@@ -38,14 +38,14 @@ func drop_item(item_id: String, position: Vector2, count: int = 1) -> void:
     if not has_item(item_id):
         return
     remove_item(item_id, count)
-    if item_pickup_scene:
-        var pickup = item_pickup_scene.instantiate()
-        if pickup:
-            pickup.item_id = item_id
-            if "quantity" in pickup:
-                pickup.quantity = count
-            pickup.global_position = position
-            # añadir a la escena actual
-            var root = get_tree().current_scene
-            if root:
-                root.add_child(pickup)
+	if item_pickup_scene:
+		var pickup = item_pickup_scene.instantiate()
+		if pickup:
+			pickup.item_id = item_id
+			if "quantity" in pickup:
+				pickup.quantity = count
+			pickup.global_position = position
+			# añadir a la escena actual
+			var root = get_tree().current_scene
+			if root:
+				root.add_child(pickup)
