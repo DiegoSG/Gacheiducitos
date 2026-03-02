@@ -1,3 +1,4 @@
+
 [gd_scene format=4 uid="uid://inventorytest"]
 
 [ext_resource type="PackedScene" path="res://scenes/overworld/player.tscn" id=1]
