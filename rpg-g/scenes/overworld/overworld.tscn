@@ -5,6 +5,11 @@
 [ext_resource type="PackedScene" uid="uid://tkrjy8dnqifu" path="res://scenes/overworld/chest.tscn" id="3_chest"]
 [ext_resource type="PackedScene" uid="uid://desnxrcj6behk" path="res://scenes/overworld/minigame_trigger.tscn" id="4_trigger"]
 [ext_resource type="PackedScene" uid="uid://627m0vq1pgow" path="res://scenes/overworld/npc_barnaby.tscn" id="5_barnaby"]
+[ext_resource type="PackedScene" uid="uid://ckyt3sc6keqdu" path="res://scenes/overworld/PickupItem.tscn" id="6_b1b42"]
+[ext_resource type="PackedScene" path="res://scenes/ui/InventoryUI.tscn" id="6_ui"]
+[ext_resource type="Resource" path="res://assets/items/data/blue_gem.tres" id="8_lvsx0"]
+[ext_resource type="Resource" path="res://assets/items/data/green_herb.tres" id="9_lia7k"]
+[ext_resource type="Resource" path="res://assets/items/data/red_potion.tres" id="10_ff0t0"]
 
 [node name="Overworld" type="Node2D" unique_id=888462769]
 
@@ -32,3 +37,21 @@ position = Vector2(320, 260)
 
 [node name="NPC_Barnaby" parent="." unique_id=679592753 instance=ExtResource("5_barnaby")]
 position = Vector2(-1, -8)
+
+[node name="InventoryUI" parent="." unique_id=247872933 instance=ExtResource("6_ui")]
+
+[node name="PickupItem" parent="." unique_id=562261955 instance=ExtResource("6_b1b42")]
+position = Vector2(337, -4)
+item_data = ExtResource("8_lvsx0")
+
+[node name="PickupItem2" parent="." unique_id=944585978 instance=ExtResource("6_b1b42")]
+position = Vector2(362, -71)
+item_data = ExtResource("9_lia7k")
+
+[node name="PickupItem3" parent="." unique_id=50810886 instance=ExtResource("6_b1b42")]
+position = Vector2(224, -75)
+item_data = ExtResource("10_ff0t0")
+
+[node name="PickupItem4" parent="." unique_id=1988564414 instance=ExtResource("6_b1b42")]
+position = Vector2(471, -74)
+item_data = ExtResource("8_lvsx0")

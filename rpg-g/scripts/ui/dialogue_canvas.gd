@@ -100,4 +100,3 @@ func _input(event):
 	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_accept"):
 		if panel.visible and not indicator.visible and not buttons_container.visible:
 			hide_dialogue()
-

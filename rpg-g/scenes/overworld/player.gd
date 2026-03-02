@@ -23,6 +23,7 @@ func _on_dialogue_ended(_resource: DialogueResource):
 	await get_tree().create_timer(0.1).timeout
 	is_dialogue_active = false
 
+@warning_ignore("unused_parameter")
 func _physics_process(delta):
 	if is_dialogue_active:
 		return
