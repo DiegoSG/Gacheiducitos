@@ -4,7 +4,7 @@ onready var label: Label = $Label
 
 func _ready() -> void:
     if InventoryManager:
-        InventoryManager.connect("inventory_changed", self, "_update")
+        InventoryManager.connect("inventory_changed", Callable(self, "_update"))
     _update()
 
 func _update() -> void:
