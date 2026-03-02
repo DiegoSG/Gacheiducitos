@@ -1,15 +1,15 @@
 extends Area2D
 
 # Identificador simple del ítem que se recogerá
-export(String) var item_id: String = ""
+@export var item_id: String = ""
 # cantidad en caso de pilas
-export(int) var quantity: int = 1
+@export var quantity: int = 1
 
 func _ready() -> void:
-    connect("body_entered", self, "_on_body_entered")
+	connect("body_entered", self, "_on_body_entered")
 
 func _on_body_entered(body):
-    if body.is_in_group("player"):
-        if InventoryManager: # singleton asumido en autoload
-            InventoryManager.add_item(item_id, quantity)
-        queue_free()
+	if body.is_in_group("player"):
+		if InventoryManager: # singleton asumido en autoload
+			InventoryManager.add_item(item_id, quantity)
+		queue_free()
