@@ -7,8 +7,13 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [x] Cámara sin límites (Referencia: `overworld.tscn`)
 - [x] Sistema de interacción base (Referencia: `actionable.gd`)
 - [x] Manager de transiciones (Referencia: `game_manager.gd`)
+- [x] Scripting de NPCs con misiones/diálogos básicos (básico en `NPCQuestGiver.gd`)
+- [x] Inventario simple para recoger/intercambiar ítems (`Inventory.gd` + UI)
+- [ ] Sistema de progresión (niveles/estadísticas/items)
+- [ ] Áreas desbloqueables y control de mapa
 
 ## 🟡 Feature: Minijuego A (Excavación)
+*Usado como desafío de quest con rejugabilidad y puente de inventario.*
 - [x] Generador Procedimental (Autómatas Celulares) (Ref: `Minijuego_Supaplex.md`)
 - [x] Algoritmo de Validación de Conectividad (Flood Fill) (Ref: `Minijuego_Supaplex.md`)
 - [ ] Reglas de "Riesgo vs Recompensa" (Colocación de items) (Ref: `Minijuego_Supaplex.md`)
@@ -30,6 +35,7 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [ ] Puente de Inventario (Transferencia de items al Overworld) (Ref: `Minijuego_Supaplex.md`)
 
 ## 🟡 Feature: Minijuego B (Laberinto)
+*Puede servir como transición/mapas secretos y pruebas de tiempo.*
 - [ ] Shader de Niebla de Guerra / Sistema de Iluminación (Ref: `Minijuego_Laberinto.md`)
 - [ ] Generación de laberinto y cambio de muros fuera de cámara (Ref: `Minijuego_Laberinto.md`)
 - [ ] Sistema de recolección de objetos clave (Ref: `Minijuego_Laberinto.md`)
@@ -37,6 +43,7 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [ ] IA de Enemigos (Drenado de luz) (Ref: `Minijuego_Laberinto.md`)
 
 ## 🟡 Feature: Minijuego C (Ritmo)
+*Pensado para retos de timing y récords, ligado a habilidades o cosméticos.*
 - [ ] Metrónomo sincronizado (AudioServer BPM) (Ref: `Minijuego_Ritmo.md`)
 - [ ] Buffer de entrada y validación de timing (Ref: `Minijuego_Ritmo.md`)
 - [ ] Validador de secuencias de comandos (Símbolos/Inputs) (Ref: `Minijuego_Ritmo.md`)
