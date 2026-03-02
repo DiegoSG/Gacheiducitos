@@ -1,31 +1,31 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=4 uid="uid://inventorytest"]
 
-[ext_resource path="res://scenes/overworld/player.tscn" type="PackedScene" id=1]
-[ext_resource path="res://scenes/overworld/InventoryUI.tscn" type="PackedScene" id=2]
-[ext_resource path="res://scenes/overworld/NPC_QuestGiver.tscn" type="PackedScene" id=3]
-[ext_resource path="res://scenes/overworld/ItemPickup.tscn" type="PackedScene" id=4]
+[ext_resource type="PackedScene" path="res://scenes/overworld/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/overworld/InventoryUI.tscn" id="2_ui"]
+[ext_resource type="PackedScene" path="res://scenes/overworld/NPC_QuestGiver.tscn" id="3_npc"]
+[ext_resource type="PackedScene" path="res://scenes/overworld/ItemPickup.tscn" id="4_pickup"]
 
-[node name="InventoryTest" type="Node2D"]
+[node name="InventoryTest" type="Node2D" unique_id=100]
 
-[node name="Player" parent="." instance=ExtResource( 1 )]
-[Player]position = Vector2(0, 0)
+[node name="Player" parent="." instance=ExtResource(1_player) unique_id=101]
+position = Vector2(0, 0)
 
-[node name="InventoryUI" parent="." instance=ExtResource( 2 )]
+[node name="InventoryUI" parent="." instance=ExtResource(2_ui) unique_id=102]
 
-[node name="NPC" parent="." instance=ExtResource( 3 )]
+[node name="NPC" parent="." instance=ExtResource(3_npc) unique_id=103]
 [NPC]required_item_id = "red"
 
-[node name="PickupRed" parent="." instance=ExtResource( 4 )]
-[PickupRed]position = Vector2(64, 0)
+[node name="PickupRed" parent="." instance=ExtResource(4_pickup) unique_id=104]
+position = Vector2(64, 0)
 [PickupRed]item_id = "red"
 [PickupRed]quantity = 1
 
-[node name="PickupGreen" parent="." instance=ExtResource( 4 )]
-[PickupGreen]position = Vector2(-64, 0)
+[node name="PickupGreen" parent="." instance=ExtResource(4_pickup) unique_id=105]
+position = Vector2(-64, 0)
 [PickupGreen]item_id = "green"
 [PickupGreen]quantity = 1
 
-[node name="PickupBlue" parent="." instance=ExtResource( 4 )]
-[PickupBlue]position = Vector2(0, 64)
+[node name="PickupBlue" parent="." instance=ExtResource(4_pickup) unique_id=106]
+position = Vector2(0, 64)
 [PickupBlue]item_id = "blue"
 [PickupBlue]quantity = 1
