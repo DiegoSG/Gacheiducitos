@@ -44,8 +44,16 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_dialogue_active:
 		return
 		
+	# interacción normal
 	if event.is_action_pressed("ui_accept"):
 		var actionables = actionable_finder.get_overlapping_areas()
 		if actionables.size() > 0:
 			get_viewport().set_input_as_handled()
 			actionables[0].action()
+
+	# tirar un ítem (usa la misma tecla de cancelar)
+	if event.is_action_pressed("ui_cancel"):
+		if InventoryManager:
+			for key in InventoryManager.items.keys():
+				InventoryManager.drop_item(key, global_position)
+				break

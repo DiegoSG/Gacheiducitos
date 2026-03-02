@@ -12,7 +12,16 @@
 [node name="InventoryUI" parent="." instance=ExtResource( 2 )]
 
 [node name="NPC" parent="." instance=ExtResource( 3 )]
-[NPC]required_item_id = "test_item"
+[NPC]required_item_id = "red"
 
-[node name="Pickup" parent="." instance=ExtResource( 4 )]
-[Pickup]item_id = "test_item"
+[node name="PickupRed" parent="." instance=ExtResource( 4 )]
+[PickupRed]item_id = "red"
+[PickupRed]quantity = 1
+
+[node name="PickupGreen" parent="." instance=ExtResource( 4 )]
+[PickupGreen]item_id = "green"
+[PickupGreen]quantity = 1
+
+[node name="PickupBlue" parent="." instance=ExtResource( 4 )]
+[PickupBlue]item_id = "blue"
+[PickupBlue]quantity = 1
