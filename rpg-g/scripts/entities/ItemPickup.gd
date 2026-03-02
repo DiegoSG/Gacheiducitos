@@ -6,8 +6,7 @@ extends Area2D
 @export var quantity: int = 1
 
 func _ready() -> void:
-	connect("body_entered", self, "_on_body_entered")
-
+        connect("body_entered", Callable(self, "_on_body_entered"))
 func _on_body_entered(body):
 	if body.is_in_group("player"):
 		if InventoryManager: # singleton asumido en autoload
