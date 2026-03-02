@@ -1,7 +1,7 @@
 extends Node2D
 
 # ID del ítem requerido para completar la misión
-export(String) var required_item_id: String = ""
+@export var required_item_id: String = ""
 
 var quest_active: bool = false
 
