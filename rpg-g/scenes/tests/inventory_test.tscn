@@ -8,6 +8,7 @@
 [node name="InventoryTest" type="Node2D"]
 
 [node name="Player" parent="." instance=ExtResource( 1 )]
+[Player]position = Vector2(0, 0)
 
 [node name="InventoryUI" parent="." instance=ExtResource( 2 )]
 
@@ -15,13 +16,16 @@
 [NPC]required_item_id = "red"
 
 [node name="PickupRed" parent="." instance=ExtResource( 4 )]
+[PickupRed]position = Vector2(64, 0)
 [PickupRed]item_id = "red"
 [PickupRed]quantity = 1
 
 [node name="PickupGreen" parent="." instance=ExtResource( 4 )]
+[PickupGreen]position = Vector2(-64, 0)
 [PickupGreen]item_id = "green"
 [PickupGreen]quantity = 1
 
 [node name="PickupBlue" parent="." instance=ExtResource( 4 )]
+[PickupBlue]position = Vector2(0, 64)
 [PickupBlue]item_id = "blue"
 [PickupBlue]quantity = 1
