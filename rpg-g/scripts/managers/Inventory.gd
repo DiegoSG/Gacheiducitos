@@ -13,7 +13,8 @@ func _ready() -> void:
     items.clear()
     # preloader fallback si no se asignó en el editor
     if item_pickup_scene == null:
-        item_pickup_scene = preload("res://scenes/overworld/ItemPickup.tscn")
+        # use load instead of preload to avoid parser-time errors
+        item_pickup_scene = load("res://scenes/overworld/ItemPickup.tscn")
 
 
 func add_item(item_id: String, count: int = 1) -> void:
