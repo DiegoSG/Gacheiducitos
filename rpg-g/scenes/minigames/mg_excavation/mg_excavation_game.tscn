@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bqw7y8dnqifu"]
+
+[ext_resource type="Script" path="res://scenes/minigames/mg_excavation/mg_excavation_game.gd" id="1"]
+
+[node name="MG_ExcavationGame" type="Node2D"]
+script = ExtResource("1")

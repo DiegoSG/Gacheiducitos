@@ -1,0 +1,13 @@
+~ start
+
+Barnaby: Hola, viajero. He perdido mi llave de oro en el pozo sureste. ¿Podrías ayudarme a buscarla?
+- Aceptar => accepted
+- Rechazar => rejected
+
+~ accepted
+Barnaby: ¡Oh, maravilloso! Tráela de vuelta tan pronto como la encuentres. ¡Confío en ti!
+=> END
+
+~ rejected
+Barnaby: ¡Qué decepción! Si cambias de opinión, aquí estaré. La oferta sigue en pie.
+=> END

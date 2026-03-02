@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://desnxrcj6behk"]
+
+[ext_resource type="Script" uid="uid://dk0f3v5336qdx" path="res://scenes/overworld/minigame_trigger.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dk41wealbqck6" path="res://icon.svg" id="2_icon"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_Interaction"]
+size = Vector2(161, 100)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_Physics"]
+size = Vector2(130, 63)
+
+[node name="MinigameTrigger" type="Area2D" unique_id=114198532]
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=36574725]
+modulate = Color(1, 0, 1, 1)
+texture = ExtResource("2_icon")
+
+[node name="InteractionArea" type="CollisionShape2D" parent="." unique_id=1998634083]
+position = Vector2(0, 49)
+shape = SubResource("RectangleShape2D_Interaction")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1973674446]
+
+[node name="PhysicsCollision" type="CollisionShape2D" parent="StaticBody2D" unique_id=549168666]
+position = Vector2(-1, 31.5)
+shape = SubResource("RectangleShape2D_Physics")

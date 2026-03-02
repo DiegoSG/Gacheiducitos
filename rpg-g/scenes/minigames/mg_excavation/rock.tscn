@@ -1,0 +1,126 @@
+[gd_scene format=3 uid="uid://pwscxhwt3tnt"]
+
+[sub_resource type="GDScript" id="GDScript_d4qya"]
+script/source = "extends RigidBody2D
+
+# Referencia al engine
+var engine = null
+
+# Estado de caída
+var is_falling = false
+var fall_start_y = 0.0
+
+func _ready():
+	# Configurar física
+	gravity_scale = 0 # Desactivar gravedad de Godot, usaremos la nuestra
+	lock_rotation = true
+	continuous_cd = RigidBody2D.CCD_MODE_CAST_RAY # Prevenir tunneling
+	max_contacts_reported = 4
+	contact_monitor = true
+	
+	# Obtener referencia al engine
+	engine = get_parent()
+	
+	# Configurar colisiones
+	collision_layer = 2 # Layer de piedras
+	collision_mask = 1 + 2 + 4 # Colisiona con jugador (1), otras piedras (2) y terreno (4)
+
+func _physics_process(delta):
+	if engine == null:
+		return
+	
+	# Obtener posición en el grid
+	var grid_pos = engine.world_to_grid(global_position)
+	
+	# Verificar si debe caer
+	if _should_fall(grid_pos):
+		if not is_falling:
+			is_falling = true
+			fall_start_y = global_position.y
+		
+		# Aplicar velocidad de caída
+		linear_velocity = Vector2(0, 120)
+	else:
+		# Detener caída y alinear al grid
+		if is_falling:
+			_snap_to_grid()
+			is_falling = false
+		
+		linear_velocity = Vector2.ZERO
+		
+		# Verificar deslizamiento lateral
+		_check_slide(grid_pos)
+
+func _should_fall(grid_pos: Vector2i) -> bool:
+	# Validar límites del grid
+	if grid_pos.x < 0 or grid_pos.x >= engine.grid_width:
+		return false
+	if grid_pos.y < 0 or grid_pos.y + 1 >= engine.grid_height:
+		return false
+	
+	var below = engine.grid[grid_pos.y + 1][grid_pos.x]
+	return below == engine.TileType.EMPTY
+
+func _check_slide(grid_pos: Vector2i):
+	# Validar límites del grid
+	if grid_pos.x < 0 or grid_pos.x >= engine.grid_width:
+		return
+	if grid_pos.y < 0 or grid_pos.y + 1 >= engine.grid_height:
+		return
+	
+	var below = engine.grid[grid_pos.y + 1][grid_pos.x]
+	
+	# Solo deslizar si hay algo sólido debajo
+	if below == engine.TileType.PIEDRA or below == engine.TileType.MURO_IRROMPIBLE or below == engine.TileType.MURO_ROMPIBLE or below == engine.TileType.TIERRA:
+		# Intentar deslizar a la izquierda
+		if grid_pos.x - 1 >= 0:
+			var left = engine.grid[grid_pos.y][grid_pos.x - 1]
+			var left_below = engine.grid[grid_pos.y + 1][grid_pos.x - 1]
+			
+			if left == engine.TileType.EMPTY and left_below == engine.TileType.EMPTY:
+				# Deslizar
+				linear_velocity = Vector2(-60, 0)
+				return
+		
+		# Intentar deslizar a la derecha
+		if grid_pos.x + 1 < engine.grid_width:
+			var right = engine.grid[grid_pos.y][grid_pos.x + 1]
+			var right_below = engine.grid[grid_pos.y + 1][grid_pos.x + 1]
+			
+			if right == engine.TileType.EMPTY and right_below == engine.TileType.EMPTY:
+				# Deslizar
+				linear_velocity = Vector2(60, 0)
+				return
+
+func _snap_to_grid():
+	var grid_pos = engine.world_to_grid(global_position)
+	global_position = engine.grid_to_world(grid_pos)
+
+func _on_body_entered(body):
+	# Detectar colisión con jugador
+	if body.is_in_group(\"player\") and is_falling:
+		# Solo matar si cayó desde arriba
+		var fall_distance = global_position.y - fall_start_y
+		if fall_distance > engine.CELL_SIZE * 0.5:
+			body.get_parent()._player_crushed()
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rock"]
+size = Vector2(14, 14)
+
+[node name="Rock" type="RigidBody2D" unique_id=419895199]
+collision_layer = 2
+collision_mask = 3
+script = SubResource("GDScript_d4qya")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=225732306]
+shape = SubResource("RectangleShape2D_rock")
+
+[node name="Sprite" type="ColorRect" parent="." unique_id=272357922]
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+color = Color(0.5, 0.5, 0.5, 1)
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
