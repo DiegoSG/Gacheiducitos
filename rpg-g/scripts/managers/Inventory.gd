@@ -1,6 +1,6 @@
 extends Node
 
-class_name Inventory
+class_name InventoryManager
 
 signal inventory_changed
 

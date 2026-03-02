@@ -14,8 +14,8 @@ func interact() -> void:
         quest_active = true
         emit_signal("quest_started")
     else:
-        if Inventory and Inventory.has_item(required_item_id):
-            Inventory.remove_item(required_item_id)
+        if InventoryManager and InventoryManager.has_item(required_item_id):
+            InventoryManager.remove_item(required_item_id)
             quest_active = false
             emit_signal("quest_completed")
 

@@ -8,6 +8,6 @@ func _ready() -> void:
 
 func _on_body_entered(body):
     if body.is_in_group("player"):
-        if Inventory: # singleton asumido en autoload
-            Inventory.add_item(item_id)
+        if InventoryManager: # singleton asumido en autoload
+            InventoryManager.add_item(item_id)
         queue_free()

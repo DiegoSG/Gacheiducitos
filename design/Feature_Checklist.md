@@ -8,7 +8,7 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [x] Sistema de interacción base (Referencia: `actionable.gd`)
 - [x] Manager de transiciones (Referencia: `game_manager.gd`)
 - [x] Scripting de NPCs con misiones/diálogos básicos (básico en `NPCQuestGiver.gd`)
-- [x] Inventario simple para recoger/intercambiar ítems (`Inventory.gd` + UI)
+- [x] Inventario simple para recoger/intercambiar ítems (`Inventory.gd` + UI) – usar nombre de singleton `InventoryManager` si ya existe conflicto
 - [ ] Sistema de progresión (niveles/estadísticas/items)
 - [ ] Áreas desbloqueables y control de mapa
 
