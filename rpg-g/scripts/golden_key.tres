@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dbhe8x2v6tggn"]
+
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://scripts/resources/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://bb7se37fgbfc" path="res://assets/items/icons/golden_key.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = "golden_key"
+name = "Llave Dorada"
+rarity = 2
+icon = ExtResource("2_icon")
+description = "Una llave de oro brillante. Abre puertas especiales."
+type = 2
+stackable = false

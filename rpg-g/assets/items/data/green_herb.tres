@@ -1,12 +1,13 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dsuuhs1xicxgg"]
 
 [ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://scripts/resources/item_data.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://cpnjofnxvcj4" path="res://assets/sprites/icon_green.png" id="2_icon"]
+[ext_resource type="Texture2D" uid="uid://bo6yul305n7km" path="res://assets/items/icons/green_herb.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_script")
 id = "green_herb"
 name = "Hierba Verde"
+value = 15
 icon = ExtResource("2_icon")
 description = "Huele a bosque fresco."
 type = 3

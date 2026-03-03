@@ -4,14 +4,21 @@
 [ext_resource type="PackedScene" path="res://scenes/overworld/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" uid="uid://tkrjy8dnqifu" path="res://scenes/overworld/chest.tscn" id="3_chest"]
 [ext_resource type="PackedScene" uid="uid://desnxrcj6behk" path="res://scenes/overworld/minigame_trigger.tscn" id="4_trigger"]
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://scripts/resources/item_data.gd" id="5_5tehe"]
 [ext_resource type="PackedScene" uid="uid://627m0vq1pgow" path="res://scenes/overworld/npc_barnaby.tscn" id="5_barnaby"]
 [ext_resource type="PackedScene" uid="uid://ckyt3sc6keqdu" path="res://scenes/overworld/PickupItem.tscn" id="6_b1b42"]
 [ext_resource type="PackedScene" path="res://scenes/ui/InventoryUI.tscn" id="6_ui"]
-[ext_resource type="Resource" path="res://assets/items/data/blue_gem.tres" id="8_lvsx0"]
-[ext_resource type="Resource" path="res://assets/items/data/green_herb.tres" id="9_lia7k"]
-[ext_resource type="Resource" path="res://assets/items/data/red_potion.tres" id="10_ff0t0"]
+[ext_resource type="Resource" uid="uid://8fc660t425el" path="res://assets/items/data/antidote.tres" id="7_hxnvt"]
+[ext_resource type="Resource" uid="uid://dckjvvpcfqm7m" path="res://assets/items/data/blue_gem.tres" id="8_lvsx0"]
+[ext_resource type="Resource" uid="uid://dsuuhs1xicxgg" path="res://assets/items/data/green_herb.tres" id="9_lia7k"]
+[ext_resource type="Resource" uid="uid://cagd771u5sffm" path="res://assets/items/data/iron_key.tres" id="10_1dryu"]
+[ext_resource type="Resource" uid="uid://g3aow6onnlpw" path="res://assets/items/data/ancient_map.tres" id="11_ff0t0"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="11_hud"]
+[ext_resource type="Resource" uid="uid://bh4box6poomqx" path="res://assets/items/data/gold_coins.tres" id="14_5tehe"]
 
 [node name="Overworld" type="Node2D" unique_id=888462769]
+
+[node name="HUD" parent="." unique_id=61597749 instance=ExtResource("11_hud")]
 
 [node name="GroundLayer" type="TileMapLayer" parent="." unique_id=180569569]
 position = Vector2(-2, 1)
@@ -30,7 +37,10 @@ position = Vector2(320, 180)
 position = Vector2(2, 2)
 
 [node name="Chest" parent="." unique_id=2125951159 instance=ExtResource("3_chest")]
-position = Vector2(400, 180)
+position = Vector2(470, 112)
+loot_items = Array[ExtResource("5_5tehe")]([ExtResource("11_ff0t0"), ExtResource("7_hxnvt"), ExtResource("14_5tehe"), ExtResource("9_lia7k"), ExtResource("10_1dryu")])
+is_storage_enabled = true
+chest_id = "10"
 
 [node name="MinigameTrigger" parent="." unique_id=1881106205 instance=ExtResource("4_trigger")]
 position = Vector2(320, 260)
@@ -42,15 +52,15 @@ position = Vector2(-1, -8)
 
 [node name="PickupItem" parent="." unique_id=562261955 instance=ExtResource("6_b1b42")]
 position = Vector2(337, -4)
-item_data = ExtResource("8_lvsx0")
+item_data = ExtResource("14_5tehe")
 
 [node name="PickupItem2" parent="." unique_id=944585978 instance=ExtResource("6_b1b42")]
 position = Vector2(362, -71)
-item_data = ExtResource("9_lia7k")
+item_data = ExtResource("14_5tehe")
 
 [node name="PickupItem3" parent="." unique_id=50810886 instance=ExtResource("6_b1b42")]
 position = Vector2(224, -75)
-item_data = ExtResource("10_ff0t0")
+item_data = ExtResource("14_5tehe")
 
 [node name="PickupItem4" parent="." unique_id=1988564414 instance=ExtResource("6_b1b42")]
 position = Vector2(471, -74)

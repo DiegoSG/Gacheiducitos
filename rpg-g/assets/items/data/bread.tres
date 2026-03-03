@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://d2r6q7v2n8y4c"]
+
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://scripts/resources/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/items/icons/bread.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = "bread"
+name = "Pan"
+rarity = 0
+value = 10
+icon = ExtResource("2_icon")
+description = "Pan recién horneado. Un alimento básico."
+type = 0
+stackable = true
+item_scale = Vector2(1, 1)
+collision_type = 0
+circle_radius = 16.0
+rectangle_size = Vector2(32, 32)
+capsule_height = 30.0
+capsule_radius = 10.0
+collision_offset = Vector2(0, 0)

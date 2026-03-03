@@ -3,40 +3,51 @@ class_name ItemData
 
 enum ItemType { CONSUMABLE, EQUIPMENT, QUEST, MATERIAL }
 enum ShapeType { CIRCLE, RECTANGLE, CAPSULE }
+enum Rarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY }
 
 @export_group("Basic Info")
 @export var id: String = "":
-	set(value):
-		id = value
+	set(new_value):
+		id = new_value
 		emit_changed()
 
 @export var name: String = "New Item":
-	set(value):
-		name = value
+	set(new_value):
+		name = new_value
+		emit_changed()
+
+@export var rarity: Rarity = Rarity.COMMON:
+	set(new_value):
+		rarity = new_value
+		emit_changed()
+
+@export var value: int = 0:
+	set(new_value):
+		value = new_value
 		emit_changed()
 
 @export var icon: Texture2D:
-	set(value):
-		icon = value
+	set(new_value):
+		icon = new_value
 		emit_changed()
 
 @export var description: String = "":
-	set(value):
-		description = value
+	set(new_value):
+		description = new_value
 		emit_changed()
 
 @export var type: ItemType = ItemType.CONSUMABLE:
-	set(value):
-		type = value
+	set(new_value):
+		type = new_value
 		emit_changed()
 
 @export var stackable: bool = true:
-	set(value):
-		stackable = value
+	set(new_value):
+		stackable = new_value
 		emit_changed()
 
 @export_group("Visuals")
-@export var item_scale: Vector2 = Vector2(0.3, 0.3):
+@export var item_scale: Vector2 = Vector2(1, 1):
 	set(value):
 		item_scale = value
 		emit_changed()

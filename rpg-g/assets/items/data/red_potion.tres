@@ -1,11 +1,12 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bxps63a4a2vpn"]
 
 [ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://scripts/resources/item_data.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://r0ktdhqtci1m" path="res://assets/sprites/icon_red.png" id="2_icon"]
+[ext_resource type="Texture2D" uid="uid://ewc4cs2gbaqd" path="res://assets/items/icons/red_potion.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_script")
 id = "red_potion"
 name = "Poción Roja"
+value = 50
 icon = ExtResource("2_icon")
 description = "Una poción de color carmesí. Recupera vida."

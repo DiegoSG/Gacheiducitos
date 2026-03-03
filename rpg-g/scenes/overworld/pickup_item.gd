@@ -96,7 +96,11 @@ func _on_body_entered(body: Node2D) -> void:
 	if not item_data: return
 	
 	if body.is_in_group("player") or body.name == "Player":
-		var inventory = get_node_or_null("/root/Inventory")
-		if inventory:
-			inventory.add_item(item_data.id)
+		if item_data.id == "gold_coins":
+			PlayerStats.add_gold(item_data.value)
+		else:
+			var inventory = get_node_or_null("/root/Inventory")
+			if inventory:
+				inventory.add_item(item_data.id)
+		
 		queue_free()
