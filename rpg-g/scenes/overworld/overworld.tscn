@@ -15,6 +15,7 @@
 [ext_resource type="Resource" uid="uid://g3aow6onnlpw" path="res://assets/items/data/ancient_map.tres" id="11_ff0t0"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="11_hud"]
 [ext_resource type="Resource" uid="uid://bh4box6poomqx" path="res://assets/items/data/gold_coins.tres" id="14_5tehe"]
+[ext_resource type="PackedScene" path="res://scenes/entities/dummy_npc.tscn" id="16_1dryu"]
 
 [node name="Overworld" type="Node2D" unique_id=888462769]
 
@@ -65,3 +66,21 @@ item_data = ExtResource("14_5tehe")
 [node name="PickupItem4" parent="." unique_id=1988564414 instance=ExtResource("6_b1b42")]
 position = Vector2(471, -74)
 item_data = ExtResource("8_lvsx0")
+
+[node name="DummyNPC" parent="." unique_id=1460195114 instance=ExtResource("16_1dryu")]
+position = Vector2(19, 158)
+
+[node name="DummyNPC2" parent="." unique_id=2079942317 instance=ExtResource("16_1dryu")]
+position = Vector2(-149, 125)
+
+[node name="DummyNPC3" parent="." unique_id=1917044352 instance=ExtResource("16_1dryu")]
+position = Vector2(-223, 276)
+
+[node name="DummyNPC4" parent="." unique_id=1694378653 instance=ExtResource("16_1dryu")]
+position = Vector2(-18, 68)
+
+[node name="DummyNPC5" parent="." unique_id=1211922097 instance=ExtResource("16_1dryu")]
+position = Vector2(-58, 300)
+
+[node name="DummyNPC6" parent="." unique_id=61164555 instance=ExtResource("16_1dryu")]
+position = Vector2(81, 259)
