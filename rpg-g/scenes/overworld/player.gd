@@ -1,8 +1,14 @@
 extends CharacterBody2D
 
 @export var speed = 100.0
+@export var max_health = 3
+var current_health = 3
+var knockback_velocity: Vector2 = Vector2.ZERO
+var is_stunned: bool = false
+var is_invulnerable: bool = false
 @onready var actionable_finder: Area2D = $ActionableFinder
 @onready var hitbox_component: HitboxComponent = $HitboxComponent
+@onready var hurtbox_component: HurtboxComponent = $HurtboxComponent
 
 var is_dialogue_active = false
 var is_attacking = false
@@ -10,6 +16,10 @@ var last_direction = Vector2.DOWN
 
 func _ready():
 	add_to_group("player")
+	current_health = max_health
+	
+	if hurtbox_component:
+		hurtbox_component.hit_received.connect(_on_hit_received)
 	
 	# Conectarse a las señales de Dialogue Manager
 	var dm = Engine.get_singleton("DialogueManager")
@@ -31,6 +41,12 @@ func _physics_process(delta):
 	if is_dialogue_active:
 		return
 		
+	if is_stunned:
+		velocity = knockback_velocity
+		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, 1000 * delta)
+		move_and_slide()
+		return
+		
 	# Get input direction
 	var direction = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	
@@ -48,6 +64,31 @@ func _physics_process(delta):
 
 	move_and_slide()
 
+func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: float):
+	if is_invulnerable: return
+	
+	current_health -= damage
+	print("Player hit! Health: ", current_health)
+	
+	is_invulnerable = true
+	
+	# Efecto de I-frames visuales (parpadeo)
+	var tween = create_tween()
+	tween.set_loops(5) # 5 parpadeos de 0.2s c/u = 1 seg de i-frames
+	tween.tween_property($Sprite2D, "modulate:a", 0.2, 0.1)
+	tween.tween_property($Sprite2D, "modulate:a", 1.0, 0.1)
+	
+	if knockback_force > 0:
+		is_stunned = true
+		knockback_velocity = attack_direction * knockback_force
+		await get_tree().create_timer(0.3).timeout
+		is_stunned = false
+		await get_tree().create_timer(0.7).timeout
+		is_invulnerable = false
+	else:
+		await get_tree().create_timer(1.0).timeout
+		is_invulnerable = false
+
 func attack():
 	if is_attacking: return
 	is_attacking = true
@@ -64,9 +105,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		
 	if event.is_action_pressed("ui_accept"):
 		var actionables = actionable_finder.get_overlapping_areas()
-		if actionables.size() > 0:
-			get_viewport().set_input_as_handled()
-			actionables[0].action()
+		for area in actionables:
+			if area.has_method("action"):
+				get_viewport().set_input_as_handled()
+				area.action()
+				break
 
 	# Accion de golpear, asumiendo "attack" map action. En caso no estar,
 	# por defecto lo vincularemos a "ui_select" (barra espaciadora) si es que "ui_accept" 

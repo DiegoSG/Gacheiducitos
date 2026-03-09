@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="11_hud"]
 [ext_resource type="Resource" uid="uid://bh4box6poomqx" path="res://assets/items/data/gold_coins.tres" id="14_5tehe"]
 [ext_resource type="PackedScene" path="res://scenes/entities/dummy_npc.tscn" id="16_1dryu"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/generic_enemy.tscn" id="17_kn0ur"]
 
 [node name="Overworld" type="Node2D" unique_id=888462769]
 
@@ -84,3 +85,15 @@ position = Vector2(-58, 300)
 
 [node name="DummyNPC6" parent="." unique_id=61164555 instance=ExtResource("16_1dryu")]
 position = Vector2(81, 259)
+
+[node name="GenericEnemy" parent="." unique_id=1212337896 instance=ExtResource("17_kn0ur")]
+position = Vector2(-248, -173)
+
+[node name="GenericEnemy2" parent="." unique_id=250163063 instance=ExtResource("17_kn0ur")]
+position = Vector2(-473, 439)
+
+[node name="GenericEnemy3" parent="." unique_id=1445497434 instance=ExtResource("17_kn0ur")]
+position = Vector2(225, -263)
+
+[node name="GenericEnemy4" parent="." unique_id=1862821853 instance=ExtResource("17_kn0ur")]
+position = Vector2(598, 435)

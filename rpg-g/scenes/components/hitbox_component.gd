@@ -2,6 +2,7 @@ extends Area2D
 class_name HitboxComponent
 
 @export var damage: int = 1
+@export var knockback_force: float = 300.0
 
 func _ready() -> void:
 	area_entered.connect(_on_area_entered)
@@ -19,4 +20,4 @@ func _on_area_entered(area: Area2D) -> void:
 		# Calculamos la dirección simplificada desde el padre del hitbox al padre del hurtbox
 		# para que el knockback tenga sentido.
 		var attack_direction = (area.global_position - global_position).normalized()
-		area.take_hit(damage, attack_direction)
+		area.take_hit(damage, attack_direction, knockback_force)
