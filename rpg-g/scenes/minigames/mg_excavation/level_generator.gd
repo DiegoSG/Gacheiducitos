@@ -56,7 +56,22 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 				if y < height - 1 and grid[y + 1][x] != 0:
 					grid[y][x] = 2 # TileType.PIEDRA (reemplaza tierra si existe)
 	
-	# Paso 6: Colocar salida en la zona inferior derecha
+	# Paso 6: Colocar monedas (ITEM_RECOMPENSA = 6)
+	var num_monedas = config.get("num_monedas", 10)
+	var coins_placed = 0
+	var empty_or_dirt_spaces = []
+	for y in range(3, height - 3):
+		for x in range(3, width - 3):
+			if grid[y][x] == 0 or grid[y][x] == 1:
+				empty_or_dirt_spaces.append(Vector2i(x, y))
+	
+	empty_or_dirt_spaces.shuffle()
+	
+	for i in range(min(num_monedas, empty_or_dirt_spaces.size())):
+		var pos = empty_or_dirt_spaces[i]
+		grid[pos.y][pos.x] = 6 # TileType.ITEM_RECOMPENSA
+
+	# Paso 7: Colocar salida en la zona inferior derecha
 	var exit_placed = false
 	for attempt in range(50):
 		var ex = randi_range(width - 10, width - 3)
@@ -69,7 +84,7 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 	if not exit_placed:
 		grid[height - 2][width - 2] = 9
 	
-	# Paso 7: Validar conectividad (Flood Fill desde inicio)
+	# Paso 8: Validar conectividad (Flood Fill desde inicio)
 	if not _is_reachable(grid, width, height, Vector2i(1, 1)):
 		print("Nivel no alcanzable, regenerando...")
 		return generate_level(width, height, config)

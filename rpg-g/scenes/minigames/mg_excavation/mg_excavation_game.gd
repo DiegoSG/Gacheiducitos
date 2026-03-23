@@ -42,8 +42,8 @@ var current_direction = Vector2i.ZERO
 # Sistema de empuje de piedras y visuales
 var is_pushing_rock = false
 const PUSH_DELAY = 0.24 # Mitad de velocidad al empujar
-var rock_visuals = {} # "x,y" -> { "visual_pos": Vector2, "rotation": float }
-var falling_rocks = {} # "x,y" -> true (coordenadas de las que ya venían cayendo)
+var falling_visuals = {} # "x,y" -> { "visual_pos": Vector2, "rotation": float, "type": int }
+var falling_objects = {} # "x,y" -> true (coordenadas de las que ya venían cayendo)
 
 # Sistema de interpolación suave
 var visual_player_pos : Vector2
@@ -68,7 +68,8 @@ func _ready():
 	
 	# Inicializar posiciones visuales
 	visual_player_pos = grid_to_world(player_grid_pos)
-	_initialize_rock_visuals()
+	visual_player_pos = grid_to_world(player_grid_pos)
+	_initialize_falling_visuals()
 	
 	# Configurar cámara
 	_setup_camera()
@@ -103,15 +104,17 @@ func _update_camera_position():
 		# visual_player_pos está en coordenadas locales del grid
 		camera.global_position = self.global_position + (visual_player_pos * self.scale)
 
-func _initialize_rock_visuals():
-	rock_visuals.clear()
+func _initialize_falling_visuals():
+	falling_visuals.clear()
 	for y in range(grid_height):
 		for x in range(grid_width):
-			if grid[y][x] == TileType.PIEDRA:
+			var tile = grid[y][x]
+			if tile == TileType.PIEDRA or tile == TileType.ITEM_RECOMPENSA:
 				var key = str(x) + "," + str(y)
-				rock_visuals[key] = {
+				falling_visuals[key] = {
 					"visual_pos": grid_to_world(Vector2i(x,y)),
-					"rotation": 0.0
+					"rotation": 0.0,
+					"type": tile
 				}
 
 func _process(delta):
@@ -137,12 +140,12 @@ func _interpolate_visuals(delta):
 	var target_player_world = grid_to_world(player_grid_pos)
 	visual_player_pos = visual_player_pos.lerp(target_player_world, interp_speed * delta)
 	
-	# Interpolar piedras
-	for key in rock_visuals:
-		var data = rock_visuals[key]
+	# Interpolar piedras y objetos
+	for key in falling_visuals:
+		var data = falling_visuals[key]
 		var coords = key.split(",")
-		var target_rock_world = grid_to_world(Vector2i(int(coords[0]), int(coords[1])))
-		data.visual_pos = data.visual_pos.lerp(target_rock_world, interp_speed * delta)
+		var target_world = grid_to_world(Vector2i(int(coords[0]), int(coords[1])))
+		data.visual_pos = data.visual_pos.lerp(target_world, interp_speed * delta)
 
 func _handle_continuous_movement(delta):
 	var direction = Vector2i.ZERO
@@ -211,16 +214,20 @@ func _draw():
 	draw_rect(Rect2(visual_player_pos - Vector2(CELL_SIZE/2, CELL_SIZE/2), Vector2(CELL_SIZE, CELL_SIZE)), Color.YELLOW)
 	draw_circle(visual_player_pos, CELL_SIZE/3, Color.ORANGE)
 	
-	# Dibujar piedras usando posición visual y rotación
-	for key in rock_visuals:
-		var data = rock_visuals[key]
+	# Dibujar piedras y objetos usando posición visual y rotación
+	for key in falling_visuals:
+		var data = falling_visuals[key]
 		var pos = data.visual_pos
 		var rot = data.rotation
 		
 		draw_set_transform(pos, rot, Vector2.ONE)
-		draw_rect(Rect2(-CELL_SIZE/2 + 1, -CELL_SIZE/2 + 1, CELL_SIZE - 2, CELL_SIZE - 2), Color(0.5, 0.5, 0.5))
-		# Detalle para ver la rotación
-		draw_rect(Rect2(-CELL_SIZE/2 + 3, -CELL_SIZE/2 + 3, 4, 4), Color(0.7, 0.7, 0.7)) 
+		if data.type == TileType.PIEDRA:
+			draw_rect(Rect2(-CELL_SIZE/2 + 1, -CELL_SIZE/2 + 1, CELL_SIZE - 2, CELL_SIZE - 2), Color(0.5, 0.5, 0.5))
+			# Detalle para ver la rotación
+			draw_rect(Rect2(-CELL_SIZE/2 + 3, -CELL_SIZE/2 + 3, 4, 4), Color(0.7, 0.7, 0.7)) 
+		elif data.type == TileType.ITEM_RECOMPENSA:
+			draw_circle(Vector2.ZERO, CELL_SIZE/2 - 2, Color.GOLD)
+			draw_circle(Vector2.ZERO, CELL_SIZE/3 - 2, Color.YELLOW)
 		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 	
 	# DEBUG: Mostrar coordenadas
@@ -246,16 +253,14 @@ func _get_tile_color(tile: TileType) -> Color:
 			return Color(0.1, 0.1, 0.15)
 		TileType.TIERRA:
 			return Color(0.4, 0.3, 0.2)
-		TileType.PIEDRA:
-			return Color.TRANSPARENT # Se dibuja por separado para rotación
+		TileType.PIEDRA, TileType.ITEM_RECOMPENSA:
+			return Color.TRANSPARENT # Se dibuja por separado para rotación y animaciones
 		TileType.MURO_IRROMPIBLE:
 			return Color(0.2, 0.2, 0.25)
 		TileType.MURO_ROMPIBLE:
 			return Color(0.3, 0.25, 0.2)
 		TileType.ITEM_MISION:
 			return Color(0.2, 0.8, 0.3)
-		TileType.ITEM_RECOMPENSA:
-			return Color(0.9, 0.8, 0.2)
 		TileType.SALIDA:
 			return Color(0.3, 0.6, 0.9)
 		_:
@@ -324,6 +329,11 @@ func _try_move_player(direction: Vector2i):
 			queue_redraw()
 		
 		TileType.ITEM_MISION, TileType.ITEM_RECOMPENSA:
+			if target_tile == TileType.ITEM_RECOMPENSA:
+				PlayerStats.add_gold(1)
+				var key = str(new_pos.x) + "," + str(new_pos.y)
+				if falling_visuals.has(key):
+					falling_visuals.erase(key)
 			grid[new_pos.y][new_pos.x] = TileType.EMPTY
 			player_grid_pos = new_pos
 			queue_redraw()
@@ -332,7 +342,6 @@ func _try_move_player(direction: Vector2i):
 			player_grid_pos = new_pos
 			queue_redraw()
 			print("¡Nivel completado!")
-			await get_tree().create_timer(1.0).timeout
 			GameManager.return_to_overworld()
 
 func _try_push_rock(rock_pos: Vector2i, direction: Vector2i) -> bool:
@@ -359,15 +368,16 @@ func _try_push_rock(rock_pos: Vector2i, direction: Vector2i) -> bool:
 	var new_key = str(push_dest.x) + "," + str(push_dest.y)
 	
 	# Si por alguna razón no existe el visual, lo inicializamos en la posición vieja
-	var data = rock_visuals.get(old_key, {
+	var data = falling_visuals.get(old_key, {
 		"visual_pos": grid_to_world(rock_pos),
-		"rotation": 0.0
+		"rotation": 0.0,
+		"type": TileType.PIEDRA
 	})
 	
 	data.rotation += PI/2 * direction.x # Girar 90 grados
-	rock_visuals[new_key] = data
+	falling_visuals[new_key] = data
 	if new_key != old_key:
-		rock_visuals.erase(old_key)
+		falling_visuals.erase(old_key)
 	
 	print("Empujando piedra")
 	return true
@@ -397,16 +407,17 @@ func _update_gravity():
 	var processed_this_tick = {}
 	var next_falling_rocks = {}
 	
-	# Procesamos de abajo hacia arriba para que las piedras caigan naturalmente
+	# Procesamos de abajo hacia arriba para que las piedras/objetos caigan naturalmente
 	for y in range(grid_height - 2, -1, -1):
 		for x in range(grid_width):
-			if grid[y][x] == TileType.PIEDRA:
+			var tile = grid[y][x]
+			if tile == TileType.PIEDRA or tile == TileType.ITEM_RECOMPENSA:
 				var key = str(x) + "," + str(y)
 				if processed_this_tick.has(key):
 					continue
 					
-				var was_falling = falling_rocks.has(key)
-				var res = _try_fall_rock(x, y, was_falling)
+				var was_falling = falling_objects.has(key)
+				var res = _try_fall_rock(x, y, was_falling, tile)
 				
 				if res.moved:
 					moved = true
@@ -414,25 +425,26 @@ func _update_gravity():
 					var new_key = str(res.new_pos.x) + "," + str(res.new_pos.y)
 					processed_this_tick[new_key] = true
 					# Transferir o actualizar visuales
-					var visual_data = rock_visuals.get(key, {
+					var visual_data = falling_visuals.get(key, {
 						"visual_pos": grid_to_world(Vector2i(x,y)),
-						"rotation": 0.0
+						"rotation": 0.0,
+						"type": tile
 					})
 					if res.rotated:
 						visual_data.rotation += PI/2
-					rock_visuals[new_key] = visual_data
+					falling_visuals[new_key] = visual_data
 					if new_key != key:
-						rock_visuals.erase(key)
+						falling_visuals.erase(key)
 					
 					# Si se movió hacia abajo, sigue cayendo
 					if res.new_pos.y > y:
 						next_falling_rocks[new_key] = true
 	
-	falling_rocks = next_falling_rocks
+	falling_objects = next_falling_rocks
 	if moved:
 		queue_redraw()
 
-func _try_fall_rock(x: int, y: int, was_falling: bool) -> Dictionary:
+func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictionary:
 	var result = {"moved": false, "new_pos": Vector2i(x, y), "rotated": false}
 	
 	# Regla 1: Caída directa si hay espacio vacío debajo
@@ -448,14 +460,14 @@ func _try_fall_rock(x: int, y: int, was_falling: bool) -> Dictionary:
 		if player_grid_pos == dest:
 			_player_crushed("CAÍDA DIRECTA")
 		
-		grid[dest.y][dest.x] = TileType.PIEDRA
+		grid[dest.y][dest.x] = tile_type
 		grid[y][x] = TileType.EMPTY
 		result.moved = true
 		result.new_pos = dest
 		return result
 	
-	# Regla 2: Deslizamiento lateral (solo sobre otras piedras)
-	if y + 1 < grid_height and grid[y + 1][x] == TileType.PIEDRA:
+	# Regla 2: Deslizamiento lateral (solo sobre otras piedras u objetos)
+	if y + 1 < grid_height and (grid[y + 1][x] == TileType.PIEDRA or grid[y + 1][x] == TileType.ITEM_RECOMPENSA):
 		# Intentar izquierda
 		if x > 0 and grid[y][x - 1] == TileType.EMPTY and grid[y + 1][x - 1] == TileType.EMPTY:
 			var dest = Vector2i(x - 1, y + 1)
@@ -464,7 +476,7 @@ func _try_fall_rock(x: int, y: int, was_falling: bool) -> Dictionary:
 			if player_grid_pos == dest:
 				_player_crushed("DESLIZAMIENTO IZQUIERDA")
 			
-			grid[dest.y][dest.x] = TileType.PIEDRA
+			grid[dest.y][dest.x] = tile_type
 			grid[y][x] = TileType.EMPTY
 			result.moved = true
 			result.new_pos = dest
@@ -479,7 +491,7 @@ func _try_fall_rock(x: int, y: int, was_falling: bool) -> Dictionary:
 			if player_grid_pos == dest:
 				_player_crushed("DESLIZAMIENTO DERECHA")
 				
-			grid[dest.y][dest.x] = TileType.PIEDRA
+			grid[dest.y][dest.x] = tile_type
 			grid[y][x] = TileType.EMPTY
 			result.moved = true
 			result.new_pos = dest

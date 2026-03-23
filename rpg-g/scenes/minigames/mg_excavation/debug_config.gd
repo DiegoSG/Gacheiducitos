@@ -20,6 +20,7 @@ var config = {
 	"densidad_tierra": 0.45,
 	"probabilidad_piedra": 0.15,
 	"num_enemigos": 3,
+	"num_monedas": 10,
 	"tiempo_limite": 180,
 	"seed": -1,
 	"show_player_logic": false,

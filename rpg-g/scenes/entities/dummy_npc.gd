@@ -14,7 +14,9 @@ func _ready() -> void:
 	hurtbox_component.hit_received.connect(_on_hit_received)
 	add_to_group("enemy")
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	if is_knocked_back:
+		velocity = velocity.move_toward(Vector2.ZERO, KNOCKBACK_DISTANCE * 10 * delta)
 	move_and_slide()
 
 func _on_hit_received(damage: int, attack_direction: Vector2) -> void:
@@ -27,17 +29,14 @@ func _on_hit_received(damage: int, attack_direction: Vector2) -> void:
 	# Efecto visual de daño
 	sprite.modulate = Color.RED
 	
-	# Calculamos hacia dónde será empujado
-	var target_position = global_position + (attack_direction * KNOCKBACK_DISTANCE)
+	# Aplicar el empuje físico
+	velocity = attack_direction * (KNOCKBACK_DISTANCE * 10)
 	
 	var tween = create_tween()
-	# Transición suave para el empuje
-	tween.tween_property(self, "global_position", target_position, KNOCKBACK_DURATION).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	# Restaurar el color
-	tween.parallel().tween_property(sprite, "modulate", Color(0.8, 0.4, 0.4), KNOCKBACK_DURATION)
+	tween.tween_property(sprite, "modulate", Color(0.8, 0.4, 0.4), KNOCKBACK_DURATION)
 	
-	await tween.finished
-	is_knocked_back = false
+	get_tree().create_timer(KNOCKBACK_DURATION).timeout.connect(func(): if is_inside_tree(): is_knocked_back = false)
 	
 	# Si su salud llega a cero, muere
 	if health <= 0:

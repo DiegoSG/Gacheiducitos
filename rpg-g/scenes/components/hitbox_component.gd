@@ -1,6 +1,8 @@
 extends Area2D
 class_name HitboxComponent
 
+const HIT_EFFECT = preload("res://scenes/components/hit_effect.tscn")
+
 @export var damage: int = 1
 @export var knockback_force: float = 300.0
 
@@ -21,3 +23,7 @@ func _on_area_entered(area: Area2D) -> void:
 		# para que el knockback tenga sentido.
 		var attack_direction = (area.global_position - global_position).normalized()
 		area.take_hit(damage, attack_direction, knockback_force)
+		
+		var effect = HIT_EFFECT.instantiate()
+		get_tree().current_scene.add_child(effect)
+		effect.global_position = area.global_position

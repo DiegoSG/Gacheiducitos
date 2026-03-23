@@ -17,6 +17,8 @@
 [ext_resource type="Resource" uid="uid://bh4box6poomqx" path="res://assets/items/data/gold_coins.tres" id="14_5tehe"]
 [ext_resource type="PackedScene" path="res://scenes/entities/dummy_npc.tscn" id="16_1dryu"]
 [ext_resource type="PackedScene" path="res://scenes/entities/enemies/generic_enemy.tscn" id="17_kn0ur"]
+[ext_resource type="PackedScene" path="res://scenes/overworld/runner_minigame_trigger.tscn" id="18_r_trig"]
+[ext_resource type="PackedScene" path="res://scenes/overworld/trampolin_minigame_trigger.tscn" id="19_t_trig"]
 
 [node name="Overworld" type="Node2D" unique_id=888462769]
 
@@ -33,19 +35,25 @@ tile_map_data = PackedByteArray("AADW/8n/AAABAAAAAADW/8r/AAABAAAAAADW/8v/AAABAAA
 tile_set = ExtResource("1_tileset")
 
 [node name="Player" parent="." unique_id=1053226611 instance=ExtResource("2_player")]
-position = Vector2(320, 180)
+position = Vector2(289, 157)
 
 [node name="Camera2D" type="Camera2D" parent="Player" unique_id=303789979]
 position = Vector2(2, 2)
 
 [node name="Chest" parent="." unique_id=2125951159 instance=ExtResource("3_chest")]
-position = Vector2(470, 112)
+position = Vector2(532, 12)
 loot_items = Array[ExtResource("5_5tehe")]([ExtResource("11_ff0t0"), ExtResource("7_hxnvt"), ExtResource("14_5tehe"), ExtResource("9_lia7k"), ExtResource("10_1dryu")])
 is_storage_enabled = true
 chest_id = "10"
 
 [node name="MinigameTrigger" parent="." unique_id=1881106205 instance=ExtResource("4_trigger")]
-position = Vector2(320, 260)
+position = Vector2(546, 276)
+
+[node name="RunnerMinigameTrigger" parent="." unique_id=1987092884 instance=ExtResource("18_r_trig")]
+position = Vector2(655, 154)
+
+[node name="TrampolinMinigameTrigger" parent="." unique_id=1831284699 instance=ExtResource("19_t_trig")]
+position = Vector2(426, 155)
 
 [node name="NPC_Barnaby" parent="." unique_id=679592753 instance=ExtResource("5_barnaby")]
 position = Vector2(-1, -8)
@@ -96,4 +104,4 @@ position = Vector2(-473, 439)
 position = Vector2(225, -263)
 
 [node name="GenericEnemy4" parent="." unique_id=1862821853 instance=ExtResource("17_kn0ur")]
-position = Vector2(598, 435)
+position = Vector2(694, 459)
