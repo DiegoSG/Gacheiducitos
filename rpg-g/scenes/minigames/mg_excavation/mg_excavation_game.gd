@@ -1,20 +1,10 @@
 extends Node2D
 class_name MG_ExcavationGame
 
-# Enumeración de tipos de tiles
-enum TileType {
-	EMPTY,
-	TIERRA,
-	PIEDRA,
-	MURO_IRROMPIBLE,
-	MURO_ROMPIBLE,
-	ITEM_MISION,
-	ITEM_RECOMPENSA,
-	BOMBA,
-	ENEMIGO,
-	SALIDA,
-	TRAMPA_BLOQUEO
-}
+# Referencia a tipos compartidos
+const MGT = preload("res://scenes/minigames/mg_excavation/mg_excavation_types.gd")
+const TileType = MGT.TileType
+const WinCondition = MGT.WinCondition
 
 # Configuración del grid
 const CELL_SIZE = 16
@@ -26,6 +16,13 @@ var grid = []
 
 # Referencia al jugador
 var player_grid_pos = Vector2i(1, 1)
+
+# Estado de la misión
+var total_coins = 0
+var coins_collected = 0
+var mission_item_collected = false
+var current_win_condition = WinCondition.ALL_COINS
+var target_coin_amount = 0
 
 # Configuración recibida del debug screen
 var config = {}
@@ -44,6 +41,10 @@ var is_pushing_rock = false
 const PUSH_DELAY = 0.24 # Mitad de velocidad al empujar
 var falling_visuals = {} # "x,y" -> { "visual_pos": Vector2, "rotation": float, "type": int }
 var falling_objects = {} # "x,y" -> true (coordenadas de las que ya venían cayendo)
+var pending_falls = {} # "x,y" -> ticks_remaining (objetos que quieren empezar a caer)
+
+# Texturas
+var coin_texture = null
 
 # Sistema de interpolación suave
 var visual_player_pos : Vector2
@@ -56,6 +57,11 @@ var input_stack = [] # Lista de direcciones presionadas en orden
 var camera : Camera2D
 
 func _ready():
+	# Cargar textura de moneda con fallback
+	coin_texture = load("res://assets/items/icons/coin_v2.png")
+	if not coin_texture:
+		coin_texture = load("res://assets/items/icons/gold_coins.png")
+	
 	config = GameManager.minigame_config
 	print("MG_Excavation Engine iniciado con config:", config)
 	
@@ -65,6 +71,11 @@ func _ready():
 	
 	_initialize_grid()
 	_generate_level()
+	
+	# Inicializar estado de misión desde config
+	current_win_condition = config.get("win_condition", WinCondition.ALL_COINS)
+	target_coin_amount = config.get("target_amount", 5)
+	_count_total_coins()
 	
 	# Inicializar posiciones visuales
 	visual_player_pos = grid_to_world(player_grid_pos)
@@ -188,6 +199,16 @@ func _generate_level():
 	grid = LevelGen.generate_level(grid_width, grid_height, config)
 	print("Nivel generado proceduralmente")
 
+func _count_total_coins():
+	total_coins = 0
+	for y in range(grid_height):
+		for x in range(grid_width):
+			if grid[y][x] == TileType.ITEM_RECOMPENSA:
+				total_coins += 1
+	print("Total de monedas en el nivel: ", total_coins)
+	if current_win_condition == WinCondition.ALL_COINS:
+		target_coin_amount = total_coins
+
 func _draw():
 	if is_player_dead:
 		draw_rect(Rect2(0, 0, grid_width * CELL_SIZE, grid_height * CELL_SIZE), Color(0.3, 0, 0, 0.3))
@@ -226,12 +247,23 @@ func _draw():
 			# Detalle para ver la rotación
 			draw_rect(Rect2(-CELL_SIZE/2 + 3, -CELL_SIZE/2 + 3, 4, 4), Color(0.7, 0.7, 0.7)) 
 		elif data.type == TileType.ITEM_RECOMPENSA:
-			draw_circle(Vector2.ZERO, CELL_SIZE/2 - 2, Color.GOLD)
-			draw_circle(Vector2.ZERO, CELL_SIZE/3 - 2, Color.YELLOW)
+			draw_texture_rect(coin_texture, Rect2(-CELL_SIZE/2, -CELL_SIZE/2, CELL_SIZE, CELL_SIZE), false)
 		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 	
-	# DEBUG: Mostrar coordenadas
-	var debug_text = "Player Grid: (" + str(player_grid_pos.x) + "," + str(player_grid_pos.y) + ")"
+	# DEBUG: Mostrar coordenadas y progreso
+	var win_text = ""
+	match current_win_condition:
+		WinCondition.ALL_COINS:
+			win_text = "Monedas: %d/%d" % [coins_collected, total_coins]
+		WinCondition.TARGET_AMOUNT:
+			win_text = "Monedas: %d/%d" % [coins_collected, target_coin_amount]
+		WinCondition.SPECIFIC_ITEM:
+			win_text = "Ítem Misión: %s" % ("SÍ" if mission_item_collected else "NO")
+	
+	if _is_win_condition_met():
+		win_text += " [¡SALIDA ABIERTA!]"
+	
+	var debug_text = "Player: (" + str(player_grid_pos.x) + "," + str(player_grid_pos.y) + ") | " + win_text
 	draw_string(ThemeDB.fallback_font, Vector2(10, 20), debug_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
 	
 	# DEBUG: Borde de lógica para el jugador (grid)
@@ -331,18 +363,24 @@ func _try_move_player(direction: Vector2i):
 		TileType.ITEM_MISION, TileType.ITEM_RECOMPENSA:
 			if target_tile == TileType.ITEM_RECOMPENSA:
 				PlayerStats.add_gold(1)
+				coins_collected += 1
 				var key = str(new_pos.x) + "," + str(new_pos.y)
 				if falling_visuals.has(key):
 					falling_visuals.erase(key)
+			elif target_tile == TileType.ITEM_MISION:
+				mission_item_collected = true
 			grid[new_pos.y][new_pos.x] = TileType.EMPTY
 			player_grid_pos = new_pos
 			queue_redraw()
 		
 		TileType.SALIDA:
-			player_grid_pos = new_pos
-			queue_redraw()
-			print("¡Nivel completado!")
-			GameManager.return_to_overworld()
+			if _is_win_condition_met():
+				player_grid_pos = new_pos
+				queue_redraw()
+				print("¡Nivel completado!")
+				GameManager.return_to_overworld()
+			else:
+				print("No has cumplido la condición de victoria")
 
 func _try_push_rock(rock_pos: Vector2i, direction: Vector2i) -> bool:
 	# Solo se pueden empujar horizontalmente
@@ -393,6 +431,28 @@ func _try_dig_adjacent(direction: Vector2i):
 	if target_tile == TileType.TIERRA:
 		grid[target_pos.y][target_pos.x] = TileType.EMPTY
 		queue_redraw()
+	elif target_tile == TileType.ITEM_MISION or target_tile == TileType.ITEM_RECOMPENSA:
+		if target_tile == TileType.ITEM_RECOMPENSA:
+			PlayerStats.add_gold(1)
+			coins_collected += 1
+			var key = str(target_pos.x) + "," + str(target_pos.y)
+			if falling_visuals.has(key):
+				falling_visuals.erase(key)
+		elif target_tile == TileType.ITEM_MISION:
+			mission_item_collected = true
+		
+		grid[target_pos.y][target_pos.x] = TileType.EMPTY
+		queue_redraw()
+
+func _is_win_condition_met() -> bool:
+	match current_win_condition:
+		WinCondition.ALL_COINS:
+			return coins_collected >= total_coins
+		WinCondition.TARGET_AMOUNT:
+			return coins_collected >= target_coin_amount
+		WinCondition.SPECIFIC_ITEM:
+			return mission_item_collected
+	return false
 
 # Estado del juego
 var is_player_dead = false
@@ -407,7 +467,9 @@ func _update_gravity():
 	var processed_this_tick = {}
 	var next_falling_rocks = {}
 	
-	# Procesamos de abajo hacia arriba para que las piedras/objetos caigan naturalmente
+	# Procesar de abajo hacia arriba para que las piedras/objetos caigan naturalmente
+	var next_pending_falls = {}
+	
 	for y in range(grid_height - 2, -1, -1):
 		for x in range(grid_width):
 			var tile = grid[y][x]
@@ -415,8 +477,27 @@ func _update_gravity():
 				var key = str(x) + "," + str(y)
 				if processed_this_tick.has(key):
 					continue
-					
+				
 				var was_falling = falling_objects.has(key)
+				
+				# REGLA DE RETARDO (0.1s aprox 1 tick de 0.12s)
+				if not was_falling:
+					# Verificar si el objeto PODRÍA caer o deslizarse
+					var can_move = _check_if_can_fall_or_slide(x, y, tile)
+					if can_move:
+						if pending_falls.has(key):
+							var ticks = pending_falls[key] - 1
+							if ticks <= 0:
+								# Ya esperó suficiente, proceder a mover
+								pass 
+							else:
+								next_pending_falls[key] = ticks
+								continue
+						else:
+							# Empezar espera (1 tick de retraso)
+							next_pending_falls[key] = 1
+							continue
+				
 				var res = _try_fall_rock(x, y, was_falling, tile)
 				
 				if res.moved:
@@ -424,6 +505,7 @@ func _update_gravity():
 					# Marcar la NUEVA posición como procesada para este tick
 					var new_key = str(res.new_pos.x) + "," + str(res.new_pos.y)
 					processed_this_tick[new_key] = true
+					
 					# Transferir o actualizar visuales
 					var visual_data = falling_visuals.get(key, {
 						"visual_pos": grid_to_world(Vector2i(x,y)),
@@ -441,8 +523,34 @@ func _update_gravity():
 						next_falling_rocks[new_key] = true
 	
 	falling_objects = next_falling_rocks
+	pending_falls = next_pending_falls
 	if moved:
 		queue_redraw()
+
+func _check_if_can_fall_or_slide(x: int, y: int, _tile_type: int) -> bool:
+	# Regla 1: Caída directa
+	if y + 1 < grid_height:
+		var dest = Vector2i(x, y + 1)
+		if grid[dest.y][dest.x] == TileType.EMPTY and player_grid_pos != dest:
+			return true
+	
+	# Regla 2: Deslizamiento lateral (solo sobre otras piedras u objetos)
+	if y + 1 < grid_height and (grid[y+1][x] == TileType.PIEDRA or grid[y+1][x] == TileType.ITEM_RECOMPENSA):
+		# Probar izquierda
+		if x > 0:
+			var side = Vector2i(x - 1, y)
+			var dest = Vector2i(x - 1, y + 1)
+			if grid[side.y][side.x] == TileType.EMPTY and player_grid_pos != side:
+				if grid[dest.y][dest.x] == TileType.EMPTY and player_grid_pos != dest:
+					return true
+		# Probar derecha
+		if x < grid_width - 1:
+			var side = Vector2i(x + 1, y)
+			var dest = Vector2i(x + 1, y + 1)
+			if grid[side.y][side.x] == TileType.EMPTY and player_grid_pos != side:
+				if grid[dest.y][dest.x] == TileType.EMPTY and player_grid_pos != dest:
+					return true
+	return false
 
 func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictionary:
 	var result = {"moved": false, "new_pos": Vector2i(x, y), "rotated": false}
@@ -469,34 +577,31 @@ func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictio
 	# Regla 2: Deslizamiento lateral (solo sobre otras piedras u objetos)
 	if y + 1 < grid_height and (grid[y + 1][x] == TileType.PIEDRA or grid[y + 1][x] == TileType.ITEM_RECOMPENSA):
 		# Intentar izquierda
-		if x > 0 and grid[y][x - 1] == TileType.EMPTY and grid[y + 1][x - 1] == TileType.EMPTY:
+		if x > 0:
+			var side = Vector2i(x - 1, y)
 			var dest = Vector2i(x - 1, y + 1)
-			
-			# Verificar crush si el jugador está en el destino
-			if player_grid_pos == dest:
-				_player_crushed("DESLIZAMIENTO IZQUIERDA")
-			
-			grid[dest.y][dest.x] = tile_type
-			grid[y][x] = TileType.EMPTY
-			result.moved = true
-			result.new_pos = dest
-			result.rotated = true
-			return result
+			# Verificar que lateral y destino estén vacíos y sin jugador
+			if grid[side.y][side.x] == TileType.EMPTY and player_grid_pos != side:
+				if grid[dest.y][dest.x] == TileType.EMPTY and player_grid_pos != dest:
+					grid[dest.y][dest.x] = tile_type
+					grid[y][x] = TileType.EMPTY
+					result.moved = true
+					result.new_pos = dest
+					result.rotated = true
+					return result
 		
 		# Intentar derecha
-		if x < grid_width - 1 and grid[y][x + 1] == TileType.EMPTY and grid[y + 1][x + 1] == TileType.EMPTY:
+		if x < grid_width - 1:
+			var side = Vector2i(x + 1, y)
 			var dest = Vector2i(x + 1, y + 1)
-			
-			# Verificar crush si el jugador está en el destino
-			if player_grid_pos == dest:
-				_player_crushed("DESLIZAMIENTO DERECHA")
-				
-			grid[dest.y][dest.x] = tile_type
-			grid[y][x] = TileType.EMPTY
-			result.moved = true
-			result.new_pos = dest
-			result.rotated = true
-			return result
+			if grid[side.y][side.x] == TileType.EMPTY and player_grid_pos != side:
+				if grid[dest.y][dest.x] == TileType.EMPTY and player_grid_pos != dest:
+					grid[dest.y][dest.x] = tile_type
+					grid[y][x] = TileType.EMPTY
+					result.moved = true
+					result.new_pos = dest
+					result.rotated = true
+					return result
 			
 	return result
 

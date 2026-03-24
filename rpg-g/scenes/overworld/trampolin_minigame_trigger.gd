@@ -7,4 +7,4 @@ func action() -> void:
 	if player:
 		return_pos = player.global_position
 	
-	GameManager.load_minigame("res://scenes/minigames/mg_trampolin/mg_trampolin.tscn", return_pos)
+	GameManager.load_minigame("res://scenes/minigames/mg_trampolin/trampolin_config.tscn", return_pos)

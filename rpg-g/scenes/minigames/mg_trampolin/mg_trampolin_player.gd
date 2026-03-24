@@ -26,14 +26,17 @@ func _physics_process(delta: float):
 		# Solo rebotar si estamos cayendo y chocamos con la parte superior de algo
 		if velocity.y > 0 and collider.is_in_group("trampolin_platform"):
 			velocity.y = JUMP_FORCE
-			# Emitir un sonido o efecto aquí si se desea
+			if collider.is_in_group("special_platform"):
+				get_parent()._win_game("¡Trampolín especial encontrado!")
 	
-	# Wrap horizontal (Teletransporte al otro lado)
+	# Paredes sólidas (bloqueo)
 	var half_width = game_area_width / 2.0
 	if global_position.x > half_width:
-		global_position.x = -half_width
-	elif global_position.x < -half_width:
 		global_position.x = half_width
+		velocity.x = 0
+	elif global_position.x < -half_width:
+		global_position.x = -half_width
+		velocity.x = 0
 
 func die():
 	died.emit()

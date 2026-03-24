@@ -12,6 +12,12 @@ extends Control
 @onready var seed_input = $VBoxContainer/Seed/LineEdit
 @onready var start_button = $VBoxContainer/StartButton
 @onready var exit_button = $VBoxContainer/ExitButton
+@onready var num_monedas_slider = $VBoxContainer/NumMonedas/Slider
+@onready var num_monedas_label = $VBoxContainer/NumMonedas/Value
+@onready var win_condition_option = $VBoxContainer/WinCondition/OptionButton
+@onready var target_amount_container = $VBoxContainer/TargetAmount
+@onready var target_amount_slider = $VBoxContainer/TargetAmount/Slider
+@onready var target_amount_label = $VBoxContainer/TargetAmount/Value
 @onready var escala_slider = $VBoxContainer/Escala/Slider
 @onready var escala_label = $VBoxContainer/Escala/Value
 
@@ -21,6 +27,8 @@ var config = {
 	"probabilidad_piedra": 0.15,
 	"num_enemigos": 3,
 	"num_monedas": 10,
+	"win_condition": 0, # 0: Todas, 1: Cantidad, 2: Objeto
+	"target_amount": 5,
 	"tiempo_limite": 180,
 	"seed": -1,
 	"show_player_logic": false,
@@ -36,6 +44,11 @@ func _ready():
 	densidad_tierra_slider.value = config.densidad_tierra
 	prob_piedra_slider.value = config.probabilidad_piedra
 	num_enemigos_slider.value = config.num_enemigos
+	num_monedas_slider.value = config.num_monedas
+	win_condition_option.selected = config.win_condition
+	target_amount_slider.value = config.target_amount
+	_update_target_amount_visibility()
+	
 	tiempo_limite_slider.value = config.tiempo_limite
 	player_logic_check.button_pressed = config.show_player_logic
 	rock_logic_check.button_pressed = config.show_rock_logic
@@ -45,6 +58,10 @@ func _ready():
 	densidad_tierra_slider.value_changed.connect(_on_densidad_tierra_changed)
 	prob_piedra_slider.value_changed.connect(_on_prob_piedra_changed)
 	num_enemigos_slider.value_changed.connect(_on_num_enemigos_changed)
+	num_monedas_slider.value_changed.connect(_on_num_monedas_changed)
+	win_condition_option.item_selected.connect(_on_win_condition_selected)
+	target_amount_slider.value_changed.connect(_on_target_amount_changed)
+	
 	tiempo_limite_slider.value_changed.connect(_on_tiempo_limite_changed)
 	escala_slider.value_changed.connect(_on_escala_changed)
 	player_logic_check.toggled.connect(_on_player_logic_toggled)
@@ -59,6 +76,8 @@ func _update_labels():
 	densidad_tierra_label.text = "%.2f" % config.densidad_tierra
 	prob_piedra_label.text = "%.2f" % config.probabilidad_piedra
 	num_enemigos_label.text = str(config.num_enemigos)
+	num_monedas_label.text = str(config.num_monedas)
+	target_amount_label.text = str(config.target_amount)
 	tiempo_limite_label.text = "%d:%02d" % [config.tiempo_limite / 60, config.tiempo_limite % 60]
 	escala_label.text = "%.1fx" % config.escala
 
@@ -73,6 +92,27 @@ func _on_prob_piedra_changed(value: float):
 func _on_num_enemigos_changed(value: float):
 	config.num_enemigos = int(value)
 	_update_labels()
+
+func _on_num_monedas_changed(value: float):
+	config.num_monedas = int(value)
+	# Limitar el target amount al número de monedas
+	target_amount_slider.max_value = config.num_monedas
+	if config.target_amount > config.num_monedas:
+		config.target_amount = config.num_monedas
+		target_amount_slider.value = config.target_amount
+	_update_labels()
+
+func _on_win_condition_selected(index: int):
+	config.win_condition = index
+	_update_target_amount_visibility()
+	_update_labels()
+
+func _on_target_amount_changed(value: float):
+	config.target_amount = int(value)
+	_update_labels()
+
+func _update_target_amount_visibility():
+	target_amount_container.visible = (config.win_condition == 1) # Cantidad específica
 
 func _on_tiempo_limite_changed(value: float):
 	config.tiempo_limite = int(value)

@@ -153,6 +153,65 @@ value = 2.0
 layout_mode = 2
 custom_minimum_size = Vector2(50, 0)
 text = "2.0x"
+[node name="NumMonedas" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/NumMonedas"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Num. Monedas:"
+
+[node name="Slider" type="HSlider" parent="VBoxContainer/NumMonedas"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 5.0
+max_value = 50.0
+value = 10.0
+
+[node name="Value" type="Label" parent="VBoxContainer/NumMonedas"]
+layout_mode = 2
+custom_minimum_size = Vector2(50, 0)
+text = "10"
+
+[node name="WinCondition" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/WinCondition"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Condición de Victoria:"
+
+[node name="OptionButton" type="OptionButton" parent="VBoxContainer/WinCondition"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 3
+selected = 0
+popup/item_0/text = "Todas las monedas"
+popup/item_0/id = 0
+popup/item_1/text = "Cantidad de monedas"
+popup/item_1/id = 1
+popup/item_2/text = "Objeto específico"
+popup/item_2/id = 2
+
+[node name="TargetAmount" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/TargetAmount"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cant. Objetivo:"
+
+[node name="Slider" type="HSlider" parent="VBoxContainer/TargetAmount"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 20.0
+value = 5.0
+
+[node name="Value" type="Label" parent="VBoxContainer/TargetAmount"]
+layout_mode = 2
+custom_minimum_size = Vector2(50, 0)
+text = "5"
 
 [node name="StartButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
