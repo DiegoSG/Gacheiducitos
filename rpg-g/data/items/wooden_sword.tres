@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://laz4x5b0v6g2k"]
+
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/items/icons/wooden_sword.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = "wooden_sword"
+name = "Espada de Madera"
+rarity = 0
+value = 150
+icon = ExtResource("2_icon")
+description = "Una espada roma tallada en roble. Ideal para entrenamiento."
+type = 1
+stackable = false
+item_scale = Vector2(1, 1)
+collision_type = 0
+circle_radius = 16.0
+rectangle_size = Vector2(32, 32)
+capsule_height = 30.0
+capsule_radius = 10.0
+collision_offset = Vector2(0, 0)

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://g3aow6onnlpw"]
+
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://b4td4a1jhkkud" path="res://assets/items/icons/ancient_map.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = "ancient_map"
+name = "Mapa Antiguo"
+rarity = 2
+value = 100
+icon = ExtResource("2_icon")
+description = "Un mapa amarillento que muestra tierras inexploradas."
+type = 2
+stackable = false

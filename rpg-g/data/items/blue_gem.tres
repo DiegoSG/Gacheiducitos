@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dckjvvpcfqm7m"]
+
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c6nvax1vfp0d1" path="res://assets/items/icons/blue_potion.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = "blue_gem"
+name = "Gema Azul"
+rarity = 2
+value = 200
+icon = ExtResource("2_icon")
+description = "Brilla con una luz fría."
+type = 2
+collision_type = 1
+rectangle_size = Vector2(24, 24)
