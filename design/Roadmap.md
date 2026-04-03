@@ -21,3 +21,7 @@
 - [ ] Corrección de Errores
 - [ ] Pulido de UI/UX
 - [ ] Exportar Builds
+
+## Backlog y Mejoras (TODO)
+- [ ] **Controles de Minijuegos en Móviles:** Hacer un branch de pruebas en Android para definir bien cómo funcionarán los controles táctiles en los minijuegos (p.ej.: tocar los bordes vs arrastrar en el juego de Catcher).
+- [ ] **Integración Catcher con Inventario:** Conectar el minijuego "Catcher" con el sistema de inventario, para que los objetos agarrados en el juego se guarden en el inventario del jugador en el mapa principal.
