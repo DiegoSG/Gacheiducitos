@@ -11,16 +11,23 @@ config_version=5
 [application]
 
 config/name="RPG_G"
-run/main_scene="res://scenes/overworld/overworld.tscn"
+run/main_scene="res://src/overworld/levels/overworld.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
-GameManager="*res://scripts/managers/game_manager.gd"
+GameManager="*res://src/core/game_manager.gd"
 DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
-Inventory="*res://scripts/managers/inventory.gd"
-ItemDatabase="*res://scripts/managers/item_database.gd"
+Inventory="*res://src/core/inventory.gd"
+ItemDatabase="*res://src/core/item_database.gd"
+PlayerStats="*res://src/core/player_stats.gd"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/stretch/mode="canvas_items"
 
 [editor_plugins]
 
@@ -28,7 +35,7 @@ enabled=PackedStringArray("res://addons/dialogue_manager/plugin.cfg")
 
 [internationalization]
 
-locale/translations_pot_files=PackedStringArray("res://scenes/overworld/barnaby.dialogue")
+locale/translations_pot_files=PackedStringArray("res://src/overworld/npcs/barnaby.dialogue", "res://src/overworld/interactables/chest.dialogue")
 
 [physics]
 

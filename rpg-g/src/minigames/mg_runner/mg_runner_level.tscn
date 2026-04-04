@@ -1,0 +1,79 @@
+[gd_scene format=3 uid="uid://dt1pfpcdopwke"]
+
+[ext_resource type="Script" uid="uid://ppfnyfioegw1" path="res://src/minigames/mg_runner/mg_runner_level.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/minigames/mg_runner/mg_runner_player.tscn" id="2_player"]
+
+[node name="RunnerLevel" type="Node2D" unique_id=2031860998]
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1184842222]
+offset_left = -1000.0
+offset_top = -1500.0
+offset_right = 1000.0
+offset_bottom = 1500.0
+color = Color(0.1, 0.1, 0.1, 1)
+
+[node name="Lanes" type="Node2D" parent="." unique_id=2082478245]
+
+[node name="LaneLeft" type="Node2D" parent="Lanes" unique_id=1020590810]
+position = Vector2(-160, 0)
+
+[node name="Bg" type="ColorRect" parent="Lanes/LaneLeft" unique_id=948114576]
+offset_left = -64.0
+offset_top = -1500.0
+offset_right = 64.0
+offset_bottom = 1500.0
+color = Color(0.2, 0.2, 0.2, 1)
+
+[node name="LaneCenter" type="Node2D" parent="Lanes" unique_id=1501662238]
+
+[node name="Bg" type="ColorRect" parent="Lanes/LaneCenter" unique_id=2061997466]
+offset_left = -64.0
+offset_top = -1500.0
+offset_right = 64.0
+offset_bottom = 1500.0
+color = Color(0.25, 0.25, 0.25, 1)
+
+[node name="LaneRight" type="Node2D" parent="Lanes" unique_id=711083440]
+position = Vector2(160, 0)
+
+[node name="Bg" type="ColorRect" parent="Lanes/LaneRight" unique_id=1047769674]
+offset_left = -64.0
+offset_top = -1500.0
+offset_right = 64.0
+offset_bottom = 1500.0
+color = Color(0.2, 0.2, 0.2, 1)
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=277832943]
+zoom = Vector2(1.2, 1.2)
+
+[node name="RunnerPlayer" parent="." unique_id=1429984458 instance=ExtResource("2_player")]
+position = Vector2(0, 400)
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=651710720]
+
+[node name="DistanceLabel" type="Label" parent="UI" unique_id=365249360]
+offset_left = 32.0
+offset_top = 32.0
+offset_right = 300.0
+offset_bottom = 72.0
+theme_override_font_sizes/font_size = 24
+text = "Distancia: 0 / 1000 m"
+
+[node name="ResultLabel" type="Label" parent="UI" unique_id=81878066]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -50.0
+offset_right = 200.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 48
+text = "Resultado"
+horizontal_alignment = 1
+vertical_alignment = 1

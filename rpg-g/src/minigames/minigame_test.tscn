@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://bvkv6s2sxc8d2"]
+
+[ext_resource type="Script" uid="uid://21vl5knqouk" path="res://src/minigames/minigame_test.gd" id="1_script"]
+
+[node name="MinigameTest" type="Node2D" unique_id=1518590675]
+script = ExtResource("1_script")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1618354308]
+offset_right = 640.0
+offset_bottom = 360.0
+color = Color(0.1, 0.1, 0.1, 1)
+
+[node name="Label" type="Label" parent="." unique_id=883961089]
+offset_left = 200.0
+offset_top = 150.0
+offset_right = 440.0
+offset_bottom = 176.0
+text = "MINIGAME MODE: Press ESC to Return"

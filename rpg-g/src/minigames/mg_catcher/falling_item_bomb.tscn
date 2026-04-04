@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://cdgd3ob28bhmb"]
+
+[ext_resource type="Script" uid="uid://7j3nrxmw31qd" path="res://src/minigames/mg_catcher/falling_item_base.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://ewc4cs2gbaqd" path="res://assets/items/icons/red_potion.png" id="2_06d37"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_b4ybl"]
+radius = 20.0
+
+[node name="FallingItemBomb" type="Area2D" unique_id=310645070]
+script = ExtResource("1")
+item_type = 1
+fall_speed_multiplier = 1.5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1596883818]
+shape = SubResource("CircleShape2D_b4ybl")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1536415582]
+scale = Vector2(2, 2)
+texture = ExtResource("2_06d37")

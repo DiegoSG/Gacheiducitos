@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://b70y06n21b8mm"
+path="res://.godot/imported/chest.dialogue-b728cd99574f5524a08217cb8455f41d.tres"
+
+[deps]
+
+source_file="res://src/overworld/interactables/chest.dialogue"
+dest_files=["res://.godot/imported/chest.dialogue-b728cd99574f5524a08217cb8455f41d.tres"]
+
+[params]
+
+defaults=true
