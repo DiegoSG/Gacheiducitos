@@ -1,7 +1,7 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3 uid="uid://crllyay0snx0b"]
 
-[ext_resource type="Script" path="res://src/shared/entities/enemies/generic_enemy.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://icon.svg" id="2_icon"]
+[ext_resource type="Script" uid="uid://d166t8ww7bo3n" path="res://src/shared/entities/enemies/generic_enemy.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dk41wealbqck6" path="res://icon.svg" id="2_icon"]
 [ext_resource type="PackedScene" path="res://src/shared/components/hitbox_component.tscn" id="3_hitbox"]
 [ext_resource type="PackedScene" path="res://src/shared/components/hurtbox_component.tscn" id="4_hurtbox"]
 
@@ -11,38 +11,35 @@ size = Vector2(16, 16)
 [sub_resource type="CircleShape2D" id="CircleShape2D_detection"]
 radius = 120.0
 
-[node name="GenericEnemy" type="CharacterBody2D"]
-collision_layer = 4
-collision_mask = 1
+[node name="GenericEnemy" type="CharacterBody2D" unique_id=1981586223]
+collision_layer = 7
+collision_mask = 7
 script = ExtResource("1_script")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1628491093]
 modulate = Color(1, 0, 0, 1)
-texture = ExtResource("2_icon")
 scale = Vector2(0.25, 0.25)
+texture = ExtResource("2_icon")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=689463546]
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="HitboxComponent" parent="." instance=ExtResource("3_hitbox")]
-collision_layer = 0
+[node name="HitboxComponent" parent="." unique_id=831137513 instance=ExtResource("3_hitbox")]
 collision_mask = 4
-damage = 1
 knockback_force = 400.0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HitboxComponent"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitboxComponent" unique_id=350662157]
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="HurtboxComponent" parent="." instance=ExtResource("4_hurtbox")]
+[node name="HurtboxComponent" parent="." unique_id=356374227 instance=ExtResource("4_hurtbox")]
 collision_layer = 8
-collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtboxComponent"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtboxComponent" unique_id=260307841]
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="DetectionZone" type="Area2D" parent="."]
+[node name="DetectionZone" type="Area2D" parent="." unique_id=298561413]
 collision_layer = 0
 collision_mask = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionZone"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionZone" unique_id=457416425]
 shape = SubResource("CircleShape2D_detection")

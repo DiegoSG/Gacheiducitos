@@ -55,8 +55,8 @@ func give_loot() -> void:
 				item_names.append(item.name)
 	
 	var message = "Obtuviste:\n"
-	for name in item_names:
-		message += "- " + name + "\n"
+	for item_name in item_names:
+		message += "- " + item_name + "\n"
 	
 	show_loot_dialogue(message.strip_edges())
 	has_been_looted = true

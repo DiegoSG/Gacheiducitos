@@ -22,6 +22,7 @@ DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 Inventory="*res://src/core/inventory.gd"
 ItemDatabase="*res://src/core/item_database.gd"
 PlayerStats="*res://src/core/player_stats.gd"
+NarrativeManager="*res://src/core/narrative_manager.gd"
 
 [display]
 

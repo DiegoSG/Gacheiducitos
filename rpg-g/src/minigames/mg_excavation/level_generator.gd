@@ -60,7 +60,6 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 	
 	# Paso 6: Colocar monedas (ITEM_RECOMPENSA = 6)
 	var num_monedas = config.get("num_monedas", 10)
-	var coins_placed = 0
 	var empty_or_dirt_spaces = []
 	for y in range(3, height - 3):
 		for x in range(3, width - 3):
