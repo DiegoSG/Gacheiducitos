@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/overworld/components/world_boundary_manager.gd" id="1_bounds"]
+
+[node name="WorldBoundaryManager" type="Node2D"]
+script = ExtResource("1_bounds")

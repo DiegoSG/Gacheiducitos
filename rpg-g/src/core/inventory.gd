@@ -29,4 +29,4 @@ func remove_item(item_id: String, amount: int = 1) -> bool:
 	return true
 
 func get_items() -> Dictionary:
-	return items
+	return items.duplicate()

@@ -78,18 +78,29 @@ func _update_collision_shape() -> void:
 		
 	match _collision_type:
 		ItemData.ShapeType.CIRCLE:
-			var shape = CircleShape2D.new()
-			shape.radius = _circle_radius
-			col_shape_node.shape = shape
+			if col_shape_node.shape is CircleShape2D:
+				(col_shape_node.shape as CircleShape2D).radius = _circle_radius
+			else:
+				var shape = CircleShape2D.new()
+				shape.radius = _circle_radius
+				col_shape_node.shape = shape
 		ItemData.ShapeType.RECTANGLE:
-			var shape = RectangleShape2D.new()
-			shape.size = _rectangle_size
-			col_shape_node.shape = shape
+			if col_shape_node.shape is RectangleShape2D:
+				(col_shape_node.shape as RectangleShape2D).size = _rectangle_size
+			else:
+				var shape = RectangleShape2D.new()
+				shape.size = _rectangle_size
+				col_shape_node.shape = shape
 		ItemData.ShapeType.CAPSULE:
-			var shape = CapsuleShape2D.new()
-			shape.radius = _capsule_radius
-			shape.height = _capsule_height
-			col_shape_node.shape = shape
+			if col_shape_node.shape is CapsuleShape2D:
+				var cap: CapsuleShape2D = col_shape_node.shape as CapsuleShape2D
+				cap.radius = _capsule_radius
+				cap.height = _capsule_height
+			else:
+				var shape = CapsuleShape2D.new()
+				shape.radius = _capsule_radius
+				shape.height = _capsule_height
+				col_shape_node.shape = shape
 
 func _on_body_entered(body: Node2D) -> void:
 	if Engine.is_editor_hint(): return
@@ -99,8 +110,6 @@ func _on_body_entered(body: Node2D) -> void:
 		if item_data.id == "gold_coins":
 			PlayerStats.add_gold(item_data.value)
 		else:
-			var inventory = get_node_or_null("/root/Inventory")
-			if inventory:
-				inventory.add_item(item_data.id)
+			Inventory.add_item(item_data.id)
 		
 		queue_free()

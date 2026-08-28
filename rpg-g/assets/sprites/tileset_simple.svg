@@ -1,12 +1,22 @@
-<svg width="64" height="32" xmlns="http://www.w3.org/2000/svg">
-  <!-- Grass Tile -->
+<svg width="128" height="32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Grass Tile (0,0) -->
   <rect x="0" y="0" width="32" height="32" fill="#2ecc71" stroke="#27ae60" stroke-width="2"/>
   <circle cx="8" cy="8" r="2" fill="#27ae60"/>
   <circle cx="24" cy="24" r="2" fill="#27ae60"/>
   
-  <!-- Wall Tile -->
+  <!-- Wall/House Tile (1,0) -->
   <rect x="32" y="0" width="32" height="32" fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
   <line x1="32" y1="16" x2="64" y2="16" stroke="#7f8c8d" stroke-width="2"/>
   <line x1="48" y1="16" x2="48" y2="32" stroke="#7f8c8d" stroke-width="2"/>
-  <line x1="48" y1="0" x2="48" y2="8" stroke="#7f8c8d" stroke-width="2"/>
+  <line x1="48" y1="0" x2="48" y2="16" stroke="#7f8c8d" stroke-width="2"/>
+
+  <!-- Water Tile (2,0) -->
+  <rect x="64" y="0" width="32" height="32" fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+  <path d="M 68 12 Q 72 8 76 12 Q 80 16 84 12 Q 88 8 92 12" stroke="#2980b9" fill="none" stroke-width="2"/>
+  <path d="M 68 22 Q 72 18 76 22 Q 80 26 84 22 Q 88 18 92 22" stroke="#2980b9" fill="none" stroke-width="2"/>
+
+  <!-- Stone Tile (3,0) -->
+  <rect x="96" y="0" width="32" height="32" fill="#7f8c8d" stroke="#2c3e50" stroke-width="2"/>
+  <circle cx="104" cy="10" r="4" fill="#2c3e50" opacity="0.3"/>
+  <circle cx="120" cy="22" r="5" fill="#2c3e50" opacity="0.3"/>
 </svg>

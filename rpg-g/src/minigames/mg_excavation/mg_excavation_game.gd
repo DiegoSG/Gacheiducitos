@@ -232,8 +232,8 @@ func _draw():
 				draw_rect(Rect2(pos, Vector2(CELL_SIZE, CELL_SIZE)), Color(0, 0, 0, 0.2), false, 1)
 	
 	# Dibujar jugador usando posición visual
-	draw_rect(Rect2(visual_player_pos - Vector2(CELL_SIZE/2, CELL_SIZE/2), Vector2(CELL_SIZE, CELL_SIZE)), Color.YELLOW)
-	draw_circle(visual_player_pos, CELL_SIZE/3, Color.ORANGE)
+	draw_rect(Rect2(visual_player_pos - Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0), Vector2(CELL_SIZE, CELL_SIZE)), Color.YELLOW)
+	draw_circle(visual_player_pos, CELL_SIZE/3.0, Color.ORANGE)
 	
 	# Dibujar piedras y objetos usando posición visual y rotación
 	for key in falling_visuals:
@@ -243,11 +243,11 @@ func _draw():
 		
 		draw_set_transform(pos, rot, Vector2.ONE)
 		if data.type == TileType.PIEDRA:
-			draw_rect(Rect2(-CELL_SIZE/2 + 1, -CELL_SIZE/2 + 1, CELL_SIZE - 2, CELL_SIZE - 2), Color(0.5, 0.5, 0.5))
+			draw_rect(Rect2(-CELL_SIZE/2.0 + 1, -CELL_SIZE/2.0 + 1, CELL_SIZE - 2, CELL_SIZE - 2), Color(0.5, 0.5, 0.5))
 			# Detalle para ver la rotación
-			draw_rect(Rect2(-CELL_SIZE/2 + 3, -CELL_SIZE/2 + 3, 4, 4), Color(0.7, 0.7, 0.7)) 
+			draw_rect(Rect2(-CELL_SIZE/2.0 + 3, -CELL_SIZE/2.0 + 3, 4, 4), Color(0.7, 0.7, 0.7)) 
 		elif data.type == TileType.ITEM_RECOMPENSA:
-			draw_texture_rect(coin_texture, Rect2(-CELL_SIZE/2, -CELL_SIZE/2, CELL_SIZE, CELL_SIZE), false)
+			draw_texture_rect(coin_texture, Rect2(-CELL_SIZE/2.0, -CELL_SIZE/2.0, CELL_SIZE, CELL_SIZE), false)
 		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 	
 	# DEBUG: Mostrar coordenadas y progreso
@@ -268,7 +268,7 @@ func _draw():
 	
 	# DEBUG: Borde de lógica para el jugador (grid)
 	if config.get("show_player_logic", false):
-		var player_logic_pos = grid_to_world(player_grid_pos) - Vector2(CELL_SIZE/2, CELL_SIZE/2)
+		var player_logic_pos = grid_to_world(player_grid_pos) - Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0)
 		draw_rect(Rect2(player_logic_pos, Vector2(CELL_SIZE, CELL_SIZE)), Color.RED, false, 1)
 
 	# DEBUG: Borde de lógica para piedras (escaneando el grid real)
@@ -276,7 +276,7 @@ func _draw():
 		for y in range(grid_height):
 			for x in range(grid_width):
 				if grid[y][x] == TileType.PIEDRA:
-					var rock_logic_pos = grid_to_world(Vector2i(x, y)) - Vector2(CELL_SIZE/2, CELL_SIZE/2)
+					var rock_logic_pos = grid_to_world(Vector2i(x, y)) - Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0)
 					draw_rect(Rect2(rock_logic_pos, Vector2(CELL_SIZE, CELL_SIZE)), Color.BLUE, false, 1)
 
 func _get_tile_color(tile: TileType) -> Color:
@@ -300,8 +300,8 @@ func _get_tile_color(tile: TileType) -> Color:
 
 func grid_to_world(grid_pos: Vector2i) -> Vector2:
 	return Vector2(
-		grid_pos.x * CELL_SIZE + CELL_SIZE / 2,
-		grid_pos.y * CELL_SIZE + CELL_SIZE / 2
+		grid_pos.x * CELL_SIZE + CELL_SIZE / 2.0,
+		grid_pos.y * CELL_SIZE + CELL_SIZE / 2.0
 	)
 
 func world_to_grid(world_pos: Vector2) -> Vector2i:

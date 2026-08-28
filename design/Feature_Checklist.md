@@ -2,11 +2,28 @@
 
 Este documento contiene la lista de funcionalidades y los puntos de control (checks) que deben cumplirse antes de dar una tarea por terminada.
 
-## 🟢 Core Engine (Completado/En proceso)
+## 🟢 Core Engine & Overworld (Completado/En proceso)
 - [x] Movimiento 8 direcciones (Referencia: `player.gd`)
-- [x] Cámara sin límites (Referencia: `overworld.tscn`)
+- [x] Cámara con límites por nivel y sincronización dinámica (Referencia: `bounded_camera.gd`)
+- [x] Colliders dinámicos y visualización en editor de bordes de nivel (Referencia: `world_boundary_manager.gd`)
+- [x] Manager de transiciones entre niveles con Fade, ArrivalSpawnPoints y LevelPortals (Referencia: `game_manager.gd` / `level_portal.gd` / `arrival_spawn_point.gd`)
+- [x] Estandarización de Grilla 60x60 px (`tileset_60x60.png`, `core_tileset.tres`)
+- [x] Plantilla de prototipado de niveles (`prototype_template.tscn`)
+- [x] Auditoría integral: corrección de fugas de memoria, crashes en corrutinas, tipado estricto y optimización de código
+- [ ] TODO: Animación de salida del portal (el personaje se desplaza desde el portal hacia el punto de llegada / arrival point)
 - [x] Sistema de interacción base (Referencia: `actionable.gd`)
-- [x] Manager de transiciones (Referencia: `game_manager.gd`)
+
+---
+
+## 📌 Registro de Checkpoints / Milestones
+
+### 🔖 Checkpoint — 28 de Agosto, 2026: *Overworld Core, Portales, Grilla 60x60 y Auditoría Integral*
+- **Sistemas completados y auditados:**
+  1. **Sistema de Portales y Spawns:** `LevelPortal` (salida/llegada) y `ArrivalSpawnPoint` con IDs únicos, validación de duplicados y atajo de debug F3.
+  2. **WorldBoundaryManager & BoundedCamera:** Edición visual de límites en el viewport del editor con `@tool`, redibujado de bordes, sincronización por señal con la cámara y generación de colisiones sólidas en tiempo de ejecución.
+  3. **Grilla Estándar:** Tileset nativo de 60x60 px (`tileset_60x60.png`) con colisiones configuradas en `core_tileset.tres`.
+  4. **Auditoría y Estabilidad:** 34 correcciones aplicadas (fugas de memoria eliminadas, `queue_free()`, protección de reentradas, desconexión de señales huérfanas, tipado fuerte estricto).
+  5. **Batería de Pruebas Automatizadas:** `test_portals_runner.gd`, `test_portals_transition.gd` y `test_camera_bounds_sync.gd` ejecutadas y pasando al 100%.
 
 ## 🟡 Feature: Minijuego A (Excavación)
 - [x] Generador Procedimental (Autómatas Celulares) (Ref: `Minijuego_Supaplex.md`)
