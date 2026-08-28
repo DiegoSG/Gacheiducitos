@@ -3,7 +3,50 @@ extends Area2D
 class_name LevelPortal
 
 signal portal_triggered(target_level_path: String, target_arrival_id: String)
+signal opened()
+signal locked()
+signal unlocked()
 
+enum Mode {
+	PORTAL, ## Se activa automáticamente al pisar el área
+	DOOR    ## Se activa interactuando con el botón de acción (E / Espacio / A)
+}
+
+@export_group("Tipo de Acceso")
+## Modo de funcionamiento: PORTAL (al contacto) o DOOR (por interacción)
+@export var mode: Mode = Mode.PORTAL:
+	set(value):
+		mode = value
+		_update_collision_layers()
+		_update_visuals()
+
+## Si está activo o deshabilitado por completo (ej. controlado por eventos)
+@export var is_active: bool = true:
+	set(value):
+		is_active = value
+		_update_visuals()
+
+@export_group("Cerradura y Llave")
+## Si la puerta está bloqueada con candado/llave
+@export var is_locked: bool = false:
+	set(value):
+		is_locked = value
+		_update_visuals()
+
+## ID del ítem requerido en el Inventario para abrir (ej. 'rusty_key'). Si está vacío, se abre sin ítem.
+@export var required_key_id: String = ""
+
+## Si consume la llave del inventario al abrirse
+@export var consume_key: bool = false
+
+## Mensaje emergente o texto de diálogo cuando está bloqueada
+@export var locked_message: String = "Está cerrada con llave."
+
+## Recurso de diálogo opcional para el bloqueo
+@export var locked_dialogue_resource: Resource
+@export var locked_dialogue_title: String = "locked"
+
+@export_group("Configuración de Destino")
 @export_file("*.tscn") var target_level_path: String = "":
 	set(value):
 		target_level_path = value
@@ -23,6 +66,26 @@ signal portal_triggered(target_level_path: String, target_arrival_id: String)
 		_update_visuals()
 		update_configuration_warnings()
 
+@export_group("Texturas / Visuales")
+## Textura cuando es un portal activo (abierto/vórtice)
+@export var portal_active_texture: Texture2D = preload("res://assets/sprites/door_portal_open.svg"):
+	set(value):
+		portal_active_texture = value
+		_update_visuals()
+
+## Textura cuando es una puerta desbloqueada/normal
+@export var door_unlocked_texture: Texture2D = preload("res://assets/sprites/door_closed.svg"):
+	set(value):
+		door_unlocked_texture = value
+		_update_visuals()
+
+## Textura cuando está bloqueada o desactivada (candado / rejas)
+@export var locked_texture: Texture2D = preload("res://assets/sprites/door_locked.svg"):
+	set(value):
+		locked_texture = value
+		_update_visuals()
+
+@onready var sprite: Sprite2D = $DoorSprite if has_node("DoorSprite") else null
 @onready var exit_label: Label = $ExitIdLabel if has_node("ExitIdLabel") else null
 @onready var spawn_point_node: Marker2D = $SpawnPoint if has_node("SpawnPoint") else null
 @onready var arrival_label: Label = $SpawnPoint/ArrivalIdLabel if has_node("SpawnPoint/ArrivalIdLabel") else null
@@ -32,10 +95,26 @@ static var debug_visuals_visible: bool = false
 
 func _ready() -> void:
 	add_to_group("arrival_points")
+	_update_collision_layers()
 	if not Engine.is_editor_hint():
-		body_entered.connect(_on_body_entered)
+		if not body_entered.is_connected(_on_body_entered):
+			body_entered.connect(_on_body_entered)
 		_set_debug_visibility(debug_visuals_visible)
 	_update_visuals()
+
+func _update_collision_layers() -> void:
+	# Layer 2 es Player (collision_mask = 2 para detectar entrada física)
+	# Layer 5 (16) es Actionable (collision_layer = 16 para que ActionableFinder del player lo detecte)
+	if mode == Mode.DOOR:
+		collision_layer = 16 # Actionable layer
+		collision_mask = 2   # Detecta al jugador
+		if has_node("SolidBody/SolidCollision"):
+			$SolidBody/SolidCollision.set_deferred("disabled", false)
+	else:
+		collision_layer = 0
+		collision_mask = 2   # Solo detecta al jugador por toque
+		if has_node("SolidBody/SolidCollision"):
+			$SolidBody/SolidCollision.set_deferred("disabled", true)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if Engine.is_editor_hint():
@@ -59,7 +138,17 @@ func _set_debug_visibility(p_visible: bool) -> void:
 
 func _update_visuals() -> void:
 	if not is_node_ready():
-		await ready
+		return
+		
+	if has_node("DoorSprite"):
+		var door_sprite: Sprite2D = $DoorSprite
+		if not is_active or is_locked:
+			door_sprite.texture = locked_texture
+		elif mode == Mode.PORTAL:
+			door_sprite.texture = portal_active_texture
+		else:
+			door_sprite.texture = door_unlocked_texture
+
 	if has_node("ExitIdLabel"):
 		$ExitIdLabel.text = exit_id
 		if Engine.is_editor_hint():
@@ -69,16 +158,87 @@ func _update_visuals() -> void:
 		if Engine.is_editor_hint():
 			$SpawnPoint/ArrivalIdLabel.visible = true
 
+## Invocado por ActionableFinder del Player al pulsar botón de interacción (E / ui_accept)
+func action() -> void:
+	if mode != Mode.DOOR or _is_triggered:
+		return
+	_attempt_traverse()
+
+## Invocado por colisión al entrar
 func _on_body_entered(body: Node2D) -> void:
-	if _is_triggered or Engine.is_editor_hint():
+	if mode != Mode.PORTAL or _is_triggered or Engine.is_editor_hint():
 		return
 		
 	if body.name == "Player" or body.is_in_group("player"):
-		_is_triggered = true
-		portal_triggered.emit(target_level_path, exit_id)
-		var game_manager = get_node_or_null("/root/GameManager")
-		if game_manager and game_manager.has_method("change_level"):
-			game_manager.change_level(target_level_path, exit_id)
+		_attempt_traverse()
+
+func _get_inventory_node() -> Node:
+	if Engine.has_singleton("Inventory"):
+		return Engine.get_singleton("Inventory")
+	var node = get_node_or_null("/root/Inventory")
+	if node:
+		return node
+	if is_inside_tree() and get_tree() and get_tree().root:
+		for child in get_tree().root.get_children():
+			if child.name == "Inventory" or child.get_script() == preload("res://src/core/inventory.gd"):
+				return child
+	return null
+
+func _attempt_traverse() -> void:
+	if not is_active:
+		_show_locked_feedback("La puerta está atrancada y no responde.")
+		return
+		
+	if is_locked:
+		if not required_key_id.is_empty():
+			var inventory = _get_inventory_node()
+			var has_key: bool = false
+			if inventory and inventory.has_method("get_items"):
+				has_key = inventory.get_items().has(required_key_id)
+			
+			if has_key:
+				if consume_key and inventory:
+					inventory.remove_item(required_key_id, 1)
+				is_locked = false
+				unlocked.emit()
+				print("[LevelPortal] Puerta desbloqueada con llave '%s'" % required_key_id)
+			else:
+				_show_locked_feedback(locked_message)
+				return
+		else:
+			_show_locked_feedback(locked_message)
+			return
+
+	# Puerta/Portal abierto y listo para viajar
+	_trigger_transition()
+
+func _trigger_transition() -> void:
+	_is_triggered = true
+	portal_triggered.emit(target_level_path, exit_id)
+	opened.emit()
+	var game_manager = get_node_or_null("/root/GameManager")
+	if game_manager and game_manager.has_method("change_level"):
+		game_manager.change_level(target_level_path, exit_id)
+
+func _show_locked_feedback(msg: String) -> void:
+	locked.emit()
+	if locked_dialogue_resource and Engine.has_singleton("DialogueManager"):
+		var dm = Engine.get_singleton("DialogueManager")
+		dm.show_dialogue_balloon(locked_dialogue_resource, locked_dialogue_title)
+	else:
+		print("[LevelPortal Bloqueado]: ", msg)
+
+## Métodos públicos para ser activados por eventos / interruptores
+func unlock() -> void:
+	is_locked = false
+	unlocked.emit()
+
+func lock() -> void:
+	is_locked = true
+	locked.emit()
+
+func set_active_state(active: bool) -> void:
+	is_active = active
 
 func get_spawn_position() -> Vector2:
 	if has_node("SpawnPoint"):

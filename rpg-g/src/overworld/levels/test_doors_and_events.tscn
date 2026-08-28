@@ -1,0 +1,127 @@
+[gd_scene format=3 uid="uid://b5k8qmfe7l4no"]
+
+[ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="1_bounds"]
+[ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="2_tileset"]
+[ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="3_player"]
+[ext_resource type="Script" uid="uid://63w406wwqc28" path="res://src/overworld/components/bounded_camera.gd" id="4_camera"]
+[ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="5_portal"]
+[ext_resource type="PackedScene" path="res://src/overworld/components/arrival_spawn_point.tscn" id="6_arrival"]
+[ext_resource type="PackedScene" uid="uid://tkrjy8dnqifu" path="res://src/overworld/interactables/chest.tscn" id="7_chest"]
+[ext_resource type="Resource" path="res://data/items/rusty_key.tres" id="8_key"]
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="8_oe5b8"]
+[ext_resource type="PackedScene" path="res://src/overworld/interactables/switch_interactable.tscn" id="9_switch"]
+[ext_resource type="Script" uid="uid://def08qexnff0u" path="res://src/core/pipeline/actions/door_action.gd" id="10_door_act"]
+[ext_resource type="Script" uid="uid://f73vy602pjfk" path="res://src/core/pipeline/action_resource.gd" id="11_b3v6g"]
+[ext_resource type="Script" uid="uid://cefwl0xrie4h6" path="res://src/core/pipeline/actions/destroy_node_action.gd" id="11_destroy_act"]
+[ext_resource type="PackedScene" uid="uid://crllyay0snx0b" path="res://src/shared/entities/enemies/generic_enemy.tscn" id="14_qmlej"]
+[ext_resource type="Script" uid="uid://cpq6fgh5c72gh" path="res://src/core/pipeline/actions/spawn_action.gd" id="15_h8l85"]
+
+[sub_resource type="Resource" id="Resource_unlock_door"]
+script = ExtResource("10_door_act")
+target_door_path = NodePath("../DoorGate")
+
+[sub_resource type="Resource" id="Resource_destroy_barrier"]
+script = ExtResource("11_destroy_act")
+target_node_path = NodePath("../RockBarrier")
+fade_duration = 0.3
+
+[sub_resource type="Resource" id="Resource_iq1pd"]
+script = ExtResource("15_h8l85")
+scene_to_spawn = ExtResource("14_qmlej")
+spawn_target_node = NodePath("../Node2D")
+metadata/_custom_type_script = "uid://cpq6fgh5c72gh"
+
+[node name="TestDoorsAndEvents" type="Node2D" unique_id=1437088498]
+
+[node name="WorldBoundaryManager" type="Node2D" parent="." unique_id=2141496497]
+script = ExtResource("1_bounds")
+
+[node name="Environment" type="Node2D" parent="." unique_id=1300910147]
+
+[node name="GroundLayer" type="TileMapLayer" parent="Environment" unique_id=1218470881]
+tile_set = ExtResource("2_tileset")
+
+[node name="DetailLayer" type="TileMapLayer" parent="Environment" unique_id=1288520504]
+tile_set = ExtResource("2_tileset")
+
+[node name="PropsLayer" type="TileMapLayer" parent="Environment" unique_id=1969178444]
+y_sort_enabled = true
+tile_set = ExtResource("2_tileset")
+
+[node name="UI_Hints" type="Control" parent="." unique_id=715747582]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="Label" type="Label" parent="UI_Hints" unique_id=2001563784]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 80.0
+offset_right = 1100.0
+offset_bottom = 220.0
+theme_override_font_sizes/font_size = 22
+text = "DEMO DE PUERTAS, CANDADOS Y EVENTOS (F3 para ver IDs de Debug)
+1. Portal Izquierdo: Portal clásico instantáneo (abierto al contacto).
+2. Puerta Central: Cerrada con candado (requiere 'Llave Oxidada' del cofre).
+3. Palanca Derecha: Abre la Reja Desactivada y destruye la barrera de rocas."
+
+[node name="Player" parent="." unique_id=958422520 instance=ExtResource("3_player")]
+position = Vector2(629, 652)
+
+[node name="Camera2D" type="Camera2D" parent="Player" unique_id=893598926 node_paths=PackedStringArray("target_node")]
+limit_left = 0
+limit_top = 0
+limit_right = 3840
+limit_bottom = 2160
+position_smoothing_enabled = true
+script = ExtResource("4_camera")
+target_node = NodePath("..")
+
+[node name="SpawnStart" parent="." unique_id=174091445 instance=ExtResource("6_arrival")]
+position = Vector2(600, 600)
+arrival_id = "start"
+
+[node name="InstantPortal" parent="." unique_id=766410627 instance=ExtResource("5_portal")]
+position = Vector2(250, 400)
+target_level_path = "res://src/overworld/levels/test_portal_room_a.tscn"
+exit_id = "start"
+arrival_id = "demo_portal_1"
+
+[node name="LockedDoor" parent="." unique_id=1902837061 instance=ExtResource("5_portal")]
+position = Vector2(600, 400)
+collision_layer = 16
+mode = 1
+is_locked = true
+required_key_id = "rusty_key"
+consume_key = true
+locked_message = "Esta puerta de hierro está cerrada con candado. Necesitas una Llave Oxidada."
+target_level_path = "res://src/overworld/levels/test_level_02.tscn"
+exit_id = "from_level_1"
+arrival_id = "demo_locked_door"
+
+[node name="DoorGate" parent="." unique_id=939592762 instance=ExtResource("5_portal")]
+position = Vector2(950, 400)
+collision_layer = 16
+mode = 1
+is_locked = true
+target_level_path = "res://src/overworld/levels/test_level_01.tscn"
+exit_id = "start"
+arrival_id = "demo_gate"
+
+[node name="ChestWithKey" parent="." unique_id=134666208 instance=ExtResource("7_chest")]
+position = Vector2(400, 600)
+loot_items = Array[ExtResource("8_oe5b8")]([ExtResource("8_key")])
+chest_id = "chest_rusty_key"
+
+[node name="LeverSwitch" parent="." unique_id=1377378891 instance=ExtResource("9_switch")]
+position = Vector2(1150, 600)
+trigger_actions = Array[ExtResource("11_b3v6g")]([SubResource("Resource_unlock_door"), SubResource("Resource_destroy_barrier"), SubResource("Resource_iq1pd")])
+
+[node name="RockBarrier" type="ColorRect" parent="." unique_id=2070944915]
+offset_left = 900.0
+offset_top = 480.0
+offset_right = 1000.0
+offset_bottom = 540.0
+color = Color(0.45, 0.3, 0.2, 1)
+
+[node name="Node2D" type="Node2D" parent="." unique_id=177371274]
+position = Vector2(852, 925)

@@ -47,7 +47,7 @@ script = ExtResource("4_camera")
 target_node = NodePath("..")
 
 [node name="LevelPortal" parent="." unique_id=1271243254 instance=ExtResource("6_j2tj3")]
-position = Vector2(152, 1422)
+position = Vector2(811, 488)
 target_level_path = "res://src/overworld/levels/test_portal_room_a.tscn"
 exit_id = "1"
 arrival_id = "1"
