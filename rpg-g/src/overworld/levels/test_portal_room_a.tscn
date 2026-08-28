@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="1_player"]
+[ext_resource type="Script" path="res://src/overworld/components/bounded_camera.gd" id="2_camera"]
+[ext_resource type="PackedScene" path="res://src/overworld/components/level_portal.tscn" id="3_portal"]
+[ext_resource type="PackedScene" path="res://src/overworld/components/arrival_spawn_point.tscn" id="4_arrival"]
+
+[node name="TestPortalRoomA" type="Node2D"]
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.12, 0.18, 0.25, 1)
+
+[node name="TitleLabel" type="Label" parent="."]
+offset_left = 60.0
+offset_top = 40.0
+offset_right = 800.0
+offset_bottom = 100.0
+theme_override_font_sizes/font_size = 26
+text = "SALA A (Test Portales)
+- F3: Alternar números de Debug en juego"
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(400, 500)
+
+[node name="Camera2D" type="Camera2D" parent="Player" node_paths=PackedStringArray("target_node")]
+script = ExtResource("2_camera")
+target_node = NodePath("..")
+
+[node name="Portal1" parent="." instance=ExtResource("3_portal")]
+position = Vector2(300, 250)
+target_level_path = "res://src/overworld/levels/test_portal_room_b.tscn"
+exit_id = "1"
+arrival_id = "1"
+
+[node name="Portal2" parent="." instance=ExtResource("3_portal")]
+position = Vector2(800, 250)
+target_level_path = "res://src/overworld/levels/test_portal_room_b.tscn"
+exit_id = "2"
+arrival_id = "2"
+
+[node name="DropPointA" parent="." instance=ExtResource("4_arrival")]
+position = Vector2(1300, 600)
+arrival_id = "drop_point_a"

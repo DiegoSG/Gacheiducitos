@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://d1g4k72msu8ab"]
+
+[ext_resource type="Script" uid="uid://bjr1mttdtahny" path="res://src/overworld/components/level_portal.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c1hck6yfswdqo" path="res://assets/sprites/door_pixel.png" id="2_door_tex"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_exit"]
+font_size = 20
+font_color = Color(1, 0.85, 0.2, 1)
+outline_size = 4
+outline_color = Color(0, 0, 0, 1)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_portal"]
+size = Vector2(80, 120)
+
+[sub_resource type="LabelSettings" id="LabelSettings_arrival"]
+font_size = 22
+font_color = Color(0.2, 0.9, 1, 1)
+outline_size = 4
+outline_color = Color(0, 0, 0, 1)
+
+[node name="LevelPortal" type="Area2D" unique_id=1271243254 groups=["arrival_points"]]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_script")
+
+[node name="DoorSprite" type="Sprite2D" parent="." unique_id=431212441]
+texture = ExtResource("2_door_tex")
+
+[node name="ExitIdLabel" type="Label" parent="." unique_id=1179350555]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -30.0
+offset_top = -25.0
+offset_right = 30.0
+offset_bottom = 5.0
+grow_horizontal = 2
+grow_vertical = 2
+label_settings = SubResource("LabelSettings_exit")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1179535578]
+shape = SubResource("RectangleShape2D_portal")
+
+[node name="SpawnPoint" type="Marker2D" parent="." unique_id=705267981]
+position = Vector2(0, 152)
+
+[node name="ArrivalIdLabel" type="Label" parent="SpawnPoint" unique_id=291326061]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -30.0
+offset_top = -15.0
+offset_right = 30.0
+offset_bottom = 15.0
+grow_horizontal = 2
+grow_vertical = 2
+label_settings = SubResource("LabelSettings_arrival")
+horizontal_alignment = 1
+vertical_alignment = 1

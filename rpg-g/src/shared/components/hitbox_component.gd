@@ -24,6 +24,8 @@ func _on_area_entered(area: Area2D) -> void:
 		var attack_direction = (area.global_position - global_position).normalized()
 		area.take_hit(damage, attack_direction, knockback_force)
 		
-		var effect = HIT_EFFECT.instantiate()
-		get_tree().current_scene.add_child(effect)
-		effect.global_position = area.global_position
+		var scene_root = get_tree().current_scene if get_tree() else null
+		if is_instance_valid(scene_root):
+			var effect = HIT_EFFECT.instantiate()
+			scene_root.add_child(effect)
+			effect.global_position = area.global_position

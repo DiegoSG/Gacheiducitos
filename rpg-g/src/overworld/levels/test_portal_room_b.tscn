@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://cmgkvvu5vwr7h"]
+
+[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="1_player"]
+[ext_resource type="Script" uid="uid://63w406wwqc28" path="res://src/overworld/components/bounded_camera.gd" id="2_camera"]
+[ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="3_portal"]
+
+[node name="TestPortalRoomB" type="Node2D" unique_id=1199606760]
+
+[node name="Background" type="ColorRect" parent="." unique_id=1961317345]
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.25, 0.14, 0.16, 1)
+
+[node name="TitleLabel" type="Label" parent="." unique_id=670773185]
+offset_left = 60.0
+offset_top = 40.0
+offset_right = 800.0
+offset_bottom = 100.0
+theme_override_font_sizes/font_size = 26
+text = "SALA B (Test Portales)
+- F3: Alternar números de Debug en juego"
+
+[node name="Player" parent="." unique_id=1531490796 instance=ExtResource("1_player")]
+position = Vector2(400, 500)
+
+[node name="Camera2D" type="Camera2D" parent="Player" unique_id=1384435058 node_paths=PackedStringArray("target_node")]
+script = ExtResource("2_camera")
+target_node = NodePath("..")
+
+[node name="Portal1" parent="." unique_id=1848186912 instance=ExtResource("3_portal")]
+position = Vector2(300, 250)
+target_level_path = "res://src/overworld/levels/test_portal_room_a.tscn"
+exit_id = "1"
+arrival_id = "1"
+
+[node name="ExitIdLabel" parent="Portal1" index="1" unique_id=1179350555]
+text = "1"
+
+[node name="SpawnPoint" parent="Portal1" index="3" unique_id=705267981]
+position = Vector2(132, 33)
+
+[node name="ArrivalIdLabel" parent="Portal1/SpawnPoint" index="0" unique_id=291326061]
+text = "1"
+
+[node name="Portal2" parent="." unique_id=969633918 instance=ExtResource("3_portal")]
+position = Vector2(796, 243)
+target_level_path = "res://src/overworld/levels/test_portal_room_a.tscn"
+exit_id = "2"
+arrival_id = "2"
+
+[node name="PortalToDropPoint" parent="." unique_id=1835331259 instance=ExtResource("3_portal")]
+position = Vector2(1300, 250)
+target_level_path = "res://src/overworld/levels/test_portal_room_a.tscn"
+exit_id = "drop_point_a"
+arrival_id = "portal_b3"
+
+[editable path="Portal1"]

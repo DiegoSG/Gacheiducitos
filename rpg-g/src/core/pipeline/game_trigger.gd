@@ -58,6 +58,7 @@ func _on_body_exited(body: Node2D) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if trigger_mode == TriggerMode.INTERACT and event.is_action_pressed("ui_accept"):
+		_agents_inside = _agents_inside.filter(func(n): return is_instance_valid(n))
 		if _agents_inside.size() > 0:
 			get_viewport().set_input_as_handled()
 			_attempt_trigger()
@@ -131,4 +132,6 @@ func _run_actions(array: Array[ActionResource]) -> void:
 		
 		# Esperamos frame por frame hasta que la señal "finished" apague la variable
 		while state.waiting:
+			if not is_inside_tree() or get_tree() == null:
+				return
 			await get_tree().process_frame

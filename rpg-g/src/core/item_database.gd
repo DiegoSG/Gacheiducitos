@@ -19,15 +19,12 @@ func _load_items_from_dir() -> void:
 		DirAccess.make_dir_recursive_absolute(data_directory)
 		return
 
-	var dir = DirAccess.open(data_directory)
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
+	var files: PackedStringArray = DirAccess.get_files_at(data_directory)
+	for file_name in files:
+		if file_name.ends_with(".tres"):
 			var item = load(data_directory + file_name)
 			if item is ItemData:
 				all_items.append(item)
-		file_name = dir.get_next()
 
 func _refresh_cache() -> void:
 	_item_cache.clear()

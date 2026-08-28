@@ -44,7 +44,7 @@ func give_loot() -> void:
 		has_been_looted = true
 		return
 		
-	var item_names = []
+	var item_names: Array[String] = []
 	for item in loot_items:
 		if item:
 			if item.id == "gold_coins":

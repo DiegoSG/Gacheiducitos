@@ -1,8 +1,8 @@
 extends CharacterBody2D
 
-@export var speed = 100.0
-@export var max_health = 3
-var current_health = 3
+@export var speed: float = 350.0
+@export var max_health: int = 3
+var current_health: int = 3
 var knockback_velocity: Vector2 = Vector2.ZERO
 var is_stunned: bool = false
 var is_invulnerable: bool = false
@@ -10,11 +10,11 @@ var is_invulnerable: bool = false
 @onready var hitbox_component: HitboxComponent = $HitboxComponent
 @onready var hurtbox_component: HurtboxComponent = $HurtboxComponent
 
-var is_dialogue_active = false
-var is_attacking = false
-var last_direction = Vector2.DOWN
+var is_dialogue_active: bool = false
+var is_attacking: bool = false
+var last_direction: Vector2 = Vector2.DOWN
 
-func _ready():
+func _ready() -> void:
 	add_to_group("player")
 	current_health = max_health
 	
@@ -24,20 +24,35 @@ func _ready():
 	# Conectarse a las señales de Dialogue Manager
 	var dm = Engine.get_singleton("DialogueManager")
 	if dm:
-		dm.dialogue_started.connect(_on_dialogue_started)
-		dm.dialogue_ended.connect(_on_dialogue_ended)
+		if not dm.dialogue_started.is_connected(_on_dialogue_started):
+			dm.dialogue_started.connect(_on_dialogue_started)
+		if not dm.dialogue_ended.is_connected(_on_dialogue_ended):
+			dm.dialogue_ended.connect(_on_dialogue_ended)
 
-func _on_dialogue_started(_resource: DialogueResource):
+func _exit_tree() -> void:
+	var dm = Engine.get_singleton("DialogueManager")
+	if dm:
+		if dm.dialogue_started.is_connected(_on_dialogue_started):
+			dm.dialogue_started.disconnect(_on_dialogue_started)
+		if dm.dialogue_ended.is_connected(_on_dialogue_ended):
+			dm.dialogue_ended.disconnect(_on_dialogue_ended)
+
+func _on_dialogue_started(_resource: DialogueResource) -> void:
 	is_dialogue_active = true
 	velocity = Vector2.ZERO # Detenemos al jugador inmediatamente
 
-func _on_dialogue_ended(_resource: DialogueResource):
+func _on_dialogue_ended(_resource: DialogueResource) -> void:
 	# Damos un pequeñísimo delay para no atrapar el mismo input que cerró el diálogo
-	await get_tree().create_timer(0.1).timeout
+	var tree = get_tree()
+	if not tree:
+		is_dialogue_active = false
+		return
+	await tree.create_timer(0.1).timeout
+	if not is_inside_tree():
+		return
 	is_dialogue_active = false
 
-@warning_ignore("unused_parameter")
-func _physics_process(delta):
+func _physics_process(delta: float) -> void:
 	if is_dialogue_active:
 		return
 		
@@ -48,9 +63,9 @@ func _physics_process(delta):
 		return
 		
 	# Get input direction
-	var direction = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	var direction: Vector2 = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	
-	if direction:
+	if direction != Vector2.ZERO:
 		velocity = direction * speed
 		last_direction = direction
 		# Rotate the interaction area and hitbox to face movement direction
@@ -64,8 +79,9 @@ func _physics_process(delta):
 
 	move_and_slide()
 
-func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: float):
-	if is_invulnerable: return
+func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: float) -> void:
+	if is_invulnerable:
+		return
 	
 	current_health -= damage
 	print("Player hit! Health: ", current_health)
@@ -78,23 +94,40 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	tween.tween_property($Sprite2D, "modulate:a", 0.2, 0.1)
 	tween.tween_property($Sprite2D, "modulate:a", 1.0, 0.1)
 	
+	var tree = get_tree()
+	if not tree:
+		is_invulnerable = false
+		is_stunned = false
+		return
+		
 	if knockback_force > 0:
 		is_stunned = true
 		knockback_velocity = attack_direction * knockback_force
-		await get_tree().create_timer(0.3).timeout
+		await tree.create_timer(0.3).timeout
+		if not is_inside_tree():
+			return
 		is_stunned = false
-		await get_tree().create_timer(0.7).timeout
+		await tree.create_timer(0.7).timeout
+		if not is_inside_tree():
+			return
 		is_invulnerable = false
 	else:
-		await get_tree().create_timer(1.0).timeout
+		await tree.create_timer(1.0).timeout
+		if not is_inside_tree():
+			return
 		is_invulnerable = false
 
-func attack():
-	if is_attacking: return
+func attack() -> void:
+	if is_attacking:
+		return
 	is_attacking = true
 	# Activar hitbox por un instante
 	hitbox_component.set_active(true)
-	await get_tree().create_timer(0.2).timeout
+	var tree = get_tree()
+	if tree:
+		await tree.create_timer(0.2).timeout
+	if not is_inside_tree():
+		return
 	hitbox_component.set_active(false)
 	is_attacking = false
 
@@ -111,13 +144,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				area.action()
 				break
 
-	# Accion de golpear, asumiendo "attack" map action. En caso no estar,
-	# por defecto lo vincularemos a "ui_select" (barra espaciadora) si es que "ui_accept" 
-	# es la tecla de interacción, o crearemos la de UI provisional. Usaremos una tecla 'Z'
-	# si el usuario lo necesita, pero temporalmente probamos ui_cancel u otra, o "attack" si existiese.
-	# Dejaremos un print o if event.is_action_pressed("attack"). Godot no fallará
-	# si mapeamos un Input normal de teclado, pero if event.is_action_pressed() requiere que exista.
-	# Haremos fallback a la tecla Z.
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_Z:
 			attack()
