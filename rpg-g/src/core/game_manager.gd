@@ -2,13 +2,23 @@ extends Node
 
 # Singleton to manage game state and scene transitions
 
+enum WorldAlertState {
+	PEACE,
+	ALERT
+}
+
 signal level_changed(target_level_path: String, spawn_id: String)
+signal alert_state_changed(new_state: WorldAlertState)
 
 const FADER_SCENE: PackedScene = preload("res://src/ui/screen_fader.tscn")
 
 var current_scene: Node = null
 var previous_scene_path: String = ""
 var player_return_position: Vector2 = Vector2.ZERO
+
+# Estado de alerta / persecución
+var alert_state: WorldAlertState = WorldAlertState.PEACE
+var _active_pursuers: Array[Node] = []
 
 # Configuración de minijuego (para debug y persistencia)
 var minigame_config: Dictionary = {}
@@ -44,6 +54,7 @@ func _deferred_load_minigame(path: String) -> void:
 	if is_instance_valid(current_scene):
 		current_scene.queue_free()
 	
+	clear_pursuers()
 	current_scene = s.instantiate()
 	get_tree().root.add_child(current_scene)
 	get_tree().current_scene = current_scene
@@ -90,6 +101,7 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 	if is_instance_valid(current_scene):
 		current_scene.queue_free()
 		
+	clear_pursuers()
 	current_scene = next_scene_resource.instantiate()
 	get_tree().root.add_child(current_scene)
 	get_tree().current_scene = current_scene
@@ -139,5 +151,35 @@ func _snap_scene_cameras(node: Node) -> void:
 			node.force_update_scroll()
 	for child in node.get_children():
 		_snap_scene_cameras(child)
+
+func register_pursuer(enemy: Node) -> void:
+	if not is_instance_valid(enemy):
+		return
+	if not _active_pursuers.has(enemy):
+		_active_pursuers.append(enemy)
+	_update_alert_state()
+
+func unregister_pursuer(enemy: Node) -> void:
+	if _active_pursuers.has(enemy):
+		_active_pursuers.erase(enemy)
+	_update_alert_state()
+
+func is_in_alert() -> bool:
+	_cleanup_invalid_pursuers()
+	return alert_state == WorldAlertState.ALERT
+
+func clear_pursuers() -> void:
+	_active_pursuers.clear()
+	_update_alert_state()
+
+func _cleanup_invalid_pursuers() -> void:
+	_active_pursuers = _active_pursuers.filter(func(node: Node) -> bool: return is_instance_valid(node) and node.is_inside_tree())
+
+func _update_alert_state() -> void:
+	_cleanup_invalid_pursuers()
+	var new_state: WorldAlertState = WorldAlertState.ALERT if _active_pursuers.size() > 0 else WorldAlertState.PEACE
+	if new_state != alert_state:
+		alert_state = new_state
+		alert_state_changed.emit(alert_state)
 
 

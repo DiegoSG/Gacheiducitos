@@ -1,0 +1,53 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/overworld/levels/test_alert_system.gd" id="1_test"]
+[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://src/overworld/npcs/npc_barnaby.tscn" id="3_npc"]
+[ext_resource type="PackedScene" path="res://src/shared/entities/enemies/generic_enemy.tscn" id="4_enemy"]
+[ext_resource type="PackedScene" path="res://src/overworld/interactables/chest.tscn" id="5_chest"]
+
+[node name="TestAlertSystem" type="Node2D"]
+script = ExtResource("1_test")
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.12, 0.14, 0.18, 1)
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(250, 360)
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+
+[node name="NPC_Barnaby" parent="." instance=ExtResource("3_npc")]
+position = Vector2(400, 360)
+
+[node name="GenericEnemy" parent="." instance=ExtResource("4_enemy")]
+position = Vector2(850, 360)
+
+[node name="Chest" parent="." instance=ExtResource("5_chest")]
+position = Vector2(250, 200)
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="Panel" parent="UI"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 650.0
+offset_bottom = 120.0
+
+[node name="StatusLabel" type="Label" parent="UI"]
+offset_left = 35.0
+offset_top = 30.0
+offset_right = 630.0
+offset_bottom = 65.0
+theme_override_font_sizes/font_size = 22
+text = "ESTADO: PAZ"
+
+[node name="InfoLabel" type="Label" parent="UI"]
+offset_left = 35.0
+offset_top = 70.0
+offset_right = 630.0
+offset_bottom = 105.0
+theme_override_font_sizes/font_size = 14
+text = "En paz. Puedes presionar [Espacio/Enter] frente a Barnaby para hablar."
