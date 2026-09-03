@@ -39,6 +39,16 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
   4. **Sistema de Recompensas y Loot:** `LootDropComponent` para entidades con porcentajes de drop de items y spawn de `PickupItem`.
   5. **Batería de Pruebas Automatizadas:** `test_doors_and_events_runner.gd`, `test_alert_peace_system_runner.gd` y `test_enemy_loot_runner.gd` ejecutadas y pasando al 100%.
 
+### 🔖 Checkpoint — 3 de Septiembre, 2026: *Framework de Minijuegos, Congelamiento y Retorno Universal*
+- **Sistemas completados y auditados:**
+  1. **Framework y Ciclo de Vida (`MinigameBase`):** Clase base con recolección de recompensas en sesión (`add_reward`), señal desacoplada `game_finished` y congelamiento total de físicas/timers (`get_tree().paused = true`).
+  2. **Feedback Visual de Fin de Partida:** Pantalla desacoplada de Victoria/Derrota (`_result_ui`) con soporte para resoluciones dinámicas, desglose de loot, botón "Continuar" interactivo y atajos (`ESPACIO`, `ENTER`, `ESC`).
+  3. **Integración con Pipeline de Eventos:** Triggers unificados con `GameTrigger` + `MinigameAction` y prefab reutilizable `minigame_interactable.tscn`. Eliminación total de triggers legacy (`minigame_trigger.gd`).
+  4. **Retorno al Overworld y Spawns Condicionales:** `GameManager.complete_minigame()` realiza transferencia oficial de items al `Inventory` y retorno con `ScreenFader` a `win_spawn_id` o `lose_spawn_id`.
+  5. **Nivel de Pruebas Multi-Trigger (`test_minigame_flow.tscn`):** 5 triggers independientes configurados y validados para cada uno de los 5 minijuegos (`Catcher`, `Excavation`, `Runner`, `Smasher`, `Trampolin`).
+  6. **Estructura y Limpieza del Proyecto:** Eliminación de archivos temporales/autosaves, estandarización a `snake_case` y creación de la skill oficial `godot-project-structure`.
+  7. **Batería de Tests Automatizados:** `test_minigame_flow_runner.gd` ejecutada y validando el 100% de los flujos en Godot 4.6 headless.
+
 
 ## 🟡 Feature: Minijuego A (Excavación)
 - [x] Generador Procedimental (Autómatas Celulares) (Ref: `Minijuego_Supaplex.md`)

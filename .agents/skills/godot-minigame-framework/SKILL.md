@@ -11,27 +11,27 @@ Esta habilidad se activa al diseñar o implementar un minijuego en el proyecto (
 
 ## 1. Principios de Diseño
 - **Aislamiento Total:** El minijuego debe poder ejecutarse de forma 100% independiente desde su escena raíz o escena de pruebas (`test_*.tscn`).
-- **Control de Ciclo de Vida:**
-  - `start_game()`: Inicializa tablero, variables locales y temporizadores.
-  - `pause_game()` / `resume_game()`: Manejo de menús de pausa o diálogos.
-  - `finish_game(success: bool, results: Dictionary)`: Notifica el resultado a través de señales antes de cualquier transición.
+- **Control de Ciclo de Vida (`MinigameBase`):**
+  - Heredar siempre de `MinigameBase`.
+  - Recolección de recompensas en búfer local: `add_reward(item_id: String, amount: int = 1)`.
+  - `finish(success: bool, skip_screen: bool = false)`: Congela automáticamente todo el escenario (`get_tree().paused = true`), despliega la pantalla modal de Victoria/Derrota desacoplada (`process_mode = PROCESS_MODE_ALWAYS`) y espera confirmación del jugador (`ui_accept` o botón).
+  - Al confirmar, despausa el árbol y emite `game_finished.emit(success, results)` hacia `GameManager.complete_minigame()`.
 - **Entrada Desacoplada:** El minijuego procesa sus propios inputs específicos sin colisionar con los inputs de exploración del Overworld.
 
 ---
 
-## 2. Puente con el Estado Global
-- **Recompensas y Loot:** Al ganar o recolectar ítems, el minijuego recopila un diccionario/array de resultados y utiliza el canal oficial de inventario:
-  ```gdscript
-  for item_id in collected_items:
-      Inventory.add_item(item_id, 1)
-  ```
-- **Retorno al Overworld:** La salida del minijuego se gestiona a través de `GameManager` o la acción `MinigameAction` / `LevelAction`.
+## 2. Puente con el Estado Global y Pipeline
+- **Lanzamiento:** Mediante `GameTrigger` + `MinigameAction` (o prefab `minigame_interactable.tscn` en el Overworld).
+- **Parámetros Inyectados:** `MinigameAction.config` inyecta parámetros de juego en `GameManager.minigame_config`.
+- **Recompensas y Loot:** Al ganar, `GameManager.complete_minigame()` transfiere automáticamente las recompensas acumuladas en `session_rewards` hacia el singleton `Inventory` (`Inventory.add_item()`).
+- **Retorno al Overworld:** `GameManager` reutiliza `ScreenFader` y los puntos de llegada (`ArrivalSpawnPoint` / `LevelPortal`) usando `win_level_path` / `win_spawn_id` si ganó, o `lose_level_path` / `lose_spawn_id` si perdió.
 
 ---
 
 ## 3. Checklist de Implementación
 Antes de finalizar un minijuego:
-1. Validar mecánicas de riesgo/recompensa.
-2. Contar con feedback visual/auditivo de victoria o derrota.
-3. Asegurar limpieza de nodos e instancias al salir (evitar fugas de memoria).
-4. Probar en `test_[minijuego].tscn` de forma aislada.
+1. Asegurar que la escena raíz hereda de `MinigameBase`.
+2. Validar que al terminar llame únicamente a `finish(true)` o `finish(false)`.
+3. No incluir timers ciegos que fuercen transiciones abruptas ni código duplicado de victoria/derrota (lo gestiona la clase base).
+4. Probar en `test_[minijuego].tscn` y verificar el congelamiento completo y el retorno.
+
