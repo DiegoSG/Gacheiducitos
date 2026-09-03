@@ -3,6 +3,8 @@ extends SceneTree
 func _init() -> void:
 	print("\n--- TEST: SISTEMA DE ESTADOS DE PAZ Y ALERTA (OVERWORLD) ---")
 	
+	await process_frame
+	
 	# Asegurarnos de tener GameManager inicializado
 	var gm = root.get_node_or_null("GameManager")
 	if not gm:
@@ -10,41 +12,45 @@ func _init() -> void:
 		gm = gm_script.new()
 		gm.name = "GameManager"
 		root.add_child(gm)
-		
-	await process_frame
 	
 	# Test 1: Estado inicial debe ser PEACE
 	assert(gm.alert_state == gm.WorldAlertState.PEACE, "Estado inicial debe ser PEACE")
 	assert(gm.is_in_alert() == false, "is_in_alert() debe ser false inicialmente")
 	print("[PASS] Estado inicial es PEACE.")
 	
-	# Configurar escucha de señal
-	var last_emitted_state = null
-	var emission_count: int = 0
+	# Configurar escucha de señal con tracker Dictionary (captura por referencia)
+	var tracker = {"last_state": null, "count": 0}
 	gm.alert_state_changed.connect(func(state):
-		last_emitted_state = state
-		emission_count += 1
+		tracker.last_state = state
+		tracker.count += 1
 	)
 	
 	# Test 2: Instanciar un enemigo y simular persecución
 	var enemy_scene = load("res://src/shared/entities/enemies/generic_enemy.tscn")
 	assert(enemy_scene != null, "generic_enemy.tscn no pudo ser cargado")
 	var enemy1 = enemy_scene.instantiate()
+	enemy1.position = Vector2(1000, 1000)
 	root.add_child(enemy1)
 	
 	var mock_player = CharacterBody2D.new()
 	mock_player.name = "Player"
+	mock_player.position = Vector2(0, 0)
 	mock_player.add_to_group("player")
 	root.add_child(mock_player)
 	
 	await process_frame
 	
+	# Reiniciar contadores para medir el disparo manual
+	gm.clear_pursuers()
+	tracker.last_state = null
+	tracker.count = 0
+	
 	# Disparar detección del jugador
 	enemy1._on_vision_entered(mock_player)
 	assert(gm.alert_state == gm.WorldAlertState.ALERT, "El estado debe cambiar a ALERT al perseguir")
 	assert(gm.is_in_alert() == true, "is_in_alert() debe devolver true")
-	assert(last_emitted_state == gm.WorldAlertState.ALERT, "alert_state_changed no emitió ALERT")
-	assert(emission_count == 1, "La señal alert_state_changed debió emitirse 1 vez")
+	assert(tracker.last_state == gm.WorldAlertState.ALERT, "alert_state_changed no emitió ALERT")
+	assert(tracker.count == 1, "La señal alert_state_changed debió emitirse 1 vez")
 	print("[PASS] Transición a estado ALERT al iniciar persecución verificada.")
 	
 	# Test 3: Bloqueo de interacción con NPCs en estado de alerta
@@ -78,7 +84,7 @@ func _init() -> void:
 	
 	enemy2._on_vision_entered(mock_player)
 	assert(gm.alert_state == gm.WorldAlertState.ALERT, "El estado sigue en ALERT con 2 enemigos")
-	assert(emission_count == 1, "No debe re-emitir señal si ya estaba en ALERT")
+	assert(tracker.count == 1, "No debe re-emitir señal si ya estaba en ALERT")
 	
 	# Test 6: Un enemigo deja de perseguir (sale de lose_target_zone), pero otro sigue persiguiendo
 	enemy1._on_lose_target_exited(mock_player)
@@ -93,8 +99,8 @@ func _init() -> void:
 	
 	assert(gm.alert_state == gm.WorldAlertState.PEACE, "El estado debe retornar a PEACE al morir el último enemigo")
 	assert(gm.is_in_alert() == false, "is_in_alert() debe ser false tras eliminación del enemigo")
-	assert(last_emitted_state == gm.WorldAlertState.PEACE, "alert_state_changed debió emitir PEACE")
-	assert(emission_count == 2, "La señal debió emitirse para la vuelta a PEACE")
+	assert(tracker.last_state == gm.WorldAlertState.PEACE, "alert_state_changed debió emitir PEACE")
+	assert(tracker.count == 2, "La señal debió emitirse para la vuelta a PEACE")
 	print("[PASS] Transición de vuelta a PEACE al morir los enemigos verificada.")
 	
 	# Test 8: Interacción con NPC ahora es permitida en estado PEACE

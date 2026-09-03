@@ -13,6 +13,7 @@ var current_health: int = 3
 @onready var lose_target_zone: Area2D = get_node_or_null("LoseTargetZone")
 @onready var hitbox_component: HitboxComponent = $HitboxComponent
 @onready var hurtbox_component: HurtboxComponent = $HurtboxComponent
+@onready var loot_drop_component: LootDropComponent = get_node_or_null("LootDropComponent")
 
 var player: CharacterBody2D = null
 
@@ -88,8 +89,9 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func _exit_tree() -> void:
-	if GameManager:
-		GameManager.unregister_pursuer(self)
+	var gm = _get_game_manager()
+	if gm:
+		gm.unregister_pursuer(self)
 
 func _check_overlap_for_reaggro() -> void:
 	if lose_target_zone:
@@ -103,22 +105,25 @@ func _on_vision_entered(body: Node2D) -> void:
 		player = body as CharacterBody2D
 		current_state = State.CHASE
 		_cooldown_timer = 0.0
-		if GameManager:
-			GameManager.register_pursuer(self)
+		var gm = _get_game_manager()
+		if gm:
+			gm.register_pursuer(self)
 
 func _on_lose_target_entered(body: Node2D) -> void:
 	if body.is_in_group("player") and (current_state == State.COOLDOWN or current_state == State.RETURNING):
 		player = body as CharacterBody2D
 		current_state = State.CHASE
 		_cooldown_timer = 0.0
-		if GameManager:
-			GameManager.register_pursuer(self)
+		var gm = _get_game_manager()
+		if gm:
+			gm.register_pursuer(self)
 
 func _on_lose_target_exited(body: Node2D) -> void:
 	if body == player:
 		player = null
-		if GameManager:
-			GameManager.unregister_pursuer(self)
+		var gm = _get_game_manager()
+		if gm:
+			gm.unregister_pursuer(self)
 			
 		if cooldown_duration > 0.0:
 			current_state = State.COOLDOWN
@@ -129,7 +134,12 @@ func _on_lose_target_exited(body: Node2D) -> void:
 			else:
 				current_state = State.IDLE
 
-func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: float):
+func _get_game_manager() -> Node:
+	if is_inside_tree() and get_tree() and get_tree().root:
+		return get_tree().root.get_node_or_null("GameManager")
+	return get_node_or_null("/root/GameManager")
+
+func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: float) -> void:
 	if is_invulnerable: return
 	
 	current_health -= damage
@@ -139,7 +149,9 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	velocity = attack_direction * knockback_force
 	
 	if current_health <= 0:
-		queue_free()
+		if loot_drop_component:
+			loot_drop_component.drop_loot()
+		call_deferred("queue_free")
 		return
 		
 	is_stunned = true

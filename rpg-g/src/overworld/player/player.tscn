@@ -21,6 +21,7 @@ scale = Vector2(0.46875, 0.46875)
 texture = ExtResource("2_icon")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=40233913]
+visible = false
 shape = SubResource("RectangleShape2D_1")
 
 [node name="ActionableFinder" type="Area2D" parent="." unique_id=1271571305]
@@ -28,6 +29,7 @@ collision_layer = 0
 collision_mask = 16
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ActionableFinder" unique_id=833290299]
+visible = false
 position = Vector2(0, 60)
 shape = SubResource("RectangleShape2D_1")
 
@@ -35,6 +37,7 @@ shape = SubResource("RectangleShape2D_1")
 collision_mask = 8
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HitboxComponent" unique_id=2134926983]
+visible = false
 position = Vector2(0, 60)
 shape = SubResource("RectangleShape2D_hitbox")
 
@@ -42,4 +45,5 @@ shape = SubResource("RectangleShape2D_hitbox")
 collision_layer = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HurtboxComponent" unique_id=1725608150]
+visible = false
 shape = SubResource("RectangleShape2D_1")

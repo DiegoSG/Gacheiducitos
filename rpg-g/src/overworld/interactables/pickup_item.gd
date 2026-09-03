@@ -17,6 +17,15 @@ class_name PickupItem
 		else:
 			_clear_visuals()
 
+@export var custom_amount: int = -1
+@export var drop_animation_duration: float = 0.45
+
+## Control para evitar recolección instantánea mientras el objeto cae/se anima
+var can_be_collected: bool = true
+var _pending_start_pos: Vector2 = Vector2.INF
+var _pending_target_pos: Vector2 = Vector2.INF
+var _pending_duration: float = 0.45
+
 # Internal state (not exported)
 var _item_icon: Texture2D
 var _item_scale: Vector2 = Vector2(0.3, 0.3)
@@ -39,6 +48,11 @@ func _ready() -> void:
 	if not Engine.is_editor_hint():
 		if not body_entered.is_connected(_on_body_entered):
 			body_entered.connect(_on_body_entered)
+			
+	if _pending_start_pos != Vector2.INF and not Engine.is_editor_hint():
+		_start_drop_tween(_pending_start_pos, _pending_target_pos, _pending_duration)
+		_pending_start_pos = Vector2.INF
+		_pending_target_pos = Vector2.INF
 
 func _sync_with_resource() -> void:
 	if not item_data: return
@@ -105,11 +119,87 @@ func _update_collision_shape() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if Engine.is_editor_hint(): return
 	if not item_data: return
+	if not can_be_collected: return
 	
 	if body.is_in_group("player") or body.name == "Player":
+		var inv = _get_autoload("Inventory")
+		var ps = _get_autoload("PlayerStats")
+		
 		if item_data.id == "gold_coins":
-			PlayerStats.add_gold(item_data.value)
+			var gold_val: int = custom_amount if custom_amount >= 0 else item_data.value
+			if ps and ps.has_method("add_gold"):
+				ps.add_gold(gold_val)
 		else:
-			Inventory.add_item(item_data.id)
+			var qty: int = custom_amount if custom_amount > 0 else 1
+			if inv and inv.has_method("add_item"):
+				inv.add_item(item_data.id, qty)
 		
 		queue_free()
+
+## Inicia una animación matemática (Tween) estilo drop cinematográfico sin físicas
+func animate_drop_from(start_pos: Vector2, target_pos: Vector2, duration: float = -1.0) -> void:
+	can_be_collected = false
+	var anim_duration: float = duration if duration > 0.0 else drop_animation_duration
+	if not is_inside_tree():
+		_pending_start_pos = start_pos
+		_pending_target_pos = target_pos
+		_pending_duration = anim_duration
+		global_position = start_pos
+		return
+		
+	_start_drop_tween(start_pos, target_pos, anim_duration)
+
+func _start_drop_tween(start_pos: Vector2, target_pos: Vector2, duration: float) -> void:
+	can_be_collected = false
+	global_position = start_pos
+	
+	var sprite: Sprite2D = get_node_or_null("Sprite2D")
+	var original_sprite_pos_y: float = sprite.position.y if sprite else 0.0
+	var final_scale: Vector2 = _item_scale
+	
+	if sprite:
+		sprite.scale = Vector2.ZERO
+		sprite.modulate.a = 0.0
+	
+	var tween: Tween = create_tween().set_parallel(true)
+	
+	# 1. Desplazamiento en X/Y hacia la posición de destino
+	tween.tween_property(self, "global_position", target_pos, duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	
+	if sprite:
+		# 2. Fade in rápido al aparecer
+		tween.tween_property(sprite, "modulate:a", 1.0, duration * 0.25)
+		
+		# 3. Pop-in de escala: 0 -> ligeramente aumentado (1.15x) -> tamaño normal
+		var scale_tween: Tween = create_tween()
+		scale_tween.tween_property(sprite, "scale", final_scale * 1.15, duration * 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		scale_tween.tween_property(sprite, "scale", final_scale, duration * 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+		
+		# 4. Arco parabólico y rebote
+		var jump_height: float = 20.0
+		var jump_tween: Tween = create_tween()
+		jump_tween.tween_property(sprite, "position:y", original_sprite_pos_y - jump_height, duration * 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		jump_tween.tween_property(sprite, "position:y", original_sprite_pos_y, duration * 0.55).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		
+	tween.finished.connect(_on_drop_animation_finished)
+
+func _on_drop_animation_finished() -> void:
+	can_be_collected = true
+	var sprite: Sprite2D = get_node_or_null("Sprite2D")
+	if sprite:
+		sprite.scale = _item_scale
+		sprite.modulate.a = 1.0
+	# Si el jugador ya estaba encima al aterrizar, se recoge automáticamente
+	if not Engine.is_editor_hint() and is_inside_tree():
+		for body in get_overlapping_bodies():
+			if body.is_in_group("player") or body.name == "Player":
+				_on_body_entered(body)
+				break
+
+func _get_autoload(autoload_name: String) -> Node:
+	if is_inside_tree() and get_tree() and get_tree().root:
+		return get_tree().root.get_node_or_null(autoload_name)
+	var main_loop = Engine.get_main_loop()
+	if main_loop and "root" in main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null(autoload_name)
+	return null
