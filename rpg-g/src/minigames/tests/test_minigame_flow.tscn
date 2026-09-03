@@ -8,12 +8,19 @@
 
 [sub_resource type="Resource" id="Resource_launch_minigame"]
 script = ExtResource("4_minigame_action")
-minigame_scene_path = "res://src/minigames/tests/dummy_minigame.tscn"
+minigame_scene_path = "res://src/minigames/mg_catcher/mg_catcher_game.tscn"
 win_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
 win_spawn_id = "spawn_win"
 lose_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
 lose_spawn_id = "spawn_lose"
-config = {}
+config = {
+"base_fall_speed": 220.0,
+"game_mode": "COUNT",
+"lives": 3,
+"max_falling_objects": 8,
+"spawn_rate": 0.8,
+"target_value": 5.0
+}
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_trigger"]
 size = Vector2(80, 80)
