@@ -16,9 +16,20 @@ var _is_finishing: bool = false
 var _result_ui: CanvasLayer = null
 var _last_success: bool = false
 
+func _enter_tree() -> void:
+	_connect_game_manager()
+
 func _ready() -> void:
-	# Intentar auto-conectar con el GameManager si no se ha conectado externamente
-	var gm = get_tree().root.get_node_or_null("GameManager")
+	_connect_game_manager()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_ENTER_TREE or what == NOTIFICATION_READY:
+		_connect_game_manager()
+
+func _connect_game_manager() -> void:
+	var gm = get_node_or_null("/root/GameManager")
+	if not gm and get_tree() and get_tree().root:
+		gm = get_tree().root.get_node_or_null("GameManager")
 	if gm and gm.has_method("complete_minigame"):
 		if not game_finished.is_connected(gm.complete_minigame):
 			game_finished.connect(gm.complete_minigame)
@@ -56,34 +67,51 @@ func _show_result_screen(success: bool) -> void:
 	_result_ui.layer = 120 # Por encima de cualquier UI o HUD de minijuego
 	add_child(_result_ui)
 	
+	var viewport_size = get_viewport_rect().size
+	if viewport_size == Vector2.ZERO:
+		viewport_size = Vector2(1152, 648)
+	
+	# Control contenedor raíz de pantalla completa
+	var root_ctrl = Control.new()
+	root_ctrl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root_ctrl.size = viewport_size
+	_result_ui.add_child(root_ctrl)
+	
 	# Fondo oscuro semi-transparente
 	var backdrop = ColorRect.new()
-	backdrop.color = Color(0, 0, 0, 0.78)
+	backdrop.color = Color(0, 0, 0, 0.8)
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_result_ui.add_child(backdrop)
+	backdrop.size = viewport_size
+	root_ctrl.add_child(backdrop)
 	
-	# Panel contenedor central
+	# Contenedor centrado
+	var center = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.size = viewport_size
+	root_ctrl.add_child(center)
+	
+	# Panel contenedor
 	var panel = PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	_result_ui.add_child(panel)
+	panel.custom_minimum_size = Vector2(420, 240)
+	center.add_child(panel)
 	
 	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 40)
-	margin.add_theme_constant_override("margin_top", 30)
-	margin.add_theme_constant_override("margin_right", 40)
-	margin.add_theme_constant_override("margin_bottom", 30)
+	margin.add_theme_constant_override("margin_left", 32)
+	margin.add_theme_constant_override("margin_top", 28)
+	margin.add_theme_constant_override("margin_right", 32)
+	margin.add_theme_constant_override("margin_bottom", 28)
 	panel.add_child(margin)
 	
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 16)
+	vbox.add_theme_constant_override("separation", 18)
 	margin.add_child(vbox)
 	
 	# Título de Victoria / Derrota
 	var title_label = Label.new()
 	title_label.text = "¡VICTORIA!" if success else "¡DERROTA!"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 32)
-	title_label.modulate = Color(0.2, 0.9, 0.3) if success else Color(0.95, 0.25, 0.25)
+	title_label.add_theme_font_size_override("font_size", 34)
+	title_label.modulate = Color(0.25, 0.95, 0.35) if success else Color(0.95, 0.25, 0.25)
 	vbox.add_child(title_label)
 	
 	# Mensaje descriptivo y desglose de recompensas
@@ -106,14 +134,14 @@ func _show_result_screen(success: bool) -> void:
 	# Botón interactivo para continuar
 	var continue_btn = Button.new()
 	continue_btn.text = "Continuar (Volver al mapa)"
-	continue_btn.custom_minimum_size = Vector2(250, 45)
+	continue_btn.custom_minimum_size = Vector2(260, 48)
 	continue_btn.pressed.connect(func(): _on_continue_pressed(success))
 	vbox.add_child(continue_btn)
 	continue_btn.grab_focus()
 	
 	# Indicador de atajo de teclado
 	var prompt_label = Label.new()
-	prompt_label.text = "O presiona ESPACIO / ENTER para continuar"
+	prompt_label.text = "O presiona ESPACIO / ENTER para volver"
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_label.add_theme_font_size_override("font_size", 12)
 	prompt_label.modulate = Color(0.75, 0.75, 0.75)
@@ -132,4 +160,5 @@ func _on_continue_pressed(success: bool) -> void:
 	_emit_finished(success)
 
 func _emit_finished(success: bool) -> void:
+	_connect_game_manager()
 	game_finished.emit(success, {"items": session_rewards})

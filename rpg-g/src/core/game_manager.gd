@@ -37,9 +37,9 @@ func _ready() -> void:
 
 func load_minigame(minigame_path: String, player_pos: Vector2 = Vector2.ZERO) -> void:
 	if is_instance_valid(current_scene):
-		# Solo guardar la escena previa si NO es ya parte del minijuego
-		# (Para que el debug screen no sobrescriba el Overworld)
-		if not ("minigames" in current_scene.scene_file_path):
+		# Solo guardar la escena previa si NO es ya parte de una partida de minijuego
+		# (Para que las escenas de prueba o el Overworld se preserven correctamente)
+		if not (current_scene is MinigameBase):
 			previous_scene_path = current_scene.scene_file_path
 			player_return_position = player_pos
 			print("GameManager: Saved return path: ", previous_scene_path)
@@ -70,6 +70,12 @@ func _deferred_load_minigame(path: String) -> void:
 	get_tree().root.add_child(current_scene)
 	get_tree().current_scene = current_scene
 	
+	# Conexión explícita e infalible de la señal game_finished
+	if current_scene.has_signal("game_finished"):
+		if not current_scene.game_finished.is_connected(complete_minigame):
+			current_scene.game_finished.connect(complete_minigame)
+			print("GameManager: Conectado con éxito a 'game_finished' de ", current_scene.name)
+	
 	# If returning to Overworld, restore player position
 	if path == previous_scene_path and player_return_position != Vector2.ZERO:
 		if current_scene.has_node("Player"):
@@ -94,8 +100,8 @@ func complete_minigame(success: bool, results: Dictionary = {}) -> void:
 	var target_spawn_id = _minigame_win_spawn_id if success else _minigame_lose_spawn_id
 	
 	# Fallback si por alguna razón están vacíos
-	if target_scene == "":
-		target_scene = "res://src/overworld/levels/overworld.tscn"
+	if target_scene.is_empty():
+		target_scene = previous_scene_path if not previous_scene_path.is_empty() else "res://src/overworld/levels/overworld.tscn"
 		
 	# Usar el sistema de transiciones con fader
 	change_level(target_scene, target_spawn_id)
