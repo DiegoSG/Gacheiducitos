@@ -74,3 +74,28 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [ ] Validador de secuencias de comandos (Símbolos/Inputs) (Ref: `Minijuego_Ritmo.md`)
 - [ ] Máquina de estados de multiplicadores/power-ups (Ref: `Minijuego_Ritmo.md`)
 - [ ] Feedback visual de pulso y comandos (Ref: `Minijuego_Ritmo.md`)
+
+---
+
+## 🎯 Milestone: Framework y Estandarización de Minijuegos (Próximos Pasos)
+- [ ] **Revisión de Estado Actual:** Auditoría de los 5 minijuegos implementados (`Excavation`, `Catcher`, `Runner`, `Smasher`, `Trampolin`).
+- [ ] **Finalización y Unificación de Lógica:**
+  - [ ] Clase base / ciclo de vida estándar (`MinigameBase` con `start_game`, `pause_game`, `end_game`).
+  - [ ] Señalización desacoplada (`game_started`, `game_finished(success: bool, results: Dictionary)`).
+- [ ] **Herramientas para Diseño:**
+  - [ ] Presets de configuración y parámetros de balance exportables (`MinigameConfigResource`).
+  - [ ] Integración de interfaces de ajuste/debug (`config_mg_*.tscn`) con el flujo real.
+- [ ] **Sistema de Victoria y Derrota:**
+  - [ ] Feedback unificado de fin de partida (UI desacoplada para Win / Lose).
+  - [ ] Tratamiento configurable de penalización o reintento.
+- [ ] **Objetos Tomables y Almacenamiento en Inventario:**
+  - [ ] Buffer local de recolección durante la sesión de juego.
+  - [ ] Transferencia oficial de ítems y consumibles recolectados hacia el singleton `Inventory` (`Inventory.add_item()`).
+- [ ] **Inicio de Minijuegos desde Triggers / Señales:**
+  - [ ] Extensión de `MinigameAction` y `GameTrigger` para lanzar minijuegos con parámetros específicos.
+  - [ ] Conexión opcional por señales de entidades o eventos del mapa.
+- [ ] **Retorno al Overworld con Nivel y Spawn Específico:**
+  - [ ] Reutilización de la lógica de portales/puertas: volver a un `target_level_path` y `arrival_id` específico tras terminar.
+  - [ ] Transición con `ScreenFader` y asentamiento de cámara idéntico a las transiciones de nivel.
+- [ ] **Pruebas y Validación Aislada:** Escena de prueba (`test_minigame_flow.tscn` / `test_minigame_flow_runner.gd`).
+
