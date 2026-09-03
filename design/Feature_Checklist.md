@@ -31,6 +31,15 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
   4. **Auditoría y Estabilidad:** 34 correcciones aplicadas (fugas de memoria eliminadas, `queue_free()`, protección de reentradas, desconexión de señales huérfanas, tipado fuerte estricto).
   5. **Batería de Pruebas Automatizadas:** `test_portals_runner.gd`, `test_portals_transition.gd` y `test_camera_bounds_sync.gd` ejecutadas y pasando al 100%.
 
+### 🔖 Checkpoint — 3 de Septiembre, 2026: *Puertas, Eventos Dinámicos, IA Enemiga y Sistema de Loot*
+- **Sistemas completados y auditados:**
+  1. **Puertas y Candados:** `LevelPortal` con modos Portal y Puerta cerrada/bloqueada, requerimiento de llaves desde `Inventory`, consumo opcional y feedback con `DialogueManager`.
+  2. **Interactables y Triggers de Pipeline:** `SwitchInteractable` (palancas persistentes), `PressurePlate` (placas de presión), `DoorAction` y `DestroyNodeAction` conectados a `GameTrigger`.
+  3. **IA de Enemigos en Overworld:** `GenericEnemy` con máquina de estados (Idle, Chasing, Lose Target, Return), alertas globales en `GameManager` (`alert_state_changed`).
+  4. **Sistema de Recompensas y Loot:** `LootDropComponent` para entidades con porcentajes de drop de items y spawn de `PickupItem`.
+  5. **Batería de Pruebas Automatizadas:** `test_doors_and_events_runner.gd`, `test_alert_peace_system_runner.gd` y `test_enemy_loot_runner.gd` ejecutadas y pasando al 100%.
+
+
 ## 🟡 Feature: Minijuego A (Excavación)
 - [x] Generador Procedimental (Autómatas Celulares) (Ref: `Minijuego_Supaplex.md`)
 - [x] Algoritmo de Validación de Conectividad (Flood Fill) (Ref: `Minijuego_Supaplex.md`)
