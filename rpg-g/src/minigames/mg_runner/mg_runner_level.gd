@@ -1,4 +1,4 @@
-extends Node2D
+extends MinigameBase
 
 const OBSTACLE_SCENE = preload("res://src/minigames/mg_runner/mg_runner_obstacle.tscn")
 const COIN_SCENE = preload("res://src/minigames/mg_runner/mg_runner_coin.tscn")
@@ -161,7 +161,7 @@ func _spawn_one_coin(lane_idx: int, y_pos: float):
 
 func _on_coin_collected():
 	coins_collected += 1
-	PlayerStats.add_gold(1)
+	add_reward("gold_coin", 1)
 
 func _stop_all_objects():
 	for c in get_children():
@@ -184,8 +184,8 @@ func _win_game():
 	
 	# Esperar 2 segundos y salir
 	await get_tree().create_timer(2.0).timeout
-	GameManager.return_to_overworld()
+	finish(true)
 
 func _input(event):
 	if event.is_action_pressed("ui_cancel"):
-		GameManager.return_to_overworld()
+		finish(false)

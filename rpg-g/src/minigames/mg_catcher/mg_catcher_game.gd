@@ -1,4 +1,4 @@
-extends Node2D
+extends MinigameBase
 
 @export var point_scene: PackedScene = preload("res://src/minigames/mg_catcher/falling_item_point.tscn")
 @export var bomb_scene: PackedScene = preload("res://src/minigames/mg_catcher/falling_item_bomb.tscn")
@@ -106,6 +106,7 @@ func _on_item_hit_floor(item_type: int) -> void:
 func _on_item_caught(item_type: int) -> void:
 	if item_type == FallingItemBase.ItemType.POINT:
 		score += 1
+		add_reward("gold_coin", 1)
 		print("Caught point item! Score: ", score)
 		if game_mode == "COUNT" and score >= target_value:
 			win()
@@ -125,7 +126,7 @@ func win() -> void:
 		message_overlay.show()
 		message_label.text = "¡VICTORIA!"
 	print("Catcher: WIN!")
-	finish_game()
+	finish_game(true)
 
 func lose() -> void:
 	if game_over: return
@@ -134,8 +135,8 @@ func lose() -> void:
 		message_overlay.show()
 		message_label.text = "GAME OVER"
 	print("Catcher: LOSE!")
-	finish_game()
+	finish_game(false)
 
-func finish_game() -> void:
+func finish_game(success: bool) -> void:
 	await get_tree().create_timer(1.0).timeout
-	GameManager.return_to_overworld()
+	finish(success)

@@ -1,4 +1,4 @@
-extends Node2D
+extends MinigameBase
 
 var platform_scene = load("res://src/minigames/mg_trampolin/mg_trampolin_platform.tscn")
 var player_scene = load("res://src/minigames/mg_trampolin/mg_trampolin_player.tscn")
@@ -61,7 +61,7 @@ func _process(_delta):
 	
 	if win_condition_met:
 		if Input.is_anything_pressed():
-			GameManager.return_to_overworld()
+			finish(true)
 		
 	# Actualizar Score basado en la altura máxima alcanzada (Y negativa)
 	var current_score = floor(-player.global_position.y / 10.0)
@@ -120,7 +120,7 @@ func _win_game(reason: String):
 
 func _on_coin_collected():
 	coins_collected += 1
-	PlayerStats.add_gold(1)
+	add_reward("gold_coin", 1)
 	print("Monedas: ", coins_collected)
 	if config.get("win_condition") == WinCondition.MONEDAS:
 		$UI/ScoreLabel.text = "Monedas: %d/%d" % [coins_collected, config.get("target_value")]
@@ -155,9 +155,7 @@ func _on_player_died():
 func _game_over():
 	print("GAME OVER - Trampolin")
 	set_process(false)
-	get_tree().create_timer(1.0).timeout.connect(func():
-		GameManager.return_to_overworld()
-	)
+	finish(win_condition_met)
 
 func spawn_base_floor():
 	var start_y = last_platform_y + 100.0

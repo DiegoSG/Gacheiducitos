@@ -1,4 +1,4 @@
-extends Node2D
+extends MinigameBase
 
 # Configurable paths
 @export var insect_scene: PackedScene = preload("res://src/minigames/mg_smasher/insect.tscn")
@@ -154,7 +154,7 @@ func win() -> void:
 		message_overlay.show()
 		message_label.text = "¡VICTORIA!"
 	print("Smasher: WIN!")
-	finish_game()
+	finish_game(true)
 
 func lose() -> void:
 	game_over = true
@@ -162,9 +162,9 @@ func lose() -> void:
 		message_overlay.show()
 		message_label.text = "GAME OVER"
 	print("Smasher: LOSE!")
-	finish_game()
+	finish_game(false)
 
-func finish_game() -> void:
+func finish_game(success: bool) -> void:
 	# Visual feedback or UI could be added here
 	await get_tree().create_timer(1.0).timeout
-	GameManager.return_to_overworld()
+	finish(success)

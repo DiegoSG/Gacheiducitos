@@ -1,4 +1,4 @@
-extends Node2D
+extends MinigameBase
 class_name MG_ExcavationGame
 
 # Referencia a tipos compartidos
@@ -312,7 +312,7 @@ func world_to_grid(world_pos: Vector2) -> Vector2i:
 
 func _input(event):
 	if event.is_action_pressed("ui_cancel"):
-		GameManager.return_to_overworld()
+		finish(false)
 		return
 
 	# Mapear acciones a direcciones
@@ -362,7 +362,7 @@ func _try_move_player(direction: Vector2i):
 		
 		TileType.ITEM_MISION, TileType.ITEM_RECOMPENSA:
 			if target_tile == TileType.ITEM_RECOMPENSA:
-				PlayerStats.add_gold(1)
+				add_reward("gold_coin", 1)
 				coins_collected += 1
 				var key = str(new_pos.x) + "," + str(new_pos.y)
 				if falling_visuals.has(key):
@@ -378,7 +378,7 @@ func _try_move_player(direction: Vector2i):
 				player_grid_pos = new_pos
 				queue_redraw()
 				print("¡Nivel completado!")
-				GameManager.return_to_overworld()
+				finish(true)
 			else:
 				print("No has cumplido la condición de victoria")
 
@@ -433,7 +433,7 @@ func _try_dig_adjacent(direction: Vector2i):
 		queue_redraw()
 	elif target_tile == TileType.ITEM_MISION or target_tile == TileType.ITEM_RECOMPENSA:
 		if target_tile == TileType.ITEM_RECOMPENSA:
-			PlayerStats.add_gold(1)
+			add_reward("gold_coin", 1)
 			coins_collected += 1
 			var key = str(target_pos.x) + "," + str(target_pos.y)
 			if falling_visuals.has(key):
@@ -617,4 +617,4 @@ func _player_crushed(reason: String = ""):
 	
 	# Terminar inmediatamente (o con un frame de delay para ver el impacto)
 	await get_tree().process_frame
-	GameManager.return_to_overworld()
+	finish(false)
