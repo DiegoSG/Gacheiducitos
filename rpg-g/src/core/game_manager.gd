@@ -24,6 +24,11 @@ var _active_pursuers: Array[Node] = []
 var minigame_config: Dictionary = {}
 var current_level_seed: int = -1
 
+var _minigame_win_path: String = ""
+var _minigame_win_spawn_id: String = ""
+var _minigame_lose_path: String = ""
+var _minigame_lose_spawn_id: String = ""
+
 var _is_changing_level: bool = false
 
 func _ready() -> void:
@@ -38,6 +43,12 @@ func load_minigame(minigame_path: String, player_pos: Vector2 = Vector2.ZERO) ->
 			previous_scene_path = current_scene.scene_file_path
 			player_return_position = player_pos
 			print("GameManager: Saved return path: ", previous_scene_path)
+			
+	# Extraer rutas de retorno de la config si existen, o usar default
+	_minigame_win_path = minigame_config.get("win_level_path", previous_scene_path)
+	_minigame_win_spawn_id = minigame_config.get("win_spawn_id", "")
+	_minigame_lose_path = minigame_config.get("lose_level_path", previous_scene_path)
+	_minigame_lose_spawn_id = minigame_config.get("lose_spawn_id", "")
 		
 	call_deferred("_deferred_load_minigame", minigame_path)
 
@@ -64,11 +75,32 @@ func _deferred_load_minigame(path: String) -> void:
 		if current_scene.has_node("Player"):
 			current_scene.get_node("Player").position = player_return_position
 
+func complete_minigame(success: bool, results: Dictionary = {}) -> void:
+	print("GameManager: complete_minigame called. Success: ", success)
+	
+	# Transferir items recolectados al Inventario Global
+	if results.has("items") and Inventory != null:
+		var items_dict = results["items"]
+		for item_id in items_dict:
+			Inventory.add_item(item_id, items_dict[item_id])
+			
+	# Determinar a dónde ir y qué spawn usar
+	var target_scene = _minigame_win_path if success else _minigame_lose_path
+	var target_spawn_id = _minigame_win_spawn_id if success else _minigame_lose_spawn_id
+	
+	# Fallback si por alguna razón están vacíos
+	if target_scene == "":
+		target_scene = "res://src/overworld/levels/overworld.tscn"
+		
+	# Usar el sistema de transiciones con fader
+	change_level(target_scene, target_spawn_id)
+
 func return_to_overworld() -> void:
 	print("GameManager: return_to_overworld called")
+	# Retrocompatibilidad temporal para los minijuegos no actualizados aún
 	var target_scene: String = previous_scene_path if previous_scene_path != "" else "res://src/overworld/levels/overworld.tscn"
 	print("GameManager: target_scene = ", target_scene)
-	call_deferred("_deferred_load_minigame", target_scene)
+	change_level(target_scene)
 
 func change_level(target_level_path: String, spawn_id: String = "", exact_pos: Vector2 = Vector2.ZERO, use_exact: bool = false) -> void:
 	if _is_changing_level:
