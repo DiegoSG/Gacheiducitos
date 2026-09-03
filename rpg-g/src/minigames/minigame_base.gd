@@ -56,38 +56,32 @@ func finish(success: bool, skip_screen: bool = false) -> void:
 		_emit_finished(success)
 		return
 		
-	# Detener físicas y proceso del minijuego para evitar muertes o inputs residuales
-	set_process(false)
-	set_physics_process(false)
+	# Congelar completamente el juego (físicas, proyectiles, timers, entidades)
+	get_tree().paused = true
 	
 	_show_result_screen(success)
 
 func _show_result_screen(success: bool) -> void:
 	_result_ui = CanvasLayer.new()
 	_result_ui.layer = 120 # Por encima de cualquier UI o HUD de minijuego
+	_result_ui.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_result_ui)
 	
-	var viewport_size = get_viewport_rect().size
-	if viewport_size == Vector2.ZERO:
-		viewport_size = Vector2(1152, 648)
-	
-	# Control contenedor raíz de pantalla completa
+	# Control contenedor raíz de pantalla completa que procesa en pausa
 	var root_ctrl = Control.new()
 	root_ctrl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root_ctrl.size = viewport_size
+	root_ctrl.process_mode = Node.PROCESS_MODE_ALWAYS
 	_result_ui.add_child(root_ctrl)
 	
 	# Fondo oscuro semi-transparente
 	var backdrop = ColorRect.new()
 	backdrop.color = Color(0, 0, 0, 0.8)
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
-	backdrop.size = viewport_size
 	root_ctrl.add_child(backdrop)
 	
 	# Contenedor centrado
 	var center = CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	center.size = viewport_size
 	root_ctrl.add_child(center)
 	
 	# Panel contenedor
@@ -135,6 +129,7 @@ func _show_result_screen(success: bool) -> void:
 	var continue_btn = Button.new()
 	continue_btn.text = "Continuar (Volver al mapa)"
 	continue_btn.custom_minimum_size = Vector2(260, 48)
+	continue_btn.process_mode = Node.PROCESS_MODE_ALWAYS
 	continue_btn.pressed.connect(func(): _on_continue_pressed(success))
 	vbox.add_child(continue_btn)
 	continue_btn.grab_focus()
@@ -147,6 +142,11 @@ func _show_result_screen(success: bool) -> void:
 	prompt_label.modulate = Color(0.75, 0.75, 0.75)
 	vbox.add_child(prompt_label)
 
+func _exit_tree() -> void:
+	# Asegurar que el juego nunca quede congelado al salir de la escena
+	if get_tree() and get_tree().paused:
+		get_tree().paused = false
+
 func _unhandled_input(event: InputEvent) -> void:
 	if _is_finishing and _result_ui != null:
 		if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_select") or event.is_action_pressed("ui_cancel"):
@@ -154,6 +154,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_on_continue_pressed(_last_success)
 
 func _on_continue_pressed(success: bool) -> void:
+	if get_tree() and get_tree().paused:
+		get_tree().paused = false
 	if _result_ui:
 		_result_ui.queue_free()
 		_result_ui = null
