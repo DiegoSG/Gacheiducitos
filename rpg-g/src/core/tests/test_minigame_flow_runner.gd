@@ -60,6 +60,22 @@ func _init() -> void:
 	assert(game_manager.minigame_config.get("lose_spawn_id") == "spawn_lose", "lose_spawn_id no inyectado")
 	print("[PASS] MinigameAction inyecta correctamente las rutas y spawns de victoria/derrota al GameManager.")
 
+	# 5.1 Probar MinigameInteractable (GameTrigger en modo INTERACT vía action())
+	var interactable_scene = load("res://src/overworld/interactables/minigame_interactable.tscn")
+	assert(interactable_scene != null, "minigame_interactable.tscn debe existir")
+	var interactable = interactable_scene.instantiate()
+	root.add_child(interactable)
+	assert(interactable is GameTrigger, "minigame_interactable debe ser un GameTrigger")
+	assert(interactable.trigger_mode == GameTrigger.TriggerMode.INTERACT, "minigame_interactable debe estar en modo INTERACT")
+	assert(interactable.collision_layer == 16, "minigame_interactable debe estar en layer 16 (interactable)")
+	interactable.actions_if_true.clear()
+	interactable.actions_if_true.append(action)
+	# Simular pulsación de 'E' por parte del jugador (ActionableFinder)
+	interactable.action()
+	await process_frame
+	print("[PASS] MinigameInteractable responde a action() y ejecuta MinigameAction vía GameTrigger.")
+	interactable.queue_free()
+
 	# 6. Probar finalización con Victoria: transferir ítems y verificar inventario
 	var win_results = {"items": {"blue_potion": 3, "rusty_key": 1}}
 	game_manager._minigame_win_path = "res://src/minigames/tests/test_minigame_flow.tscn"

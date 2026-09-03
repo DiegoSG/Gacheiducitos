@@ -56,10 +56,9 @@ func _init() -> void:
 	# ----------------------------------------------------
 	var loot_comp = LootDropComponent.new()
 	root.add_child(loot_comp)
-	loot_comp.loot_table = {
-		red_potion: 10,
-		green_herb: 0
-	}
+	loot_comp.loot_table.clear()
+	loot_comp.loot_table[red_potion] = 10
+	loot_comp.loot_table[green_herb] = 0
 	loot_comp.drop_count = 5
 	loot_comp.enable_coins = false
 	
@@ -84,10 +83,9 @@ func _init() -> void:
 	# ----------------------------------------------------
 	# Test 3: Drop Count Limit
 	# ----------------------------------------------------
-	loot_comp.loot_table = {
-		red_potion: 10,
-		green_herb: 10
-	}
+	loot_comp.loot_table.clear()
+	loot_comp.loot_table[red_potion] = 10
+	loot_comp.loot_table[green_herb] = 10
 	loot_comp.drop_count = 1
 	
 	for i in range(20):
@@ -172,11 +170,10 @@ func _init() -> void:
 	# ----------------------------------------------------
 	# Test 7: Diccionario tipado loot_table
 	# ----------------------------------------------------
-	loot_comp.loot_table = {
-		red_potion: 8,
-		green_herb: 5,
-		golden_key: 2
-	}
+	loot_comp.loot_table.clear()
+	loot_comp.loot_table[red_potion] = 8
+	loot_comp.loot_table[green_herb] = 5
+	loot_comp.loot_table[golden_key] = 2
 	assert(loot_comp.loot_table.size() == 3, "loot_table debe contener 3 entradas")
 	assert(loot_comp.loot_table[red_potion] == 8, "Probabilidad de red_potion debe ser 8")
 	print("[PASS] Configuración de loot_table como Dictionary[ItemData, int] verificada.")
@@ -184,8 +181,8 @@ func _init() -> void:
 	# ----------------------------------------------------
 	# Test 8: InventoryUI con tecla TAB
 	# ----------------------------------------------------
-	var inv_ui_scene = load("res://src/ui/inventory/InventoryUI.tscn")
-	assert(inv_ui_scene != null, "InventoryUI.tscn no pudo ser cargado")
+	var inv_ui_scene = load("res://src/ui/inventory/inventory_ui.tscn")
+	assert(inv_ui_scene != null, "inventory_ui.tscn no pudo ser cargado")
 	var inv_ui = inv_ui_scene.instantiate()
 	root.add_child(inv_ui)
 	await process_frame

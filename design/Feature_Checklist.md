@@ -78,24 +78,28 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 ---
 
 ## 🎯 Milestone: Framework y Estandarización de Minijuegos (Próximos Pasos)
-- [ ] **Revisión de Estado Actual:** Auditoría de los 5 minijuegos implementados (`Excavation`, `Catcher`, `Runner`, `Smasher`, `Trampolin`).
-- [ ] **Finalización y Unificación de Lógica:**
-  - [ ] Clase base / ciclo de vida estándar (`MinigameBase` con `start_game`, `pause_game`, `end_game`).
-  - [ ] Señalización desacoplada (`game_started`, `game_finished(success: bool, results: Dictionary)`).
+- [x] **Revisión de Estado Actual:** Auditoría de los 5 minijuegos implementados (`Excavation`, `Catcher`, `Runner`, `Smasher`, `Trampolin`).
+- [x] **Finalización y Unificación de Lógica:**
+  - [x] Clase base / ciclo de vida estándar (`MinigameBase` con `add_reward`, `finish(success)` y señal `game_finished`).
+  - [x] Señalización desacoplada (`game_finished(success: bool, results: Dictionary)` conectada con `GameManager`).
 - [ ] **Herramientas para Diseño:**
   - [ ] Presets de configuración y parámetros de balance exportables (`MinigameConfigResource`).
-  - [ ] Integración de interfaces de ajuste/debug (`config_mg_*.tscn`) con el flujo real.
-- [ ] **Sistema de Victoria y Derrota:**
-  - [ ] Feedback unificado de fin de partida (UI desacoplada para Win / Lose).
-  - [ ] Tratamiento configurable de penalización o reintento.
-- [ ] **Objetos Tomables y Almacenamiento en Inventario:**
-  - [ ] Buffer local de recolección durante la sesión de juego.
-  - [ ] Transferencia oficial de ítems y consumibles recolectados hacia el singleton `Inventory` (`Inventory.add_item()`).
-- [ ] **Inicio de Minijuegos desde Triggers / Señales:**
-  - [ ] Extensión de `MinigameAction` y `GameTrigger` para lanzar minijuegos con parámetros específicos.
-  - [ ] Conexión opcional por señales de entidades o eventos del mapa.
-- [ ] **Retorno al Overworld con Nivel y Spawn Específico:**
-  - [ ] Reutilización de la lógica de portales/puertas: volver a un `target_level_path` y `arrival_id` específico tras terminar.
-  - [ ] Transición con `ScreenFader` y asentamiento de cámara idéntico a las transiciones de nivel.
-- [ ] **Pruebas y Validación Aislada:** Escena de prueba (`test_minigame_flow.tscn` / `test_minigame_flow_runner.gd`).
+  - [x] Integración de minijuegos con configuración inyectable vía `MinigameAction.config`.
+- [x] **Sistema de Victoria y Derrota:**
+  - [x] Routing de victoria/derrota con rutas y spawns (`win_level_path`, `win_spawn_id`, `lose_level_path`, `lose_spawn_id`).
+- [x] **Objetos Tomables y Almacenamiento en Inventario:**
+  - [x] Buffer local de recolección durante la sesión de juego (`session_rewards`).
+  - [x] Transferencia oficial de ítems y consumibles recolectados hacia el singleton `Inventory` (`Inventory.add_item()`).
+- [x] **Inicio de Minijuegos desde Triggers / Señales:**
+  - [x] Sistema único basado en `GameTrigger` + `MinigameAction`.
+  - [x] Prefab `MinigameInteractable` (`minigame_interactable.tscn`) para muebles/props de minijuegos interactuables con 'E'.
+  - [x] Eliminación de sistemas legacy paralelos (`minigame_trigger.gd`).
+- [x] **Retorno al Overworld con Nivel y Spawn Específico:**
+  - [x] Reutilización de la lógica de portales/puertas: volver a un `target_level_path` y `arrival_id` específico tras terminar.
+  - [x] Transición con `ScreenFader` y asentamiento de cámara idéntico a las transiciones de nivel.
+- [x] **Pruebas y Validación Aislada:** Escena de prueba (`test_minigame_flow.tscn` / `test_minigame_flow_runner.gd`) con 100% PASS.
+- [x] **Organización e Higiene del Repositorio:**
+  - [x] Eliminación de archivos temporales, backups y scripts huérfanos.
+  - [x] Estandarización de nombres a `snake_case` (`pickup_item.tscn`, `hud.tscn`, `inventory_ui.tscn`).
+  - [x] Creación de skill oficial `godot-project-structure` para blindar la taxonomía de carpetas.
 

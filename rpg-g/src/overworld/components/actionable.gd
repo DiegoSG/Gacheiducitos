@@ -6,7 +6,8 @@ extends Area2D
 var triggered: bool = false
 
 func action() -> void:
-	if not allow_during_alert and GameManager and GameManager.is_in_alert():
+	var gm: Node = get_node_or_null("/root/GameManager")
+	if not allow_during_alert and gm and gm.has_method("is_in_alert") and gm.is_in_alert():
 		print("Actionable: Interaction blocked during alert state for: ", name)
 		return
 	if one_shot and triggered: return

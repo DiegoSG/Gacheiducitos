@@ -21,3 +21,8 @@ Antes de modificar o implementar cualquier función o minijuego:
 - **Estado Global:** Minimizar singletons/autoloads; usarlos únicamente para gestores de nivel global (`GameManager`, etc.).
 - **Escenas de Prueba:** Cada feature o minijuego nuevo DEBE incluir su propia escena de prueba aislada en su respectivo directorio (`test_*.tscn`).
 - **Tipado Fuerte:** Utilizar tipado explícito en GDScript siempre que sea posible (`var count: int = 0`, `func _on_area_entered(area: Area2D) -> void:`).
+
+## 4. Estructura del Proyecto e Higiene
+- **Taxonomía:** Respetar estrictamente la estructura de directorios documentada en el skill `godot-project-structure`.
+- **Cero Basura:** Prohibido dejar archivos temporales (`*~`, `*.swp`, `*.bak`, `.*-autosave.*`), carpetas duplicadas (`design/Design`) o scripts redundantes.
+- **Herramientas Externas:** Scripts auxiliares de Python o Bash residen en `rpg-g/tools/asset_tools/`, nunca dentro de carpetas de assets.

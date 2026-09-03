@@ -29,7 +29,7 @@ signal loot_dropped(dropped_pickups: Array[PickupItem])
 @export var max_coins: int = 5
 
 @export_group("Spawn Settings")
-@export var pickup_item_scene: PackedScene = preload("res://src/overworld/interactables/PickupItem.tscn")
+@export var pickup_item_scene: PackedScene = preload("res://src/overworld/interactables/pickup_item.tscn")
 @export var coin_item_data: ItemData = preload("res://data/items/gold_coins.tres")
 ## Radio máximo de dispersión física para que los objetos no se amontonen
 @export var scatter_radius: float = 24.0
