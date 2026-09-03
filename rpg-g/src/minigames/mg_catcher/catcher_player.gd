@@ -6,7 +6,7 @@ var speed: float = 600.0
 func _ready() -> void:
 	add_to_group("catcher_player")
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	var input_dir = Input.get_axis("ui_left", "ui_right")
 	velocity.x = input_dir * speed
 	velocity.y = 0

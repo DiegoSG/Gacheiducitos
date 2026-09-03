@@ -150,21 +150,10 @@ func _on_insect_escaped() -> void:
 
 func win() -> void:
 	game_over = true
-	if message_overlay:
-		message_overlay.show()
-		message_label.text = "¡VICTORIA!"
 	print("Smasher: WIN!")
-	finish_game(true)
+	finish(true)
 
 func lose() -> void:
 	game_over = true
-	if message_overlay:
-		message_overlay.show()
-		message_label.text = "GAME OVER"
 	print("Smasher: LOSE!")
-	finish_game(false)
-
-func finish_game(success: bool) -> void:
-	# Visual feedback or UI could be added here
-	await get_tree().create_timer(1.0).timeout
-	finish(success)
+	finish(false)

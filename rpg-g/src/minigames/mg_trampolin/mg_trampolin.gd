@@ -59,9 +59,8 @@ func _process(_delta):
 	if player.global_position.y < last_platform_y + 1200:
 		spawn_platform()
 	
-	if win_condition_met:
-		if Input.is_anything_pressed():
-			finish(true)
+	if win_condition_met and not _is_finishing:
+		finish(true)
 		
 	# Actualizar Score basado en la altura máxima alcanzada (Y negativa)
 	var current_score = floor(-player.global_position.y / 10.0)

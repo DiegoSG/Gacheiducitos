@@ -122,21 +122,11 @@ func check_lives() -> void:
 func win() -> void:
 	if game_over: return
 	game_over = true
-	if message_overlay:
-		message_overlay.show()
-		message_label.text = "¡VICTORIA!"
 	print("Catcher: WIN!")
-	finish_game(true)
+	finish(true)
 
 func lose() -> void:
 	if game_over: return
 	game_over = true
-	if message_overlay:
-		message_overlay.show()
-		message_label.text = "GAME OVER"
 	print("Catcher: LOSE!")
-	finish_game(false)
-
-func finish_game(success: bool) -> void:
-	await get_tree().create_timer(1.0).timeout
-	finish(success)
+	finish(false)

@@ -171,19 +171,11 @@ func _stop_all_objects():
 func _on_player_died():
 	is_playing = false
 	_stop_all_objects()
-	result_label.text = "¡Chocaste!\nPresiona ESC para salir"
-	result_label.modulate = Color(1, 0, 0)
-	result_label.show()
+	finish(false)
 
 func _win_game():
 	is_playing = false
 	_stop_all_objects()
-	result_label.text = "¡Superado!\nVolviendo al mapa..."
-	result_label.modulate = Color(0, 1, 0)
-	result_label.show()
-	
-	# Esperar 2 segundos y salir
-	await get_tree().create_timer(2.0).timeout
 	finish(true)
 
 func _input(event):

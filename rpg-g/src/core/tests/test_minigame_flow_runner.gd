@@ -89,6 +89,33 @@ func _init() -> void:
 	assert(inventory.items.get("rusty_key") == 1, "El inventario global debe contener 1 rusty_key tras ganar")
 	print("[PASS] complete_minigame(true) transfiere satisfactoriamente todos los ítems al Inventario Global.")
 
+	# 7. Validar que test_minigame_flow.tscn contiene los 5 triggers individuales
+	var flow_scene = load("res://src/minigames/tests/test_minigame_flow.tscn")
+	assert(flow_scene != null, "test_minigame_flow.tscn debe cargar correctamente")
+	var flow_inst = flow_scene.instantiate()
+	root.add_child(flow_inst)
+	await process_frame
+	
+	var triggers_node = flow_inst.get_node_or_null("MinigameTriggers")
+	assert(triggers_node != null, "test_minigame_flow debe tener nodo MinigameTriggers")
+	
+	var expected_triggers = [
+		"Trigger_Catcher",
+		"Trigger_Excavation",
+		"Trigger_Runner",
+		"Trigger_Smasher",
+		"Trigger_Trampolin"
+	]
+	for trigger_name in expected_triggers:
+		var trig = triggers_node.get_node_or_null(trigger_name)
+		assert(trig != null, "Falta el trigger '%s' en test_minigame_flow" % trigger_name)
+		assert(trig.actions_if_true.size() > 0, "Trigger '%s' debe tener al menos una acción" % trigger_name)
+		var mg_act = trig.actions_if_true[0]
+		assert(mg_act is MinigameAction, "La acción de '%s' debe ser MinigameAction" % trigger_name)
+		assert(ResourceLoader.exists(mg_act.minigame_scene_path), "La escena '%s' del minijuego debe existir" % mg_act.minigame_scene_path)
+	print("[PASS] Los 5 triggers individuales (Catcher, Excavation, Runner, Smasher, Trampolin) verificados en test_minigame_flow.tscn.")
+	flow_inst.queue_free()
+
 	# Limpiar
 	dummy.queue_free()
 	dummy_trigger.queue_free()
