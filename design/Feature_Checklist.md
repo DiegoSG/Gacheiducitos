@@ -53,63 +53,64 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 ## 🟡 Feature: Minijuego A (Excavación)
 - [x] Generador Procedimental (Autómatas Celulares) (Ref: `Minijuego_Supaplex.md`)
 - [x] Algoritmo de Validación de Conectividad (Flood Fill) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Reglas de "Riesgo vs Recompensa" (Colocación de items) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Perfiles de Nivel (Variación de densidades) (Ref: `Minijuego_Supaplex.md`)
 - [x] Motor de Grid y Lógica de Excavación (Ref: `Minijuego_Supaplex.md`)
 - [x] Gravedad de Piedras (Caída y Deslizamiento) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Sistema de Misión (Contador de Raíces / Rescate de NPC) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Generador de Loot (Monedas, Corazones) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Sistema de Bombas (Colocación y cuenta atrás) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Lógica de Explosión 3x3 (Detección de tiles destructibles) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Tipos de Muro (Irrompible vs Rompible) (Ref: `Minijuego_Supaplex.md`)
-- [ ] IA de Enemigo (Ciego/Sonido) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Lógica de Radio de Ruido (Excavación vs Bomba) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Sistema de Sigilo en Túneles Vacíos (Ref: `Minijuego_Supaplex.md`)
-- [ ] Sistema de Semilla Persistente (Mismo nivel al reintentar) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Temporizador de Nivel y Gestión de Vidas (Ref: `Minijuego_Supaplex.md`)
-- [ ] Mecánica de Trampas de Bloqueo (One-way) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Condición de Salida (Activación de puerta tras objetivo) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Puente de Inventario (Transferencia de items al Overworld) (Ref: `Minijuego_Supaplex.md`)
+- [ ] **Edición Manual de Niveles:**
+  - [ ] Soporte para cargar niveles prediseñados a mano en lugar de sólo procedimental.
+  - [ ] TileMap / Grid de tiles para "pintar" tierra, piedras, muros y objetos directamente desde el editor de Godot.
+- [ ] **Elementos Interactivos y Bloqueos:**
+  - [ ] Sistema de Bombas (colocación, temporizador y explosión 3x3).
+  - [ ] Tipos de Muro: Muros irrompibles vs Muros rompibles por bombas.
+  - [ ] Trampas de Bloqueo (One-way: permiten paso en un sentido pero bloquean el regreso).
+- [ ] **Objetos y Misión:**
+  - [ ] Colocación de ítems de misión (raíces, rescate) y loot (monedas, consumibles).
+  - [ ] Reglas de riesgo/recompensa.
+  - [ ] Condición de salida activada tras cumplir objetivos.
+- [ ] **Enemigos y Sigilo (Siguiente iteración):**
+  - [ ] IA de Enemigo ciego guiado por sonido (excavación vs explosiones).
+  - [ ] Sistema de sigilo en túneles vacíos.
 
-## 🟡 Feature: Minijuego B (Laberinto)
-- [ ] Shader de Niebla de Guerra / Sistema de Iluminación (Ref: `Minijuego_Laberinto.md`)
-- [ ] Generación de laberinto y cambio de muros fuera de cámara (Ref: `Minijuego_Laberinto.md`)
-- [ ] Sistema de recolección de objetos clave (Ref: `Minijuego_Laberinto.md`)
-- [ ] Lógica de "Bucle Espacial" (Screen Wraparound) (Ref: `Minijuego_Laberinto.md`)
-- [ ] IA de Enemigos (Drenado de luz) (Ref: `Minijuego_Laberinto.md`)
+## 🟡 Feature: Minijuego Runner (Estilo Dinosaurio Google 2D)
+- [ ] **Mecánica Core 2D:**
+  - [ ] Perspectiva lateral 2D (Side-scroller) en línea recta con salto / agache al estilo Dinosaurio de Google.
+  - [ ] Scroll continuo de suelo con aceleración progresiva de velocidad.
+  - [ ] Generación procedural o por patrones de obstáculos terrestres y aéreos.
+  - [ ] Sistema de puntuación por distancia recorrida y multiplicadores.
 
-## 🟡 Feature: Minijuego C (Ritmo)
-- [ ] Metrónomo sincronizado (AudioServer BPM) (Ref: `Minijuego_Ritmo.md`)
-- [ ] Buffer de entrada y validación de timing (Ref: `Minijuego_Ritmo.md`)
-- [ ] Validador de secuencias de comandos (Símbolos/Inputs) (Ref: `Minijuego_Ritmo.md`)
-- [ ] Máquina de estados de multiplicadores/power-ups (Ref: `Minijuego_Ritmo.md`)
-- [ ] Feedback visual de pulso y comandos (Ref: `Minijuego_Ritmo.md`)
+## 🟡 Feature: Minijuego Trampolín (Sistema de Temas)
+- [ ] **Sistema de Temas Visuales:**
+  - [ ] Selector/recurso de tema para intercambiar fondos dinámicamente (cielo, noche, espacio, cueva).
+  - [ ] Variaciones de textura/estilo para las plataformas según el tema activo.
+  - [ ] Balance de tipos de plataformas (estáticas, móviles, rebotadoras frágiles).
+
+## 🟡 Feature: Minijuego Smasher (Temas y Puntos de Salida/Entrada)
+- [ ] **Sistema de Temas Visuales:**
+  - [ ] Fondos intercambiables por configuración/recurso.
+  - [ ] Personalización temática de los puntos / dianas a golpear.
+- [ ] **Puntos de Entrada y Salida Configurables:**
+  - [ ] Definición explícita de spawners (puntos de entrada de dianas) y zonas de escape/salida.
+
+## 🟡 Feature: Minijuego Catcher (Temas, Balances y Catálogo de Objetos)
+- [ ] **Sistema de Temas Visuales:**
+  - [ ] Fondos intercambiables por configuración/recurso.
+- [ ] **Catálogo y Configuración de Objetos Caídos:**
+  - [ ] Array configurable de objetos buenos (puntos, monedas, buffs).
+  - [ ] Array configurable de objetos malos (bombas, penalizadores).
+  - [ ] Ajuste independiente de velocidades de caída y escalas/tamaños de colisión.
+
+## 🟡 Feature: Feedback de Loot y Cofres (Mensajes de Diálogo No Invasivos)
+- [ ] **Sistema de Toast / Notificación Breve:**
+  - [ ] Notificación visual no intrusiva y de corta duración (ej. popup superior/inferior flotante que desaparece solo en 1.5s).
+  - [ ] Icono del ítem + nombre + cantidad (ej. "+3 Poción Azul", "+1 Llave Oxidada").
+  - [ ] Disparo automático al recolectar drops de enemigos (`PickupItem`).
+  - [ ] Integración en cofres (`chest.gd`) al abrirlos, reemplazando diálogos bloqueantes por toasts ligeros.
 
 ---
 
-## 🎯 Milestone: Framework y Estandarización de Minijuegos (Próximos Pasos)
-- [x] **Revisión de Estado Actual:** Auditoría de los 5 minijuegos implementados (`Excavation`, `Catcher`, `Runner`, `Smasher`, `Trampolin`).
-- [x] **Finalización y Unificación de Lógica:**
-  - [x] Clase base / ciclo de vida estándar (`MinigameBase` con `add_reward`, `finish(success)` y señal `game_finished`).
-  - [x] Señalización desacoplada (`game_finished(success: bool, results: Dictionary)` conectada con `GameManager`).
-- [ ] **Herramientas para Diseño:**
-  - [ ] Presets de configuración y parámetros de balance exportables (`MinigameConfigResource`).
-  - [x] Integración de minijuegos con configuración inyectable vía `MinigameAction.config`.
-- [x] **Sistema de Victoria y Derrota:**
-  - [x] Routing de victoria/derrota con rutas y spawns (`win_level_path`, `win_spawn_id`, `lose_level_path`, `lose_spawn_id`).
-- [x] **Objetos Tomables y Almacenamiento en Inventario:**
-  - [x] Buffer local de recolección durante la sesión de juego (`session_rewards`).
-  - [x] Transferencia oficial de ítems y consumibles recolectados hacia el singleton `Inventory` (`Inventory.add_item()`).
-- [x] **Inicio de Minijuegos desde Triggers / Señales:**
-  - [x] Sistema único basado en `GameTrigger` + `MinigameAction`.
-  - [x] Prefab `MinigameInteractable` (`minigame_interactable.tscn`) para muebles/props de minijuegos interactuables con 'E'.
-  - [x] Eliminación de sistemas legacy paralelos (`minigame_trigger.gd`).
-- [x] **Retorno al Overworld con Nivel y Spawn Específico:**
-  - [x] Reutilización de la lógica de portales/puertas: volver a un `target_level_path` y `arrival_id` específico tras terminar.
-  - [x] Transición con `ScreenFader` y asentamiento de cámara idéntico a las transiciones de nivel.
-- [x] **Pruebas y Validación Aislada:** Escena de prueba (`test_minigame_flow.tscn` / `test_minigame_flow_runner.gd`) con 100% PASS.
-- [x] **Organización e Higiene del Repositorio:**
-  - [x] Eliminación de archivos temporales, backups y scripts huérfanos.
-  - [x] Estandarización de nombres a `snake_case` (`pickup_item.tscn`, `hud.tscn`, `inventory_ui.tscn`).
-  - [x] Creación de skill oficial `godot-project-structure` para blindar la taxonomía de carpetas.
+## 🎯 Próximo Gran Hito: Vertical Slice
+- [ ] Integración de un bucle de juego completo:
+  - Exploración en Overworld ➔ Desbloqueo de puertas con llaves ➔ Combate/Loot de enemigos con notificaciones.
+  - Acceso interactivo a los minijuegos pulidos temáticamente.
+  - Retorno con recompensas añadidas al inventario global para progresión en el mapa.
+
 
