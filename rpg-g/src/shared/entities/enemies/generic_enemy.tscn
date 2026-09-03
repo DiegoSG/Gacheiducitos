@@ -4,24 +4,29 @@
 [ext_resource type="Texture2D" uid="uid://dk41wealbqck6" path="res://icon.svg" id="2_icon"]
 [ext_resource type="PackedScene" path="res://src/shared/components/hitbox_component.tscn" id="3_hitbox"]
 [ext_resource type="PackedScene" path="res://src/shared/components/hurtbox_component.tscn" id="4_hurtbox"]
+[ext_resource type="PackedScene" path="res://src/shared/components/loot_drop_component.tscn" id="5_loot"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_enemy"]
-size = Vector2(16, 16)
+size = Vector2(59, 60)
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_detection"]
+[sub_resource type="CircleShape2D" id="CircleShape2D_vision"]
 radius = 120.0
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_lose"]
+radius = 561.85583
+
 [node name="GenericEnemy" type="CharacterBody2D" unique_id=1981586223]
-collision_layer = 7
-collision_mask = 7
+collision_layer = 0
+collision_mask = 3
 script = ExtResource("1_script")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1628491093]
 modulate = Color(1, 0, 0, 1)
-scale = Vector2(0.25, 0.25)
+scale = Vector2(0.4375, 0.43750003)
 texture = ExtResource("2_icon")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=689463546]
+visible = false
 shape = SubResource("RectangleShape2D_enemy")
 
 [node name="HitboxComponent" parent="." unique_id=831137513 instance=ExtResource("3_hitbox")]
@@ -29,17 +34,31 @@ collision_mask = 4
 knockback_force = 400.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HitboxComponent" unique_id=350662157]
+visible = false
 shape = SubResource("RectangleShape2D_enemy")
 
 [node name="HurtboxComponent" parent="." unique_id=356374227 instance=ExtResource("4_hurtbox")]
 collision_layer = 8
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HurtboxComponent" unique_id=260307841]
+visible = false
+position = Vector2(-1.5, 0)
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="DetectionZone" type="Area2D" parent="." unique_id=298561413]
+[node name="VisionZone" type="Area2D" parent="." unique_id=298561413]
 collision_layer = 0
 collision_mask = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionZone" unique_id=457416425]
-shape = SubResource("CircleShape2D_detection")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VisionZone" unique_id=457416425]
+visible = false
+shape = SubResource("CircleShape2D_vision")
+
+[node name="LoseTargetZone" type="Area2D" parent="." unique_id=1847192841]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LoseTargetZone" unique_id=1294817294]
+visible = false
+shape = SubResource("CircleShape2D_lose")
+
+[node name="LootDropComponent" parent="." unique_id=1603003153 instance=ExtResource("5_loot")]

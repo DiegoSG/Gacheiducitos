@@ -1,14 +1,14 @@
 class_name GameTrigger
 extends Area2D
 
-## Un trigger general que evalúa variables de juego y ejecuta acciones ya sea en
-## secuencia o todas a la vez.
+## Un trigger general que evalúa variables de juego y ejecuta acciones tanto al entrar, al salir o por interacción.
 
 enum TriggerMode {
-	ON_ENTER, ## Se activa al pisarlo
-	ON_EXIT, ## Se activa al salir del área
-	INTERACT, ## Se activa usando el botón de acción estando dentro
-	AUTO_START ## Se activa automáticamente en cuanto carga la escena
+	ON_ENTER,        ## Se activa al pisarlo
+	ON_EXIT,         ## Se activa al salir del área
+	ON_ENTER_AND_EXIT, ## Ejecuta una lista al entrar y otra lista distinta al salir
+	INTERACT,        ## Se activa usando el botón de acción estando dentro
+	AUTO_START       ## Se activa automáticamente en cuanto carga la escena
 }
 
 @export var trigger_mode: TriggerMode = TriggerMode.ON_ENTER
@@ -20,7 +20,9 @@ enum TriggerMode {
 @export var condition_expected_value: String = "true"
 
 @export_group("Acciones")
+## Acciones ejecutadas en ON_ENTER, INTERACT, AUTO_START o si la condición es verdadera
 @export var actions_if_true: Array[ActionResource] = []
+## Acciones ejecutadas en ON_EXIT (en modo ON_ENTER_AND_EXIT) o si la condición es falsa
 @export var actions_if_false: Array[ActionResource] = []
 
 var _has_triggered: bool = false
@@ -41,7 +43,10 @@ func _on_body_entered(body: Node2D) -> void:
 	var activated = false
 	if trigger_mode == TriggerMode.ON_ENTER:
 		activated = _can_trigger()
-		_attempt_trigger()
+		_attempt_trigger(actions_if_true)
+	elif trigger_mode == TriggerMode.ON_ENTER_AND_EXIT:
+		activated = _can_trigger()
+		_attempt_trigger(actions_if_true)
 		
 	print("[GameTrigger: body_entered] '%s' cruzó el área de '%s'. Activado: %s" % [body.name, name, activated])
 
@@ -52,7 +57,10 @@ func _on_body_exited(body: Node2D) -> void:
 	var activated = false
 	if trigger_mode == TriggerMode.ON_EXIT:
 		activated = _can_trigger()
-		_attempt_trigger()
+		_attempt_trigger(actions_if_true)
+	elif trigger_mode == TriggerMode.ON_ENTER_AND_EXIT:
+		activated = _can_trigger()
+		_attempt_trigger(actions_if_false)
 		
 	print("[GameTrigger: body_exited] '%s' salió del área de '%s'. Activado: %s" % [body.name, name, activated])
 
@@ -79,17 +87,18 @@ func _can_trigger() -> bool:
 	if _is_running: return false
 	return true
 
-func _attempt_trigger() -> void:
+func _attempt_trigger(override_actions: Array[ActionResource] = []) -> void:
 	if not _can_trigger(): return
 	
-	_has_triggered = true
+	if one_shot:
+		_has_triggered = true
 	_is_running = true
 	
-	var array_to_run: Array[ActionResource] = actions_if_true
+	var array_to_run: Array[ActionResource] = override_actions if not override_actions.is_empty() else actions_if_true
 	
-	# Evaluar condición
-	if require_condition and condition_flag != "":
-		var narrative_manager = get_tree().root.get_node_or_null("NarrativeManager")
+	# Evaluar condición si no es override directo
+	if override_actions.is_empty() and require_condition and condition_flag != "":
+		var narrative_manager = get_tree().root.get_node_or_null("NarrativeManager") if get_tree() and get_tree().root else null
 		if narrative_manager:
 			var actual_val = narrative_manager.get_flag(condition_flag)
 			var expected = _str_to_variant(condition_expected_value)
@@ -110,27 +119,22 @@ func _str_to_variant(val: String) -> Variant:
 func _run_actions(array: Array[ActionResource]) -> void:
 	if array.is_empty(): return
 	
-	# Usamos un pequeño diccionario para que la lambda pueda modificar el valor por referencia
 	var state = {"waiting": false}
 	var on_action_done = func(): state.waiting = false
 	
 	for act in array:
 		if not act: continue
 		
-		# Si la accion NO dice que debamos esperar a que termine, 
-		# la disparamos y pasamos inmediatamente a la siguiente.
 		if not act.wait_to_finish:
 			act.execute(self)
 			continue
 			
-		# Si ES wait_to_finish, nos preparamos para esperar su señal
 		state.waiting = true
 		if not act.is_connected("finished", on_action_done):
 			act.finished.connect(on_action_done, CONNECT_ONE_SHOT)
 			
 		act.execute(self)
 		
-		# Esperamos frame por frame hasta que la señal "finished" apague la variable
 		while state.waiting:
 			if not is_inside_tree() or get_tree() == null:
 				return

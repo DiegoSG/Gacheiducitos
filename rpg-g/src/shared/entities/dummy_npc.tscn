@@ -1,31 +1,29 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene format=3 uid="uid://de6b37r8ps5c0"]
 
-[ext_resource type="Script" path="res://src/shared/entities/dummy_npc.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://icon.svg" id="2_icon"]
+[ext_resource type="Script" uid="uid://cre47deufg0be" path="res://src/shared/entities/dummy_npc.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dk41wealbqck6" path="res://icon.svg" id="2_icon"]
 [ext_resource type="PackedScene" path="res://src/shared/components/hurtbox_component.tscn" id="3_hurtbox"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(16, 16)
+size = Vector2(30, 32)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
-size = Vector2(16, 16)
+size = Vector2(32, 30)
 
-[node name="DummyNPC" type="CharacterBody2D"]
+[node name="DummyNPC" type="CharacterBody2D" unique_id=1022085605]
 collision_layer = 8
-collision_mask = 1
 script = ExtResource("1_script")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=997064357]
 modulate = Color(0.8, 0.4, 0.4, 1)
-texture = ExtResource("2_icon")
 scale = Vector2(0.25, 0.25)
+texture = ExtResource("2_icon")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=874401216]
 shape = SubResource("RectangleShape2D_body")
 
-[node name="HurtboxComponent" parent="." instance=ExtResource("3_hurtbox")]
+[node name="HurtboxComponent" parent="." unique_id=223798546 instance=ExtResource("3_hurtbox")]
 collision_layer = 8
-collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtboxComponent"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtboxComponent" unique_id=406361551]
 shape = SubResource("RectangleShape2D_hurtbox")

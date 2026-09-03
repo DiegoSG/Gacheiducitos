@@ -2,12 +2,13 @@
 
 [ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="1_bounds"]
 [ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="2_tileset"]
-[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="3_player"]
 [ext_resource type="Script" uid="uid://63w406wwqc28" path="res://src/overworld/components/bounded_camera.gd" id="4_camera"]
 [ext_resource type="PackedScene" path="res://src/overworld/components/arrival_spawn_point.tscn" id="5_arrival"]
 [ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="6_j2tj3"]
 
 [node name="PrototypeTemplate" type="Node2D" unique_id=168899230]
+position = Vector2(1, 1)
 
 [node name="WorldBoundaryManager" type="Node2D" parent="." unique_id=558415174]
 script = ExtResource("1_bounds")
@@ -47,7 +48,7 @@ script = ExtResource("4_camera")
 target_node = NodePath("..")
 
 [node name="LevelPortal" parent="." unique_id=1271243254 instance=ExtResource("6_j2tj3")]
-position = Vector2(152, 1422)
+position = Vector2(811, 488)
 target_level_path = "res://src/overworld/levels/test_portal_room_a.tscn"
 exit_id = "1"
 arrival_id = "1"

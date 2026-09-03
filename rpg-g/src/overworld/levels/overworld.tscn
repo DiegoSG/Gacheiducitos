@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://dlq26oyia074p"]
 
 [ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="1_tileset"]
-[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" uid="uid://tkrjy8dnqifu" path="res://src/overworld/interactables/chest.tscn" id="3_chest"]
 [ext_resource type="PackedScene" uid="uid://desnxrcj6behk" path="res://src/overworld/interactables/minigame_trigger.tscn" id="4_trigger"]
 [ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="5_5tehe"]
@@ -186,7 +186,7 @@ position = Vector2(1991, 841)
 minigame_scene = ExtResource("12_fevyo")
 
 [node name="MinigameTrigger2" parent="Triggers" unique_id=114198532 instance=ExtResource("4_trigger")]
-position = Vector2(666, -9)
+position = Vector2(536, 170)
 minigame_scene = ExtResource("21_vjxgl")
 
 [node name="MinigameTrigger3" parent="Triggers" unique_id=990729748 instance=ExtResource("4_trigger")]
@@ -194,7 +194,7 @@ position = Vector2(1773, 553)
 minigame_scene = ExtResource("19_n00ki")
 
 [node name="MinigameTrigger4" parent="Triggers" unique_id=178776406 instance=ExtResource("4_trigger")]
-position = Vector2(858, -8)
+position = Vector2(847, 140)
 minigame_scene = ExtResource("8_dlk22")
 
 [node name="Items" type="Node2D" parent="." unique_id=1440517776]
@@ -225,6 +225,11 @@ item_data = ExtResource("8_lvsx0")
 position = Vector2(289, 157)
 
 [node name="Camera2D" type="Camera2D" parent="Player" unique_id=303789979 node_paths=PackedStringArray("target_node")]
+limit_left = 0
+limit_top = 0
+limit_right = 3840
+limit_bottom = 2160
+position_smoothing_enabled = true
 script = ExtResource("27_camera")
 target_node = NodePath("..")
 

@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://be3dgr8tc2bii"]
 
 [ext_resource type="Script" uid="uid://i7ip702opd4y" path="res://src/overworld/player/player.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dk41wealbqck6" path="res://icon.svg" id="2_icon"]
@@ -11,37 +11,39 @@ size = Vector2(60, 60)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
 size = Vector2(60, 60)
 
-[node name="Player" type="CharacterBody2D"]
+[node name="Player" type="CharacterBody2D" unique_id=1441524907]
 collision_layer = 2
 collision_mask = 9
 script = ExtResource("1_script")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1173199192]
+scale = Vector2(0.46875, 0.46875)
 texture = ExtResource("2_icon")
-scale = Vector2(0.8, 0.8)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=40233913]
+visible = false
 shape = SubResource("RectangleShape2D_1")
 
-[node name="ActionableFinder" type="Area2D" parent="."]
+[node name="ActionableFinder" type="Area2D" parent="." unique_id=1271571305]
 collision_layer = 0
 collision_mask = 16
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ActionableFinder"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ActionableFinder" unique_id=833290299]
+visible = false
 position = Vector2(0, 60)
 shape = SubResource("RectangleShape2D_1")
 
-[node name="HitboxComponent" parent="." instance=ExtResource("3_hitbox")]
-collision_layer = 0
+[node name="HitboxComponent" parent="." unique_id=673697191 instance=ExtResource("3_hitbox")]
 collision_mask = 8
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HitboxComponent"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitboxComponent" unique_id=2134926983]
+visible = false
 position = Vector2(0, 60)
 shape = SubResource("RectangleShape2D_hitbox")
 
-[node name="HurtboxComponent" parent="." instance=ExtResource("4_hurtbox")]
+[node name="HurtboxComponent" parent="." unique_id=1563591684 instance=ExtResource("4_hurtbox")]
 collision_layer = 4
-collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtboxComponent"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtboxComponent" unique_id=1725608150]
+visible = false
 shape = SubResource("RectangleShape2D_1")

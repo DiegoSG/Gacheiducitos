@@ -12,6 +12,12 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [x] Auditoría integral: corrección de fugas de memoria, crashes en corrutinas, tipado estricto y optimización de código
 - [ ] TODO: Animación de salida del portal (el personaje se desplaza desde el portal hacia el punto de llegada / arrival point)
 - [x] Sistema de interacción base (Referencia: `actionable.gd`)
+- [x] Puertas vs Portales: modos `PORTAL` (toque directo) y `DOOR` (interacción manual)
+- [x] Lógica de Candados y Llaves en Puertas: comprobación con `Inventory`, consumo opcional de ítems y retroalimentación/diálogo de bloqueo
+- [x] Estados Dinámicos de Textura: vórtice activo para portales, puerta de madera para puertas abiertas, cadenas y candado para bloqueadas/desactivadas
+- [x] Sistema de Interruptores/Palancas (`SwitchInteractable`) y Activadores de Eventos
+- [x] Placas de Presión y Triggers de Entrada/Salida (`PressurePlate` & `GameTrigger.ON_ENTER_AND_EXIT`)
+- [x] Nuevos Recursos de Pipeline: `DoorAction` (bloquear/desbloquear/activar) y `DestroyNodeAction` (eliminar/desvanecer obstáculos)
 
 ---
 
