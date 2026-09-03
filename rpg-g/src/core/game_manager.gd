@@ -79,10 +79,15 @@ func complete_minigame(success: bool, results: Dictionary = {}) -> void:
 	print("GameManager: complete_minigame called. Success: ", success)
 	
 	# Transferir items recolectados al Inventario Global
-	if results.has("items") and Inventory != null:
-		var items_dict = results["items"]
-		for item_id in items_dict:
-			Inventory.add_item(item_id, items_dict[item_id])
+	if results.has("items"):
+		var inventory: Node = get_node_or_null("/root/Inventory")
+		if not inventory and get_tree() and get_tree().root:
+			inventory = get_tree().root.get_node_or_null("Inventory")
+			
+		if inventory and inventory.has_method("add_item"):
+			var items_dict = results["items"]
+			for item_id in items_dict:
+				inventory.add_item(item_id, items_dict[item_id])
 			
 	# Determinar a dónde ir y qué spawn usar
 	var target_scene = _minigame_win_path if success else _minigame_lose_path
