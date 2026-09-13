@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://c3m7tx2yvw4la"]
+[gd_scene format=3 uid="uid://c3m7tx2yvw4la"]
 
 [ext_resource type="Script" path="res://src/minigames/mg_trampolin/mg_trampolin_item.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dk41wealbqck6" path="res://icon.svg" id="2_icon"]

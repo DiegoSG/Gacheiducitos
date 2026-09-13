@@ -23,8 +23,7 @@ var velocity_y: float = 0.0
 var ammo: int = 3
 var is_dead: bool = false
 var _jump_buffer: float = 0.0
-
-const BULLET_SCENE = preload("res://src/minigames/mg_runner/mg_runner_bullet.tscn")
+var bullet_scene: PackedScene = null
 
 @onready var visual: Node2D = $Visual
 @onready var sprite: Sprite2D = $Visual/Sprite2D
@@ -155,7 +154,9 @@ func _set_ducking_state() -> void:
 func _shoot() -> void:
 	if ammo > 0:
 		ammo -= 1
-		var bullet = BULLET_SCENE.instantiate()
+		if not bullet_scene:
+			bullet_scene = load("res://src/minigames/mg_runner/mg_runner_bullet.tscn")
+		var bullet = bullet_scene.instantiate()
 		bullet.player = self
 		get_parent().add_child(bullet)
 		var spawn_y = position.y - (duck_height * 0.5 if state == State.DUCKING else stand_height * 0.5)

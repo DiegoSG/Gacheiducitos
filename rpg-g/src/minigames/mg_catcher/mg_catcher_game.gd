@@ -120,8 +120,9 @@ func _on_spawn_timeout() -> void:
 			if critical_item_ids.has("point"):
 				is_crit = true
 		
-		if not chosen_item_id.is_empty() and ItemDatabase:
-			var item_res = ItemDatabase.get_item(chosen_item_id)
+		var item_db = get_node_or_null("/root/ItemDatabase")
+		if not chosen_item_id.is_empty() and item_db:
+			var item_res = item_db.get_item(chosen_item_id)
 			if item_res and item_res.icon:
 				custom_texture = item_res.icon
 

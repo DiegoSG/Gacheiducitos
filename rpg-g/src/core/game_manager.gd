@@ -108,12 +108,14 @@ func complete_minigame(success: bool, results: Dictionary = {}) -> void:
 	await change_level(target_scene, target_spawn_id)
 	
 	# Si obtuvimos items del minijuego, animar su llegada en el HUD
-	if not pending_items.is_empty() and ItemDatabase:
-		for item_id in pending_items:
-			var data: ItemData = ItemDatabase.get_item(item_id)
-			if data:
-				var center_screen = get_viewport().get_visible_rect().size * 0.5
-				LootFeedbackManager.trigger_screen_loot(data, center_screen, pending_items[item_id])
+	if not pending_items.is_empty():
+		var item_db = get_node_or_null("/root/ItemDatabase")
+		if item_db:
+			for item_id in pending_items:
+				var data: ItemData = item_db.get_item(item_id)
+				if data:
+					var center_screen = get_viewport().get_visible_rect().size * 0.5
+					LootFeedbackManager.trigger_screen_loot(data, center_screen, pending_items[item_id])
 
 func return_to_overworld() -> void:
 	print("GameManager: return_to_overworld called")

@@ -10,8 +10,9 @@ func _ready() -> void:
 		control.visible = false
 		
 	# Conexión al inventario global para actualizar reactivamente
-	if Inventory:
-		Inventory.inventory_changed.connect(_on_inventory_changed)
+	var inv = get_node_or_null("/root/Inventory")
+	if inv:
+		inv.inventory_changed.connect(_on_inventory_changed)
 	
 	refresh_ui()
 
@@ -54,17 +55,19 @@ func refresh_ui() -> void:
 		return
 	item_list.clear()
 	
-	if not Inventory or not ItemDatabase:
+	var inv = get_node_or_null("/root/Inventory")
+	var item_db = get_node_or_null("/root/ItemDatabase")
+	if not inv or not item_db:
 		return
 		
-	var items: Dictionary = Inventory.get_items()
+	var items: Dictionary = inv.get_items()
 	if items.is_empty():
 		item_list.add_item("(Inventario vacío)")
 		return
 		
 	for item_id in items:
 		var amount: int = items[item_id]
-		var data: ItemData = ItemDatabase.get_item(item_id)
+		var data: ItemData = item_db.get_item(item_id)
 		
 		if data:
 			item_list.add_item("%s (x%d)" % [data.name, amount], data.icon)

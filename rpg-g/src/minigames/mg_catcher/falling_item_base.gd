@@ -1,3 +1,6 @@
+extends Area2D
+class_name FallingItemBase
+
 signal hit_floor
 signal caught(item_type: int)
 signal expired(is_critical: bool)
