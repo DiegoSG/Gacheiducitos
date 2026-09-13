@@ -149,4 +149,19 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
   - [x] Creada `design/Guia_Creacion_Niveles.md` cubriendo la creación desde `prototype_template.tscn`, configuración de colisiones, portales, puertas con llave, cofres, drops de enemigos, triggers de minijuegos y NPCs con diálogos.
 - [ ] Creación manual guiada de dos niveles interconectados como demostración del Vertical Slice (realizada por el usuario siguiendo la guía).
 
+---
+
+## 📌 Milestone: Diseño Técnico de Misiones para Minijuegos (Framework de 4 Capas)
+- [x] **Framework de 4 Capas Documentado (`docs/design/misiones/00-sistema-general.md`):**
+  - [x] Core loop, Modificadores de sesión, Objetivo de misión (3 estrellas) y Gancho narrativo.
+  - [x] Estandarización de `MissionDefinition` con integración a `GameManager`, `NarrativeManager`, `Inventory` e `ItemDatabase`.
+  - [x] Especificación técnica del sistema de feedback visual de loot en HUD (`LootToastStack` junto al icono de inventario, `[Icono] x N`, 2.5s con fade-out).
+- [x] **Documentación Técnica Específica por Minijuego:**
+  - [x] Smasher (`docs/design/misiones/01-smasher.md`): Whack-a-mole, bichos blindados/trampa, misiones de precisión y gaps técnicos identificados.
+  - [x] Excavación (`docs/design/misiones/02-excavacion.md`): Física de rocas/bombas, medidor de oxígeno/pasos, misiones de extracción y rescate.
+  - [x] Runner (`docs/design/misiones/03-runner.md`): Rutas altas/bajas, enemigos con reacción estricta, checkpoints narrativos y escolta.
+  - [x] Catcher (`docs/design/misiones/04-catcher.md`): Viento lateral, contenedor dual, checklist de ingredientes y misiones defensivas.
+  - [x] Trampolín (`docs/design/misiones/05-trampolin.md`): Plataformas móviles/quebradizas/resorte, cumbres fijas y restricciones de ruta.
+
+
 
