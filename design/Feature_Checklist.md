@@ -120,15 +120,17 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [ ] **Sistema de Temas Visuales:**
   - [ ] Fondos intercambiables por configuración/recurso.
 
-## 🟢 Feature: Feedback de Loot, Cofres y Minijuegos (Animación e Iconos al Inventario) (Completado)
-- [x] **Animación de Iconos Descendentes hacia el Inventario:**
-  - [x] Al recoger `PickupItem`, abrir cofre (`chest.gd`) o finalizar minijuego (`MinigameBase.add_reward`), spawnear un icono temporal animado (efecto "flying icon / bounce").
-  - [x] Animación fluida parabólica/descendente hacia la posición anclada del icono de Inventario en el HUD.
-  - [x] Desvanecimiento y efecto "punch/scale" en la interfaz de inventario al recibir el objeto (`pulse_icon()`).
+## 🟢 Feature: Feedback de Loot, Cofres y Minijuegos (LootToastStack) (Completado)
+- [x] **Notificaciones Tipo Toast al Lado del Inventario (`LootToastStack`):**
+  - [x] Al recoger `PickupItem`, abrir cofre (`chest.gd`) o finalizar minijuego (`MinigameBase.add_reward`), desplegar inmediatamente una fila de toast junto a la mochila.
+  - [x] Estructura visual limpia: `[Icono] x N [Nombre]` con fondo oscuro semi-transparente y bordes redondeados.
+  - [x] Apilamiento dinámico: Ítems idénticos o monedas consecutivas incrementan el contador (`x 1` -> `x 2`) con un scale punch visual y reinician el temporizador a 2.5s sin duplicar filas.
+  - [x] Soporte completo de Monedas de Oro (`gold_coins`) mostrando `[🪙] Monedas de Oro x N` y apilándose automáticamente.
+  - [x] Eliminación de la animación de iconos voladores cruzando la pantalla para evitar polución visual y dar feedback instantáneo.
+  - [x] Temporizador de permanencia de 2.5s con desvanecimiento suave (fade-out de opacidad) y limpieza automática de memoria.
 - [ ] **TODO Diseño de UI (Tarea Asignada para Sesión de Diseño):**
   - [ ] Asignar lugares definitivos a todos los elementos del HUD (esquinas, slots, área dedicada del inventario y barra de accesos).
   - [ ] Diseño de menú/barra de acceso rápido (Hotbar / Quick-access).
-  - [ ] Notificaciones tipo Toast / popup flotante no intrusivo complementario.
 
 ## 🟢 Feature: Arquitectura de Inventario Unificado y Control de Pausa (Completado)
 - [x] **Desacoplamiento de Niveles e Integración al Player:**
