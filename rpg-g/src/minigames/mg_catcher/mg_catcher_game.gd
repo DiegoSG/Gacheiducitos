@@ -103,14 +103,20 @@ func _on_spawn_timeout() -> void:
 	if not is_bomb:
 		# Evaluar si seleccionamos un item del pool
 		if not item_pool.is_empty():
-			var roll = randf()
-			var accum = 0.0
-			for entry in item_pool:
-				accum += entry.get("chance", 0.3)
-				if roll <= accum:
-					chosen_item_id = str(entry.get("id", ""))
-					is_crit = entry.get("is_critical", false)
-					break
+			if item_pool[0] is Dictionary:
+				var roll = randf()
+				var accum = 0.0
+				for entry in item_pool:
+					accum += entry.get("chance", 0.3)
+					if roll <= accum:
+						chosen_item_id = str(entry.get("id", ""))
+						is_crit = entry.get("is_critical", false)
+						break
+			else:
+				# Si es un Array de Strings (ej. ["blue_potion", "red_potion", "green_herb"])
+				# 35% de probabilidad de que este punto caiga como ítem de inventario
+				if randf() < 0.35:
+					chosen_item_id = str(item_pool[randi() % item_pool.size()])
 		
 		# Si está explícitamente en la lista de críticos
 		if not chosen_item_id.is_empty() and critical_item_ids.has(chosen_item_id):

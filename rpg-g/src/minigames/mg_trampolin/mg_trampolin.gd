@@ -138,16 +138,22 @@ func spawn_platform():
 	new_plat.global_position = Vector2(x_pos, last_platform_y)
 	
 	# Spawn de items coleccionables sobre la plataforma (siempre apoyados en ella)
-	if not item_pool.is_empty():
-		var roll = randf()
-		var accum = 0.0
-		for entry in item_pool:
-			accum += entry.get("chance", 0.15)
-			if roll <= accum:
-				var chosen_id = str(entry.get("id", ""))
-				if not chosen_id.is_empty():
-					_spawn_platform_item(chosen_id, Vector2(x_pos, last_platform_y - 25.0))
-				break
+	var item_chance = config.get("item_spawn_chance", 0.25)
+	if not item_pool.is_empty() and randf() < item_chance:
+		var chosen_id: String = ""
+		if item_pool[0] is Dictionary:
+			var roll = randf()
+			var accum = 0.0
+			for entry in item_pool:
+				accum += entry.get("chance", 0.5)
+				if roll <= accum:
+					chosen_id = str(entry.get("id", ""))
+					break
+		else:
+			chosen_id = str(item_pool[randi() % item_pool.size()])
+			
+		if not chosen_id.is_empty():
+			_spawn_platform_item(chosen_id, Vector2(x_pos, last_platform_y - 25.0))
 	
 	# Spawn de monedas basado en densidad y patrones aleatorios (flotando en el aire)
 	var density = config.get("coin_density", 0.3)
