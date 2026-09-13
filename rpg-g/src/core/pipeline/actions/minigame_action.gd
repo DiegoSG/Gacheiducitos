@@ -43,6 +43,10 @@ var runner_speed: float = 380.0
 var runner_coin_density: float = 0.55
 var runner_max_coins: int = -1
 var runner_item_pool: Array[String] = ["blue_potion", "red_potion", "green_herb"]
+var runner_speed_increase_interval: float = 200.0
+var runner_speed_increase_amount: float = 25.0
+var runner_ammo_initial_distance: float = 250.0
+var runner_ammo_distance_multiplier: float = 1.5
 
 # --- Parámetros específicos de CATCHER ---
 var catcher_game_mode: int = 0 # 0: COUNT, 1: TIME
@@ -51,12 +55,17 @@ var catcher_lives: int = 3
 var catcher_fall_speed: float = 200.0
 var catcher_spawn_rate: float = 0.8
 var catcher_max_objects: int = 8
+var catcher_item_pool: Array[String] = ["blue_potion", "red_potion", "green_herb"]
+var catcher_critical_item_ids: Array[String] = ["falling_bomb", "falling_rock"]
 
 # --- Parámetros específicos de EXCAVATION ---
 var excavation_win_condition: int = 0 # 0: ALL_COINS, 1: TARGET_AMOUNT, 2: MISSION_ITEM
 var excavation_target_amount: int = 5
 var excavation_rocks: int = 10
 var excavation_scale: float = 1.5
+var excavation_deliver_items: bool = false
+var excavation_initial_bombs: int = 1
+var excavation_item_pool: Array[String] = ["blue_potion", "red_potion", "green_herb"]
 
 # --- Parámetros específicos de SMASHER ---
 var smasher_game_mode: int = 0 # 0: COUNT, 1: TIME
@@ -68,6 +77,8 @@ var smasher_lives: int = 3
 # --- Parámetros específicos de TRAMPOLIN ---
 var trampolin_win_condition: int = 1 # 0: ALTURA, 1: ESPECIAL, 2: MONEDAS
 var trampolin_target_value: float = 5.0
+var trampolin_item_chance: float = 0.25
+var trampolin_item_pool: Array[String] = ["blue_potion", "red_potion", "green_herb"]
 
 # --- Rutas de retorno al Overworld ---
 @export_group("Retorno al Overworld (Victoria)")
@@ -170,6 +181,34 @@ func _get_property_list() -> Array[Dictionary]:
 			"hint_string": "%d:" % TYPE_STRING,
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
+		list.append({
+			"name": "runner_speed_increase_interval",
+			"type": TYPE_FLOAT,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "50.0,2000.0,25.0",
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
+		list.append({
+			"name": "runner_speed_increase_amount",
+			"type": TYPE_FLOAT,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "5.0,100.0,5.0",
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
+		list.append({
+			"name": "runner_ammo_initial_distance",
+			"type": TYPE_FLOAT,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "50.0,2000.0,25.0",
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
+		list.append({
+			"name": "runner_ammo_distance_multiplier",
+			"type": TYPE_FLOAT,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "1.0,3.0,0.1",
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
 	elif minigame_type == MinigameType.CATCHER:
 		list.append({
 			"name": "Catcher Settings",
@@ -211,6 +250,20 @@ func _get_property_list() -> Array[Dictionary]:
 			"hint_string": "0.2,3.0,0.1",
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
+		list.append({
+			"name": "catcher_item_pool",
+			"type": TYPE_ARRAY,
+			"hint": PROPERTY_HINT_TYPE_STRING,
+			"hint_string": "%d:" % TYPE_STRING,
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
+		list.append({
+			"name": "catcher_critical_item_ids",
+			"type": TYPE_ARRAY,
+			"hint": PROPERTY_HINT_TYPE_STRING,
+			"hint_string": "%d:" % TYPE_STRING,
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
 	elif minigame_type == MinigameType.EXCAVATION:
 		list.append({
 			"name": "Excavation Settings",
@@ -243,6 +296,25 @@ func _get_property_list() -> Array[Dictionary]:
 			"type": TYPE_FLOAT,
 			"hint": PROPERTY_HINT_RANGE,
 			"hint_string": "1.0,3.0,0.1",
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
+		list.append({
+			"name": "excavation_deliver_items",
+			"type": TYPE_BOOL,
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
+		list.append({
+			"name": "excavation_initial_bombs",
+			"type": TYPE_INT,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "0,10,1",
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
+		list.append({
+			"name": "excavation_item_pool",
+			"type": TYPE_ARRAY,
+			"hint": PROPERTY_HINT_TYPE_STRING,
+			"hint_string": "%d:" % TYPE_STRING,
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
 	elif minigame_type == MinigameType.SMASHER:
@@ -306,6 +378,20 @@ func _get_property_list() -> Array[Dictionary]:
 			"hint_string": "1.0,1000.0,1.0",
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
+		list.append({
+			"name": "trampolin_item_chance",
+			"type": TYPE_FLOAT,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "0.0,1.0,0.05",
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
+		list.append({
+			"name": "trampolin_item_pool",
+			"type": TYPE_ARRAY,
+			"hint": PROPERTY_HINT_TYPE_STRING,
+			"hint_string": "%d:" % TYPE_STRING,
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
 
 	return list
 
@@ -332,6 +418,10 @@ func get_built_config() -> Dictionary:
 			c["coin_density"] = runner_coin_density
 			c["max_coins"] = runner_max_coins
 			c["item_pool"] = runner_item_pool
+			c["speed_increase_interval"] = runner_speed_increase_interval
+			c["speed_increase_amount"] = runner_speed_increase_amount
+			c["ammo_spawn_initial_distance"] = runner_ammo_initial_distance
+			c["ammo_spawn_distance_multiplier"] = runner_ammo_distance_multiplier
 		MinigameType.CATCHER:
 			c["game_mode"] = "TIME" if catcher_game_mode == 1 else "COUNT"
 			c["target_value"] = catcher_target_value
@@ -339,11 +429,16 @@ func get_built_config() -> Dictionary:
 			c["base_fall_speed"] = catcher_fall_speed
 			c["spawn_rate"] = catcher_spawn_rate
 			c["max_falling_objects"] = catcher_max_objects
+			c["item_pool"] = catcher_item_pool
+			c["critical_item_ids"] = catcher_critical_item_ids
 		MinigameType.EXCAVATION:
 			c["win_condition"] = excavation_win_condition
 			c["target_amount"] = excavation_target_amount
 			c["rocks"] = excavation_rocks
 			c["escala"] = excavation_scale
+			c["deliver_items"] = excavation_deliver_items
+			c["initial_bombs"] = excavation_initial_bombs
+			c["item_pool"] = excavation_item_pool
 		MinigameType.SMASHER:
 			c["game_mode"] = "TIME" if smasher_game_mode == 1 else "COUNT"
 			c["target_value"] = smasher_target_value
@@ -353,6 +448,8 @@ func get_built_config() -> Dictionary:
 		MinigameType.TRAMPOLIN:
 			c["win_condition"] = trampolin_win_condition
 			c["target_value"] = trampolin_target_value
+			c["item_spawn_chance"] = trampolin_item_chance
+			c["item_pool"] = trampolin_item_pool
 		MinigameType.CUSTOM_SCENE:
 			pass
 

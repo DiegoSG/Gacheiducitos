@@ -84,16 +84,17 @@ func _deferred_load_minigame(path: String) -> void:
 func complete_minigame(success: bool, results: Dictionary = {}) -> void:
 	print("GameManager: complete_minigame called. Success: ", success)
 	
-	# Transferir items recolectados al Inventario Global
+	# Guardar items para animar su llegada en el HUD del Overworld
+	var pending_items: Dictionary = {}
 	if results.has("items"):
+		pending_items = results["items"]
 		var inventory: Node = get_node_or_null("/root/Inventory")
 		if not inventory and get_tree() and get_tree().root:
 			inventory = get_tree().root.get_node_or_null("Inventory")
 			
 		if inventory and inventory.has_method("add_item"):
-			var items_dict = results["items"]
-			for item_id in items_dict:
-				inventory.add_item(item_id, items_dict[item_id])
+			for item_id in pending_items:
+				inventory.add_item(item_id, pending_items[item_id])
 			
 	# Determinar a dónde ir y qué spawn usar
 	var target_scene = _minigame_win_path if success else _minigame_lose_path
@@ -104,7 +105,15 @@ func complete_minigame(success: bool, results: Dictionary = {}) -> void:
 		target_scene = previous_scene_path if not previous_scene_path.is_empty() else "res://src/overworld/levels/overworld.tscn"
 		
 	# Usar el sistema de transiciones con fader
-	change_level(target_scene, target_spawn_id)
+	await change_level(target_scene, target_spawn_id)
+	
+	# Si obtuvimos items del minijuego, animar su llegada en el HUD
+	if not pending_items.is_empty() and ItemDatabase:
+		for item_id in pending_items:
+			var data: ItemData = ItemDatabase.get_item(item_id)
+			if data:
+				var center_screen = get_viewport().get_visible_rect().size * 0.5
+				LootFeedbackManager.trigger_screen_loot(data, center_screen, pending_items[item_id])
 
 func return_to_overworld() -> void:
 	print("GameManager: return_to_overworld called")

@@ -125,14 +125,16 @@ func _on_body_entered(body: Node2D) -> void:
 		var inv = _get_autoload("Inventory")
 		var ps = _get_autoload("PlayerStats")
 		
+		var qty: int = custom_amount if custom_amount > 0 else 1
 		if item_data.id == "gold_coins":
 			var gold_val: int = custom_amount if custom_amount >= 0 else item_data.value
 			if ps and ps.has_method("add_gold"):
 				ps.add_gold(gold_val)
+			LootFeedbackManager.trigger_loot_pickup(item_data, global_position, gold_val)
 		else:
-			var qty: int = custom_amount if custom_amount > 0 else 1
 			if inv and inv.has_method("add_item"):
 				inv.add_item(item_data.id, qty)
+			LootFeedbackManager.trigger_loot_pickup(item_data, global_position, qty)
 		
 		queue_free()
 

@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dk41wealbqck6" path="res://icon.svg" id="2_icon"]
 [ext_resource type="PackedScene" path="res://src/shared/components/hitbox_component.tscn" id="3_hitbox"]
 [ext_resource type="PackedScene" path="res://src/shared/components/hurtbox_component.tscn" id="4_hurtbox"]
+[ext_resource type="PackedScene" uid="uid://buh6h4w8o8fef" path="res://src/ui/loot_feedback/player_hud.tscn" id="5_hud"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(60, 60)
@@ -47,3 +48,5 @@ collision_layer = 4
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HurtboxComponent" unique_id=1725608150]
 visible = false
 shape = SubResource("RectangleShape2D_1")
+
+[node name="PlayerHUD" parent="." instance=ExtResource("5_hud")]

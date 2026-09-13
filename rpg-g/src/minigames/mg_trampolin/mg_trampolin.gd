@@ -3,6 +3,7 @@ extends MinigameBase
 var platform_scene = load("res://src/minigames/mg_trampolin/mg_trampolin_platform.tscn")
 var player_scene = load("res://src/minigames/mg_trampolin/mg_trampolin_player.tscn")
 var coin_scene = load("res://src/minigames/mg_trampolin/mg_trampolin_coin.tscn")
+var item_scene = load("res://src/minigames/mg_trampolin/mg_trampolin_item.tscn")
 
 @onready var camera = $Camera2D
 @onready var platforms_container = $Platforms
@@ -20,6 +21,7 @@ var config = {}
 var coins_collected = 0
 var win_condition_met = false
 var special_platform_spawned = false
+var item_pool: Array = [] # Array[Dictionary]: [{"id": "blue_potion", "chance": 0.25}, ...]
 
 enum WinCondition { ALTURA, ESPECIAL, MONEDAS }
 enum CoinPattern { LINEA, CUADRO, V, V_INVERTIDA }
@@ -27,6 +29,8 @@ enum CoinPattern { LINEA, CUADRO, V, V_INVERTIDA }
 func _ready():
 	config = GameManager.minigame_config
 	print("Trampolin iniciado con config:", config)
+	if config.has("item_pool") and config["item_pool"] is Array:
+		item_pool = config["item_pool"]
 	
 	# Configuración inicial del juego
 	last_platform_y = get_viewport_rect().size.y - 100.0
@@ -133,7 +137,19 @@ func spawn_platform():
 	last_platform_y -= spawn_distance
 	new_plat.global_position = Vector2(x_pos, last_platform_y)
 	
-	# Spawn de monedas basado en densidad y patrones aleatorios
+	# Spawn de items coleccionables sobre la plataforma (siempre apoyados en ella)
+	if not item_pool.is_empty():
+		var roll = randf()
+		var accum = 0.0
+		for entry in item_pool:
+			accum += entry.get("chance", 0.15)
+			if roll <= accum:
+				var chosen_id = str(entry.get("id", ""))
+				if not chosen_id.is_empty():
+					_spawn_platform_item(chosen_id, Vector2(x_pos, last_platform_y - 25.0))
+				break
+	
+	# Spawn de monedas basado en densidad y patrones aleatorios (flotando en el aire)
 	var density = config.get("coin_density", 0.3)
 	if randf() < density:
 		_spawn_coin_pattern(last_platform_y - 60.0)
@@ -147,6 +163,22 @@ func spawn_platform():
 			new_plat.add_to_group("special_platform")
 			special_platform_spawned = true
 			print("Plataforma especial aparecida a altura: ", current_h)
+
+func _spawn_platform_item(p_id: String, pos: Vector2) -> void:
+	var item_node = item_scene.instantiate() as MG_TrampolinItem
+	var tex = null
+	if ItemDatabase:
+		var data = ItemDatabase.get_item(p_id)
+		if data and data.icon:
+			tex = data.icon
+	add_child(item_node)
+	item_node.global_position = pos
+	item_node.setup(p_id, tex)
+	item_node.collected.connect(_on_platform_item_collected)
+
+func _on_platform_item_collected(p_id: String) -> void:
+	add_reward(p_id, 1)
+	print("[Trampolin] ¡Item recogido sobre plataforma!: ", p_id)
 
 func _on_player_died():
 	_game_over()

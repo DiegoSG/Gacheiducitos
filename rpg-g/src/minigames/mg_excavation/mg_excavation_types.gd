@@ -12,7 +12,9 @@ enum TileType {
 	BOMBA,
 	ENEMIGO,
 	SALIDA,
-	TRAMPA_BLOQUEO
+	TRAMPA_BLOQUEO,
+	ITEM_INVENTARIO,
+	BOMB_PICKUP
 }
 
 # Condiciones de victoria para el motor

@@ -18,7 +18,22 @@ enum CoinPattern { LINE_1, LINE_2, LINE_3, LINE_4, V_SHAPE, V_INVERTED }
 @export var coin_density: float = 0.55
 @export var max_coins: int = -1 # -1 = Sin límite estricto
 @export var item_spawn_rate: float = 0.25
-@export var item_pool: Array[String] = ["blue_potion", "red_potion", "green_herb"]
+@export var item_pool: Array = ["blue_potion", "red_potion", "green_herb"] # Puede ser Array[String] o Array[Dictionary]
+
+# Aumento dinámico de velocidad
+@export var speed_increase_interval: float = 200.0 # Cada cuántos metros acelera
+@export var speed_increase_amount: float = 25.0 # Cuánta velocidad suma
+var next_speed_increase_dist: float = 200.0
+
+# Spawn de munición creciente
+@export var ammo_spawn_initial_distance: float = 120.0
+@export var ammo_spawn_distance_multiplier: float = 1.35
+var next_ammo_spawn_distance: float = 120.0
+var ammo_spawn_step: float = 120.0
+
+# Anti-solapamiento: Registro del último X donde se generó un obstáculo/entidad
+var last_spawned_x: float = 0.0
+const MIN_OBSTACLE_SPACING: float = 320.0
 
 const GROUND_Y: float = 820.0
 const SPAWN_X: float = 2050.0
@@ -81,12 +96,11 @@ func _load_configuration() -> void:
 	coin_density = cfg.get("coin_density", coin_density)
 	max_coins = cfg.get("max_coins", max_coins)
 	item_spawn_rate = cfg.get("item_spawn_rate", item_spawn_rate)
+	speed_increase_interval = cfg.get("speed_increase_interval", speed_increase_interval)
+	speed_increase_amount = cfg.get("speed_increase_amount", speed_increase_amount)
 	
 	if cfg.has("item_pool") and cfg["item_pool"] is Array:
-		var arr: Array[String] = []
-		for it in cfg["item_pool"]:
-			arr.append(str(it))
-		item_pool = arr
+		item_pool = cfg["item_pool"]
 
 func _start_game() -> void:
 	is_playing = true
@@ -94,6 +108,9 @@ func _start_game() -> void:
 	coins_collected = 0
 	total_coins_spawned = 0
 	target_object_spawned = false
+	next_speed_increase_dist = speed_increase_interval
+	next_ammo_spawn_distance = ammo_spawn_initial_distance
+	ammo_spawn_step = ammo_spawn_initial_distance
 	time_between_spawns = 1.7 * (350.0 / run_speed)
 	spawn_timer = 1.0 # Breve respiro al iniciar
 
@@ -104,6 +121,26 @@ func _process(delta: float) -> void:
 	# Distancia
 	current_distance += (run_speed * distance_factor) * delta
 	
+	# Comprobar aceleración de velocidad cada X distancia
+	if current_distance >= next_speed_increase_dist:
+		run_speed += speed_increase_amount
+		next_speed_increase_dist += speed_increase_interval
+		time_between_spawns = 1.7 * (350.0 / run_speed)
+		# Actualizar velocidad de los objetos ya existentes en pantalla
+		for c in world_objects.get_children():
+			if "speed" in c and not (c is MG_RunnerEnemy):
+				c.speed = run_speed
+			elif c is MG_RunnerEnemy:
+				c.speed = run_speed + 40.0
+		print("[Runner] ¡Velocidad aumentada a: %.1f! (Distancia: %.0f m)" % [run_speed, current_distance])
+	
+	# Comprobar aparición de munición a distancia creciente
+	if current_distance >= next_ammo_spawn_distance:
+		_spawn_ammo_pickup()
+		ammo_spawn_step *= ammo_spawn_distance_multiplier
+		next_ammo_spawn_distance += ammo_spawn_step
+		print("[Runner] Munición generada a %.0f m. Próxima en %.0f m" % [current_distance, next_ammo_spawn_distance])
+
 	# Scroll visual del suelo
 	ground_scroll_offset = fmod(ground_scroll_offset + (run_speed * delta), 120.0)
 	ground_dashes.position.x = -ground_scroll_offset
@@ -116,7 +153,7 @@ func _process(delta: float) -> void:
 	spawn_timer -= delta
 	if spawn_timer <= 0.0:
 		_spawn_wave()
-		spawn_timer = time_between_spawns + randf_range(-0.2, 0.3)
+		spawn_timer = time_between_spawns + randf_range(-0.1, 0.2)
 
 func _update_ui() -> void:
 	if win_condition == WinCondition.DISTANCE:
@@ -151,25 +188,38 @@ func _on_target_pickup_collected(p: MG_RunnerPickup) -> void:
 	add_reward(p.item_id, 1)
 	_win_game()
 
+func _spawn_ammo_pickup() -> void:
+	var pickup = PICKUP_SCENE.instantiate() as MG_RunnerPickup
+	pickup.pickup_type = MG_RunnerPickup.PickupType.AMMO
+	pickup.speed = run_speed
+	# Se coloca flotando a altura media/baja
+	pickup.position = Vector2(SPAWN_X + 150.0, GROUND_Y - 55.0)
+	pickup.collected.connect(func(_p):
+		player.add_ammo(1)
+		print("[Runner] Munición recogida! Balas: ", player.ammo)
+	)
+	world_objects.add_child(pickup)
+
 func _spawn_wave() -> void:
 	var roll = randf()
 	
-	if roll < 0.40:
-		# Ola de Obstáculo Terrestre (Salto) + monedas en arco opcional
+	if roll < 0.38:
+		# Ola de Obstáculo Terrestre (Salto) + monedas en arco seguro
 		_spawn_obstacle(MG_RunnerObstacle.ObstacleType.LOW)
 		if randf() < coin_density and _can_spawn_more_coins():
+			# El arco V_INVERTED acompaña el salto del obstáculo
 			_spawn_coin_pattern(CoinPattern.V_INVERTED, SPAWN_X)
-	elif roll < 0.70:
+	elif roll < 0.68:
 		# Ola de Obstáculo Aéreo (Agacharse)
 		_spawn_obstacle(MG_RunnerObstacle.ObstacleType.HIGH)
 		if randf() < coin_density and _can_spawn_more_coins():
-			# Monedas a ras de suelo para premiar agacharse
-			_spawn_coin_pattern(CoinPattern.LINE_2, SPAWN_X + 80.0)
+			# Monedas a ras de suelo colocadas con offset seguro bajo el obstáculo
+			_spawn_coin_pattern(CoinPattern.LINE_2, SPAWN_X + 60.0)
 	elif roll < 0.82:
 		# Ola de Enemigo frontal
 		_spawn_enemy()
 	else:
-		# Tramo libre con patrón de monedas o ítem
+		# Tramo libre de obstáculos: sólo monedas o items con distancia limpia
 		if randf() < item_spawn_rate and not item_pool.is_empty():
 			_spawn_random_item()
 		elif _can_spawn_more_coins():
@@ -214,16 +264,16 @@ func _spawn_coin_pattern(pattern: CoinPattern, base_x: float) -> void:
 			# Patrón en V (baja al centro y sube)
 			positions.append(Vector2(0, GROUND_Y - 140.0))
 			positions.append(Vector2(spacing_x, GROUND_Y - 95.0))
-			positions.append(Vector2(spacing_x * 2, GROUND_Y - 35.0)) # Altura agachado
+			positions.append(Vector2(spacing_x * 2, GROUND_Y - 35.0))
 			positions.append(Vector2(spacing_x * 3, GROUND_Y - 95.0))
 			positions.append(Vector2(spacing_x * 4, GROUND_Y - 140.0))
 		CoinPattern.V_INVERTED:
-			# Patrón en V Invertida (Arco parabólico de salto sobre obstáculo de suelo)
-			positions.append(Vector2(0, GROUND_Y - 50.0))
+			# Patrón en V Invertida (Arco parabólico limpio sobre obstáculo de suelo)
+			positions.append(Vector2(-spacing_x * 2, GROUND_Y - 50.0))
+			positions.append(Vector2(-spacing_x, GROUND_Y - 110.0))
+			positions.append(Vector2(0, GROUND_Y - 180.0)) # Cima sobre el obstáculo
 			positions.append(Vector2(spacing_x, GROUND_Y - 110.0))
-			positions.append(Vector2(spacing_x * 2, GROUND_Y - 175.0)) # Cima del salto
-			positions.append(Vector2(spacing_x * 3, GROUND_Y - 110.0))
-			positions.append(Vector2(spacing_x * 4, GROUND_Y - 50.0))
+			positions.append(Vector2(spacing_x * 2, GROUND_Y - 50.0))
 			
 	for pos in positions:
 		if not _can_spawn_more_coins():
@@ -241,14 +291,27 @@ func _spawn_coin_pattern(pattern: CoinPattern, base_x: float) -> void:
 func _spawn_random_item() -> void:
 	if item_pool.is_empty():
 		return
-	var rand_id = item_pool[randi() % item_pool.size()]
+	var chosen_id: String = ""
+	if item_pool[0] is Dictionary:
+		var roll = randf()
+		var accum = 0.0
+		for entry in item_pool:
+			accum += entry.get("chance", 0.3)
+			if roll <= accum:
+				chosen_id = str(entry.get("id", ""))
+				break
+	else:
+		chosen_id = str(item_pool[randi() % item_pool.size()])
+		
+	if chosen_id.is_empty():
+		return
+		
 	var pickup = PICKUP_SCENE.instantiate() as MG_RunnerPickup
 	pickup.pickup_type = MG_RunnerPickup.PickupType.RANDOM_ITEM
-	pickup.item_id = rand_id
+	pickup.item_id = chosen_id
 	pickup.amount = 1
 	pickup.speed = run_speed
-	# Spawn a ras de suelo o a media altura
-	var spawn_height = GROUND_Y - (40.0 if randf() > 0.5 else 110.0)
+	var spawn_height = GROUND_Y - (45.0 if randf() > 0.5 else 115.0)
 	pickup.position = Vector2(SPAWN_X, spawn_height)
 	pickup.collected.connect(_on_random_item_collected)
 	world_objects.add_child(pickup)

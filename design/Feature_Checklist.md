@@ -50,22 +50,36 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
   7. **Batería de Tests Automatizados:** `test_minigame_flow_runner.gd` ejecutada y validando el 100% de los flujos en Godot 4.6 headless.
 
 
+### 🔖 Checkpoint — 13 de Septiembre, 2026: *Ajustes de Minijuegos, Feedback Visual de Loot, Gamepad e Inventario del Jugador*
+- **Sistemas completados y auditados:**
+  1. **Feedback Visual de Loot y HUD del Jugador (`PlayerHUD`):**
+     * Sistema de iconos voladores (`LootFeedbackManager` y `LootFlyIcon`) con trayectoria parabólica/descendente hacia el icono del inventario.
+     * Activación automática al recolectar `PickupItem`, abrir cofres (`chest.gd`) o regresar victorioso de cualquier minijuego.
+     * Desacoplamiento total: `InventoryUI` ahora forma parte del `Player` a través de `PlayerHUD`, pausando el árbol de juego (`get_tree().paused = true`) al abrirse y reanudando al cerrarse.
+  2. **Soporte Nativo de Joystick / Gamepad:**
+     * Mapeo en `project.godot` de Stick Analógico Izquierdo, D-Pad, Botón A (Acción/Salto), Botón B (Cancelar/Agache), Botón X (Ataque), Botón Y (Inventario) y Botón Pause (Start).
+     * Integración total con Overworld (`player.gd`) y minijuegos.
+  3. **Ajustes de Minijuegos:**
+     * **Runner 2D:** Aceleración progresiva configurable (`speed_increase_interval`, `speed_increase_amount`), recarga de munición con distanciamiento progresivo (`ammo_spawn_initial_distance`, `ammo_spawn_distance_multiplier`, +1 bala), pool de ítems y separación inteligente contra solapamientos.
+     * **Catcher:** Retardo de 3.0 segundos en el suelo con parpadeo, recolección al caminar sobre el piso, pérdida de vida al expirar ítems críticos y pool de ítems.
+     * **Trampolín:** Ítems de inventario reposando físicamente sobre plataformas/trampolines (distintos a las monedas aéreas), recolectados por contacto directo.
+     * **Excavación:** Bombas ambientales con gravedad, deslizamiento y empuje horizontal que detonan en 3x3 al impactar suelo, obstáculos o jugador; bombas manuales estáticas colocadas con espacio sostenido (0.35s) con cuenta regresiva de 4s y radio letal de 3x3 que destruye terreno y causa muerte al jugador si se queda dentro; sustitución visible de tierra por ítems de inventario y munición de bomba manual si `deliver_items = true`.
+  4. **Guía de Creación de Niveles Overworld:**
+     * Creada `design/Guia_Creacion_Niveles.md` documentando paso a paso la creación de mapas desde cero usando `prototype_template.tscn` para el Vertical Slice.
+
 ## 🟡 Feature: Minijuego A (Excavación)
 - [x] Generador Procedimental (Autómatas Celulares) (Ref: `Minijuego_Supaplex.md`)
 - [x] Algoritmo de Validación de Conectividad (Flood Fill) (Ref: `Minijuego_Supaplex.md`)
 - [x] Motor de Grid y Lógica de Excavación (Ref: `Minijuego_Supaplex.md`)
 - [x] Gravedad de Piedras (Caída y Deslizamiento) (Ref: `Minijuego_Supaplex.md`)
+- [x] **Elementos Interactivos y Bombas:**
+  - [x] Bombas ambientales con física de gravedad, empuje y detonación 3x3 al impactar.
+  - [x] Bombas manuales con plantado estático (`ui_accept` sostenido 0.35s), cuenta atrás de 4s y explosión letal 3x3.
+  - [x] Tipos de bloque: Muros irrompibles y salida inmune a bombas.
+  - [x] Poblar terreno visible con ítems de inventario y munición de bombas manuales (`deliver_items`).
 - [ ] **Edición Manual de Niveles:**
   - [ ] Soporte para cargar niveles prediseñados a mano en lugar de sólo procedimental.
   - [ ] TileMap / Grid de tiles para "pintar" tierra, piedras, muros y objetos directamente desde el editor de Godot.
-- [ ] **Elementos Interactivos y Bloqueos:**
-  - [ ] Sistema de Bombas (colocación, temporizador y explosión 3x3).
-  - [ ] Tipos de Muro: Muros irrompibles vs Muros rompibles por bombas.
-  - [ ] Trampas de Bloqueo (One-way: permiten paso en un sentido pero bloquean el regreso).
-- [ ] **Objetos y Misión:**
-  - [ ] Colocación de ítems de misión (raíces, rescate) y loot (monedas, consumibles).
-  - [ ] Reglas de riesgo/recompensa.
-  - [ ] Condición de salida activada tras cumplir objetivos.
 - [ ] **Enemigos y Sigilo (Siguiente iteración):**
   - [ ] IA de Enemigo ciego guiado por sonido (excavación vs explosiones).
   - [ ] Sistema de sigilo en túneles vacíos.
@@ -75,13 +89,17 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
   - [x] Perspectiva lateral 2D (Side-scroller) con física de salto parabólico (`ui_up`/`ui_accept`/`Espacio`), caída rápida (*fast-fall*) y agache/slide (`ui_down`).
   - [x] Conmutación limpia de colisionadores (Stand vs Duck) para pasar bajo obstáculos aéreos con legibilidad 100% intuitiva.
   - [x] Scroll continuo de suelo con indicadores de velocidad y desplazamiento de pista.
+  - [x] Aumento progresivo de velocidad cada X metros (`speed_increase_interval`, `speed_increase_amount`).
+  - [x] Pickups de munición (+1 bala) con distancia creciente progresiva.
   - [x] Generación procedural de obstáculos terrestres bajos (salto), aéreos suspendidos (agache) y enemigos frontales.
   - [x] Condiciones de victoria configurables: Por Distancia (`WIN_BY_DISTANCE`) o por Objeto Clave (`WIN_BY_OBJECT`) con rango aleatorio `[min, max]`.
   - [x] Catálogo y patrones rítmicos de monedas: Líneas de 1, 2, 3 o 4 monedas, patrón en V y patrón en V invertida (arco parabólico de salto).
+  - [x] Anti-solapamiento inteligente para asegurar legibilidad en carrera.
   - [x] Aparición de ítems aleatorios del pool de inventario con recolección directa hacia `MinigameBase.add_reward()`.
   - [x] Integración completa con la escena unificada de pruebas `test_minigame_flow.tscn` y suite automatizada `test_runner_mechanics.gd`.
 
-## 🟡 Feature: Minijuego Trampolín (Sistema de Temas)
+## 🟡 Feature: Minijuego Trampolín (Sistema de Temas e Ítems)
+- [x] Ítems de inventario reposando sobre plataformas y trampolines (recolección por contacto físico).
 - [ ] **Sistema de Temas Visuales:**
   - [ ] Selector/recurso de tema para intercambiar fondos dinámicamente (cielo, noche, espacio, cueva).
   - [ ] Variaciones de textura/estilo para las plataformas según el tema activo.
@@ -94,49 +112,41 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [ ] **Puntos de Entrada y Salida Configurables:**
   - [ ] Definición explícita de spawners (puntos de entrada de dianas) y zonas de escape/salida.
 
-## 🟡 Feature: Minijuego Catcher (Temas, Balances y Catálogo de Objetos)
+## 🟡 Feature: Minijuego Catcher (Temas, Balances y Suelo)
+- [x] Retardo de permanencia de ítems en el suelo (3.0s) con parpadeo visual.
+- [x] Recolección de ítems en el suelo por contacto del jugador.
+- [x] Penalización de vida inmediata al expirar ítems críticos en el suelo.
+- [x] Pool de recompensas de inventario configurable.
 - [ ] **Sistema de Temas Visuales:**
   - [ ] Fondos intercambiables por configuración/recurso.
-- [ ] **Catálogo y Configuración de Objetos Caídos:**
-  - [ ] Array configurable de objetos buenos (puntos, monedas, buffs).
-  - [ ] Array configurable de objetos malos (bombas, penalizadores).
-  - [ ] Ajuste independiente de velocidades de caída y escalas/tamaños de colisión.
 
-## 🟡 Feature: Feedback de Loot, Cofres y Minijuegos (Animación e Iconos al Inventario)
-- [ ] **Animación de Iconos Descendentes hacia el Inventario:**
-  - [ ] Al recoger `PickupItem`, abrir cofre (`chest.gd`) o finalizar minijuego (`MinigameBase.add_reward`), spawnear un icono temporal animado (efecto "flying icon / bounce").
-  - [ ] Animación fluida descendente / flotante hacia la posición anclada del icono de Inventario en la UI.
-  - [ ] Desvanecimiento y efecto "punch/scale" en la interfaz de inventario al recibir el objeto.
-- [ ] **Diseño y Maquetación de UI (HUD / Layout General):**
-  - [ ] Asignación de posiciones fijas de UI (esquinas, slots, área dedicada del inventario y barra de accesos).
+## 🟢 Feature: Feedback de Loot, Cofres y Minijuegos (Animación e Iconos al Inventario) (Completado)
+- [x] **Animación de Iconos Descendentes hacia el Inventario:**
+  - [x] Al recoger `PickupItem`, abrir cofre (`chest.gd`) o finalizar minijuego (`MinigameBase.add_reward`), spawnear un icono temporal animado (efecto "flying icon / bounce").
+  - [x] Animación fluida parabólica/descendente hacia la posición anclada del icono de Inventario en el HUD.
+  - [x] Desvanecimiento y efecto "punch/scale" en la interfaz de inventario al recibir el objeto (`pulse_icon()`).
+- [ ] **TODO Diseño de UI (Tarea Asignada para Sesión de Diseño):**
+  - [ ] Asignar lugares definitivos a todos los elementos del HUD (esquinas, slots, área dedicada del inventario y barra de accesos).
   - [ ] Diseño de menú/barra de acceso rápido (Hotbar / Quick-access).
   - [ ] Notificaciones tipo Toast / popup flotante no intrusivo complementario.
 
-## 🟡 Feature: Arquitectura de Inventario Unificado y Control de Pausa
-- [ ] **Desacoplamiento de Niveles e Integración al Player / CanvasLayer Global:**
-  - [ ] Mover `InventoryUI` para que no deba instanciarse a mano en cada nivel.
-  - [ ] Mecanismo: o adjunto directamente a la escena `Player` como `CanvasLayer` hijo, o gestionado centralizadamente.
-  - [ ] **Pausa de Juego:** Pausar el árbol de nodos (`get_tree().paused = true`) al abrir el inventario (`toggle_inventory()`) y reanudar al cerrar (`process_mode = PROCESS_MODE_ALWAYS` para el menú).
-  - [ ] **Menú de Acceso Rápido (Hotbar):** Barra persistente para uso rápido de consumibles o llaves en Overworld.
+## 🟢 Feature: Arquitectura de Inventario Unificado y Control de Pausa (Completado)
+- [x] **Desacoplamiento de Niveles e Integración al Player:**
+  - [x] Mover `InventoryUI` para que forme parte del `Player` mediante el componente `PlayerHUD`.
+  - [x] Eliminada la necesidad de instanciar `InventoryUI` a mano en los niveles (limpiado en `overworld.tscn`).
+  - [x] **Pausa de Juego:** Pausar el árbol de nodos (`get_tree().paused = true`) al abrir el inventario (`toggle_inventory()`) y reanudar al cerrar (`process_mode = PROCESS_MODE_ALWAYS` para el menú).
+- [ ] **Menú de Acceso Rápido (Hotbar):** Barra persistente para uso rápido de consumibles o llaves en Overworld (vinculada a la tarea de diseño de UI).
 
-## 🟡 Feature: Soporte Nativo para Joystick / Gamepad
-- [ ] Mapeo completo en `InputMap` (D-Pad y Stick analógico izquierdo para movimiento de jugador).
-- [ ] Botones de interacción (Cruz/A para interactuar y saltar, Cuadrado/X para atacar, Triángulo/Y para inventario, etc.).
-- [ ] Soporte en todos los minijuegos (Runner: salto con botón inferior/cruz, agache con stick abajo/D-Pad).
+## 🟢 Feature: Soporte Nativo para Joystick / Gamepad (Completado)
+- [x] Mapeo completo en `InputMap` (D-Pad y Stick analógico izquierdo para movimiento de jugador con deadzone).
+- [x] Botones de interacción (Cruz/A para interactuar y saltar, Círculo/B para cancelar y deslizarse, Cuadrado/X para atacar y disparar, Triángulo/Y para inventario, Botón Start para pausar).
+- [x] Soporte en todos los minijuegos y Overworld.
 
 ---
 
 ## 🎯 Próximo Gran Hito: Vertical Slice & Guía Paso a Paso de Creación de Niveles
-- [ ] **Documentación Guía de Creación de Niveles Overworld Paso a Paso:**
-  - [ ] Cómo crear una nueva escena de nivel desde la plantilla `prototype_template.tscn`.
-  - [ ] Configuración del `WorldBoundaryManager` (límites de nivel) y `BoundedCamera`.
-  - [ ] Pintado con `TileMapLayer` (`GroundLayer`, `PropsLayer`, `DetailLayer`).
-  - [ ] Colocación de `Player` y `ArrivalSpawnPoint` con IDs consistentes.
-  - [ ] Inserción y configuración de `LevelPortal` (portales directos vs puertas con llave).
-  - [ ] Colocación de `GenericEnemy` (zonas de visión y drop tables).
-  - [ ] Colocación de `PickupItem` y `Chest`.
-  - [ ] Creación de NPCs con diálogos (`SimpleNPC` + `DialogueManager`).
-  - [ ] Vinculación de minijuegos con `minigame_interactable.tscn`.
-- [ ] Creación manual guiada de dos niveles interconectados como demostración del Vertical Slice.
+- [x] **Documentación Guía de Creación de Niveles Overworld Paso a Paso:**
+  - [x] Creada `design/Guia_Creacion_Niveles.md` cubriendo la creación desde `prototype_template.tscn`, configuración de colisiones, portales, puertas con llave, cofres, drops de enemigos, triggers de minijuegos y NPCs con diálogos.
+- [ ] Creación manual guiada de dos niveles interconectados como demostración del Vertical Slice (realizada por el usuario siguiendo la guía).
 
 

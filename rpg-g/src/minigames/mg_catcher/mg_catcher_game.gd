@@ -15,6 +15,8 @@ var spawn_rate: float = 1.0
 var max_falling_objects: int = 10
 var game_mode: String = "TIME" # "TIME" or "COUNT"
 var target_value: float = 30.0
+var item_pool: Array = [] # Array[Dictionary]: [{"id": "blue_potion", "chance": 0.4, "is_critical": true}, ...]
+var critical_item_ids: Array[String] = []
 
 var score: int = 0
 var lives: int = 3
@@ -33,6 +35,13 @@ func _ready() -> void:
 		game_mode = config.get("game_mode", "TIME")
 		target_value = config.get("target_value", 30.0)
 		lives = config.get("lives", 3)
+		if config.has("item_pool") and config["item_pool"] is Array:
+			item_pool = config["item_pool"]
+		if config.has("critical_item_ids") and config["critical_item_ids"] is Array:
+			var c_ids: Array[String] = []
+			for id in config["critical_item_ids"]:
+				c_ids.append(str(id))
+			critical_item_ids = c_ids
 		
 	time_left = target_value if game_mode == "TIME" else 0.0
 	
@@ -44,14 +53,14 @@ func _ready() -> void:
 	spawn_timer.timeout.connect(_on_spawn_timeout)
 	add_child(spawn_timer)
 	
-	# We need a floor area to catch missed items
+	# Floor area a la altura de los pies del jugador
 	var floor_area = Area2D.new()
 	floor_area.add_to_group("catcher_floor")
 	var screen_size = get_viewport_rect().size
-	floor_area.global_position = Vector2(screen_size.x / 2.0, screen_size.y + 50)
+	floor_area.global_position = Vector2(screen_size.x / 2.0, 990.0)
 	var shape = CollisionShape2D.new()
 	var rect = RectangleShape2D.new()
-	rect.size = Vector2(screen_size.x + 200, 100)
+	rect.size = Vector2(screen_size.x + 200, 80)
 	shape.shape = rect
 	floor_area.add_child(shape)
 	add_child(floor_area)
@@ -86,34 +95,73 @@ func _on_spawn_timeout() -> void:
 	var screen_size = get_viewport_rect().size
 	var spawn_x = randf_range(50, screen_size.x - 50)
 	
+	# Determinar si es un item del pool de inventario o si es crítico
+	var chosen_item_id: String = ""
+	var is_crit: bool = false
+	var custom_texture: Texture2D = null
+	
+	if not is_bomb:
+		# Evaluar si seleccionamos un item del pool
+		if not item_pool.is_empty():
+			var roll = randf()
+			var accum = 0.0
+			for entry in item_pool:
+				accum += entry.get("chance", 0.3)
+				if roll <= accum:
+					chosen_item_id = str(entry.get("id", ""))
+					is_crit = entry.get("is_critical", false)
+					break
+		
+		# Si está explícitamente en la lista de críticos
+		if not chosen_item_id.is_empty() and critical_item_ids.has(chosen_item_id):
+			is_crit = true
+		elif chosen_item_id.is_empty() and not critical_item_ids.is_empty():
+			# Si no hay pool pero se especificó que los puntos normales son críticos
+			if critical_item_ids.has("point"):
+				is_crit = true
+		
+		if not chosen_item_id.is_empty() and ItemDatabase:
+			var item_res = ItemDatabase.get_item(chosen_item_id)
+			if item_res and item_res.icon:
+				custom_texture = item_res.icon
+
 	add_child(item)
-	item.setup(base_fall_speed, Vector2(spawn_x, -50))
-	item.hit_floor.connect(_on_item_hit_floor)
-	item.caught.connect(_on_item_caught)
+	item.setup(base_fall_speed, Vector2(spawn_x, -50), is_crit, chosen_item_id, custom_texture)
+	item.hit_floor.connect(func(_type): pass)
+	item.expired.connect(_on_item_expired)
+	item.caught.connect(func(type): _on_item_caught(type, item))
 	
 	# track active objects count
 	item.tree_exited.connect(func(): active_objects -= 1)
 	active_objects += 1
 
-func _on_item_hit_floor(item_type: int) -> void:
-	if item_type == FallingItemBase.ItemType.POINT:
-		# Missed a point item = lose life
+func _on_item_expired(is_crit: bool) -> void:
+	if is_crit:
+		# Si era un item crítico obligatorio y expiró en el suelo, se pierde vida
 		lives -= 1
-		print("Missed point item! Lives: ", lives)
+		print("[Catcher] ¡Objeto crítico perdido en el suelo! Vidas: ", lives)
+		_update_ui()
 		check_lives()
-	# Bomb hitting floor = nothing happens
+	else:
+		print("[Catcher] Objeto no crítico expiró en el suelo.")
 
-func _on_item_caught(item_type: int) -> void:
+func _on_item_caught(item_type: int, item: FallingItemBase) -> void:
 	if item_type == FallingItemBase.ItemType.POINT:
 		score += 1
-		add_reward("gold_coin", 1)
-		print("Caught point item! Score: ", score)
+		if not item.item_id.is_empty():
+			add_reward(item.item_id, 1)
+			print("[Catcher] ¡Atrapado objeto especial: %s!" % item.item_id)
+		else:
+			add_reward("gold_coin", 1)
+			print("[Catcher] Atrapado punto normal. Score: ", score)
+			
 		if game_mode == "COUNT" and score >= target_value:
 			win()
 	elif item_type == FallingItemBase.ItemType.BOMB:
 		lives -= 1
-		print("Caught bomb! Lives: ", lives)
+		print("[Catcher] ¡Bomba atrapada! Vidas: ", lives)
 		check_lives()
+	_update_ui()
 
 func check_lives() -> void:
 	if lives <= 0:

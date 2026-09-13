@@ -179,7 +179,6 @@ script = ExtResource("29_bounds")
 
 [node name="HUD" parent="UI" unique_id=61597749 instance=ExtResource("11_hud")]
 
-[node name="InventoryUI" parent="UI" unique_id=247872933 instance=ExtResource("6_ui")]
 
 [node name="Environment" type="Node2D" parent="." unique_id=1055517177]
 

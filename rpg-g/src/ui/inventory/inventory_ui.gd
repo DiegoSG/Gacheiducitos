@@ -4,6 +4,7 @@ extends CanvasLayer
 @onready var item_list: ItemList = $Control/Panel/ItemList
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	# El inventario inicia cerrado
 	if control:
 		control.visible = false
@@ -15,26 +16,31 @@ func _ready() -> void:
 	refresh_ui()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.physical_keycode == KEY_TAB or (InputMap.has_action("toggle_inventory") and event.is_action_pressed("toggle_inventory")):
-			toggle_inventory()
-			get_viewport().set_input_as_handled()
+	if event.is_action_pressed("toggle_inventory") or (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_TAB):
+		toggle_inventory()
+		get_viewport().set_input_as_handled()
+	elif is_open() and event.is_action_pressed("ui_cancel"):
+		close_inventory()
+		get_viewport().set_input_as_handled()
 
 func toggle_inventory() -> void:
 	if not control:
 		return
-	control.visible = !control.visible
 	if control.visible:
-		refresh_ui()
+		close_inventory()
+	else:
+		open_inventory()
 
 func open_inventory() -> void:
 	if control:
 		control.visible = true
+		get_tree().paused = true
 		refresh_ui()
 
 func close_inventory() -> void:
 	if control:
 		control.visible = false
+		get_tree().paused = false
 
 func is_open() -> bool:
 	return control.visible if control else false

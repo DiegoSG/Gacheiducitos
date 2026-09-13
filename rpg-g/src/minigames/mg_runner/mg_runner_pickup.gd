@@ -3,7 +3,7 @@ class_name MG_RunnerPickup
 
 signal collected(pickup: MG_RunnerPickup)
 
-enum PickupType { COIN, RANDOM_ITEM, TARGET_OBJECT }
+enum PickupType { COIN, RANDOM_ITEM, TARGET_OBJECT, AMMO }
 @export var pickup_type: PickupType = PickupType.COIN
 @export var item_id: String = "gold_coins"
 @export var amount: int = 1
@@ -14,6 +14,7 @@ var speed: float = 380.0
 @export var coin_target_size: float = 38.0
 @export var item_target_size: float = 48.0
 @export var target_object_size: float = 68.0
+@export var ammo_target_size: float = 42.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var glow: Node2D = get_node_or_null("Glow")
@@ -40,6 +41,14 @@ func _setup_visuals() -> void:
 		if not coin_tex:
 			coin_tex = load("res://assets/items/icons/gold_coins.png")
 		_apply_texture_and_scale(coin_tex, coin_target_size)
+	elif pickup_type == PickupType.AMMO:
+		if glow:
+			glow.visible = false
+		var ammo_tex = load("res://assets/items/icons/iron_key.png") # o icon.svg coloreado
+		if not ammo_tex:
+			ammo_tex = load("res://icon.svg")
+		sprite.modulate = Color(1.0, 0.4, 0.2) # Resplandor anaranjado de proyectil/munición
+		_apply_texture_and_scale(ammo_tex, ammo_target_size)
 	else:
 		if glow:
 			glow.visible = false

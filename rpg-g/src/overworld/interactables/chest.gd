@@ -44,21 +44,15 @@ func give_loot() -> void:
 		has_been_looted = true
 		return
 		
-	var item_names: Array[String] = []
 	for item in loot_items:
 		if item:
 			if item.id == "gold_coins":
 				PlayerStats.add_gold(item.value)
-				item_names.append(str(item.value) + " monedas de oro")
+				LootFeedbackManager.trigger_loot_pickup(item, global_position, item.value)
 			else:
 				Inventory.add_item(item.id, 1)
-				item_names.append(item.name)
+				LootFeedbackManager.trigger_loot_pickup(item, global_position, 1)
 	
-	var message = "Obtuviste:\n"
-	for item_name in item_names:
-		message += "- " + item_name + "\n"
-	
-	show_loot_dialogue(message.strip_edges())
 	has_been_looted = true
 
 func show_loot_dialogue(loot_message: String) -> void:
