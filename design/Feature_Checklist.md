@@ -8,7 +8,8 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [x] Colliders dinámicos y visualización en editor de bordes de nivel (Referencia: `world_boundary_manager.gd`)
 - [x] Manager de transiciones entre niveles con Fade, ArrivalSpawnPoints y LevelPortals (Referencia: `game_manager.gd` / `level_portal.gd` / `arrival_spawn_point.gd`)
 - [x] Estandarización de Grilla 60x60 px (`tileset_60x60.png`, `core_tileset.tres`)
-- [x] Plantilla de prototipado de niveles (`prototype_template.tscn`)
+- [x] Plantilla de nivel limpia y autónoma (`template_level.tscn`) con Player y BoundedCamera integrados
+- [x] Plantilla de prototipado de niveles legacy (`prototype_template.tscn`)
 - [x] Auditoría integral: corrección de fugas de memoria, crashes en corrutinas, tipado estricto y optimización de código
 - [ ] TODO: Animación de salida del portal (el personaje se desplaza desde el portal hacia el punto de llegada / arrival point)
 - [x] Sistema de interacción base (Referencia: `actionable.gd`)

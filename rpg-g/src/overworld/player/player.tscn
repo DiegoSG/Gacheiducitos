@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://src/shared/components/hitbox_component.tscn" id="3_hitbox"]
 [ext_resource type="PackedScene" path="res://src/shared/components/hurtbox_component.tscn" id="4_hurtbox"]
 [ext_resource type="PackedScene" uid="uid://buh6h4w8o8fef" path="res://src/ui/loot_feedback/player_hud.tscn" id="5_hud"]
+[ext_resource type="Script" uid="uid://63w406wwqc28" path="res://src/overworld/components/bounded_camera.gd" id="6_camera"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(60, 60)
@@ -50,3 +51,7 @@ visible = false
 shape = SubResource("RectangleShape2D_1")
 
 [node name="PlayerHUD" parent="." instance=ExtResource("5_hud")]
+ 
+[node name="Camera2D" type="Camera2D" parent="."]
+position_smoothing_enabled = true
+script = ExtResource("6_camera")

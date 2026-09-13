@@ -6,6 +6,8 @@ class_name BoundedCamera
 @export var target_node: Node2D
 
 func _ready() -> void:
+	if not target_node and get_parent() is Node2D:
+		target_node = get_parent() as Node2D
 	position_smoothing_enabled = true
 	position_smoothing_speed = 5.0
 	_connect_boundary_manager()

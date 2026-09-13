@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://mamwxsjxy3f5"]
+
+[ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="1_bounds"]
+[ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="2_tileset"]
+[ext_resource type="PackedScene" path="res://src/overworld/components/arrival_spawn_point.tscn" id="3_arrival"]
+
+[node name="TemplateLevel" type="Node2D"]
+y_sort_enabled = true
+
+[node name="WorldBoundaryManager" type="Node2D" parent="."]
+script = ExtResource("1_bounds")
+width = 1920.0
+height = 1080.0
+
+[node name="Environment" type="Node2D" parent="."]
+
+[node name="GroundLayer" type="TileMapLayer" parent="Environment"]
+tile_set = ExtResource("2_tileset")
+
+[node name="DetailLayer" type="TileMapLayer" parent="Environment"]
+tile_set = ExtResource("2_tileset")
+
+[node name="PropsLayer" type="TileMapLayer" parent="Environment"]
+y_sort_enabled = true
+tile_set = ExtResource("2_tileset")
+
+[node name="SpawnPoints" type="Node2D" parent="."]
+
+[node name="SpawnStart" parent="SpawnPoints" instance=ExtResource("3_arrival")]
+position = Vector2(300, 300)
+arrival_id = "start"
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Portals" type="Node2D" parent="."]
