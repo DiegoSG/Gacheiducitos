@@ -15,11 +15,14 @@ extends Control
 @onready var exit_button = $VBoxContainer/ExitButton
 
 var config = {
-	"win_condition": 0, # 0: Distancia, 1: Obstáculos, 2: Monedas
+	"win_condition": 0, # 0: Distancia, 1: Objeto
 	"target_value": 1500,
-	"run_speed": 350,
-	"coin_density": 0.4,
-	"distance_factor": 0.1
+	"target_item_id": "ancient_map",
+	"target_distance_range": Vector2(800.0, 1400.0),
+	"run_speed": 380,
+	"coin_density": 0.55,
+	"distance_factor": 0.10,
+	"item_pool": ["blue_potion", "red_potion", "green_herb"]
 }
 
 func _ready():
@@ -31,28 +34,32 @@ func _ready():
 	start_button.pressed.connect(_on_start_pressed)
 	exit_button.pressed.connect(_on_exit_pressed)
 	
+	_setup_options()
 	_update_ui()
+
+func _setup_options():
+	win_condition_option.clear()
+	win_condition_option.add_item("Por Distancia (Metros)", 0)
+	win_condition_option.add_item("Por Objeto Clave (Meta)", 1)
+	win_condition_option.select(config.win_condition)
 
 func _update_ui():
 	match config.win_condition:
 		0: # Distancia
-			target_label.text = "Distancia Objetivo:"
+			target_label.text = "Distancia Meta:"
 			target_value_slider.min_value = 500
 			target_value_slider.max_value = 5000
 			target_value_slider.step = 100
-		1: # Obstáculos
-			target_label.text = "Líneas de Obstáculos:"
-			target_value_slider.min_value = 5
-			target_value_slider.max_value = 100
-			target_value_slider.step = 5
-		2: # Monedas
-			target_label.text = "Monedas a Recolectar:"
-			target_value_slider.min_value = 5
-			target_value_slider.max_value = 100
-			target_value_slider.step = 5
+			target_value_slider.set_value_no_signal(config.target_value)
+			target_value_label.text = "%d m" % config.target_value
+		1: # Objeto
+			target_label.text = "Distancia Objeto:"
+			target_value_slider.min_value = 400
+			target_value_slider.max_value = 3000
+			target_value_slider.step = 100
+			target_value_slider.set_value_no_signal(config.target_distance_range.x)
+			target_value_label.text = "~%d m" % int(config.target_distance_range.x)
 			
-	target_value_slider.set_value_no_signal(config.target_value)
-	target_value_label.text = str(config.target_value)
 	speed_slider.set_value_no_signal(config.run_speed)
 	speed_label.text = str(config.run_speed)
 	density_slider.set_value_no_signal(config.coin_density)
@@ -62,14 +69,20 @@ func _update_ui():
 
 func _on_win_condition_selected(index: int):
 	config.win_condition = index
-	if index == 0: config.target_value = 1500
-	elif index == 1: config.target_value = 25
-	elif index == 2: config.target_value = 20
+	if index == 0:
+		config.target_value = 1500
+	elif index == 1:
+		config.target_item_id = "ancient_map"
+		config.target_distance_range = Vector2(800.0, 1200.0)
 	_update_ui()
 
 func _on_target_value_changed(value: float):
-	config.target_value = int(value)
-	target_value_label.text = str(config.target_value)
+	if config.win_condition == 0:
+		config.target_value = int(value)
+		target_value_label.text = "%d m" % config.target_value
+	else:
+		config.target_distance_range = Vector2(value, value + 400.0)
+		target_value_label.text = "~%d m" % int(value)
 
 func _on_speed_changed(value: float):
 	config.run_speed = int(value)

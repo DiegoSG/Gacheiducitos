@@ -6,74 +6,201 @@
 [node name="RunnerLevel" type="Node2D" unique_id=2031860998]
 script = ExtResource("1_script")
 
-[node name="Background" type="ColorRect" parent="." unique_id=1184842222]
-offset_left = -1000.0
-offset_top = -1500.0
-offset_right = 1000.0
-offset_bottom = 1500.0
-color = Color(0.1, 0.1, 0.1, 1)
+[node name="Environment" type="Node2D" parent="." unique_id=1184842222]
 
-[node name="Lanes" type="Node2D" parent="." unique_id=2082478245]
+[node name="SkyBackground" type="ColorRect" parent="Environment" unique_id=1184842223]
+offset_right = 1920.0
+offset_bottom = 820.0
+color = Color(0.08, 0.11, 0.16, 1)
 
-[node name="LaneLeft" type="Node2D" parent="Lanes" unique_id=1020590810]
-position = Vector2(-160, 0)
+[node name="CitySilhouette" type="ColorRect" parent="Environment" unique_id=1184842224]
+offset_top = 700.0
+offset_right = 1920.0
+offset_bottom = 820.0
+color = Color(0.05, 0.07, 0.1, 0.7)
 
-[node name="Bg" type="ColorRect" parent="Lanes/LaneLeft" unique_id=948114576]
-offset_left = -64.0
-offset_top = -1500.0
-offset_right = 64.0
-offset_bottom = 1500.0
-color = Color(0.2, 0.2, 0.2, 1)
+[node name="GroundFill" type="ColorRect" parent="Environment" unique_id=1184842225]
+offset_top = 820.0
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.13, 0.16, 0.2, 1)
 
-[node name="LaneCenter" type="Node2D" parent="Lanes" unique_id=1501662238]
+[node name="GroundTrack" type="Node2D" parent="Environment" unique_id=1184842226]
 
-[node name="Bg" type="ColorRect" parent="Lanes/LaneCenter" unique_id=2061997466]
-offset_left = -64.0
-offset_top = -1500.0
-offset_right = 64.0
-offset_bottom = 1500.0
-color = Color(0.25, 0.25, 0.25, 1)
+[node name="GroundLine" type="Line2D" parent="Environment/GroundTrack" unique_id=1184842227]
+points = PackedVector2Array(0, 820, 1920, 820)
+width = 4.0
+default_color = Color(0.25, 0.75, 0.95, 1)
 
-[node name="LaneRight" type="Node2D" parent="Lanes" unique_id=711083440]
-position = Vector2(160, 0)
+[node name="Dashes" type="Node2D" parent="Environment/GroundTrack" unique_id=1184842228]
 
-[node name="Bg" type="ColorRect" parent="Lanes/LaneRight" unique_id=1047769674]
-offset_left = -64.0
-offset_top = -1500.0
-offset_right = 64.0
-offset_bottom = 1500.0
-color = Color(0.2, 0.2, 0.2, 1)
+[node name="Dash1" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(0, 840, 60, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
 
-[node name="Camera2D" type="Camera2D" parent="." unique_id=277832943]
-zoom = Vector2(1.2, 1.2)
+[node name="Dash2" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(120, 840, 180, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash3" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(240, 840, 300, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash4" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(360, 840, 420, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash5" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(480, 840, 540, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash6" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(600, 840, 660, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash7" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(720, 840, 780, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash8" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(840, 840, 900, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash9" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(960, 840, 1020, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash10" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(1080, 840, 1140, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash11" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(1200, 840, 1260, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash12" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(1320, 840, 1380, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash13" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(1440, 840, 1500, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash14" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(1560, 840, 1620, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash15" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(1680, 840, 1740, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash16" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(1800, 840, 1860, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash17" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(1920, 840, 1980, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="Dash18" type="Line2D" parent="Environment/GroundTrack/Dashes"]
+points = PackedVector2Array(2040, 840, 2100, 840)
+width = 2.0
+default_color = Color(0.3, 0.4, 0.5, 0.6)
+
+[node name="WorldObjects" type="Node2D" parent="." unique_id=98124901]
 
 [node name="RunnerPlayer" parent="." unique_id=1429984458 instance=ExtResource("2_player")]
-position = Vector2(0, 400)
+position = Vector2(280, 820)
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=651710720]
 
-[node name="DistanceLabel" type="Label" parent="UI" unique_id=365249360]
-offset_left = 32.0
-offset_top = 32.0
-offset_right = 300.0
-offset_bottom = 72.0
-theme_override_font_sizes/font_size = 24
-text = "Distancia: 0 / 1000 m"
-
-[node name="ResultLabel" type="Label" parent="UI" unique_id=81878066]
-visible = false
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -50.0
-offset_right = 200.0
-offset_bottom = 50.0
+[node name="HUD" type="Control" parent="UI" unique_id=19401824]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_font_sizes/font_size = 48
-text = "Resultado"
+mouse_filter = 2
+
+[node name="DistanceLabel" type="Label" parent="UI/HUD" unique_id=365249360]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 40.0
+offset_right = 400.0
+offset_bottom = 80.0
+theme_override_font_sizes/font_size = 28
+text = "Distancia: 0 m"
+
+[node name="ObjectiveLabel" type="Label" parent="UI/HUD" unique_id=365249361]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 40.0
+offset_right = 300.0
+offset_bottom = 80.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 26
+text = "Objetivo: Recorrer 1500 m"
 horizontal_alignment = 1
-vertical_alignment = 1
+
+[node name="CoinsLabel" type="Label" parent="UI/HUD" unique_id=365249362]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -350.0
+offset_top = 40.0
+offset_right = -50.0
+offset_bottom = 80.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 28
+text = "Monedas: 0"
+horizontal_alignment = 2
+
+[node name="AmmoLabel" type="Label" parent="UI/HUD" unique_id=365249363]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 85.0
+offset_right = 250.0
+offset_bottom = 120.0
+theme_override_font_sizes/font_size = 22
+modulate = Color(0.8, 0.8, 0.8, 1)
+text = "Balas (Z): 3/3"
+
+[node name="HelpLabel" type="Label" parent="UI/HUD" unique_id=365249364]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -60.0
+offset_right = 400.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 20
+modulate = Color(0.7, 0.8, 0.9, 0.8)
+text = "ARRIBA / ESPACIO: Saltar   |   ABAJO: Agacharse / Slide   |   Z: Disparar"
+horizontal_alignment = 1

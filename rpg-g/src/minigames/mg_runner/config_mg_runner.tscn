@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b2t2e0sdue2d7"]
 
-[ext_resource type="Script" uid="uid://cumorwx11v42r" path="res://src/minigames/mg_runner/runner_config.gd" id="1"]
+[ext_resource type="Script" uid="uid://dh3v0198k5v71" path="res://src/minigames/mg_runner/config_mg_runner.gd" id="1_script"]
 
 [node name="RunnerConfig" type="Control" unique_id=1503950090]
 layout_mode = 3
@@ -9,7 +9,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1")
+script = ExtResource("1_script")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=96325055]
 layout_mode = 1
@@ -18,7 +18,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.15, 0.2, 0.15, 1)
+color = Color(0.12, 0.16, 0.22, 1)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1414546484]
 layout_mode = 1
@@ -27,17 +27,18 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -170.0
-offset_right = 200.0
-offset_bottom = 170.0
+offset_left = -250.0
+offset_top = -220.0
+offset_right = 250.0
+offset_bottom = 220.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 15
+theme_override_constants/separation = 16
 
 [node name="Title" type="Label" parent="VBoxContainer" unique_id=305318458]
 layout_mode = 2
-text = "CONFIGURACIÓN - RUNNER"
+theme_override_font_sizes/font_size = 28
+text = "CONFIGURACIÓN - RUNNER 2D"
 horizontal_alignment = 1
 
 [node name="WinCondition" type="HBoxContainer" parent="VBoxContainer" unique_id=547742573]
@@ -46,19 +47,17 @@ layout_mode = 2
 [node name="Label" type="Label" parent="VBoxContainer/WinCondition" unique_id=875732383]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Condición:"
+text = "Condición de Victoria:"
 
 [node name="OptionButton" type="OptionButton" parent="VBoxContainer/WinCondition" unique_id=922869915]
 layout_mode = 2
 size_flags_horizontal = 3
 selected = 0
-item_count = 3
-popup/item_0/text = "Distancia"
+item_count = 2
+popup/item_0/text = "Por Distancia (Metros)"
 popup/item_0/id = 0
-popup/item_1/text = "Obstáculos"
+popup/item_1/text = "Por Objeto Clave"
 popup/item_1/id = 1
-popup/item_2/text = "Monedas"
-popup/item_2/id = 2
 
 [node name="TargetValue" type="HBoxContainer" parent="VBoxContainer" unique_id=1039668179]
 layout_mode = 2
@@ -66,7 +65,7 @@ layout_mode = 2
 [node name="Label" type="Label" parent="VBoxContainer/TargetValue" unique_id=2128536394]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Objetivo:"
+text = "Distancia Meta:"
 
 [node name="Slider" type="HSlider" parent="VBoxContainer/TargetValue" unique_id=1352393456]
 layout_mode = 2
@@ -77,9 +76,9 @@ step = 100.0
 value = 1500.0
 
 [node name="Value" type="Label" parent="VBoxContainer/TargetValue" unique_id=1064217755]
-custom_minimum_size = Vector2(50, 0)
+custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "1500"
+text = "1500 m"
 
 [node name="Speed" type="HBoxContainer" parent="VBoxContainer" unique_id=965581365]
 layout_mode = 2
@@ -87,20 +86,20 @@ layout_mode = 2
 [node name="Label" type="Label" parent="VBoxContainer/Speed" unique_id=71333201]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Velocidad:"
+text = "Velocidad de Avance:"
 
 [node name="Slider" type="HSlider" parent="VBoxContainer/Speed" unique_id=480298286]
 layout_mode = 2
 size_flags_horizontal = 3
-min_value = 150.0
-max_value = 800.0
-step = 50.0
-value = 350.0
+min_value = 200.0
+max_value = 600.0
+step = 20.0
+value = 380.0
 
 [node name="Value" type="Label" parent="VBoxContainer/Speed" unique_id=1370654893]
-custom_minimum_size = Vector2(50, 0)
+custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "350"
+text = "380"
 
 [node name="Density" type="HBoxContainer" parent="VBoxContainer" unique_id=114148395]
 layout_mode = 2
@@ -114,13 +113,13 @@ text = "Densidad Monedas:"
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 1.0
-step = 0.1
-value = 0.4
+step = 0.05
+value = 0.55
 
 [node name="Value" type="Label" parent="VBoxContainer/Density" unique_id=886267219]
-custom_minimum_size = Vector2(50, 0)
+custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "0.4"
+text = "0.55"
 
 [node name="DistanceFactor" type="HBoxContainer" parent="VBoxContainer" unique_id=1489626897]
 layout_mode = 2
@@ -128,25 +127,26 @@ layout_mode = 2
 [node name="Label" type="Label" parent="VBoxContainer/DistanceFactor" unique_id=927804246]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Factor Distancia:"
+text = "Factor de Distancia:"
 
 [node name="Slider" type="HSlider" parent="VBoxContainer/DistanceFactor" unique_id=1343785405]
 layout_mode = 2
 size_flags_horizontal = 3
-min_value = 0.01
+min_value = 0.05
 max_value = 0.5
-step = 0.01
-value = 0.09999999999999999
+step = 0.05
+value = 0.1
 
 [node name="Value" type="Label" parent="VBoxContainer/DistanceFactor" unique_id=223501265]
-custom_minimum_size = Vector2(50, 0)
+custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 text = "0.10"
 
 [node name="StartButton" type="Button" parent="VBoxContainer" unique_id=327644405]
 layout_mode = 2
-text = "INICIAR ACT"
+theme_override_font_sizes/font_size = 20
+text = "COMENZAR PARTIDA"
 
 [node name="ExitButton" type="Button" parent="VBoxContainer" unique_id=1474504073]
 layout_mode = 2
-text = "SALIR"
+text = "VOLVER"
