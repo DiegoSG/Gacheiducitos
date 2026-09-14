@@ -34,7 +34,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2) -> void:
 	
 	var tween = create_tween()
 	# Restaurar el color
-	tween.tween_property(sprite, "modulate", Color(0.8, 0.4, 0.4), KNOCKBACK_DURATION)
+	tween.tween_property(sprite, "modulate", Color.WHITE, KNOCKBACK_DURATION)
 	
 	get_tree().create_timer(KNOCKBACK_DURATION).timeout.connect(func(): if is_inside_tree(): is_knocked_back = false)
 	

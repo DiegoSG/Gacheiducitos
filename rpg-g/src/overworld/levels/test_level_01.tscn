@@ -3,7 +3,6 @@
 [ext_resource type="Script" path="res://src/overworld/components/world_boundary_manager.gd" id="1_bounds"]
 [ext_resource type="TileSet" path="res://assets/sprites/core_tileset.tres" id="2_tileset"]
 [ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="3_player"]
-[ext_resource type="Script" path="res://src/overworld/components/bounded_camera.gd" id="4_camera"]
 [ext_resource type="PackedScene" path="res://src/overworld/components/level_portal.tscn" id="5_portal"]
 [ext_resource type="PackedScene" path="res://src/overworld/components/arrival_spawn_point.tscn" id="6_arrival"]
 
@@ -39,9 +38,6 @@ arrival_id = "from_level_2"
 [node name="Player" parent="." instance=ExtResource("3_player")]
 position = Vector2(300, 1080)
 
-[node name="Camera2D" type="Camera2D" parent="Player" node_paths=PackedStringArray("target_node")]
-script = ExtResource("4_camera")
-target_node = NodePath("..")
 
 [node name="PortalToLevel2" parent="." instance=ExtResource("5_portal")]
 position = Vector2(3780, 1080)

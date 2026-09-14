@@ -55,6 +55,7 @@ var item_pool: Array = []
 var coin_texture = null
 var bomb_texture = null
 var potion_texture = null
+var player_texture = null
 
 # Sistema de interpolación suave
 var visual_player_pos : Vector2
@@ -73,6 +74,7 @@ func _ready():
 		coin_texture = load("res://assets/items/icons/gold_coins.png")
 	bomb_texture = load("res://assets/items/icons/iron_key.png") # o icono representativo
 	potion_texture = load("res://assets/items/icons/blue_potion.png")
+	player_texture = load("res://assets/sprites/player_down.png")
 	
 	config = GameManager.minigame_config
 	print("MG_Excavation Engine iniciado con config:", config)
@@ -351,8 +353,12 @@ func _draw():
 						draw_circle(pos + Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0), CELL_SIZE/3.0, Color(0.9, 0.4, 0.9))
 	
 	# Dibujar jugador usando posición visual
-	draw_rect(Rect2(visual_player_pos - Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0), Vector2(CELL_SIZE, CELL_SIZE)), Color.YELLOW)
-	draw_circle(visual_player_pos, CELL_SIZE/3.0, Color.ORANGE)
+	if player_texture:
+		var draw_p = visual_player_pos - Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0)
+		draw_texture_rect(player_texture, Rect2(draw_p, Vector2(CELL_SIZE, CELL_SIZE)), false)
+	else:
+		draw_rect(Rect2(visual_player_pos - Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0), Vector2(CELL_SIZE, CELL_SIZE)), Color.YELLOW)
+		draw_circle(visual_player_pos, CELL_SIZE/3.0, Color.ORANGE)
 	
 	# Indicador de plantado de bomba (espacio sostenido)
 	if space_held_timer > 0.0 and player_bombs_ammo > 0:

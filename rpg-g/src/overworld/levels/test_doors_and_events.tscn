@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="1_bounds"]
 [ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="2_tileset"]
 [ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="3_player"]
-[ext_resource type="Script" uid="uid://63w406wwqc28" path="res://src/overworld/components/bounded_camera.gd" id="4_camera"]
 [ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="5_portal"]
 [ext_resource type="PackedScene" path="res://src/overworld/components/arrival_spawn_point.tscn" id="6_arrival"]
 [ext_resource type="PackedScene" uid="uid://tkrjy8dnqifu" path="res://src/overworld/interactables/chest.tscn" id="7_chest"]
@@ -67,14 +66,6 @@ text = "DEMO DE PUERTAS, CANDADOS Y EVENTOS (F3 para ver IDs de Debug)
 [node name="Player" parent="." unique_id=958422520 instance=ExtResource("3_player")]
 position = Vector2(629, 652)
 
-[node name="Camera2D" type="Camera2D" parent="Player" unique_id=893598926 node_paths=PackedStringArray("target_node")]
-limit_left = 0
-limit_top = 0
-limit_right = 3840
-limit_bottom = 2160
-position_smoothing_enabled = true
-script = ExtResource("4_camera")
-target_node = NodePath("..")
 
 [node name="SpawnStart" parent="." unique_id=174091445 instance=ExtResource("6_arrival")]
 position = Vector2(600, 600)

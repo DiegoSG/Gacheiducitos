@@ -8,7 +8,6 @@ class_name LootFeedbackManager
 static var instance: LootFeedbackManager = null
 
 const TOAST_SCENE = preload("res://src/ui/loot_feedback/loot_toast_item.tscn")
-const LootToastItem = preload("res://src/ui/loot_feedback/loot_toast_item.gd")
 
 @onready var inventory_anchor: Control = $InventoryAnchor
 @onready var quickbar_container: HBoxContainer = $QuickbarContainer
@@ -76,8 +75,8 @@ func show_toast(item_data: ItemData, amount: int = 1) -> void:
 	
 	# Si ya existe un toast activo para este ítem y sigue en pantalla, acumular cantidad
 	if _active_toasts.has(item_id) and is_instance_valid(_active_toasts[item_id]) and _active_toasts[item_id].is_inside_tree():
-		var toast: LootToastItem = _active_toasts[item_id]
-		toast.add_amount(amount)
+		var existing_toast: LootToastItem = _active_toasts[item_id]
+		existing_toast.add_amount(amount)
 		return
 		
 	# Si no existe, instanciar nuevo toast

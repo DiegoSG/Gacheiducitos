@@ -166,5 +166,26 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
   - [x] Catcher (`docs/design/misiones/04-catcher.md`): Viento lateral, contenedor dual, checklist de ingredientes y misiones defensivas.
   - [x] Trampolín (`docs/design/misiones/05-trampolin.md`): Plataformas móviles/quebradizas/resorte, cumbres fijas y restricciones de ruta.
 
+---
+
+### 🔖 Checkpoint — 14 de Septiembre, 2026: *Integración Visual de Personaje en Minijuegos, Arañas en Smasher y Llaves de Inventario en Portales*
+- **Sistemas y Mejoras Implementadas:**
+  1. **Integración del Nuevo Player en Minijuegos:**
+     - `MG_Catcher`: Reemplazo del placeholder de icono por `player_down.png` y cambio dinámico a `player_side.png` con `flip_h` según el desplazamiento horizontal.
+     - `MG_Runner`: Reemplazo del placeholder por `player_side.png` orientado al frente de carrera, eliminación de tintes de color (`modulate = Color.WHITE`) y ajuste de escala a colisiones de carrera y agache.
+     - `MG_Trampolín`: Integración del nuevo sprite del personaje respondiendo con `player_up.png`, `player_down.png` y `player_side.png` (`flip_h`) según fase de salto y movimiento lateral.
+     - `MG_Excavación`: Renderizado directo de la textura `player_down.png` en la celda del jugador en sustitución de las figuras primitivas.
+  2. **MG_Smasher — Reemplazo de Puntos por Arañas:**
+     - Sustitución de `icon_red.png` por el sprite oficial `spider_enemy.png`.
+     - Calibración de la rotación y orientación angular ($-\pi/2$) para que la cabeza y cuerpo de la araña apunten hacia adelante a lo largo de su trayectoria curva.
+  3. **Sistema de Portales y Puertas con Llave (`LevelPortal`):**
+     - Nueva propiedad `@export var key: ItemData` en inspector para arrastrar y soltar recursos de llave (`.tres`).
+     - Activación automática de `is_locked = true` al asignar un ítem llave.
+     - Soporte para consumo opcional del ítem (`consume_key: bool`) descontando 1 unidad de `Inventory` si está activado, o conservándolo si no.
+     - Actualización visual automática y emisión de señales `unlocked` / `locked`.
+  4. **Resolución de Conflictos de Cámara:**
+     - Eliminación de nodos duplicados obsoletos `Camera2D` bajo `Player` en los niveles del overworld, permitiendo que el `Player` gestione de manera autónoma su propia `BoundedCamera`.
+
+
 
 

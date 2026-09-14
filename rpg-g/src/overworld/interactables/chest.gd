@@ -5,11 +5,20 @@ extends Actionable
 @export var is_storage_enabled: bool = false
 @export var chest_id: String = "" # Unique ID for persistence if needed later
 
+@export_group("Visuals")
+@export var texture_closed: Texture2D = preload("res://assets/sprites/chest_closed.png")
+@export var texture_open: Texture2D = preload("res://assets/sprites/chest_open.png")
+
 var is_open: bool = false
 var has_been_looted: bool = false
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var chest_dialogue: Resource = preload("res://src/overworld/interactables/chest.dialogue")
+
+func _ready() -> void:
+	if sprite:
+		sprite.texture = texture_open if is_open else texture_closed
+		sprite.modulate = Color.WHITE
 
 func action() -> void:
 	if not is_open:
@@ -19,9 +28,9 @@ func action() -> void:
 
 func open_chest() -> void:
 	is_open = true
-	# Visual feedback for open chest
-	sprite.modulate = Color(1.0, 1.0, 1.0) # Original color or "active"
-	# In a real game, you'd change the sprite to an open version here.
+	if sprite:
+		sprite.texture = texture_open
+		sprite.modulate = Color.WHITE
 	print("Chest ", chest_id, " opened.")
 	
 	if not has_been_looted:
@@ -34,7 +43,9 @@ func open_chest() -> void:
 
 func close_chest() -> void:
 	is_open = false
-	sprite.modulate = Color(0.6, 0.4, 0.2) # Back to "closed" brown
+	if sprite:
+		sprite.texture = texture_closed
+		sprite.modulate = Color.WHITE
 	print("Chest ", chest_id, " closed.")
 	show_message("closed")
 

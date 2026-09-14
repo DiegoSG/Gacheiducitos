@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://cmgkvvu5vwr7h"]
 
 [ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="1_player"]
-[ext_resource type="Script" uid="uid://63w406wwqc28" path="res://src/overworld/components/bounded_camera.gd" id="2_camera"]
 [ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="3_portal"]
 
 [node name="TestPortalRoomB" type="Node2D" unique_id=1199606760]
@@ -23,9 +22,6 @@ text = "SALA B (Test Portales)
 [node name="Player" parent="." unique_id=1531490796 instance=ExtResource("1_player")]
 position = Vector2(400, 500)
 
-[node name="Camera2D" type="Camera2D" parent="Player" unique_id=1384435058 node_paths=PackedStringArray("target_node")]
-script = ExtResource("2_camera")
-target_node = NodePath("..")
 
 [node name="Portal1" parent="." unique_id=1848186912 instance=ExtResource("3_portal")]
 position = Vector2(300, 250)

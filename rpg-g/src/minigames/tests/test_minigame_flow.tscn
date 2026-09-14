@@ -121,7 +121,6 @@ trampolin_item_chance = 0.25
 trampolin_item_pool = Array[String](["blue_potion", "red_potion", "green_herb"])
 
 [node name="TestMinigameFlow" type="Node2D" unique_id=1087961555]
-position = Vector2(1, 0)
 
 [node name="Background" type="ColorRect" parent="." unique_id=1617464539]
 offset_left = 1.0
@@ -306,7 +305,7 @@ text = "5. TRAMPOLÍN"
 horizontal_alignment = 1
 
 [node name="Player" parent="." unique_id=1860600067 instance=ExtResource("1_player")]
-position = Vector2(100, 320)
+position = Vector2(101, 320)
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=194062443]
 

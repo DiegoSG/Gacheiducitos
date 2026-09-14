@@ -134,10 +134,10 @@ func _set_standing_state() -> void:
 	
 	visual.position = Vector2(0, -stand_height * 0.5)
 	var tex = sprite.texture
-	var base_w: float = float(tex.get_width()) if tex != null else 128.0
-	var base_h: float = float(tex.get_height()) if tex != null else 128.0
+	var base_w: float = float(tex.get_width()) if tex != null else 138.0
+	var base_h: float = float(tex.get_height()) if tex != null else 271.0
 	sprite.scale = Vector2(stand_width / base_w, stand_height / base_h)
-	sprite.modulate = Color(0.2, 0.9, 0.3)
+	sprite.modulate = Color.WHITE
 
 func _set_ducking_state() -> void:
 	state = State.DUCKING
@@ -146,10 +146,10 @@ func _set_ducking_state() -> void:
 	
 	visual.position = Vector2(0, -duck_height * 0.5)
 	var tex = sprite.texture
-	var base_w: float = float(tex.get_width()) if tex != null else 128.0
-	var base_h: float = float(tex.get_height()) if tex != null else 128.0
+	var base_w: float = float(tex.get_width()) if tex != null else 138.0
+	var base_h: float = float(tex.get_height()) if tex != null else 271.0
 	sprite.scale = Vector2(duck_width / base_w, duck_height / base_h)
-	sprite.modulate = Color(0.1, 0.75, 0.95)
+	sprite.modulate = Color(0.9, 0.9, 0.9)
 
 func _shoot() -> void:
 	if ammo > 0:

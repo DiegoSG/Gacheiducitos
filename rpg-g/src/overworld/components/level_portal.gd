@@ -33,7 +33,15 @@ enum Mode {
 		is_locked = value
 		_update_visuals()
 
-## ID del ítem requerido en el Inventario para abrir (ej. 'rusty_key'). Si está vacío, se abre sin ítem.
+## Objeto/Llave requerida en el Inventario para abrir. Arrastra aquí un ItemData (ej. rusty_key.tres).
+@export var key: ItemData:
+	set(value):
+		key = value
+		if key != null:
+			is_locked = true
+		_update_visuals()
+
+## ID del ítem requerido en el Inventario para abrir (ej. 'rusty_key'). Si está vacío y 'key' es nulo, se abre sin ítem.
 @export var required_key_id: String = ""
 
 ## Si consume la llave del inventario al abrirse
@@ -184,24 +192,31 @@ func _get_inventory_node() -> Node:
 				return child
 	return null
 
+func _get_effective_key_id() -> String:
+	if key and not key.id.is_empty():
+		return key.id
+	return required_key_id
+
 func _attempt_traverse() -> void:
 	if not is_active:
 		_show_locked_feedback("La puerta está atrancada y no responde.")
 		return
 		
 	if is_locked:
-		if not required_key_id.is_empty():
+		var effective_key_id: String = _get_effective_key_id()
+		if not effective_key_id.is_empty():
 			var inventory = _get_inventory_node()
 			var has_key: bool = false
 			if inventory and inventory.has_method("get_items"):
-				has_key = inventory.get_items().has(required_key_id)
+				has_key = inventory.get_items().get(effective_key_id, 0) > 0
 			
 			if has_key:
 				if consume_key and inventory:
-					inventory.remove_item(required_key_id, 1)
+					inventory.remove_item(effective_key_id, 1)
 				is_locked = false
+				_update_visuals()
 				unlocked.emit()
-				print("[LevelPortal] Puerta desbloqueada con llave '%s'" % required_key_id)
+				print("[LevelPortal] Puerta desbloqueada con llave '%s' (consumida: %s)" % [effective_key_id, str(consume_key)])
 			else:
 				_show_locked_feedback(locked_message)
 				return
@@ -222,8 +237,10 @@ func _trigger_transition() -> void:
 
 func _show_locked_feedback(msg: String) -> void:
 	locked.emit()
-	if locked_dialogue_resource and Engine.has_singleton("DialogueManager"):
-		var dm = Engine.get_singleton("DialogueManager")
+	var dm = get_node_or_null("/root/DialogueManager")
+	if not dm and Engine.has_singleton("DialogueManager"):
+		dm = Engine.get_singleton("DialogueManager")
+	if locked_dialogue_resource and dm:
 		dm.show_dialogue_balloon(locked_dialogue_resource, locked_dialogue_title)
 	else:
 		print("[LevelPortal Bloqueado]: ", msg)
@@ -231,10 +248,12 @@ func _show_locked_feedback(msg: String) -> void:
 ## Métodos públicos para ser activados por eventos / interruptores
 func unlock() -> void:
 	is_locked = false
+	_update_visuals()
 	unlocked.emit()
 
 func lock() -> void:
 	is_locked = true
+	_update_visuals()
 	locked.emit()
 
 func set_active_state(active: bool) -> void:

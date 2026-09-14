@@ -125,6 +125,7 @@ Para colocar un acceso a un minijuego en cualquier nivel del Overworld:
 * **`smasher_initial_speed`** *(float)*: Velocidad de movimiento inicial de las dianas (defecto: `150.0`).
 * **`smasher_final_speed`** *(float)*: Velocidad máxima hacia el final de la partida (defecto: `350.0`).
 * **`smasher_lives`** *(int)*: Errores permitidos antes de la derrota (defecto: `3`).
+* **Visuales:** Utiliza el sprite oficial de araña (`spider_enemy.png`) orientado hacia adelante en la dirección de desplazamiento sinusoidal de la trayectoria.
 
 ---
 

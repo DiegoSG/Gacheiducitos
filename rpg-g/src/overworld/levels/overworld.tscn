@@ -25,7 +25,6 @@
 [ext_resource type="Script" uid="uid://f73vy602pjfk" path="res://src/core/pipeline/action_resource.gd" id="24_v631l"]
 [ext_resource type="Script" uid="uid://dubg4eofrq028" path="res://src/core/pipeline/actions/anim_action.gd" id="25_12nke"]
 [ext_resource type="Texture2D" uid="uid://bk1lpujvwo32b" path="res://assets/sprites/icon_blue.png" id="26_4efs3"]
-[ext_resource type="Script" uid="uid://63w406wwqc28" path="res://src/overworld/components/bounded_camera.gd" id="27_camera"]
 [ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="29_bounds"]
 
 [sub_resource type="Resource" id="Resource_chey4"]
@@ -251,14 +250,6 @@ item_data = ExtResource("8_lvsx0")
 [node name="Player" parent="." unique_id=1053226611 instance=ExtResource("2_player")]
 position = Vector2(289, 157)
 
-[node name="Camera2D" type="Camera2D" parent="Player" unique_id=303789979 node_paths=PackedStringArray("target_node")]
-limit_left = 0
-limit_top = 0
-limit_right = 3840
-limit_bottom = 2160
-position_smoothing_enabled = true
-script = ExtResource("27_camera")
-target_node = NodePath("..")
 
 [node name="Dummies" type="Node2D" parent="." unique_id=1375112382]
 

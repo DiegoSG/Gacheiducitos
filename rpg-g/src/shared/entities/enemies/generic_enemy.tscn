@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://crllyay0snx0b"]
 
 [ext_resource type="Script" uid="uid://d166t8ww7bo3n" path="res://src/shared/entities/enemies/generic_enemy.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://dk41wealbqck6" path="res://icon.svg" id="2_icon"]
+[ext_resource type="Texture2D" uid="uid://b44n0qp4bna68" path="res://assets/sprites/spider_enemy.png" id="2_spider"]
 [ext_resource type="PackedScene" path="res://src/shared/components/hitbox_component.tscn" id="3_hitbox"]
 [ext_resource type="PackedScene" path="res://src/shared/components/hurtbox_component.tscn" id="4_hurtbox"]
 [ext_resource type="PackedScene" path="res://src/shared/components/loot_drop_component.tscn" id="5_loot"]
@@ -21,9 +21,8 @@ collision_mask = 3
 script = ExtResource("1_script")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1628491093]
-modulate = Color(1, 0, 0, 1)
-scale = Vector2(0.4375, 0.43750003)
-texture = ExtResource("2_icon")
+scale = Vector2(0.065, 0.065)
+texture = ExtResource("2_spider")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=689463546]
 visible = false

@@ -37,9 +37,9 @@ func setup(p_start: Vector2, p_end: Vector2, p_speed: float) -> void:
 	path_offset = 0.0
 	is_active = true
 	
-	# Initial rotation
+	# Initial rotation (offset by -PI/2 because spider sprite head faces DOWN)
 	var t = curve.sample_baked_with_rotation(0.0)
-	rotation = t.get_rotation()
+	rotation = t.get_rotation() - PI / 2.0
 	
 	# Randomize sinusoidal wave parameters
 	wave_amplitude = randf_range(20.0, 100.0)
@@ -69,9 +69,8 @@ func _process(delta: float) -> void:
 	
 	global_position = base_pos + offset_vector
 	
-	# Slightly adjust rotation based on the wave derivative (optional but looks better)
-	# For simplicity, we'll keep the base rotation or slightly offset it
-	rotation = base_rot + (cos(path_offset * wave_frequency) * wave_amplitude * wave_frequency * 0.5)
+	# Slightly adjust rotation based on the wave derivative (spider head faces forward)
+	rotation = base_rot - PI / 2.0 + (cos(path_offset * wave_frequency) * wave_amplitude * wave_frequency * 0.5)
 
 func _input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:

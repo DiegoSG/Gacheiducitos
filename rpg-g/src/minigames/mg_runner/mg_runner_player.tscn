@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cb5k18x60yovx"]
 
 [ext_resource type="Script" uid="uid://bcmsy72sr0mpx" path="res://src/minigames/mg_runner/mg_runner_player.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://dk41wealbqck6" path="res://icon.svg" id="2_icon"]
+[ext_resource type="Texture2D" uid="uid://cgcjyypi1c8nc" path="res://assets/sprites/player_side.png" id="2_player_side"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_stand"]
 size = Vector2(40, 80)
@@ -27,6 +27,5 @@ disabled = true
 position = Vector2(0, -40)
 
 [node name="Sprite2D" type="Sprite2D" parent="Visual" unique_id=94812391]
-modulate = Color(0.2, 0.9, 0.3, 1)
-scale = Vector2(0.35, 0.65)
-texture = ExtResource("2_icon")
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("2_player_side")
