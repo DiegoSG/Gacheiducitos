@@ -12,3 +12,5 @@ rpg-g/android/
 .directory
 .DS_Store
 Thumbs.db
+node_modules/
+

@@ -13,6 +13,8 @@ enum TriggerMode {
 
 @export var trigger_mode: TriggerMode = TriggerMode.ON_ENTER
 @export var one_shot: bool = true
+## ID único para persistencia. Si está vacío, no se persiste.
+@export var persistence_id: String = ""
 
 @export_group("Condición")
 @export var require_condition: bool = false
@@ -32,9 +34,16 @@ var _agents_inside: Array[Node2D] = []
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
-	
-	if trigger_mode == TriggerMode.AUTO_START:
+	_restore_state()
+	if trigger_mode == TriggerMode.AUTO_START and not _has_triggered:
 		call_deferred("_attempt_trigger")
+
+func _restore_state() -> void:
+	if persistence_id.is_empty():
+		return
+	var wsm := get_node_or_null("/root/WorldStateManager")
+	if wsm and wsm.has_state(persistence_id):
+		_has_triggered = wsm.load_state(persistence_id).get("has_triggered", false)
 
 func _on_body_entered(body: Node2D) -> void:
 	if not _agents_inside.has(body):
@@ -92,6 +101,7 @@ func _attempt_trigger(override_actions: Array[ActionResource] = []) -> void:
 	
 	if one_shot:
 		_has_triggered = true
+		_persist_state()
 	_is_running = true
 	
 	var array_to_run: Array[ActionResource] = override_actions if not override_actions.is_empty() else actions_if_true
@@ -139,3 +149,10 @@ func _run_actions(array: Array[ActionResource]) -> void:
 			if not is_inside_tree() or get_tree() == null:
 				return
 			await get_tree().process_frame
+
+func _persist_state() -> void:
+	if persistence_id.is_empty():
+		return
+	var wsm := get_node_or_null("/root/WorldStateManager")
+	if wsm:
+		wsm.save_state(persistence_id, {"has_triggered": _has_triggered})

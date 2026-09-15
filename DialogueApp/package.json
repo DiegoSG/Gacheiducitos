@@ -1,0 +1,12 @@
+{
+  "name": "dialogue-app",
+  "version": "1.0.0",
+  "description": "Visual dialogue editor for Godot 4.6 Dialogue Manager",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

@@ -24,11 +24,13 @@ El sistema de eventos se basa en el nodo `GameTrigger` (`Area2D` con lógica ext
 
 ## 3. Parámetros de GameTrigger
 - `one_shot` (bool): Si es `true`, el trigger se deshabilita permanentemente tras ejecutarse una vez.
+- `persistence_id` (String): Clave única opcional para persistir `_has_triggered` en `WorldStateManager` al cambiar de nivel.
 - `require_condition` (bool): Habilita evaluación de banderas en `NarrativeManager`.
 - `condition_flag` (String): Nombre de la bandera a consultar.
 - `condition_expected_value` (Variant): Valor esperado (ej. `true`, `false`, número).
 - `actions_if_true` (Array[ActionResource]): Secuencia ejecutada si la condición se cumple (o por defecto).
 - `actions_if_false` (Array[ActionResource]): Secuencia ejecutada si la condición no se cumple.
+
 
 ---
 
@@ -59,3 +61,10 @@ Al crear una nueva acción personalizada:
 1. Heredar de `ActionResource` (`class_name MiNuevaAction extends ActionResource`).
 2. Implementar `func execute(trigger_context: Node) -> void:`.
 3. Si soporta `wait_to_finish`, emitir la señal `finished` cuando la operación asíncrona termine.
+
+---
+
+## 7. Puente de Eventos y Diálogos (`OnEventListener`)
+- **`GameManager.trigger_event(event_name: String, event_data: Variant)`**: Permite disparar eventos de forma global, por ejemplo desde diálogos mediante `do GameManager.trigger_event("mi_evento")` (generado por `DialogueApp`).
+- **`OnEventListener` (`res://src/core/pipeline/on_event_listener.gd`)**: Nodo componente que escucha `GameManager.game_event`. Al recibir el evento configurado en `listen_for_event`, ejecuta `force_trigger()` en su `target_trigger` (o su padre directo si no se especifica).
+

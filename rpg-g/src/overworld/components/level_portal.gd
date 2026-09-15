@@ -54,6 +54,10 @@ enum Mode {
 @export var locked_dialogue_resource: Resource
 @export var locked_dialogue_title: String = "locked"
 
+## ID único para persistencia del estado is_locked / is_active entre cambios de nivel.
+@export var persistence_id: String = ""
+
+
 @export_group("Configuración de Destino")
 @export_file("*.tscn") var target_level_path: String = "":
 	set(value):
@@ -108,7 +112,18 @@ func _ready() -> void:
 		if not body_entered.is_connected(_on_body_entered):
 			body_entered.connect(_on_body_entered)
 		_set_debug_visibility(debug_visuals_visible)
+		_restore_state()
 	_update_visuals()
+
+func _restore_state() -> void:
+	if persistence_id.is_empty():
+		return
+	var wsm := get_node_or_null("/root/WorldStateManager")
+	if not wsm or not wsm.has_state(persistence_id):
+		return
+	var data: Dictionary = wsm.load_state(persistence_id)
+	is_locked = data.get("is_locked", is_locked)
+	is_active = data.get("is_active", is_active)
 
 func _update_collision_layers() -> void:
 	# Layer 2 es Player (collision_mask = 2 para detectar entrada física)
@@ -216,6 +231,7 @@ func _attempt_traverse() -> void:
 				is_locked = false
 				_update_visuals()
 				unlocked.emit()
+				_persist_state()
 				print("[LevelPortal] Puerta desbloqueada con llave '%s' (consumida: %s)" % [effective_key_id, str(consume_key)])
 			else:
 				_show_locked_feedback(locked_message)
@@ -250,14 +266,24 @@ func unlock() -> void:
 	is_locked = false
 	_update_visuals()
 	unlocked.emit()
+	_persist_state()
 
 func lock() -> void:
 	is_locked = true
 	_update_visuals()
 	locked.emit()
+	_persist_state()
 
 func set_active_state(active: bool) -> void:
 	is_active = active
+	_persist_state()
+
+func _persist_state() -> void:
+	if persistence_id.is_empty():
+		return
+	var wsm := get_node_or_null("/root/WorldStateManager")
+	if wsm:
+		wsm.save_state(persistence_id, {"is_locked": is_locked, "is_active": is_active})
 
 func get_spawn_position() -> Vector2:
 	if has_node("SpawnPoint"):

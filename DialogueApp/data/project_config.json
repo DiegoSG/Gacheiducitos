@@ -1,0 +1,16 @@
+{
+  "variables": [
+    {
+      "name": "test",
+      "type": "int",
+      "defaultValue": "1"
+    }
+  ],
+  "flags": [
+    {
+      "name": "test",
+      "type": "int",
+      "defaultValue": "1"
+    }
+  ]
+}

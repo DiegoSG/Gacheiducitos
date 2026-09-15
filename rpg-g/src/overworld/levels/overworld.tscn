@@ -8,7 +8,6 @@
 [ext_resource type="PackedScene" uid="uid://627m0vq1pgow" path="res://src/overworld/npcs/npc_barnaby.tscn" id="5_barnaby"]
 [ext_resource type="Resource" uid="uid://rwhqbbd0deoj" path="res://src/overworld/npcs/barnaby.dialogue" id="6_12nke"]
 [ext_resource type="PackedScene" uid="uid://ckyt3sc6keqdu" path="res://src/overworld/interactables/pickup_item.tscn" id="6_b1b42"]
-[ext_resource type="PackedScene" path="res://src/ui/inventory/inventory_ui.tscn" id="6_ui"]
 [ext_resource type="Script" uid="uid://ctgku8kfqwvw" path="res://src/core/pipeline/actions/dialogue_action.gd" id="7_4efs3"]
 [ext_resource type="Resource" uid="uid://8fc660t425el" path="res://data/items/antidote.tres" id="7_hxnvt"]
 [ext_resource type="Resource" uid="uid://dckjvvpcfqm7m" path="res://data/items/blue_gem.tres" id="8_lvsx0"]
@@ -18,13 +17,14 @@
 [ext_resource type="Resource" uid="uid://g3aow6onnlpw" path="res://data/items/ancient_map.tres" id="11_ff0t0"]
 [ext_resource type="PackedScene" path="res://src/ui/hud/hud.tscn" id="11_hud"]
 [ext_resource type="Resource" uid="uid://bh4box6poomqx" path="res://data/items/gold_coins.tres" id="14_5tehe"]
-[ext_resource type="PackedScene" path="res://src/shared/entities/dummy_npc.tscn" id="16_1dryu"]
+[ext_resource type="PackedScene" uid="uid://de6b37r8ps5c0" path="res://src/shared/entities/dummy_npc.tscn" id="16_1dryu"]
 [ext_resource type="PackedScene" uid="uid://crllyay0snx0b" path="res://src/shared/entities/enemies/generic_enemy.tscn" id="17_kn0ur"]
 [ext_resource type="Texture2D" uid="uid://r4d478cpta8c" path="res://assets/items/icons/wood_log.png" id="22_vqx3p"]
 [ext_resource type="Script" uid="uid://5ty48iuwaxhs" path="res://src/core/pipeline/game_trigger.gd" id="23_c8a3p"]
 [ext_resource type="Script" uid="uid://f73vy602pjfk" path="res://src/core/pipeline/action_resource.gd" id="24_v631l"]
 [ext_resource type="Script" uid="uid://dubg4eofrq028" path="res://src/core/pipeline/actions/anim_action.gd" id="25_12nke"]
 [ext_resource type="Texture2D" uid="uid://bk1lpujvwo32b" path="res://assets/sprites/icon_blue.png" id="26_4efs3"]
+[ext_resource type="Resource" uid="uid://b70y06n21b8mm" path="res://src/overworld/interactables/chest.dialogue" id="26_c8a3p"]
 [ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="29_bounds"]
 
 [sub_resource type="Resource" id="Resource_chey4"]
@@ -41,39 +41,29 @@ metadata/_custom_type_script = "uid://dubg4eofrq028"
 
 [sub_resource type="Resource" id="Resource_wohqu"]
 script = ExtResource("9_4efs3")
+config = {
+"ammo_spawn_distance_multiplier": 1.5,
+"ammo_spawn_initial_distance": 250.0,
+"coin_density": 0.55,
+"item_pool": Array[String](["blue_potion", "red_potion", "green_herb"]),
+"max_coins": -1,
+"run_speed": 380.0,
+"speed_increase_amount": 25.0,
+"speed_increase_interval": 200.0,
+"target_value": 1500.0,
+"win_condition": 0
+}
 minigame_scene_path = "uid://cokkajhh3ub0y"
-metadata/_custom_type_script = "uid://83c224l2dccq"
-
-[sub_resource type="Resource" id="Resource_mg_trampolin"]
-script = ExtResource("9_4efs3")
-minigame_scene_path = "res://src/minigames/mg_trampolin/mg_trampolin.tscn"
-win_level_path = "res://src/overworld/levels/overworld.tscn"
-lose_level_path = "res://src/overworld/levels/overworld.tscn"
-config = {}
-metadata/_custom_type_script = "uid://83c224l2dccq"
-
-[sub_resource type="Resource" id="Resource_mg_excavation"]
-script = ExtResource("9_4efs3")
-minigame_scene_path = "res://src/minigames/mg_excavation/mg_excavation_game.tscn"
-win_level_path = "res://src/overworld/levels/overworld.tscn"
-lose_level_path = "res://src/overworld/levels/overworld.tscn"
-config = {}
-metadata/_custom_type_script = "uid://83c224l2dccq"
-
-[sub_resource type="Resource" id="Resource_mg_runner"]
-script = ExtResource("9_4efs3")
-minigame_scene_path = "res://src/minigames/mg_runner/mg_runner_level.tscn"
-win_level_path = "res://src/overworld/levels/overworld.tscn"
-lose_level_path = "res://src/overworld/levels/overworld.tscn"
-config = {}
-metadata/_custom_type_script = "uid://83c224l2dccq"
-
-[sub_resource type="Resource" id="Resource_mg_smasher"]
-script = ExtResource("9_4efs3")
-minigame_scene_path = "res://src/minigames/mg_smasher/mg_smasher_game.tscn"
-win_level_path = "res://src/overworld/levels/overworld.tscn"
-lose_level_path = "res://src/overworld/levels/overworld.tscn"
-config = {}
+runner_win_mode = 0
+runner_target_distance = 1500.0
+runner_speed = 380.0
+runner_coin_density = 0.55
+runner_max_coins = -1
+runner_item_pool = Array[String](["blue_potion", "red_potion", "green_herb"])
+runner_speed_increase_interval = 200.0
+runner_speed_increase_amount = 25.0
+runner_ammo_initial_distance = 250.0
+runner_ammo_distance_multiplier = 1.5
 metadata/_custom_type_script = "uid://83c224l2dccq"
 
 [sub_resource type="Resource" id="Resource_c8a3p"]
@@ -85,6 +75,122 @@ metadata/_custom_type_script = "uid://dubg4eofrq028"
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_chey4"]
 size = Vector2(67.5, 79)
+
+[sub_resource type="Resource" id="Resource_mg_trampolin"]
+script = ExtResource("9_4efs3")
+win_level_path = "res://src/overworld/levels/overworld.tscn"
+lose_level_path = "res://src/overworld/levels/overworld.tscn"
+config = {
+"ammo_spawn_distance_multiplier": 1.5,
+"ammo_spawn_initial_distance": 250.0,
+"coin_density": 0.55,
+"item_pool": Array[String](["blue_potion", "red_potion", "green_herb"]),
+"max_coins": -1,
+"run_speed": 380.0,
+"speed_increase_amount": 25.0,
+"speed_increase_interval": 200.0,
+"target_value": 1500.0,
+"win_condition": 0
+}
+minigame_scene_path = "res://src/minigames/mg_trampolin/mg_trampolin.tscn"
+runner_win_mode = 0
+runner_target_distance = 1500.0
+runner_speed = 380.0
+runner_coin_density = 0.55
+runner_max_coins = -1
+runner_item_pool = Array[String](["blue_potion", "red_potion", "green_herb"])
+runner_speed_increase_interval = 200.0
+runner_speed_increase_amount = 25.0
+runner_ammo_initial_distance = 250.0
+runner_ammo_distance_multiplier = 1.5
+metadata/_custom_type_script = "uid://83c224l2dccq"
+
+[sub_resource type="Resource" id="Resource_mg_excavation"]
+script = ExtResource("9_4efs3")
+win_level_path = "res://src/overworld/levels/overworld.tscn"
+lose_level_path = "res://src/overworld/levels/overworld.tscn"
+config = {
+"ammo_spawn_distance_multiplier": 1.5,
+"ammo_spawn_initial_distance": 250.0,
+"coin_density": 0.55,
+"item_pool": Array[String](["blue_potion", "red_potion", "green_herb"]),
+"max_coins": -1,
+"run_speed": 380.0,
+"speed_increase_amount": 25.0,
+"speed_increase_interval": 200.0,
+"target_value": 1500.0,
+"win_condition": 0
+}
+minigame_scene_path = "res://src/minigames/mg_excavation/mg_excavation_game.tscn"
+runner_win_mode = 0
+runner_target_distance = 1500.0
+runner_speed = 380.0
+runner_coin_density = 0.55
+runner_max_coins = -1
+runner_item_pool = Array[String](["blue_potion", "red_potion", "green_herb"])
+runner_speed_increase_interval = 200.0
+runner_speed_increase_amount = 25.0
+runner_ammo_initial_distance = 250.0
+runner_ammo_distance_multiplier = 1.5
+metadata/_custom_type_script = "uid://83c224l2dccq"
+
+[sub_resource type="Resource" id="Resource_mg_runner"]
+script = ExtResource("9_4efs3")
+win_level_path = "res://src/overworld/levels/overworld.tscn"
+lose_level_path = "res://src/overworld/levels/overworld.tscn"
+config = {
+"ammo_spawn_distance_multiplier": 1.5,
+"ammo_spawn_initial_distance": 250.0,
+"coin_density": 0.55,
+"item_pool": Array[String](["blue_potion", "red_potion", "green_herb"]),
+"max_coins": -1,
+"run_speed": 380.0,
+"speed_increase_amount": 25.0,
+"speed_increase_interval": 200.0,
+"target_value": 1500.0,
+"win_condition": 0
+}
+minigame_scene_path = "res://src/minigames/mg_runner/mg_runner_level.tscn"
+runner_win_mode = 0
+runner_target_distance = 1500.0
+runner_speed = 380.0
+runner_coin_density = 0.55
+runner_max_coins = -1
+runner_item_pool = Array[String](["blue_potion", "red_potion", "green_herb"])
+runner_speed_increase_interval = 200.0
+runner_speed_increase_amount = 25.0
+runner_ammo_initial_distance = 250.0
+runner_ammo_distance_multiplier = 1.5
+metadata/_custom_type_script = "uid://83c224l2dccq"
+
+[sub_resource type="Resource" id="Resource_mg_smasher"]
+script = ExtResource("9_4efs3")
+win_level_path = "res://src/overworld/levels/overworld.tscn"
+lose_level_path = "res://src/overworld/levels/overworld.tscn"
+config = {
+"ammo_spawn_distance_multiplier": 1.5,
+"ammo_spawn_initial_distance": 250.0,
+"coin_density": 0.55,
+"item_pool": Array[String](["blue_potion", "red_potion", "green_herb"]),
+"max_coins": -1,
+"run_speed": 380.0,
+"speed_increase_amount": 25.0,
+"speed_increase_interval": 200.0,
+"target_value": 1500.0,
+"win_condition": 0
+}
+minigame_scene_path = "res://src/minigames/mg_smasher/mg_smasher_game.tscn"
+runner_win_mode = 0
+runner_target_distance = 1500.0
+runner_speed = 380.0
+runner_coin_density = 0.55
+runner_max_coins = -1
+runner_item_pool = Array[String](["blue_potion", "red_potion", "green_herb"])
+runner_speed_increase_interval = 200.0
+runner_speed_increase_amount = 25.0
+runner_ammo_initial_distance = 250.0
+runner_ammo_distance_multiplier = 1.5
+metadata/_custom_type_script = "uid://83c224l2dccq"
 
 [sub_resource type="Animation" id="Animation_v631l"]
 resource_name = "MoverA"
@@ -178,7 +284,6 @@ script = ExtResource("29_bounds")
 
 [node name="HUD" parent="UI" unique_id=61597749 instance=ExtResource("11_hud")]
 
-
 [node name="Environment" type="Node2D" parent="." unique_id=1055517177]
 
 [node name="GroundLayer" type="TileMapLayer" parent="Environment" unique_id=180569569]
@@ -250,7 +355,6 @@ item_data = ExtResource("8_lvsx0")
 [node name="Player" parent="." unique_id=1053226611 instance=ExtResource("2_player")]
 position = Vector2(289, 157)
 
-
 [node name="Dummies" type="Node2D" parent="." unique_id=1375112382]
 
 [node name="DummyNPC" parent="Dummies" unique_id=1460195114 instance=ExtResource("16_1dryu")]
@@ -296,3 +400,7 @@ texture = ExtResource("22_vqx3p")
 
 [node name="MoverAbajo" type="AnimationPlayer" parent="ObjMovil" unique_id=1929779888]
 libraries/ = SubResource("AnimationLibrary_yaesj")
+
+[node name="NPC_Barnaby" parent="." unique_id=1127233890 instance=ExtResource("5_barnaby")]
+position = Vector2(297, 549)
+dialogue_resource = ExtResource("26_c8a3p")

@@ -34,8 +34,9 @@ Para cualquier nueva mecánica, refactorización, minijuego o corrección:
 
 ## 3. Principios de Arquitectura en Godot 4.6
 - **Composición sobre Herencia:** Evitar scripts monolíticos; crear componentes modulares y reutilizables.
-- **Minimizar Singletons (Autoloads):** Reservados exclusivamente para gestores globales reales (`GameManager`, `Inventory`, `ItemDatabase`, `PlayerStats`, `NarrativeManager`, `DialogueManager`).
+- **Minimizar Singletons (Autoloads):** Reservados exclusivamente para gestores globales reales (`GameManager`, `Inventory`, `ItemDatabase`, `PlayerStats`, `NarrativeManager`, `DialogueManager`, `WorldStateManager`).
 - **Aislamiento:** Los sistemas y minijuegos deben poder ejecutarse de forma independiente sin depender rígidamente del mapa principal.
+
 - **Escenas de Prueba:** Cada funcionalidad o minijuego DEBE incluir su propia escena de prueba (`test_*.tscn`) en su respectivo directorio.
 
 ---

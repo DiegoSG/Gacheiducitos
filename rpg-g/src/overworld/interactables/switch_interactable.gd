@@ -28,6 +28,9 @@ signal turned_off()
 		texture_on = value
 		_update_visuals()
 
+@export_group("Persistencia")
+@export var persistence_id: String = ""
+
 @onready var sprite: Sprite2D = $Sprite2D if has_node("Sprite2D") else null
 
 func _ready() -> void:
@@ -35,6 +38,14 @@ func _ready() -> void:
 	collision_layer = 16
 	collision_mask = 0
 	_update_visuals()
+	_restore_state()
+
+func _restore_state() -> void:
+	if persistence_id.is_empty():
+		return
+	var wsm := get_node_or_null("/root/WorldStateManager")
+	if wsm and wsm.has_state(persistence_id):
+		is_on = wsm.load_state(persistence_id).get("is_on", false)
 
 func _update_visuals() -> void:
 	if not is_node_ready():
@@ -46,16 +57,25 @@ func _update_visuals() -> void:
 func action() -> void:
 	if not is_toggleable and is_on:
 		return
-		
+
 	is_on = not is_on
 	state_changed.emit(is_on)
-	
+
 	if is_on:
 		turned_on.emit()
 		_run_actions(trigger_actions)
 	else:
 		turned_off.emit()
 		_run_actions(off_actions)
+
+	_persist_state()
+
+func _persist_state() -> void:
+	if persistence_id.is_empty():
+		return
+	var wsm := get_node_or_null("/root/WorldStateManager")
+	if wsm:
+		wsm.save_state(persistence_id, {"is_on": is_on})
 
 func _run_actions(actions: Array[ActionResource]) -> void:
 	for act in actions:

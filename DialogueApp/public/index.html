@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DialogueApp — RPG-G</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- HEADER -->
+    <header id="app-header">
+      <span class="logo">💬 DialogueApp</span>
+      <div class="header-shortcuts-info">
+        <span class="shortcut-tip"><kbd>+</kbd> +Diálogo</span>
+        <span class="shortcut-tip"><kbd>V</kbd> +Variable</span>
+        <span class="shortcut-tip"><kbd>E</kbd> +Evento</span>
+        <span class="shortcut-tip"><kbd>F</kbd> Centrar</span>
+        <span class="shortcut-tip"><kbd>Shift</kbd>+Arrastrar Selección</span>
+        <span class="shortcut-tip"><kbd>Ctrl+C</kbd>/<kbd>V</kbd> Copiar/Pegar</span>
+        <span class="shortcut-tip"><kbd>Supr</kbd> Borrar</span>
+      </div>
+      <div class="header-actions">
+        <button id="btn-save" title="Guardar cambios (Ctrl+S)">💾 Guardar</button>
+        <span id="status-badge" class="badge">Listo</span>
+      </div>
+    </header>
+
+    <div id="app-body">
+      <!-- SIDEBAR IZQUIERDO -->
+      <aside id="sidebar">
+        <!-- Sección Archivos -->
+        <details class="sidebar-section" open>
+          <summary>📁 Archivos .dialogue</summary>
+          <div class="section-actions">
+            <button id="btn-new-dialogue" class="btn-small">+ Nuevo</button>
+            <button id="btn-refresh-files" class="btn-small">↺</button>
+          </div>
+          <ul id="file-list"></ul>
+        </details>
+
+        <!-- Sección Variables -->
+        <details class="sidebar-section" open>
+          <summary>🏁 Variables Narrativas</summary>
+          <div class="section-actions">
+            <button id="btn-add-variable" class="btn-small">+ Variable</button>
+          </div>
+          <ul id="variable-list"></ul>
+        </details>
+      </aside>
+
+      <!-- ÁREA PRINCIPAL CANVAS -->
+      <main id="main-area">
+        <!-- TAB BAR -->
+        <div id="tab-bar">
+          <div id="tabs-container"></div>
+          <button id="btn-new-tab" title="Nuevo diálogo">+</button>
+        </div>
+
+        <!-- CANVAS WRAPPER -->
+        <div id="canvas-wrapper">
+          <!-- Marquee de selección rectangular -->
+          <div id="selection-box" class="selection-box hidden"></div>
+
+          <!-- Empty state -->
+          <div id="canvas-empty-state">
+            <p>Abre un archivo .dialogue desde el panel izquierdo<br>o crea uno nuevo con <strong>+ Nuevo</strong></p>
+          </div>
+
+          <!-- Contenedor del canvas de nodos -->
+          <div id="canvas-container">
+            <div id="canvas-viewport">
+              <!-- Capa SVG para conexiones -->
+              <svg id="connections-svg"></svg>
+              <!-- Capa donde viven los nodos -->
+              <div id="nodes-layer"></div>
+            </div>
+          </div>
+
+          <!-- Controles flotantes del canvas -->
+          <div id="canvas-controls">
+            <button id="btn-add-node" title="Añadir nodo de diálogo (+)">+ Diálogo</button>
+            <button id="btn-add-var-node" title="Añadir nodo que modifica una variable">+ Variable</button>
+            <button id="btn-add-event-node" title="Añadir nodo de evento del juego">+ Evento</button>
+            <button id="btn-fit-view" title="Ajustar y centrar vista (F)">⊞ Fit (F)</button>
+            <span id="zoom-label">100%</span>
+          </div>
+        </div>
+      </main>
+
+      <!-- PANEL DERECHO: INSPECTOR DE NODO SELECCIONADO -->
+      <aside id="edit-panel">
+        <div id="edit-panel-header">
+          <h3 id="inspector-title">Inspector de Nodo</h3>
+        </div>
+        <div id="inspector-content">
+          <div id="inspector-empty" class="inspector-placeholder">
+            <p>Selecciona un nodo en el canvas para ver y editar sus propiedades.</p>
+          </div>
+          <div id="inspector-form" class="hidden">
+            <!-- Contenido dinámico según el tipo de nodo seleccionado -->
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- MODALES -->
+  <div id="modal-overlay" class="hidden">
+    <div id="modal-box">
+      <h3 id="modal-title">Título Modal</h3>
+      <div id="modal-body"></div>
+      <div class="modal-footer">
+        <button id="modal-confirm" class="btn-primary">Aceptar</button>
+        <button id="modal-cancel">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENÚ CONTEXTUAL -->
+  <div id="context-menu" class="hidden">
+    <ul>
+      <li data-action="duplicate">⧉ Duplicar</li>
+      <li class="separator"></li>
+      <li data-action="delete" class="danger">🗑 Eliminar</li>
+    </ul>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

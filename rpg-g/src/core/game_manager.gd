@@ -9,6 +9,11 @@ enum WorldAlertState {
 
 signal level_changed(target_level_path: String, spawn_id: String)
 signal alert_state_changed(new_state: WorldAlertState)
+signal game_event(event_name: String, event_data: Variant)
+
+func trigger_event(event_name: String, event_data: Variant = null) -> void:
+	print("[GameManager] trigger_event: '%s'" % event_name)
+	game_event.emit(event_name, event_data)
 
 const FADER_SCENE: PackedScene = preload("res://src/ui/screen_fader.tscn")
 

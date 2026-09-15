@@ -19,6 +19,7 @@ Gacheiducitos/
 │   ├── mockups/                  # Archivos Krita (.kra) e imágenes de referencia artística
 │   ├── Feature_Checklist.md      # Checklist oficial de hitos y tareas
 │   └── ... (documentación técnica y narrativa)
+├── DialogueApp/                  # Herramienta visual web (Node/Express) para editar archivos .dialogue
 ├── rpg-g/                        # Raíz del proyecto Godot (contiene project.godot)
 │   ├── .godot/                   # Caché e importaciones internas (ignorado en Git)
 │   ├── addons/                   # Plugins externos (Dialogue Manager, etc.)
@@ -30,12 +31,13 @@ Gacheiducitos/
 │   │   ├── items/                # Instancias de recursos de ítems individuales (.tres)
 │   │   └── resource_types/       # Scripts GDScript que definen Custom Resources (ItemData)
 │   ├── src/                      # Código fuente y escenas del juego
-│   │   ├── core/                 # Infraestructura base y gestores globales
-│   │   │   ├── pipeline/         # Sistema de eventos (GameTrigger, ActionResource)
+│   │   ├── core/                 # Infraestructura base y gestores globales (WorldStateManager, GameManager, etc.)
+│   │   │   ├── pipeline/         # Sistema de eventos (GameTrigger, OnEventListener, ActionResource)
 │   │   │   │   └── actions/      # Acciones modulares (MinigameAction, DoorAction, etc.)
 │   │   │   ├── tests/            # Test runners automatizados (scripts headless SceneTree)
 │   │   │   ├── tools/            # Herramientas GDScript internas del motor
 │   │   │   └── utils/            # Scripts utilitarios y validadores
+
 │   │   ├── minigames/            # Minijuegos desacoplados
 │   │   │   ├── minigame_base.gd  # Clase base para todos los minijuegos
 │   │   │   ├── mg_catcher/       # Minijuego de atrapar objetos
@@ -104,3 +106,6 @@ Gacheiducitos/
 | Nueva Pantalla / Menú UI | `rpg-g/src/ui/<nombre>/` |
 | Documento o Mockup de Diseño | `design/` o `design/mockups/` |
 | Test Runner automatizado | `rpg-g/src/core/tests/` |
+| Editor visual de diálogos | `DialogueApp/` |
+| Persistencia del mundo (Autoload) | `rpg-g/src/core/world_state_manager.gd` |
+
