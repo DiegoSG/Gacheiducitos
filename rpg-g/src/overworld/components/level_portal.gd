@@ -111,6 +111,8 @@ func _ready() -> void:
 	if not Engine.is_editor_hint():
 		if not body_entered.is_connected(_on_body_entered):
 			body_entered.connect(_on_body_entered)
+		if not body_exited.is_connected(_on_body_exited):
+			body_exited.connect(_on_body_exited)
 		_set_debug_visibility(debug_visuals_visible)
 		_restore_state()
 	_update_visuals()
@@ -194,6 +196,13 @@ func _on_body_entered(body: Node2D) -> void:
 		
 	if body.name == "Player" or body.is_in_group("player"):
 		_attempt_traverse()
+
+## Invocado por colisión al salir (reactiva el trigger para re-ingreso)
+func _on_body_exited(body: Node2D) -> void:
+	if Engine.is_editor_hint():
+		return
+	if body.name == "Player" or body.is_in_group("player"):
+		_is_triggered = false
 
 func _get_inventory_node() -> Node:
 	if Engine.has_singleton("Inventory"):
