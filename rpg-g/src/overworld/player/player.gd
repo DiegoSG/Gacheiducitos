@@ -226,6 +226,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				area.action()
 				break
 
-	if event.is_action_pressed("attack") or (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_Z):
+	if event.is_action_pressed("attack"):
 		attack()
 		get_viewport().set_input_as_handled()

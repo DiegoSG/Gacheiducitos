@@ -19,25 +19,31 @@ func _physics_process(delta: float) -> void:
 		velocity = velocity.move_toward(Vector2.ZERO, KNOCKBACK_DISTANCE * 10 * delta)
 	move_and_slide()
 
-func _on_hit_received(damage: int, attack_direction: Vector2) -> void:
-	if is_knocked_back: return
-	
+func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: float) -> void:
+	if is_knocked_back:
+		return
+
 	is_knocked_back = true
 	health -= damage
 	print("Dummy golpeado! HP restante: %d" % health)
-	
+
 	# Efecto visual de daño
 	sprite.modulate = Color.RED
-	
+
 	# Aplicar el empuje físico
-	velocity = attack_direction * (KNOCKBACK_DISTANCE * 10)
-	
-	var tween = create_tween()
+	var effective_force: float = knockback_force if knockback_force > 0.0 else KNOCKBACK_DISTANCE * 10.0
+	velocity = attack_direction * effective_force
+
+	var tween: Tween = create_tween()
 	# Restaurar el color
 	tween.tween_property(sprite, "modulate", Color.WHITE, KNOCKBACK_DURATION)
-	
-	get_tree().create_timer(KNOCKBACK_DURATION).timeout.connect(func(): if is_inside_tree(): is_knocked_back = false)
-	
+
+	get_tree().create_timer(KNOCKBACK_DURATION).timeout.connect(
+		func() -> void:
+			if is_inside_tree():
+				is_knocked_back = false
+	)
+
 	# Si su salud llega a cero, muere
 	if health <= 0:
 		print("Dummy destruido!")

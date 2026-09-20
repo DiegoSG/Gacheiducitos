@@ -18,8 +18,6 @@ var _active_toasts: Dictionary = {} # item_id: String -> LootToastItem
 func _ready() -> void:
 	instance = self
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	if not toast_container:
-		toast_container = get_node_or_null("ToastContainer")
 
 func _exit_tree() -> void:
 	if instance == self:

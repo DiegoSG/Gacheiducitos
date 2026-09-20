@@ -84,13 +84,6 @@ func give_loot() -> void:
 	has_been_looted = true
 	_persist_state()
 
-func show_loot_dialogue(loot_message: String) -> void:
-	if Engine.has_singleton("DialogueManager"):
-		var dialogue_manager = Engine.get_singleton("DialogueManager")
-		dialogue_manager.show_dialogue_balloon(chest_dialogue, "loot", [{"loot_message": loot_message}])
-	else:
-		print("Has encontrado: ", loot_message)
-
 func show_message(title: String) -> void:
 	if Engine.has_singleton("DialogueManager"):
 		var dialogue_manager = Engine.get_singleton("DialogueManager")

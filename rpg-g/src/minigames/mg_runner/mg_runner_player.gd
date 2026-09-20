@@ -52,14 +52,11 @@ func _input(event: InputEvent) -> void:
 	if is_dead:
 		return
 
-	# Detección universal de salto (Espacio, Flecha Arriba, W, Enter o acción UI)
-	if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_up") or event.is_action_pressed("ui_select"):
+	# Salto (Espacio, Flechas, WASD y Gamepad ya están mapeados en ui_accept / ui_up)
+	if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_up"):
 		try_jump()
-	elif event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_SPACE or event.keycode == KEY_UP or event.keycode == KEY_W:
-			try_jump()
-		elif event.keycode == KEY_Z:
-			_shoot()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_Z:
+		_shoot()
 
 func try_jump() -> void:
 	if is_dead:

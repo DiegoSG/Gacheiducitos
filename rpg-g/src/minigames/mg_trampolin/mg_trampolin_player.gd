@@ -7,8 +7,7 @@ const GRAVITY = 800.0
 const JUMP_FORCE = -600.0
 const MOVE_SPEED = 400.0
 
-var screen_width = 1920.0 # Se ajustará en _ready si es necesario
-var game_area_width = 600.0 # El ancho central donde ocurre el juego
+var game_area_width: float = 600.0 ## El ancho central donde ocurre el juego
 
 @onready var sprite: Sprite2D = $Sprite2D
 

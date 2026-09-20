@@ -48,30 +48,18 @@ func _restore_state() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if not _agents_inside.has(body):
 		_agents_inside.append(body)
-		
-	var activated = false
-	if trigger_mode == TriggerMode.ON_ENTER:
-		activated = _can_trigger()
+
+	if trigger_mode == TriggerMode.ON_ENTER or trigger_mode == TriggerMode.ON_ENTER_AND_EXIT:
 		_attempt_trigger(actions_if_true)
-	elif trigger_mode == TriggerMode.ON_ENTER_AND_EXIT:
-		activated = _can_trigger()
-		_attempt_trigger(actions_if_true)
-		
-	print("[GameTrigger: body_entered] '%s' cruzó el área de '%s'. Activado: %s" % [body.name, name, activated])
 
 func _on_body_exited(body: Node2D) -> void:
 	if _agents_inside.has(body):
 		_agents_inside.erase(body)
-		
-	var activated = false
+
 	if trigger_mode == TriggerMode.ON_EXIT:
-		activated = _can_trigger()
 		_attempt_trigger(actions_if_true)
 	elif trigger_mode == TriggerMode.ON_ENTER_AND_EXIT:
-		activated = _can_trigger()
 		_attempt_trigger(actions_if_false)
-		
-	print("[GameTrigger: body_exited] '%s' salió del área de '%s'. Activado: %s" % [body.name, name, activated])
 
 func _unhandled_input(event: InputEvent) -> void:
 	if trigger_mode == TriggerMode.INTERACT and event.is_action_pressed("ui_accept"):
@@ -82,13 +70,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Por si se llama directamente al trigger a través de un ActionableFinder manual
 func action() -> void:
-	if trigger_mode != TriggerMode.INTERACT: return
-	print("[GameTrigger: action] Interacción táctil con '%s'. Activado: %s" % [name, _can_trigger()])
+	if trigger_mode != TriggerMode.INTERACT:
+		return
 	_attempt_trigger()
 
 ## Permite que cualquier otro nodo (u otra acción) lo dispare a la fuerza
 func force_trigger() -> void:
-	print("[GameTrigger: force] '%s' fue forzado vía código." % name)
 	_attempt_trigger()
 
 func _can_trigger() -> bool:
@@ -107,44 +94,49 @@ func _attempt_trigger(override_actions: Array[ActionResource] = []) -> void:
 	var array_to_run: Array[ActionResource] = override_actions if not override_actions.is_empty() else actions_if_true
 	
 	# Evaluar condición si no es override directo
-	if override_actions.is_empty() and require_condition and condition_flag != "":
-		var narrative_manager = get_tree().root.get_node_or_null("NarrativeManager") if get_tree() and get_tree().root else null
+	if override_actions.is_empty() and require_condition and not condition_flag.is_empty():
+		var narrative_manager: Node = get_tree().root.get_node_or_null("NarrativeManager") if get_tree() and get_tree().root else null
 		if narrative_manager:
-			var actual_val = narrative_manager.get_flag(condition_flag)
-			var expected = _str_to_variant(condition_expected_value)
-			
+			var actual_val: Variant = narrative_manager.get_flag(condition_flag)
+			var expected: Variant = _str_to_variant(condition_expected_value)
+
 			if str(actual_val) != str(expected):
 				array_to_run = actions_if_false
-				
+
 	await _run_actions(array_to_run)
 	_is_running = false
 
 func _str_to_variant(val: String) -> Variant:
-	var l_val = val.to_lower()
-	if l_val == "true" or l_val == "verdadero": return true
-	if l_val == "false" or l_val == "falso": return false
-	if val.is_valid_int(): return val.to_int()
+	var l_val: String = val.to_lower()
+	if l_val == "true" or l_val == "verdadero":
+		return true
+	if l_val == "false" or l_val == "falso":
+		return false
+	if val.is_valid_int():
+		return val.to_int()
 	return val
 
 func _run_actions(array: Array[ActionResource]) -> void:
 	if array.is_empty(): return
 	
-	var state = {"waiting": false}
-	var on_action_done = func(): state.waiting = false
-	
-	for act in array:
-		if not act: continue
-		
+	var state: Dictionary = {"waiting": false}
+	var on_action_done: Callable = func() -> void: state.waiting = false
+
+	for act: ActionResource in array:
+		if not act:
+			continue
+
 		if not act.wait_to_finish:
 			act.execute(self)
 			continue
-			
+
 		state.waiting = true
-		if not act.is_connected("finished", on_action_done):
-			act.finished.connect(on_action_done, CONNECT_ONE_SHOT)
-			
+		if act.is_connected("finished", on_action_done):
+			act.finished.disconnect(on_action_done)
+		act.finished.connect(on_action_done, CONNECT_ONE_SHOT)
+
 		act.execute(self)
-		
+
 		while state.waiting:
 			if not is_inside_tree() or get_tree() == null:
 				return

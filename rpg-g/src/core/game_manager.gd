@@ -114,12 +114,12 @@ func complete_minigame(success: bool, results: Dictionary = {}) -> void:
 	
 	# Si obtuvimos items del minijuego, animar su llegada en el HUD
 	if not pending_items.is_empty():
-		var item_db = get_node_or_null("/root/ItemDatabase")
+		var item_db: Node = get_node_or_null("/root/ItemDatabase")
 		if item_db:
-			for item_id in pending_items:
+			for item_id: String in pending_items:
 				var data: ItemData = item_db.get_item(item_id)
-				if data:
-					var center_screen = get_viewport().get_visible_rect().size * 0.5
+				if data and LootFeedbackManager.instance:
+					var center_screen: Vector2 = get_viewport().get_visible_rect().size * 0.5
 					LootFeedbackManager.trigger_screen_loot(data, center_screen, pending_items[item_id])
 
 func return_to_overworld() -> void:
@@ -240,5 +240,3 @@ func _update_alert_state() -> void:
 	if new_state != alert_state:
 		alert_state = new_state
 		alert_state_changed.emit(alert_state)
-
-

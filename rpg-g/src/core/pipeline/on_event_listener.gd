@@ -9,9 +9,15 @@ extends Node
 func _ready() -> void:
 	var gm := get_node_or_null("/root/GameManager")
 	if gm and gm.has_signal("game_event"):
-		gm.game_event.connect(_on_game_event)
+		if not gm.game_event.is_connected(_on_game_event):
+			gm.game_event.connect(_on_game_event)
 	else:
 		push_warning("OnEventListener '%s': GameManager no encontrado." % name)
+
+func _exit_tree() -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	if gm and gm.has_signal("game_event") and gm.game_event.is_connected(_on_game_event):
+		gm.game_event.disconnect(_on_game_event)
 
 func _on_game_event(event_name: String, _data: Variant) -> void:
 	if listen_for_event.is_empty() or event_name != listen_for_event:
