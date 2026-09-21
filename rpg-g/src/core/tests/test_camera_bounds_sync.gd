@@ -3,14 +3,14 @@ extends SceneTree
 func _init() -> void:
 	print("--- TEST: SINCRONIZACIÓN DE LÍMITES WORLD BOUNDARY Y CÁMARA ---")
 	
-	var scene_res = load("res://src/overworld/levels/prototype_template.tscn")
-	assert(scene_res != null, "Error al cargar prototype_template.tscn")
+	var scene_res = load("res://src/overworld/levels/Lvl01.tscn")
+	assert(scene_res != null, "Error al cargar Lvl01.tscn")
 	var scene = scene_res.instantiate()
 	root.add_child(scene)
 	await process_frame
 	
 	var wbm = scene.get_node_or_null("WorldBoundaryManager")
-	assert(wbm != null, "WorldBoundaryManager no encontrado en prototype_template")
+	assert(wbm != null, "WorldBoundaryManager no encontrado en Lvl01")
 	
 	var player = scene.get_node("Player")
 	var camera = player.get_node("Camera2D")

@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3]
 
-[ext_resource type="Script" path="res://src/shared/components/hit_effect.gd" id="1_script"]
+[ext_resource type="Script" path="res://src/core/components/hit_effect.gd" id="1_script"]
 
 [sub_resource type="Gradient" id="Gradient_1"]
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)

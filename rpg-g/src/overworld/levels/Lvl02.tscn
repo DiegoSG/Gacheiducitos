@@ -3,7 +3,9 @@
 [ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="1_b2d7p"]
 [ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="2_ehqxv"]
 [ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="3_0pt0e"]
+[ext_resource type="Script" uid="uid://b24wrgfyi41x2" path="res://src/overworld/components/arrival_spawn_point.gd" id="3_1hs2r"]
 [ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="4_yhaya"]
+[ext_resource type="Script" uid="uid://cvtexnirp7fqt" path="res://src/overworld/components/checkpoint_level.gd" id="6_uf1ck"]
 
 [node name="TemplateLevel" type="Node2D" unique_id=187744379]
 y_sort_enabled = true
@@ -28,6 +30,12 @@ tile_set = ExtResource("2_ehqxv")
 [node name="SpawnPoints" type="Node2D" parent="." unique_id=1674647729]
 position = Vector2(-8, 24)
 
+[node name="ArrivalSpawnPoint" type="Marker2D" parent="SpawnPoints" unique_id=875361763]
+position = Vector2(252, 475)
+script = ExtResource("3_1hs2r")
+arrival_id = "RespawnPoint"
+metadata/_custom_type_script = "uid://b24wrgfyi41x2"
+
 [node name="Entities" type="Node2D" parent="." unique_id=1700418367]
 y_sort_enabled = true
 
@@ -42,3 +50,6 @@ arrival_id = "1"
 
 [node name="Player" parent="." unique_id=1441524907 instance=ExtResource("4_yhaya")]
 position = Vector2(122, 130)
+
+[node name="CheckpointLevel" type="Node" parent="." unique_id=1690620383]
+script = ExtResource("6_uf1ck")

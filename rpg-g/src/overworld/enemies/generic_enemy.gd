@@ -7,6 +7,7 @@ extends CharacterBody2D
 @export var cooldown_duration: float = 10.0
 @export var return_to_start_position: bool = true
 @export var return_speed: float = 70.0
+@export var attack_damage: int = 1
 
 @export_group("Persistencia")
 ## Si tiene un valor asignado, su muerte se guarda en WorldStateManager y no vuelve a aparecer.
@@ -58,7 +59,10 @@ func _ready() -> void:
 		hurtbox_component.hit_received.connect(_on_hit_received)
 		
 	if hitbox_component:
-		# Activamos el hitbox permanentemente para que lastime al tocar
+		# Configuramos daño configurable y activamos el hitbox permanentemente con daño continuo
+		hitbox_component.damage = attack_damage
+		hitbox_component.continuous_damage = true
+		hitbox_component.attack_rate = 0.6
 		hitbox_component.set_active(true)
 
 func _physics_process(delta: float) -> void:

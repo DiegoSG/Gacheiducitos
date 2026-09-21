@@ -19,6 +19,7 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [x] Sistema de Interruptores/Palancas (`SwitchInteractable`) y Activadores de Eventos
 - [x] Placas de Presión y Triggers de Entrada/Salida (`PressurePlate` & `GameTrigger.ON_ENTER_AND_EXIT`)
 - [x] Nuevos Recursos de Pipeline: `DoorAction` (bloquear/desbloquear/activar) y `DestroyNodeAction` (eliminar/desvanecer obstáculos)
+- [x] Sistema de Salud Unificado, Muerte, Checkpoints y Respawn (`PlayerStats`, `CheckpointLevel`, `ArrivalSpawnPoint.RespawnPoint` y reversión de persistencia con `WorldStateManager`)
 
 ---
 

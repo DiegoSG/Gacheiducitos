@@ -1,9 +1,0 @@
-[gd_scene format=3 uid="uid://c3testtmpl002"]
-
-[ext_resource type="PackedScene" uid="uid://c3templatelevel001" path="res://src/overworld/levels/template_level.tscn" id="1_template"]
-[ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="2_player"]
-
-[node name="TestTemplateLevel" instance=ExtResource("1_template")]
-
-[node name="Player" parent="Entities" index="0" instance=ExtResource("2_player")]
-position = Vector2(300, 300)

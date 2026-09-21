@@ -1,11 +1,10 @@
 extends CharacterBody2D
 
 @export var speed: float = 350.0
-@export var max_health: int = 3
-var current_health: int = 3
 var knockback_velocity: Vector2 = Vector2.ZERO
 var is_stunned: bool = false
 var is_invulnerable: bool = false
+var is_dead: bool = false
 @onready var actionable_finder: Area2D = $ActionableFinder
 @onready var hitbox_component: HitboxComponent = $HitboxComponent
 @onready var hurtbox_component: HurtboxComponent = $HurtboxComponent
@@ -25,7 +24,6 @@ var last_direction: Vector2 = Vector2.DOWN
 
 func _ready() -> void:
 	add_to_group("player")
-	current_health = max_health
 	
 	if slash_sprite:
 		slash_sprite.visible = false
@@ -34,6 +32,16 @@ func _ready() -> void:
 	
 	if hurtbox_component:
 		hurtbox_component.hit_received.connect(_on_hit_received)
+		
+	var stats = get_node_or_null("/root/PlayerStats")
+	if stats:
+		if not stats.player_died.is_connected(_on_player_died):
+			stats.player_died.connect(_on_player_died)
+			
+	var gm = get_node_or_null("/root/GameManager")
+	if gm:
+		if not gm.player_respawned.is_connected(_on_player_respawned):
+			gm.player_respawned.connect(_on_player_respawned)
 	
 	# Conectarse a las señales de Dialogue Manager
 	var dm = Engine.get_singleton("DialogueManager")
@@ -67,7 +75,7 @@ func _on_dialogue_ended(_resource: DialogueResource) -> void:
 	is_dialogue_active = false
 
 func _physics_process(delta: float) -> void:
-	if is_dialogue_active:
+	if is_dialogue_active or is_dead:
 		return
 		
 	if is_stunned:
@@ -141,42 +149,95 @@ func _update_sprite_facing(dir: Vector2) -> void:
 		sprite.flip_h = false
 
 func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: float) -> void:
+	if is_dead:
+		return
+	
+	var tree = get_tree()
+	
+	# Aplicar siempre knockback físico hacia atrás
+	if knockback_force > 0:
+		is_stunned = true
+		knockback_velocity = attack_direction * knockback_force
+		if tree:
+			tree.create_timer(0.3).timeout.connect(func():
+				if is_inside_tree() and not is_dead:
+					is_stunned = false
+			)
+		else:
+			is_stunned = false
+
+
+	# Si ya está invencible, no resta vida ni reinicia el temporizador de i-frames
 	if is_invulnerable:
 		return
 	
-	current_health -= damage
-	print("Player hit! Health: ", current_health)
+	var stats = get_node_or_null("/root/PlayerStats")
+	if stats:
+		stats.take_damage(damage)
 	
+	if is_dead:
+		return
+		
 	is_invulnerable = true
 	
-	# Efecto de I-frames visuales (parpadeo)
+	# Efecto de I-frames visuales (parpadeo de 1 segundo)
 	var tween = create_tween()
 	tween.set_loops(5) # 5 parpadeos de 0.2s c/u = 1 seg de i-frames
 	tween.tween_property($Sprite2D, "modulate:a", 0.2, 0.1)
 	tween.tween_property($Sprite2D, "modulate:a", 1.0, 0.1)
 	
-	var tree = get_tree()
-	if not tree:
-		is_invulnerable = false
-		is_stunned = false
-		return
-		
-	if knockback_force > 0:
-		is_stunned = true
-		knockback_velocity = attack_direction * knockback_force
-		await tree.create_timer(0.3).timeout
-		if not is_inside_tree():
-			return
-		is_stunned = false
-		await tree.create_timer(0.7).timeout
-		if not is_inside_tree():
-			return
-		is_invulnerable = false
+	if tree:
+		tree.create_timer(1.0).timeout.connect(func():
+			if is_inside_tree():
+				is_invulnerable = false
+		)
 	else:
-		await tree.create_timer(1.0).timeout
-		if not is_inside_tree():
-			return
 		is_invulnerable = false
+
+
+func _on_player_died() -> void:
+	if is_dead:
+		return
+	is_dead = true
+	is_stunned = false
+	is_invulnerable = true
+	velocity = Vector2.ZERO
+	knockback_velocity = Vector2.ZERO
+	
+	if hitbox_component:
+		hitbox_component.set_active(false)
+	if hurtbox_component:
+		hurtbox_component.set_deferred("monitoring", false)
+		hurtbox_component.set_deferred("monitorable", false)
+		
+	# Feedback visual de muerte (fade/rotación suave)
+	if sprite:
+		var death_tween = create_tween()
+		death_tween.tween_property(sprite, "rotation_degrees", 90.0, 0.25)
+		death_tween.parallel().tween_property(sprite, "modulate", Color(0.8, 0.2, 0.2, 0.8), 0.25)
+		
+	print("[Player] El jugador ha muerto. Solicitando respawn a GameManager...")
+	var gm = get_node_or_null("/root/GameManager")
+	if gm and gm.has_method("respawn_player"):
+		# Breve pausa para notar la caída antes del fader de respawn
+		var tree = get_tree()
+		if tree:
+			await tree.create_timer(0.5).timeout
+		gm.respawn_player()
+
+func _on_player_respawned() -> void:
+	is_dead = false
+	is_invulnerable = false
+	is_stunned = false
+	velocity = Vector2.ZERO
+	if sprite:
+		sprite.rotation_degrees = 0.0
+		sprite.modulate = Color.WHITE
+	if hurtbox_component:
+		hurtbox_component.set_deferred("monitoring", true)
+		hurtbox_component.set_deferred("monitorable", true)
+	print("[Player] Jugador restablecido tras respawn.")
+
 
 func attack() -> void:
 	if is_attacking:
@@ -215,7 +276,7 @@ func attack() -> void:
 
 # Trasladamos la interacción a _unhandled_input para respetar los CanvasLayer (UI)
 func _unhandled_input(event: InputEvent) -> void:
-	if is_dialogue_active:
+	if is_dialogue_active or is_dead:
 		return
 		
 	if event.is_action_pressed("ui_accept"):

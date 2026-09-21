@@ -19,7 +19,7 @@
 [ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="11_n8rv5"]
 [ext_resource type="PackedScene" path="res://src/overworld/interactables/pressure_plate.tscn" id="12_hes4d"]
 [ext_resource type="Texture2D" uid="uid://7phgavare8mx" path="res://assets/sprites/door_locked.svg" id="12_rcb5p"]
-[ext_resource type="PackedScene" uid="uid://crllyay0snx0b" path="res://src/shared/entities/enemies/generic_enemy.tscn" id="13_3bam5"]
+[ext_resource type="PackedScene" uid="uid://crllyay0snx0b" path="res://src/overworld/enemies/generic_enemy.tscn" id="13_3bam5"]
 [ext_resource type="Script" uid="uid://f73vy602pjfk" path="res://src/core/pipeline/action_resource.gd" id="13_s44nc"]
 [ext_resource type="PackedScene" uid="uid://ckyt3sc6keqdu" path="res://src/overworld/interactables/pickup_item.tscn" id="14_3bam5"]
 [ext_resource type="Resource" uid="uid://bxps63a4a2vpn" path="res://data/items/red_potion.tres" id="15_fvo0o"]
@@ -80,7 +80,6 @@ tile_map_data = PackedByteArray("AAAFAAsAAAAFAAAAAAAFAAwAAAAFAAAAAAAGAAsAAAAFAAA
 tile_set = ExtResource("2_eyghc")
 
 [node name="SpawnPoints" type="Node2D" parent="." unique_id=1674647729]
-position = Vector2(-8, 24)
 
 [node name="Entities" type="Node2D" parent="." unique_id=1700418367]
 y_sort_enabled = true

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://627m0vq1pgow"]
 
-[ext_resource type="Script" uid="uid://kpdul8fmo2lo" path="res://src/shared/entities/simple_npc.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://kpdul8fmo2lo" path="res://src/overworld/npcs/simple_npc.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://brk2hgukdmxeu" path="res://assets/sprites/npc_kawaii_cat.png" id="2_cat"]
 [ext_resource type="Resource" uid="uid://rwhqbbd0deoj" path="res://src/overworld/npcs/barnaby.dialogue" id="3_dialogue"]
 

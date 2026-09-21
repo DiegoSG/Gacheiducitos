@@ -12,16 +12,67 @@ const TOAST_SCENE = preload("res://src/ui/loot_feedback/loot_toast_item.tscn")
 @onready var inventory_anchor: Control = $InventoryAnchor
 @onready var quickbar_container: HBoxContainer = $QuickbarContainer
 @onready var toast_container: VBoxContainer = get_node_or_null("ToastContainer")
+@onready var health_bar_container: HBoxContainer = get_node_or_null("TopLeftContainer/VBoxContainer/HealthBarContainer")
+@onready var gold_label: Label = get_node_or_null("TopLeftContainer/VBoxContainer/GoldContainer/GoldLabel")
+
+const COLOR_HEALTH_ACTIVE = Color(0.2, 0.9, 0.3, 1.0) # Verde activo
+const COLOR_HEALTH_EMPTY = Color(0.25, 0.25, 0.25, 0.4) # Gris apagado
 
 var _active_toasts: Dictionary = {} # item_id: String -> LootToastItem
 
 func _ready() -> void:
 	instance = self
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	
+	var stats = get_node_or_null("/root/PlayerStats")
+	if stats:
+		if not stats.health_changed.is_connected(_on_health_changed):
+			stats.health_changed.connect(_on_health_changed)
+		if not stats.gold_changed.is_connected(_on_gold_changed):
+			stats.gold_changed.connect(_on_gold_changed)
+		_update_health(stats.health, stats.max_health)
+		_update_gold(stats.gold)
 
 func _exit_tree() -> void:
 	if instance == self:
 		instance = null
+
+func _on_health_changed(current: int, max_val: int) -> void:
+	_update_health(current, max_val)
+
+func _on_gold_changed(amount: int) -> void:
+	_update_gold(amount)
+
+func _update_health(current: int, max_val: int) -> void:
+	if not health_bar_container:
+		return
+		
+	var existing_pips = health_bar_container.get_children()
+	# Si la cantidad de barritas difiere del max_health, sincronizar cantidad
+	while existing_pips.size() < max_val:
+		var pip = ColorRect.new()
+		pip.custom_minimum_size = Vector2(10, 24)
+		health_bar_container.add_child(pip)
+		existing_pips.append(pip)
+		
+	while existing_pips.size() > max_val:
+		var last_pip = existing_pips.pop_back()
+		last_pip.queue_free()
+		
+	# Actualizar colores activos/apagados
+	for i in range(existing_pips.size()):
+		var pip: ColorRect = existing_pips[i] as ColorRect
+		if not pip:
+			continue
+		if i < current:
+			pip.color = COLOR_HEALTH_ACTIVE
+		else:
+			pip.color = COLOR_HEALTH_EMPTY
+
+func _update_gold(amount: int) -> void:
+	if gold_label:
+		gold_label.text = str(amount)
+
 
 ## Notifica la recolección de un ítem en el mundo (cofre, suelo, enemigo)
 ## y despliega inmediatamente el toast al lado del inventario con feedback visual

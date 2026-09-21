@@ -67,3 +67,11 @@ func has_item_amount(item_id: String, amount: int) -> bool:
 	if amount <= 0:
 		return true
 	return get_item_count(item_id) >= amount
+
+func create_snapshot() -> Dictionary:
+	return items.duplicate(true)
+
+func restore_snapshot(snapshot: Dictionary) -> void:
+	items = snapshot.duplicate(true)
+	inventory_changed.emit()
+	print("Inventory: Snapshot restaurado -> Items: ", items)

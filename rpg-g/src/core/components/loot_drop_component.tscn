@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://loot_drop_component_scene"]
 
-[ext_resource type="Script" path="res://src/shared/components/loot_drop_component.gd" id="1_script"]
+[ext_resource type="Script" path="res://src/core/components/loot_drop_component.gd" id="1_script"]
 
 [node name="LootDropComponent" type="Node2D"]
 script = ExtResource("1_script")

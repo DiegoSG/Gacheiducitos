@@ -2,10 +2,18 @@
 
 [ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="1_wkgao"]
 [ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="2_rtahy"]
+[ext_resource type="PackedScene" uid="uid://crllyay0snx0b" path="res://src/overworld/enemies/generic_enemy.tscn" id="3_rj3qk"]
 [ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="3_rtahy"]
 [ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="3_tt3lc"]
+[ext_resource type="PackedScene" uid="uid://tkrjy8dnqifu" path="res://src/overworld/interactables/chest.tscn" id="4_gctn1"]
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="5_deq0d"]
+[ext_resource type="Resource" uid="uid://d2r6q7v2n8y4c" path="res://data/items/bread.tres" id="6_0wc7n"]
+[ext_resource type="Resource" uid="uid://8fc660t425el" path="res://data/items/antidote.tres" id="7_1isys"]
+[ext_resource type="Resource" uid="uid://c1q8p5u1m7x3b" path="res://data/items/blue_potion.tres" id="8_qt222"]
+[ext_resource type="Resource" uid="uid://dsuuhs1xicxgg" path="res://data/items/green_herb.tres" id="9_e50kj"]
+[ext_resource type="Resource" uid="uid://dj7er1hirrpj1" path="res://data/items/wooden_sword.tres" id="10_aksaa"]
 
-[node name="TemplateLevel" type="Node2D" unique_id=187744379]
+[node name="TemplateLevel2" type="Node2D" unique_id=187744379]
 y_sort_enabled = true
 
 [node name="WorldBoundaryManager" type="Node2D" parent="." unique_id=404598349]
@@ -30,6 +38,26 @@ position = Vector2(-8, 24)
 
 [node name="Entities" type="Node2D" parent="." unique_id=1700418367]
 y_sort_enabled = true
+
+[node name="GenericEnemy" parent="Entities" unique_id=1981586223 instance=ExtResource("3_rj3qk")]
+position = Vector2(498, 392)
+
+[node name="GenericEnemy2" parent="Entities" unique_id=38186256 instance=ExtResource("3_rj3qk")]
+position = Vector2(871, 397)
+
+[node name="GenericEnemy3" parent="Entities" unique_id=1111069417 instance=ExtResource("3_rj3qk")]
+position = Vector2(502, 683)
+
+[node name="GenericEnemy4" parent="Entities" unique_id=629165441 instance=ExtResource("3_rj3qk")]
+position = Vector2(773, 661)
+
+[node name="GenericEnemy5" parent="Entities" unique_id=1586369492 instance=ExtResource("3_rj3qk")]
+position = Vector2(665, 501)
+
+[node name="Chest" parent="Entities" unique_id=1929656856 instance=ExtResource("4_gctn1")]
+position = Vector2(1176, 612)
+loot_items = Array[ExtResource("5_deq0d")]([ExtResource("6_0wc7n"), ExtResource("7_1isys"), ExtResource("8_qt222"), ExtResource("9_e50kj"), ExtResource("10_aksaa")])
+persistence_id = "Chestito"
 
 [node name="Portals" type="Node2D" parent="." unique_id=265911282]
 

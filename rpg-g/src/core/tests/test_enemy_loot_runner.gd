@@ -1,6 +1,6 @@
 extends SceneTree
 
-const LootDropComponent = preload("res://src/shared/components/loot_drop_component.gd")
+const LootDropComponent = preload("res://src/core/components/loot_drop_component.gd")
 
 func _init() -> void:
 	print("\n--- TEST: SISTEMA DE LOOT Y DROPS DE ENEMIGOS + INVENTARIO TAB ---")

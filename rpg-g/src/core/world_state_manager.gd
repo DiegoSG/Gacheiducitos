@@ -28,6 +28,13 @@ func clear_state(persistence_id: String) -> void:
 func clear_all() -> void:
 	_states.clear()
 
+func create_snapshot() -> Dictionary:
+	return _states.duplicate(true)
+
+func restore_snapshot(snapshot: Dictionary) -> void:
+	_states = snapshot.duplicate(true)
+	print("[WorldStateManager] Snapshot restaurado -> Claves: ", _states.keys())
+
 func save_to_disk() -> void:
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if not file:
