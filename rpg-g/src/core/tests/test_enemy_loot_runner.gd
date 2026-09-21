@@ -33,6 +33,13 @@ func _init() -> void:
 		item_db = db_script.new()
 		item_db.name = "ItemDatabase"
 		root.add_child(item_db)
+
+	var wsm = root.get_node_or_null("WorldStateManager")
+	if not wsm:
+		var wsm_script = load("res://src/core/world_state_manager.gd")
+		wsm = wsm_script.new()
+		wsm.name = "WorldStateManager"
+		root.add_child(wsm)
 		
 	await process_frame
 	
@@ -97,11 +104,11 @@ func _init() -> void:
 	print("[PASS] Límite de drop_count respetado estrictamente.")
 	
 	# ----------------------------------------------------
-	# Test 4: Ítem Único (One-Time Drop)
+	# Test 4: Ítem Único (One-Time Drop) con persistence_id
 	# ----------------------------------------------------
 	loot_comp.unique_item = golden_key
 	loot_comp.unique_probability = 10
-	loot_comp.unique_drop_flag = "test_boss_key"
+	loot_comp.persistence_id = "test_boss_key_drop"
 	loot_comp.loot_table.clear()
 	loot_comp.enable_coins = false
 	
@@ -109,15 +116,16 @@ func _init() -> void:
 	var first_drops = loot_comp.drop_loot()
 	assert(first_drops.size() == 1, "Debe soltar el ítem único la primera vez")
 	assert(first_drops[0].item_data.id == "golden_key", "El drop debe ser la golden_key")
-	assert(nm.get_flag("test_boss_key") == true, "El flag en NarrativeManager debe ser true")
+	assert(wsm != null and wsm.has_state("test_boss_key_drop"), "El estado debe guardarse en WorldStateManager")
+	assert(wsm.load_state("test_boss_key_drop").get("unique_dropped", false) == true, "unique_dropped debe ser true en WSM")
 	for d in first_drops:
 		d.queue_free()
 	await process_frame
 	
-	# Segunda muerte (mismo componente o reaparición con flag activo) -> NO debe soltar golden_key
+	# Segunda muerte (mismo componente o reaparición con persistence_id guardado) -> NO debe soltar golden_key
 	var second_drops = loot_comp.drop_loot()
 	assert(second_drops.is_empty(), "No debe volver a soltar el ítem único una vez entregado")
-	print("[PASS] Ítem Único (One-Time Drop) verificado y persistido en NarrativeManager.")
+	print("[PASS] Ítem Único (One-Time Drop) verificado y persistido en WorldStateManager.")
 	
 	# ----------------------------------------------------
 	# Test 5: Monedas en Rango Aleatorio

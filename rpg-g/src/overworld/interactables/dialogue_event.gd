@@ -20,8 +20,6 @@ signal event_executed()
 var _has_triggered: bool = false
 
 func _ready() -> void:
-	if persistence_id.is_empty():
-		persistence_id = PersistenceIdHelper.generate_id(self, "evt")
 	if Engine.is_editor_hint():
 		_update_editor_label()
 		return
@@ -31,6 +29,8 @@ func _ready() -> void:
 		gm.game_event.connect(_on_game_event)
 
 func _on_game_event(event_name: String, _event_data: Variant = null) -> void:
+	if event_name.is_empty():
+		return
 	if event_name != event_id and event_name != name:
 		return
 	if one_shot and _has_triggered:
@@ -69,5 +69,5 @@ func _draw() -> void:
 	# Dibujar icono visual en el editor para que sea localizable
 	draw_circle(Vector2.ZERO, 12.0, Color(0.9, 0.3, 0.1, 0.6))
 	draw_arc(Vector2.ZERO, 14.0, 0, TAU, 32, Color.WHITE, 2.0)
-	var label: String = event_id if not event_id.is_empty() else name
+	var label: String = event_id if not event_id.is_empty() else String(name)
 	draw_string(ThemeDB.fallback_font, Vector2(-30, 28), label, HORIZONTAL_ALIGNMENT_CENTER, 60, 10, Color.WHITE)

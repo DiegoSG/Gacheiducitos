@@ -101,7 +101,7 @@ arrival_id = "demo_gate"
 [node name="ChestWithKey" parent="." unique_id=134666208 instance=ExtResource("7_chest")]
 position = Vector2(400, 600)
 loot_items = Array[ExtResource("8_oe5b8")]([ExtResource("8_key")])
-chest_id = "chest_rusty_key"
+persistence_id = "chest_rusty_key"
 
 [node name="LeverSwitch" parent="." unique_id=1377378891 instance=ExtResource("9_switch")]
 position = Vector2(1150, 600)

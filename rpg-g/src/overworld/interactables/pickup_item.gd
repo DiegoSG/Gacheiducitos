@@ -20,6 +20,9 @@ class_name PickupItem
 @export var custom_amount: int = -1
 @export var drop_animation_duration: float = 0.45
 
+@export_group("Persistencia")
+@export var persistence_id: String = ""
+
 ## Control para evitar recolección instantánea mientras el objeto cae/se anima
 var can_be_collected: bool = true
 var _pending_start_pos: Vector2 = Vector2.INF
@@ -46,6 +49,10 @@ func _ready() -> void:
 	_update_collision_shape()
 	
 	if not Engine.is_editor_hint():
+		# Restaurar estado: si ya fue recolectado, eliminar inmediatamente
+		if _is_already_collected():
+			queue_free()
+			return
 		if not body_entered.is_connected(_on_body_entered):
 			body_entered.connect(_on_body_entered)
 			
@@ -136,6 +143,7 @@ func _on_body_entered(body: Node2D) -> void:
 				inv.add_item(item_data.id, qty)
 			LootFeedbackManager.trigger_loot_pickup(item_data, global_position, qty)
 		
+		_persist_collected()
 		queue_free()
 
 ## Inicia una animación matemática (Tween) estilo drop cinematográfico sin físicas
@@ -205,3 +213,19 @@ func _get_autoload(autoload_name: String) -> Node:
 	if main_loop and "root" in main_loop and main_loop.root:
 		return main_loop.root.get_node_or_null(autoload_name)
 	return null
+
+func _is_already_collected() -> bool:
+	if persistence_id.is_empty():
+		return false
+	var wsm: Node = _get_autoload("WorldStateManager")
+	if wsm and wsm.has_state(persistence_id):
+		var data: Dictionary = wsm.load_state(persistence_id)
+		return data.get("is_collected", false)
+	return false
+
+func _persist_collected() -> void:
+	if persistence_id.is_empty():
+		return
+	var wsm: Node = _get_autoload("WorldStateManager")
+	if wsm:
+		wsm.save_state(persistence_id, {"is_collected": true})

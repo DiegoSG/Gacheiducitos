@@ -7,6 +7,12 @@ extends CharacterBody2D
 @export var cooldown_duration: float = 10.0
 @export var return_to_start_position: bool = true
 @export var return_speed: float = 70.0
+
+@export_group("Persistencia")
+## Si tiene un valor asignado, su muerte se guarda en WorldStateManager y no vuelve a aparecer.
+## Si está vacío (""), no hay persistencia y reaparece siempre.
+@export var persistence_id: String = ""
+
 var current_health: int = 3
 
 @onready var vision_zone: Area2D = get_node_or_null("VisionZone") if get_node_or_null("VisionZone") else get_node_or_null("DetectionZone")
@@ -31,6 +37,9 @@ var _start_position: Vector2 = Vector2.ZERO
 var _cooldown_timer: float = 0.0
 
 func _ready() -> void:
+	if _restore_state():
+		return
+		
 	add_to_group("enemy")
 	current_health = max_health
 	_start_position = global_position
@@ -149,6 +158,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	velocity = attack_direction * knockback_force
 	
 	if current_health <= 0:
+		_persist_death()
 		if loot_drop_component:
 			loot_drop_component.drop_loot()
 		call_deferred("queue_free")
@@ -170,3 +180,21 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 		tween.tween_property($Sprite2D, "modulate:a", 1.0, blink_time)
 		
 		get_tree().create_timer(iframe_duration).timeout.connect(func(): if is_inside_tree(): is_invulnerable = false)
+
+func _restore_state() -> bool:
+	if persistence_id.is_empty():
+		return false
+	var wsm = get_node_or_null("/root/WorldStateManager")
+	if wsm and wsm.has_state(persistence_id):
+		var data: Dictionary = wsm.load_state(persistence_id)
+		if data.get("is_dead", false):
+			queue_free()
+			return true
+	return false
+
+func _persist_death() -> void:
+	if persistence_id.is_empty():
+		return
+	var wsm = get_node_or_null("/root/WorldStateManager")
+	if wsm:
+		wsm.save_state(persistence_id, {"is_dead": true})

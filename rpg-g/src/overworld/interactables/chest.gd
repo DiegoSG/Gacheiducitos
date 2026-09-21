@@ -3,7 +3,6 @@ extends Actionable
 @export_group("Loot & Storage")
 @export var loot_items: Array[ItemData] = []
 @export var is_storage_enabled: bool = false
-@export var chest_id: String = "" # Unique ID for persistence if needed later
 @export var persistence_id: String = ""
 
 @export_group("Visuals")
@@ -45,7 +44,7 @@ func open_chest() -> void:
 	if sprite:
 		sprite.texture = texture_open
 		sprite.modulate = Color.WHITE
-	print("Chest ", persistence_id if persistence_id else chest_id, " opened.")
+	print("Chest ", persistence_id, " opened.")
 
 	if not has_been_looted:
 		give_loot()
@@ -61,7 +60,7 @@ func close_chest() -> void:
 	if sprite:
 		sprite.texture = texture_closed
 		sprite.modulate = Color.WHITE
-	print("Chest ", persistence_id if persistence_id else chest_id, " closed.")
+	print("Chest ", persistence_id, " closed.")
 	show_message("closed")
 	_persist_state()
 

@@ -13,6 +13,10 @@ func get_action_name() -> String:
 	return "ItemAction (%s %s x%d)" % [operation, item_id, amount]
 
 func execute(trigger_node: Node) -> void:
+	if not trigger_node:
+		push_warning("ItemAction: trigger_node es null.")
+		finished.emit()
+		return
 	if item_id.is_empty() or amount <= 0:
 		finished.emit()
 		return

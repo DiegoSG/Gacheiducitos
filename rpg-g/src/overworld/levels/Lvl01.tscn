@@ -4,13 +4,16 @@
 [ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="2_eyghc"]
 [ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="3_0ydad"]
 [ext_resource type="PackedScene" uid="uid://627m0vq1pgow" path="res://src/overworld/npcs/npc_barnaby.tscn" id="3_eyghc"]
+[ext_resource type="Resource" uid="uid://osefela8lutb" path="res://data/items/leather_cap.tres" id="4_bum6v"]
 [ext_resource type="Resource" uid="uid://0ii1rigngct4" path="res://src/overworld/npcs/Test.dialogue" id="4_s44nc"]
 [ext_resource type="PackedScene" uid="uid://tkrjy8dnqifu" path="res://src/overworld/interactables/chest.tscn" id="5_axe4l"]
 [ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="6_77vc6"]
 [ext_resource type="PackedScene" path="res://src/overworld/interactables/dialogue_event.tscn" id="6_dq17e"]
 [ext_resource type="Resource" uid="uid://dbhe8x2v6tggn" path="res://data/items/golden_key.tres" id="7_mwxlp"]
 [ext_resource type="Script" uid="uid://83c224l2dccq" path="res://src/core/pipeline/actions/minigame_action.gd" id="8_cet0f"]
+[ext_resource type="Resource" uid="uid://cagd771u5sffm" path="res://data/items/iron_key.tres" id="8_edlbh"]
 [ext_resource type="Resource" uid="uid://bh4box6poomqx" path="res://data/items/gold_coins.tres" id="8_n8rv5"]
+[ext_resource type="Resource" uid="uid://g3aow6onnlpw" path="res://data/items/ancient_map.tres" id="9_bum6v"]
 [ext_resource type="Resource" uid="uid://d2r6q7v2n8y4c" path="res://data/items/bread.tres" id="9_rcb5p"]
 [ext_resource type="Resource" uid="uid://8fc660t425el" path="res://data/items/antidote.tres" id="10_3bam5"]
 [ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="11_n8rv5"]
@@ -82,12 +85,35 @@ position = Vector2(-8, 24)
 [node name="Entities" type="Node2D" parent="." unique_id=1700418367]
 y_sort_enabled = true
 
+[node name="GenericEnemy2" parent="Entities" unique_id=1981586223 instance=ExtResource("13_3bam5")]
+position = Vector2(1371, 844)
+
+[node name="LootDropComponent" parent="Entities/GenericEnemy2" index="6" unique_id=1603003153]
+unique_item = ExtResource("4_bum6v")
+persistence_id = "Leather2"
+drop_count = 3
+min_coins = 10
+max_coins = 15
+
 [node name="NPC_Barnaby" parent="Entities" unique_id=1127233890 instance=ExtResource("3_eyghc")]
 position = Vector2(231, 738)
 dialogue_resource = ExtResource("4_s44nc")
 
-[node name="GenericEnemy" parent="Entities" unique_id=1981586223 instance=ExtResource("13_3bam5")]
-position = Vector2(1394, 658)
+[node name="GenericEnemy" parent="Entities" unique_id=83438673 instance=ExtResource("13_3bam5")]
+position = Vector2(1394, 375)
+persistence_id = "aranita"
+
+[node name="LootDropComponent" parent="Entities/GenericEnemy" index="6" unique_id=1603003153]
+unique_item = ExtResource("4_bum6v")
+persistence_id = "Leather"
+loot_table = Dictionary[ExtResource("6_77vc6"), int]({
+ExtResource("9_rcb5p"): 3,
+ExtResource("8_edlbh"): 5,
+ExtResource("9_bum6v"): 7
+})
+drop_count = 3
+min_coins = 10
+max_coins = 15
 
 [node name="DialogueEvent" parent="Entities" unique_id=1780950499 instance=ExtResource("6_dq17e")]
 position = Vector2(147, 744)
@@ -97,17 +123,16 @@ actions = Array[ExtResource("13_s44nc")]([SubResource("Resource_edlbh")])
 [node name="Portals" type="Node2D" parent="." unique_id=265911282]
 
 [node name="Player" parent="." unique_id=1441524907 instance=ExtResource("3_0ydad")]
-position = Vector2(498, 543)
+position = Vector2(584, 347)
 
 [node name="Chest" parent="." unique_id=1929656856 instance=ExtResource("5_axe4l")]
 position = Vector2(697, 568)
 loot_items = Array[ExtResource("6_77vc6")]([ExtResource("7_mwxlp"), ExtResource("8_n8rv5"), ExtResource("9_rcb5p"), ExtResource("9_rcb5p"), ExtResource("10_3bam5")])
-chest_id = "54"
 persistence_id = "54"
 
 [node name="PressurePlate" parent="." unique_id=732398667 instance=ExtResource("12_hes4d")]
 position = Vector2(501, 874)
-persistence_id = null
+persistence_id = "lvl_01_plate_ff644dea"
 on_enter_actions = Array[ExtResource("13_s44nc")]([null])
 
 [node name="LevelPortal" parent="." unique_id=1271243254 instance=ExtResource("11_n8rv5")]
@@ -148,5 +173,8 @@ text = "1"
 [node name="PickupItem" parent="." unique_id=171384609 instance=ExtResource("14_3bam5")]
 position = Vector2(326, 566)
 item_data = ExtResource("15_fvo0o")
+persistence_id = "lvl_01_item_8f81566c"
 
+[editable path="Entities/GenericEnemy2"]
+[editable path="Entities/GenericEnemy"]
 [editable path="LevelPortal"]

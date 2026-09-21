@@ -10,9 +10,10 @@ signal loot_dropped(dropped_pickups: Array[PickupItem])
 @export var unique_item: ItemData = null
 ## Probabilidad del ítem único del 0 al 10 (10 = 100% garantizado en su primera muerte)
 @export_range(0, 10) var unique_probability: int = 10
-## Flag en NarrativeManager para persistir si este drop único ya fue entregado.
-## Si se deja vacío, el componente usará su propia variable local.
-@export var unique_drop_flag: String = ""
+## ID de persistencia para WorldStateManager.
+## Si tiene un valor asignado, la entrega del drop único se guarda para siempre.
+## Si está vacío (""), no hay persistencia y se recalcula cada vez.
+@export var persistence_id: String = ""
 
 @export_group("Standard Loot Table")
 ## Tabla de loot: Clave = Ítem (ItemData), Valor = Probabilidad de 0 a 10 (10 = 100%)
@@ -43,9 +44,10 @@ var _has_dropped_unique: bool = false
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
-	var nm = _get_narrative_manager()
-	if not unique_drop_flag.is_empty() and nm:
-		_has_dropped_unique = bool(nm.get_flag(unique_drop_flag, false))
+	if not persistence_id.is_empty():
+		var wsm = _get_world_state_manager()
+		if wsm and wsm.has_state(persistence_id):
+			_has_dropped_unique = wsm.load_state(persistence_id).get("unique_dropped", false)
 
 ## Ejecuta la lógica completa de loot y spawnea los objetos en el nivel.
 func drop_loot(spawn_pos: Vector2 = global_position) -> Array[PickupItem]:
@@ -104,19 +106,21 @@ func _roll_probability(prob_rating: int) -> bool:
 	return roll <= prob_rating
 
 func _is_unique_already_dropped() -> bool:
-	var nm = _get_narrative_manager()
-	if not unique_drop_flag.is_empty() and nm:
-		return bool(nm.get_flag(unique_drop_flag, false))
+	if not persistence_id.is_empty():
+		var wsm = _get_world_state_manager()
+		if wsm and wsm.has_state(persistence_id):
+			return wsm.load_state(persistence_id).get("unique_dropped", false)
 	return _has_dropped_unique
 
 func _mark_unique_as_dropped() -> void:
 	_has_dropped_unique = true
-	var nm = _get_narrative_manager()
-	if not unique_drop_flag.is_empty() and nm:
-		nm.set_flag(unique_drop_flag, true)
+	if not persistence_id.is_empty():
+		var wsm = _get_world_state_manager()
+		if wsm:
+			wsm.save_state(persistence_id, {"unique_dropped": true})
 
-func _get_narrative_manager() -> Node:
-	return get_node_or_null("/root/NarrativeManager")
+func _get_world_state_manager() -> Node:
+	return get_node_or_null("/root/WorldStateManager")
 
 ## Instancia el PickupItem en la escena con animación cinemática radial (Tween)
 func _spawn_pickup(item_res: ItemData, custom_amount: int, origin_pos: Vector2, delay_step: int = 0) -> PickupItem:

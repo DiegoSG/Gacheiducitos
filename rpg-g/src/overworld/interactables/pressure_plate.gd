@@ -41,8 +41,6 @@ var _agents_inside: Array[Node2D] = []
 var _has_triggered: bool = false
 
 func _ready() -> void:
-	if persistence_id.is_empty():
-		persistence_id = PersistenceIdHelper.generate_id(self, "plate")
 	collision_layer = 0
 	collision_mask = 2 # Detecta al jugador
 	if not Engine.is_editor_hint():

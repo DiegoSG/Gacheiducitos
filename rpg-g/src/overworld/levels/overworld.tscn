@@ -331,26 +331,30 @@ actions_if_true = Array[ExtResource("24_v631l")]([SubResource("Resource_mg_smash
 [node name="Items" type="Node2D" parent="." unique_id=1440517776]
 
 [node name="Chest" parent="Items" unique_id=2125951159 instance=ExtResource("3_chest")]
-position = Vector2(380, -179)
+position = Vector2(1089, 76)
 loot_items = Array[ExtResource("5_5tehe")]([ExtResource("11_ff0t0"), ExtResource("7_hxnvt"), ExtResource("14_5tehe"), ExtResource("9_lia7k"), ExtResource("10_1dryu")])
 is_storage_enabled = true
-chest_id = "10"
+persistence_id = "10"
 
 [node name="PickupItem" parent="Items" unique_id=562261955 instance=ExtResource("6_b1b42")]
 position = Vector2(337, -4)
 item_data = ExtResource("14_5tehe")
+persistence_id = "overworld_item_ce15f762"
 
 [node name="PickupItem2" parent="Items" unique_id=944585978 instance=ExtResource("6_b1b42")]
 position = Vector2(362, -71)
 item_data = ExtResource("14_5tehe")
+persistence_id = "overworld_item_8839d9d8"
 
 [node name="PickupItem3" parent="Items" unique_id=50810886 instance=ExtResource("6_b1b42")]
 position = Vector2(224, -75)
 item_data = ExtResource("14_5tehe")
+persistence_id = "overworld_item_512b00d4"
 
 [node name="PickupItem4" parent="Items" unique_id=1988564414 instance=ExtResource("6_b1b42")]
 position = Vector2(471, -74)
 item_data = ExtResource("8_lvsx0")
+persistence_id = "overworld_item_4d9faa31"
 
 [node name="Player" parent="." unique_id=1053226611 instance=ExtResource("2_player")]
 position = Vector2(289, 157)
@@ -396,6 +400,7 @@ position = Vector2(700, 453)
 
 [node name="ObjMovil" type="Sprite2D" parent="." unique_id=43116720]
 position = Vector2(-299, 30)
+rotation = 0.20167306
 texture = ExtResource("22_vqx3p")
 
 [node name="MoverAbajo" type="AnimationPlayer" parent="ObjMovil" unique_id=1929779888]
