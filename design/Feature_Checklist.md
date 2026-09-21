@@ -185,8 +185,24 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
      - Soporte para consumo opcional del ítem (`consume_key: bool`) descontando 1 unidad de `Inventory` si está activado, o conservándolo si no.
      - Actualización visual automática y emisión de señales `unlocked` / `locked`.
   4. **Resolución de Conflictos de Cámara:**
-     - Eliminación de nodos duplicados obsoletos `Camera2D` bajo `Player` en los niveles del overworld, permitiendo que el `Player` gestione de manera autónoma su propia `BoundedCamera`.
-
-
-
+     - Eliminación de nodos duplicados obsoletos `Camera2D` bajo `Player` en los niveles del overworld, permitiendo que el `Player` gestione de manera autónoma su propia `BoundedCamera`.### 🔖 Checkpoint — 21 de Septiembre, 2026: *Salud Unificada, Muerte y Respawn con Checkpoints, HUD Retro, Combate Equilibrado y Limpieza de Taxonomía*
+- **Sistemas y Mejoras Implementadas:**
+  1. **Sistema de Salud, Muerte y Checkpoints de Nivel:**
+     - `PlayerStats`: Salud reestructurada a valores enteros (`max_health = 4`, `health = 4`), emisión de `player_died` al llegar a 0. Métodos `create_snapshot()` y `restore_snapshot()`.
+     - `CheckpointLevel`: Componente marcador que define qué nivel actúa como zona segura y punto de control.
+     - `GameManager`: Registro de checkpoints, captura de snapshots de estado al entrar a cada nivel, y secuencia de `respawn_player()` que revierte los cambios del nivel actual en `WorldStateManager` y restaura estadísticas e inventario al checkpoint activo en el spawn `RespawnPoint`.
+     - `Inventory` y `WorldStateManager`: Snapshots y reversión coordinada del estado del mundo y objetos perdidos tras morir.
+  2. **Combate, Knockback e Invulnerabilidad:**
+     - Desacoplamiento de daño y retroceso: El jugador siempre sufre knockback hacia atrás al ser impactado, incluso durante el estado de invulnerabilidad temporal (i-frames).
+     - Daño continuo periódico en colisiones (`continuous_damage` y `attack_rate = 0.6s` en `HitboxComponent`) para que los enemigos continúen atacando si el jugador permanece dentro de su rango.
+     - Inamovilidad de enemigos: Configuración en `CharacterBody2D.MOTION_MODE_FLOATING` para impedir que el jugador empuje físicamente a los enemigos caminando contra ellos.
+     - Daño de enemigos expuesto y configurable (`@export var attack_damage: int = 1`).
+  3. **PlayerHUD Retro (Barritas y Oro):**
+     - Barra de salud dinámica por pips/barritas verticales verdes que se apagan al sufrir daño y se expanden automáticamente si la vida máxima aumenta.
+     - Contador de oro integrado (`🪙 [oro]`) sincronizado por señales en tiempo real.
+  4. **Higiene, Limpieza y Reorganización de Taxonomía:**
+     - Eliminación de niveles sandbox obsoletos; `Lvl01.tscn` establecido como escena principal inicial en `project.godot`.
+     - Purgado de la carpeta `src/shared/`, reubicando componentes a `src/core/components/`, enemigos a `src/overworld/enemies/` y NPCs a `src/overworld/npcs/`.
+     - Eliminación del HUD legacy (`src/ui/hud/`) y scripts obsoletos en `tools/`.
+     - Batería de pruebas automatizadas activas al 100%: `test_death_and_respawn_runner.gd`, `test_knockback_continuous_runner.gd` y `test_player_hud_runner.gd`.
 
