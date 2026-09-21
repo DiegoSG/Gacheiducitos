@@ -9,6 +9,20 @@ signal quest_completed(quest_id: String)
 var flags: Dictionary = {}
 var quests: Dictionary = {}
 
+func _ready() -> void:
+	_load_defaults()
+
+func _load_defaults() -> void:
+	const DEFAULTS_PATH: String = "res://src/core/data/narrative_defaults.gd"
+	if ResourceLoader.exists(DEFAULTS_PATH):
+		var script: GDScript = load(DEFAULTS_PATH)
+		if script and "DEFAULTS" in script:
+			var defaults: Dictionary = script.DEFAULTS
+			for key: String in defaults:
+				if not flags.has(key):
+					flags[key] = defaults[key]
+			print("NarrativeManager: Loaded %d default flags" % defaults.size())
+
 func set_flag(flag: String, value: Variant) -> void:
 	flags[flag] = value
 	flag_changed.emit(flag, value)

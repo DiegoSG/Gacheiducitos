@@ -17,6 +17,9 @@ signal state_changed(is_pressed: bool)
 
 @export var one_shot: bool = false ## Si se presiona una sola vez y no vuelve a subir
 
+@export_group("Persistencia")
+@export var persistence_id: String = ""
+
 @export_group("Acciones de Eventos")
 @export var on_enter_actions: Array[ActionResource] = [] ## Acciones que se ejecutan al entrar/pisar
 @export var on_exit_actions: Array[ActionResource] = []  ## Acciones que se ejecutan al salir/despresionar
@@ -38,6 +41,8 @@ var _agents_inside: Array[Node2D] = []
 var _has_triggered: bool = false
 
 func _ready() -> void:
+	if persistence_id.is_empty():
+		persistence_id = PersistenceIdHelper.generate_id(self, "plate")
 	collision_layer = 0
 	collision_mask = 2 # Detecta al jugador
 	if not Engine.is_editor_hint():
@@ -45,6 +50,7 @@ func _ready() -> void:
 			body_entered.connect(_on_body_entered)
 		if not body_exited.is_connected(_on_body_exited):
 			body_exited.connect(_on_body_exited)
+	_restore_state()
 	_update_visuals()
 
 func _update_visuals() -> void:
@@ -63,6 +69,7 @@ func _on_body_entered(body: Node2D) -> void:
 			return
 		_has_triggered = true
 		is_pressed = true
+		_persist_state()
 		pressed.emit()
 		state_changed.emit(true)
 		print("[PressurePlate]: Pisada por '%s'. Ejecutando on_enter_actions..." % body.name)
@@ -77,6 +84,7 @@ func _on_body_exited(body: Node2D) -> void:
 		if one_shot:
 			return
 		is_pressed = false
+		_persist_state()
 		released.emit()
 		state_changed.emit(false)
 		print("[PressurePlate]: Despresionada. Ejecutando on_exit_actions...")
@@ -86,3 +94,22 @@ func _run_actions(actions: Array[ActionResource]) -> void:
 	for act in actions:
 		if act:
 			act.execute(self)
+
+func _restore_state() -> void:
+	if persistence_id.is_empty():
+		return
+	var wsm: Node = get_node_or_null("/root/WorldStateManager")
+	if wsm and wsm.has_state(persistence_id):
+		var data: Dictionary = wsm.load_state(persistence_id)
+		_has_triggered = data.get("has_triggered", false)
+		is_pressed = data.get("is_pressed", false)
+
+func _persist_state() -> void:
+	if persistence_id.is_empty():
+		return
+	var wsm: Node = get_node_or_null("/root/WorldStateManager")
+	if wsm:
+		wsm.save_state(persistence_id, {
+			"has_triggered": _has_triggered,
+			"is_pressed": is_pressed
+		})

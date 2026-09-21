@@ -22,6 +22,7 @@
   --end-color: #e94560;
   --var-color: #00b4d8;
   --event-color: #f77f00;
+  --condition-color: #ef4444;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -138,6 +139,10 @@ kbd {
   background: rgba(0, 180, 216, 0.15); color: var(--var-color);
 }
 
+.var-item-badge.type-float {
+  background: rgba(56, 182, 255, 0.15); color: #38b6ff;
+}
+
 .var-item-val {
   font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);
 }
@@ -212,6 +217,9 @@ kbd {
 
 #canvas-container {
   width: 100%; height: 100%; overflow: hidden; cursor: grab; position: relative;
+  background-color: var(--bg-base);
+  background-image: radial-gradient(circle, #2a2a55 1.5px, transparent 1.5px);
+  background-size: 32px 32px;
 }
 
 #canvas-container.panning { cursor: grabbing !important; }
@@ -220,10 +228,8 @@ kbd {
 
 #canvas-viewport {
   position: absolute; top: 0; left: 0; transform-origin: 0 0;
-  width: 12000px; height: 12000px;
-  background-color: var(--bg-base);
-  background-image: radial-gradient(circle, #2a2a55 1.5px, transparent 1.5px);
-  background-size: 32px 32px;
+  width: 0; height: 0; overflow: visible;
+  background: transparent;
 }
 
 #connections-svg {
@@ -275,14 +281,15 @@ path.connection-preview {
 }
 
 .node-title-input {
-  flex: 1; background: transparent; border: none; outline: none;
+  flex: 1; background: transparent; border: 1px solid transparent; outline: none;
   color: var(--text-primary); font-family: var(--font-mono);
   font-size: 12px; font-weight: 600; padding: 2px 4px;
-  border-radius: 3px;
+  border-radius: 3px; cursor: grab; user-select: none;
 }
 
-.node-title-input:focus {
+.node-title-input.editing {
   background: var(--bg-surface); border: 1px solid var(--accent);
+  cursor: text; user-select: text;
 }
 
 .node-title-input::placeholder { color: var(--text-muted); }
@@ -491,6 +498,25 @@ path.connection-preview {
   display: flex; flex-direction: column; gap: 6px; padding: 4px 0;
 }
 
+/* === CONDITION NODE === */
+.dialogue-node.node-condition {
+  border-color: var(--condition-color);
+  min-width: 260px;
+}
+
+.dialogue-node.node-condition .node-header {
+  background: rgba(239, 68, 68, 0.25);
+  border-bottom-color: rgba(239, 68, 68, 0.4);
+}
+
+.dialogue-node.node-condition .node-title-input {
+  color: var(--condition-color);
+}
+
+.node-condition-config {
+  display: flex; flex-direction: column; gap: 6px; padding: 4px 0;
+}
+
 /* === RIGHT PANEL: INSPECTOR === */
 #edit-panel {
   background: var(--bg-panel);
@@ -535,17 +561,18 @@ path.connection-preview {
 
 /* === CANVAS CONTROLS === */
 #canvas-controls {
-  position: absolute; bottom: 16px; right: 16px;
-  display: flex; gap: 8px; align-items: center;
-  background: var(--bg-panel); padding: 6px 10px;
+  position: absolute; top: 16px; left: 16px;
+  display: flex; flex-direction: column; gap: 8px; align-items: stretch;
+  background: var(--bg-panel); padding: 8px;
   border-radius: 8px; border: 1px solid var(--border);
   box-shadow: var(--shadow); z-index: 10;
 }
 
 #canvas-controls button {
   background: var(--bg-surface); border: 1px solid var(--border);
-  color: var(--text-primary); padding: 5px 10px; border-radius: 4px;
+  color: var(--text-primary); padding: 6px 10px; border-radius: 4px;
   font-size: 12px; cursor: pointer; transition: all 0.15s; font-weight: 500;
+  text-align: left;
 }
 
 #canvas-controls button:hover { border-color: var(--accent); color: var(--accent-hover); }
@@ -586,6 +613,60 @@ path.connection-preview {
 
 #modal-body {
   display: flex; flex-direction: column; gap: 10px; font-size: 13px;
+}
+
+#modal-box.modal-wide {
+  max-width: 900px;
+  width: 95%;
+  max-height: 85vh;
+}
+
+#modal-box.modal-wide #modal-body {
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.quick-rewrite-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.quick-rewrite-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.quick-rewrite-character {
+  width: 180px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.quick-rewrite-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 8px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 50px;
 }
 
 .modal-footer {

@@ -102,12 +102,14 @@ function init() {
   document.getElementById('btn-refresh-files')?.addEventListener('click', loadDialogueFiles);
   document.getElementById('btn-add-variable')?.addEventListener('click', handleAddVariable);
   document.getElementById('btn-save')?.addEventListener('click', saveActiveTab);
+  document.getElementById('btn-quick-rewrite')?.addEventListener('click', handleQuickRewrite);
   document.getElementById('btn-new-tab')?.addEventListener('click', handleNewDialogue);
 
   // Canvas buttons
   document.getElementById('btn-add-node')?.addEventListener('click', () => handleAddGenericNode('dialogue'));
   document.getElementById('btn-add-var-node')?.addEventListener('click', () => handleAddGenericNode('variable'));
   document.getElementById('btn-add-event-node')?.addEventListener('click', () => handleAddGenericNode('event'));
+  document.getElementById('btn-add-condition-node')?.addEventListener('click', () => handleAddGenericNode('condition'));
   document.getElementById('btn-fit-view')?.addEventListener('click', handleFitView);
 
   // Modal
@@ -208,6 +210,13 @@ function initKeyboardShortcuts() {
       handleAddGenericNode('event');
       return;
     }
+
+    // C: Añadir nodo condición (solo si no estamos escribiendo)
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'c' && !isTyping) {
+      e.preventDefault();
+      handleAddGenericNode('condition');
+      return;
+    }
   });
 }
 
@@ -253,7 +262,7 @@ function renderVariableList() {
     nameSpan.title = `${v.name} (${v.type || 'bool'}) = ${v.defaultValue}`;
 
     const badge = document.createElement('span');
-    badge.className = 'var-item-badge';
+    badge.className = 'var-item-badge type-' + (v.type || 'bool');
     badge.textContent = v.type || 'bool';
 
     const delBtn = document.createElement('button');
@@ -287,6 +296,7 @@ function handleAddVariable() {
     <select id="modal-var-type" style="margin-bottom: 12px;">
       <option value="bool">Booleano (true / false)</option>
       <option value="int">Entero (Número)</option>
+      <option value="float">Decimal (Float)</option>
       <option value="string">Texto (String)</option>
     </select>
     
@@ -304,7 +314,7 @@ function handleAddVariable() {
 
       if (!name) return;
       if (defVal === '') {
-        defVal = type === 'bool' ? 'false' : (type === 'int' ? '0' : '""');
+        defVal = type === 'bool' ? 'false' : (type === 'int' ? '0' : (type === 'float' ? '0.0' : '""'));
       }
 
       if (AppState.variables.some(v => v.name === name)) {
@@ -539,6 +549,8 @@ function parseDialogue(content, layoutData) {
       }
     } else if (line.startsWith('if ') && currentNode) {
       pendingCondition = line.replace(/^if\s+/, '').replace(/:$/, '').trim();
+    } else if (line.startsWith('elif ') && currentNode) {
+      pendingCondition = line.replace(/^elif\s+/, '').replace(/:$/, '').trim();
     } else if (line.startsWith('- ') && currentNode) {
       const match = line.match(/^-\s+(.+?)\s+=>\s+(.+)$/);
       if (match) {
@@ -547,8 +559,13 @@ function parseDialogue(content, layoutData) {
       }
       pendingCondition = '';
     } else if (line.startsWith('=> ') && currentNode) {
-      currentNode.goto = line.slice(3).trim();
-      pendingCondition = '';
+      if (pendingCondition) {
+        if (!currentNode.conditionalGotos) currentNode.conditionalGotos = [];
+        currentNode.conditionalGotos.push({ condition: pendingCondition, goto: line.slice(3).trim() });
+        pendingCondition = '';
+      } else {
+        currentNode.goto = line.slice(3).trim();
+      }
     } else if (line.startsWith('do ') && currentNode) {
       const mut = parseMutation(line);
       currentNode.mutations.push(mut);
@@ -581,6 +598,42 @@ function parseDialogue(content, layoutData) {
 }
 
 function finalizeParsedNode(node) {
+  if (node.lines.length === 0 && node.mutations.length === 0 && node.conditionalGotos?.length > 0) {
+    node.nodeType = 'condition';
+    node.conditionOutputs = { default: node.goto || '' };
+    node.switchCases = [];
+    
+    const firstCond = node.conditionalGotos[0].condition;
+    const match = firstCond.match(/NarrativeManager\.get_flag\(['"](.+?)['"]\)\s*(==|!=|>|<|>=|<=)\s*(.+)/);
+    if (match) {
+      node.conditionVar = match[1];
+      node.conditionOperator = match[2];
+      const val = match[3];
+      
+      if (node.conditionalGotos.length === 1 && (val === 'true' || val === 'false')) {
+        node.conditionMode = 'compare';
+        node.conditionValue = 'true';
+        if (val === 'true' && node.conditionOperator === '==') {
+          node.conditionOutputs['true'] = node.conditionalGotos[0].goto;
+          node.conditionOutputs['false'] = node.goto || '';
+        } else {
+          node.conditionOutputs['false'] = node.conditionalGotos[0].goto;
+          node.conditionOutputs['true'] = node.goto || '';
+        }
+      } else {
+        node.conditionMode = 'switch';
+        for (const cg of node.conditionalGotos) {
+          const m = cg.condition.match(/NarrativeManager\.get_flag\(['"](.+?)['"]\)\s*==\s*(.+)/);
+          if (m) {
+            node.switchCases.push(m[2]);
+            node.conditionOutputs[m[2]] = cg.goto;
+          }
+        }
+      }
+    }
+    return node;
+  }
+
   // Deducir si el nodo es en realidad un nodo de evento o de variable si no tiene diálogo
   if (node.lines.length === 0 && node.mutations.length === 1) {
     const mut = node.mutations[0];
@@ -590,8 +643,8 @@ function finalizeParsedNode(node) {
       node.varValue = mut.value;
     } else if (mut.type === 'event') {
       node.nodeType = 'event';
-      node.eventName = mut.name;
-      node.eventParam = mut.value;
+      node.eventParam = mut.value || mut.name;
+      node.eventName = node.eventParam;
     }
   }
   return node;
@@ -604,10 +657,11 @@ function parseMutation(line) {
     return { type: 'variable', name: flagMatch[1], value: flagMatch[2] };
   }
 
-  // Detectar evento: do GameManager.trigger_event("evento", "param") o ("evento")
+  // Detectar evento: do GameManager.trigger_event("actor") o ("evento", "param")
   const evtMatch = line.match(/do\s+GameManager\.trigger_event\(['"](.+?)['"](?:\s*,\s*['"]?(.*?)['"]?)?\)/);
   if (evtMatch) {
-    return { type: 'event', name: evtMatch[1], value: evtMatch[2] || '' };
+    const actorOrParam = evtMatch[2] ? evtMatch[2] : evtMatch[1];
+    return { type: 'event', name: actorOrParam, value: actorOrParam };
   }
 
   // Triggers legacy
@@ -620,6 +674,20 @@ function parseMutation(line) {
 }
 
 function ensureSpecialNodes(nodes, nodesLayout) {
+  // Detectar si hay un alias puro de start: un nodo 'start' sin diálogo que solo salta a otro nodo
+  const startAliasIdx = nodes.findIndex(n => n.title?.toLowerCase() === 'start' && n.lines.length === 0 && n.choices.length === 0 && n.mutations.length === 0 && (!n.conditionalGotos || n.conditionalGotos.length === 0) && n.goto);
+  let aliasTarget = '';
+  if (startAliasIdx !== -1) {
+    aliasTarget = nodes[startAliasIdx].goto;
+    nodes.splice(startAliasIdx, 1);
+  }
+
+  // Detectar si hay un alias puro de end: un nodo 'end' sin diálogo que solo salta a END
+  const endAliasIdx = nodes.findIndex(n => n.title?.toLowerCase() === 'end' && n.lines.length === 0 && n.choices.length === 0 && n.mutations.length === 0 && (!n.conditionalGotos || n.conditionalGotos.length === 0) && (n.goto === 'END' || !n.goto));
+  if (endAliasIdx !== -1) {
+    nodes.splice(endAliasIdx, 1);
+  }
+
   const hasStart = nodes.some(n => n.title === '__START__');
   const hasEnd = nodes.some(n => n.title === '__END__');
 
@@ -635,9 +703,14 @@ function ensureSpecialNodes(nodes, nodesLayout) {
       lines: [],
       choices: [],
       mutations: [],
-      goto: firstReal ? firstReal.title : '',
+      goto: aliasTarget || (firstReal ? firstReal.title : ''),
       isSpecial: true,
     });
+  } else if (aliasTarget) {
+    const startNode = nodes.find(n => n.title === '__START__');
+    if (startNode && (!startNode.goto || startNode.goto === '__END__')) {
+      startNode.goto = aliasTarget;
+    }
   }
 
   if (!hasEnd) {
@@ -684,28 +757,58 @@ function serializeDialogue(tabData) {
     }
   }
 
+  const cleanTarget = (tgt) => {
+    if (!tgt || tgt === '__END__' || tgt === 'END') return 'END';
+    return tgt.trim().replace(/\s+/g, '_');
+  };
+
+  // Código correspondiente para el nodo START presente por defecto
+  const hasExplicitStartNode = realNodes.some(n => (n.title || '').trim().toLowerCase() === 'start');
+  if (!hasExplicitStartNode) {
+    const startTarget = cleanTarget(firstTitle || 'END');
+    out += `~ start\n\n=> ${startTarget}\n\n`;
+  }
+
   for (const node of realNodes) {
-    out += `~ ${node.title}\n\n`;
+    const safeTitle = (node.title || 'nudo').trim().replace(/\s+/g, '_');
+    out += `~ ${safeTitle}\n\n`;
 
     if (node.nodeType === 'variable') {
       const vName = node.varName || 'variable';
       const vVal = node.varValue !== undefined && node.varValue !== '' ? node.varValue : 'true';
       out += `do NarrativeManager.set_flag("${vName}", ${vVal})\n`;
-      const target = node.goto === '__END__' ? 'END' : (node.goto || 'END');
-      out += `=> ${target}\n\n`;
+      out += `=> ${cleanTarget(node.goto)}\n\n`;
       continue;
     }
 
     if (node.nodeType === 'event') {
-      const eName = node.eventName || 'evento';
-      const eParam = node.eventParam ? node.eventParam.trim() : '';
-      if (eParam) {
-        out += `do GameManager.trigger_event("${eName}", "${eParam}")\n`;
+      const actorTarget = (node.eventParam || node.eventName || 'DialogueEvent').trim();
+      out += `do GameManager.trigger_event("${actorTarget}")\n`;
+      out += `=> ${cleanTarget(node.goto)}\n\n`;
+      continue;
+    }
+
+    if (node.nodeType === 'condition') {
+      const vName = node.conditionVar || 'var';
+      if (node.conditionMode === 'compare') {
+        const op = node.conditionOperator || '==';
+        const val = node.conditionValue || 'true';
+        out += `if NarrativeManager.get_flag("${vName}") ${op} ${val}\n`;
+        out += `\t=> ${cleanTarget(node.conditionOutputs?.['true'])}\n`;
+        out += `=> ${cleanTarget(node.conditionOutputs?.['false'])}\n\n`;
       } else {
-        out += `do GameManager.trigger_event("${eName}")\n`;
+        const cases = node.switchCases || [];
+        for (let i = 0; i < cases.length; i++) {
+          const cval = cases[i];
+          if (i === 0) {
+            out += `if NarrativeManager.get_flag("${vName}") == ${cval}\n`;
+          } else {
+            out += `elif NarrativeManager.get_flag("${vName}") == ${cval}\n`;
+          }
+          out += `\t=> ${cleanTarget(node.conditionOutputs?.[cval])}\n`;
+        }
+        out += `=> ${cleanTarget(node.conditionOutputs?.['default'])}\n\n`;
       }
-      const target = node.goto === '__END__' ? 'END' : (node.goto || 'END');
-      out += `=> ${target}\n\n`;
       continue;
     }
 
@@ -718,15 +821,21 @@ function serializeDialogue(tabData) {
 
     if (node.choices.length > 0) {
       for (const ch of node.choices) {
-        const target = ch.targetTitle === '__END__' ? 'END' : ch.targetTitle;
-        out += `- ${ch.label} => ${target}\n`;
+        out += `- ${ch.label} => ${cleanTarget(ch.targetTitle)}\n`;
       }
     } else if (node.goto) {
-      const target = node.goto === '__END__' ? 'END' : node.goto;
-      out += `=> ${target}\n`;
+      out += `=> ${cleanTarget(node.goto)}\n`;
     }
     out += '\n';
   }
+
+  // Código correspondiente para el nodo END presente por defecto
+  const hasExplicitEndNode = realNodes.some(n => (n.title || '').trim().toLowerCase() === 'end');
+  const hasEndNode = tabData.nodes.some(n => n.title === '__END__');
+  if (hasEndNode && !hasExplicitEndNode) {
+    out += `~ end\n\n=> END\n\n`;
+  }
+
   return out.trimEnd() + '\n';
 }
 
@@ -757,8 +866,17 @@ function renderCanvas(tabData) {
 
 function applyCanvasTransform(tab) {
   const vp = document.getElementById('canvas-viewport');
-  if (!vp) return;
-  vp.style.transform = `scale(${tab.canvas.zoom}) translate(${tab.canvas.panX}px, ${tab.canvas.panY}px)`;
+  if (vp) {
+    vp.style.transform = `scale(${tab.canvas.zoom}) translate(${tab.canvas.panX}px, ${tab.canvas.panY}px)`;
+  }
+  const cc = document.getElementById('canvas-container');
+  if (cc) {
+    const size = 32 * tab.canvas.zoom;
+    const posX = (tab.canvas.panX * tab.canvas.zoom) % size;
+    const posY = (tab.canvas.panY * tab.canvas.zoom) % size;
+    cc.style.backgroundPosition = `${posX}px ${posY}px`;
+    cc.style.backgroundSize = `${size}px ${size}px`;
+  }
   const zl = document.getElementById('zoom-label');
   if (zl) zl.textContent = Math.round(tab.canvas.zoom * 100) + '%';
 }
@@ -785,6 +903,7 @@ function createNodeElement(node, tabData) {
   if (isEnd) div.classList.add('node-end');
   if (node.nodeType === 'variable') div.classList.add('node-variable');
   if (node.nodeType === 'event') div.classList.add('node-event');
+  if (node.nodeType === 'condition') div.classList.add('node-condition');
 
   // --- HEADER ---
   const header = document.createElement('div');
@@ -810,15 +929,52 @@ function createNodeElement(node, tabData) {
     titleInput.className = 'node-title-input';
     titleInput.value = node.title;
     titleInput.placeholder = 'nombre_nudo';
-    titleInput.addEventListener('input', () => {
+    titleInput.readOnly = true;
+    titleInput.title = 'Doble clic para renombrar';
+
+    titleInput.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      titleInput.readOnly = false;
+      titleInput.classList.add('editing');
+      titleInput.focus();
+      titleInput.select();
+    });
+
+    const finishEditing = () => {
+      if (titleInput.readOnly) return;
+      titleInput.readOnly = true;
+      titleInput.classList.remove('editing');
       const oldTitle = node.title;
-      node.title = titleInput.value.trim() || oldTitle;
+      const sanitized = titleInput.value.replace(/\s+/g, '_');
+      titleInput.value = sanitized;
+      node.title = sanitized.trim() || oldTitle;
       updateNodeReferences(tabData, oldTitle, node.title);
       markDirty();
       updateInspector();
       requestAnimationFrame(() => renderConnections(tabData));
+    };
+
+    titleInput.addEventListener('blur', finishEditing);
+    titleInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        titleInput.blur();
+      } else if (e.key === 'Escape') {
+        titleInput.value = node.title;
+        titleInput.blur();
+      }
     });
-    titleInput.addEventListener('mousedown', (e) => e.stopPropagation());
+
+    titleInput.addEventListener('input', () => {
+      const sanitized = titleInput.value.replace(/\s+/g, '_');
+      titleInput.value = sanitized;
+    });
+
+    titleInput.addEventListener('mousedown', (e) => {
+      if (!titleInput.readOnly) {
+        e.stopPropagation();
+      }
+    });
+
     header.appendChild(titleInput);
   }
 
@@ -848,10 +1004,10 @@ function createNodeElement(node, tabData) {
   const body = document.createElement('div');
   body.className = 'node-body';
 
-  if (node.nodeType === 'variable') {
-    // --- NODO VARIABLE ---
+  if (node.nodeType === 'condition') {
+    // --- NODO CONDICIÓN ---
     const configDiv = document.createElement('div');
-    configDiv.className = 'node-var-config';
+    configDiv.className = 'node-condition-config';
 
     const rowVar = document.createElement('div');
     rowVar.className = 'node-var-row';
@@ -861,9 +1017,9 @@ function createNodeElement(node, tabData) {
 
     const selectVar = document.createElement('select');
     selectVar.addEventListener('mousedown', (e) => e.stopPropagation());
-    rebuildVariableSelectOptions(selectVar, node.varName);
+    rebuildVariableSelectOptions(selectVar, node.conditionVar);
     selectVar.addEventListener('change', () => {
-      node.varName = selectVar.value;
+      node.conditionVar = selectVar.value;
       markDirty();
       updateInspector();
     });
@@ -872,12 +1028,90 @@ function createNodeElement(node, tabData) {
     rowVar.appendChild(selectVar);
     configDiv.appendChild(rowVar);
 
+    const rowMode = document.createElement('div');
+    rowMode.className = 'node-var-row';
+    const lblMode = document.createElement('span');
+    lblMode.className = 'node-var-label';
+    lblMode.textContent = node.conditionMode === 'compare' ? 'Compara:' : 'Switch:';
+
+    const modeDisplay = document.createElement('span');
+    modeDisplay.style.fontFamily = 'var(--font-mono)';
+    modeDisplay.style.fontSize = '11px';
+    if (node.conditionMode === 'compare') {
+      modeDisplay.textContent = `${node.conditionOperator} ${node.conditionValue}`;
+    } else {
+      modeDisplay.textContent = `${(node.switchCases || []).length} casos`;
+    }
+
+    rowMode.appendChild(lblMode);
+    rowMode.appendChild(modeDisplay);
+    configDiv.appendChild(rowMode);
+
+    body.appendChild(configDiv);
+    div.appendChild(body);
+
+    const choicesDiv = document.createElement('div');
+    choicesDiv.className = 'node-choices';
+
+    const outputKeys = node.conditionMode === 'compare' 
+      ? ['true', 'false'] 
+      : [...(node.switchCases || []), 'default'];
+
+    outputKeys.forEach((key) => {
+      const choiceRow = document.createElement('div');
+      choiceRow.className = 'node-choice';
+      choiceRow.style.justifyContent = 'space-between';
+
+      const lbl = document.createElement('span');
+      lbl.textContent = node.conditionMode === 'compare' ? (key === 'true' ? '✅ True' : '❌ False') : (key === 'default' ? 'Default' : `Caso ${key}`);
+      lbl.style.fontSize = '11px';
+
+      const portOut = document.createElement('span');
+      portOut.className = 'port-out';
+      portOut.dataset.sourceId = node.id;
+      portOut.dataset.choiceIdx = `cond_${key}`;
+      portOut.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        startConnection(e, node.id, `cond_${key}`);
+      });
+
+      choiceRow.appendChild(lbl);
+      choiceRow.appendChild(portOut);
+      choicesDiv.appendChild(choiceRow);
+    });
+
+    div.appendChild(choicesDiv);
+
+  } else if (node.nodeType === 'variable') {
+    // --- NODO VARIABLE ---
+    const configDiv = document.createElement('div');
+    configDiv.className = 'node-var-config';
+    
+    const rowVar = document.createElement('div');
+    rowVar.className = 'node-var-row';
+    const lblVar = document.createElement('span');
+    lblVar.className = 'node-var-label';
+    lblVar.textContent = 'Variable:';
+    
+    const selectVar = document.createElement('select');
+    selectVar.addEventListener('mousedown', (e) => e.stopPropagation());
+    rebuildVariableSelectOptions(selectVar, node.varName);
+    selectVar.addEventListener('change', () => {
+      node.varName = selectVar.value;
+      markDirty();
+      updateInspector();
+    });
+    
+    rowVar.appendChild(lblVar);
+    rowVar.appendChild(selectVar);
+    configDiv.appendChild(rowVar);
+    
     const rowVal = document.createElement('div');
     rowVal.className = 'node-var-row';
     const lblVal = document.createElement('span');
     lblVal.className = 'node-var-label';
     lblVal.textContent = 'Valor:';
-
+    
     const valInput = document.createElement('input');
     valInput.type = 'text';
     valInput.value = node.varValue ?? 'true';
@@ -888,81 +1122,33 @@ function createNodeElement(node, tabData) {
       markDirty();
       updateInspector();
     });
-
+    
     rowVal.appendChild(lblVal);
     rowVal.appendChild(valInput);
     configDiv.appendChild(rowVal);
-
+    
     body.appendChild(configDiv);
     div.appendChild(body);
     attachSingleOutputFooter(div, node);
-
   } else if (node.nodeType === 'event') {
     // --- NODO EVENTO ---
     const configDiv = document.createElement('div');
     configDiv.className = 'node-event-config';
 
-    const rowEvt = document.createElement('div');
-    rowEvt.className = 'node-var-row';
-    const lblEvt = document.createElement('span');
-    lblEvt.className = 'node-var-label';
-    lblEvt.textContent = 'Evento:';
-
-    const selectEvt = document.createElement('select');
-    selectEvt.addEventListener('mousedown', (e) => e.stopPropagation());
-
-    GAME_EVENTS_LIST.forEach(ev => {
-      const opt = document.createElement('option');
-      opt.value = ev.id;
-      opt.textContent = ev.label;
-      selectEvt.appendChild(opt);
-    });
-
-    const isCustom = !GAME_EVENTS_LIST.some(ev => ev.id === node.eventName);
-    selectEvt.value = isCustom ? 'custom' : (node.eventName || 'abrir_puerta');
-
-    const customInput = document.createElement('input');
-    customInput.type = 'text';
-    customInput.placeholder = 'nombre_evento_custom';
-    customInput.value = isCustom ? node.eventName : '';
-    customInput.style.display = isCustom ? 'block' : 'none';
-    customInput.addEventListener('mousedown', (e) => e.stopPropagation());
-    customInput.addEventListener('input', () => {
-      node.eventName = customInput.value;
-      markDirty();
-      updateInspector();
-    });
-
-    selectEvt.addEventListener('change', () => {
-      if (selectEvt.value === 'custom') {
-        customInput.style.display = 'block';
-        node.eventName = customInput.value || 'custom_event';
-      } else {
-        customInput.style.display = 'none';
-        node.eventName = selectEvt.value;
-      }
-      markDirty();
-      updateInspector();
-    });
-
-    rowEvt.appendChild(lblEvt);
-    rowEvt.appendChild(selectEvt);
-    configDiv.appendChild(rowEvt);
-    configDiv.appendChild(customInput);
-
     const rowParam = document.createElement('div');
     rowParam.className = 'node-var-row';
     const lblParam = document.createElement('span');
     lblParam.className = 'node-var-label';
-    lblParam.textContent = 'Parámetro:';
+    lblParam.textContent = 'Actor / Objeto:';
 
     const paramInput = document.createElement('input');
     paramInput.type = 'text';
-    paramInput.value = node.eventParam || '';
-    paramInput.placeholder = 'puerta_1, 50, etc.';
+    paramInput.value = node.eventParam || node.eventName || '';
+    paramInput.placeholder = 'Nombre del DialogueEvent / Actor';
     paramInput.addEventListener('mousedown', (e) => e.stopPropagation());
     paramInput.addEventListener('input', () => {
-      node.eventParam = paramInput.value;
+      node.eventParam = paramInput.value.trim();
+      node.eventName = node.eventParam;
       markDirty();
       updateInspector();
     });
@@ -1184,7 +1370,11 @@ function attachNodeEventListeners(div, node, tabData) {
 
     updateInspector();
 
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+    if (e.target.classList.contains('node-title-input')) {
+      if (!e.target.readOnly) {
+        return;
+      }
+    } else if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
       return;
     }
 
@@ -1226,6 +1416,24 @@ function renderConnections(tabData) {
   for (const node of tabData.nodes) {
     const fromNodeEl = document.querySelector(`.dialogue-node[data-id="${node.id}"]`);
     if (!fromNodeEl) continue;
+
+    if (node.nodeType === 'condition') {
+      const keys = Object.keys(node.conditionOutputs || {});
+      keys.forEach((key) => {
+        const targetRaw = node.conditionOutputs[key];
+        if (!targetRaw || targetRaw === '') return;
+        const targetTitle = targetRaw === 'END' ? '__END__' : targetRaw;
+        const targetNode = nodeMap[targetTitle];
+        if (!targetNode) return;
+        const toNodeEl = document.querySelector(`.dialogue-node[data-id="${targetNode.id}"]`);
+        if (!toNodeEl) return;
+        
+        const fromPort = fromNodeEl.querySelector(`.port-out[data-choice-idx="cond_${key}"]`);
+        const toPort = toNodeEl.querySelector('.port-in');
+        if (fromPort && toPort) drawConnection(svg, fromPort, toPort);
+      });
+      continue; // Skip the rest of the node types for connections
+    }
 
     // Conexiones de choices
     node.choices.forEach((choice, idx) => {
@@ -1311,9 +1519,7 @@ function handleConnectionMove(e) {
 
   const fromNodeEl = document.querySelector(`.dialogue-node[data-id="${connectFromNodeId}"]`);
   if (!fromNodeEl) return;
-  const selector = connectFromChoiceIdx >= 0
-    ? `.port-out[data-choice-idx="${connectFromChoiceIdx}"]`
-    : '.port-out[data-choice-idx="-1"]';
+  const selector = `.port-out[data-choice-idx="${connectFromChoiceIdx}"]`;
   const fromPort = fromNodeEl.querySelector(selector);
   if (!fromPort) return;
 
@@ -1356,7 +1562,10 @@ function endConnection(e) {
         const sourceNode = tab.nodes.find(n => n.id === connectFromNodeId);
         const targetNode = tab.nodes.find(n => n.id === targetNodeId);
         if (sourceNode && targetNode && targetNode.title !== '__START__') {
-          if (connectFromChoiceIdx >= 0 && sourceNode.choices[connectFromChoiceIdx]) {
+          if (typeof connectFromChoiceIdx === 'string' && connectFromChoiceIdx.startsWith('cond_')) {
+            const key = connectFromChoiceIdx.replace('cond_', '');
+            sourceNode.conditionOutputs[key] = targetNode.title;
+          } else if (connectFromChoiceIdx >= 0 && sourceNode.choices[connectFromChoiceIdx]) {
             sourceNode.choices[connectFromChoiceIdx].targetTitle = targetNode.title;
           } else {
             sourceNode.goto = targetNode.title;
@@ -1368,15 +1577,18 @@ function endConnection(e) {
       }
     }
   } else {
-    // Soltado en vacío -> desconectar
+    // Soltado en vacío -> conectar directamente con END
     const tab = getActiveTab();
     if (tab) {
       const sourceNode = tab.nodes.find(n => n.id === connectFromNodeId);
       if (sourceNode) {
-        if (connectFromChoiceIdx >= 0 && sourceNode.choices[connectFromChoiceIdx]) {
-          sourceNode.choices[connectFromChoiceIdx].targetTitle = '';
+        if (typeof connectFromChoiceIdx === 'string' && connectFromChoiceIdx.startsWith('cond_')) {
+          const key = connectFromChoiceIdx.replace('cond_', '');
+          sourceNode.conditionOutputs[key] = 'END';
+        } else if (connectFromChoiceIdx >= 0 && sourceNode.choices[connectFromChoiceIdx]) {
+          sourceNode.choices[connectFromChoiceIdx].targetTitle = 'END';
         } else if (sourceNode.title !== '__START__') {
-          sourceNode.goto = '';
+          sourceNode.goto = 'END';
         }
         markDirty();
         renderCanvas(tab);
@@ -1770,7 +1982,8 @@ function updateInspector() {
   // Campo común: Título del nodo
   const titleField = createInspectorField('Nombre del Nudo (Título)', 'text', node.title, (newVal) => {
     const oldTitle = node.title;
-    node.title = newVal.trim() || oldTitle;
+    const sanitized = newVal.replace(/\s+/g, '_');
+    node.title = sanitized.trim() || oldTitle;
     updateNodeReferences(tab, oldTitle, node.title);
     markDirty();
     renderCanvas(tab);
@@ -1804,58 +2017,184 @@ function updateInspector() {
 
   } else if (node.nodeType === 'event') {
     // --- INSPECTOR EVENTO ---
-    const fieldEvt = document.createElement('div');
-    fieldEvt.className = 'inspector-field';
-    fieldEvt.innerHTML = '<label>Evento del Juego:</label>';
-
-    const selectEvt = document.createElement('select');
-    GAME_EVENTS_LIST.forEach(ev => {
-      const opt = document.createElement('option');
-      opt.value = ev.id;
-      opt.textContent = ev.label;
-      selectEvt.appendChild(opt);
-    });
-
-    const isCustom = !GAME_EVENTS_LIST.some(ev => ev.id === node.eventName);
-    selectEvt.value = isCustom ? 'custom' : (node.eventName || 'abrir_puerta');
-
-    const customField = document.createElement('input');
-    customField.type = 'text';
-    customField.placeholder = 'evento_personalizado';
-    customField.value = isCustom ? node.eventName : '';
-    customField.style.display = isCustom ? 'block' : 'none';
-    customField.style.marginTop = '4px';
-
-    customField.addEventListener('input', () => {
-      node.eventName = customField.value;
-      markDirty();
-      renderCanvas(tab);
-    });
-
-    selectEvt.addEventListener('change', () => {
-      if (selectEvt.value === 'custom') {
-        customField.style.display = 'block';
-        node.eventName = customField.value || 'custom_event';
-      } else {
-        customField.style.display = 'none';
-        node.eventName = selectEvt.value;
-      }
-      markDirty();
-      renderCanvas(tab);
-    });
-
-    fieldEvt.appendChild(selectEvt);
-    fieldEvt.appendChild(customField);
-    formEl.appendChild(fieldEvt);
-
-    const fieldParam = createInspectorField('Parámetro / Configuración:', 'text', node.eventParam || '', (p) => {
-      node.eventParam = p;
+    const fieldParam = createInspectorField('Nombre del DialogueEvent / Actor a Gatillar:', 'text', node.eventParam || node.eventName || '', (p) => {
+      node.eventParam = p.trim();
+      node.eventName = node.eventParam;
       markDirty();
       renderCanvas(tab);
     });
     formEl.appendChild(fieldParam);
 
     appendGotoInspectorField(formEl, node, tab);
+
+  } else if (node.nodeType === 'condition') {
+    // --- INSPECTOR CONDICIÓN ---
+    const fieldVar = document.createElement('div');
+    fieldVar.className = 'inspector-field';
+    fieldVar.innerHTML = '<label>Variable Narrativa a Evaluar:</label>';
+    const selectVar = document.createElement('select');
+    rebuildVariableSelectOptions(selectVar, node.conditionVar);
+    selectVar.addEventListener('change', () => {
+      node.conditionVar = selectVar.value;
+      markDirty();
+      renderCanvas(tab);
+    });
+    fieldVar.appendChild(selectVar);
+    formEl.appendChild(fieldVar);
+
+    const fieldMode = document.createElement('div');
+    fieldMode.className = 'inspector-field';
+    fieldMode.innerHTML = '<label>Modo de Evaluación:</label>';
+    const selectMode = document.createElement('select');
+    selectMode.innerHTML = `
+      <option value="compare">Comparación Booleana (True / False)</option>
+      <option value="switch">Switch (Múltiples Casos)</option>
+    `;
+    selectMode.value = node.conditionMode || 'compare';
+    selectMode.addEventListener('change', () => {
+      node.conditionMode = selectMode.value;
+      if (!node.conditionOutputs) node.conditionOutputs = {};
+      markDirty();
+      renderCanvas(tab);
+      updateInspector(); // rebuild dynamic form
+    });
+    fieldMode.appendChild(selectMode);
+    formEl.appendChild(fieldMode);
+
+    if (node.conditionMode === 'compare') {
+      const fieldOp = document.createElement('div');
+      fieldOp.className = 'inspector-field';
+      fieldOp.innerHTML = '<label>Operador:</label>';
+      const selectOp = document.createElement('select');
+      selectOp.innerHTML = `
+        <option value="==">Es igual a (==)</option>
+        <option value="!=">Es diferente a (!=)</option>
+        <option value=">">Mayor que (&gt;)</option>
+        <option value="<">Menor que (&lt;)</option>
+        <option value=">=">Mayor o igual (&gt;=)</option>
+        <option value="<=">Menor o igual (&lt;=)</option>
+      `;
+      selectOp.value = node.conditionOperator || '==';
+      selectOp.addEventListener('change', () => {
+        node.conditionOperator = selectOp.value;
+        markDirty();
+        renderCanvas(tab);
+      });
+      fieldOp.appendChild(selectOp);
+      formEl.appendChild(fieldOp);
+
+      const fieldVal = createInspectorField('Valor Esperado:', 'text', node.conditionValue || 'true', (val) => {
+        node.conditionValue = val;
+        markDirty();
+        renderCanvas(tab);
+      });
+      formEl.appendChild(fieldVal);
+
+      // Outputs Dropdowns
+      ['true', 'false'].forEach(key => {
+        const fieldOut = document.createElement('div');
+        fieldOut.className = 'inspector-field';
+        fieldOut.innerHTML = `<label>Destino si ${key === 'true' ? 'Cumple (True)' : 'Falla (False)'}:</label>`;
+        const selectOut = document.createElement('select');
+        buildNodeTargetOptions(selectOut, tab, node.conditionOutputs[key]);
+        selectOut.addEventListener('change', () => {
+          node.conditionOutputs[key] = selectOut.value;
+          markDirty();
+          renderCanvas(tab);
+        });
+        fieldOut.appendChild(selectOut);
+        formEl.appendChild(fieldOut);
+      });
+
+    } else {
+      // Switch Mode
+      const fieldCases = document.createElement('div');
+      fieldCases.className = 'inspector-field';
+      fieldCases.innerHTML = '<label>Casos Posibles:</label>';
+      const casesContainer = document.createElement('div');
+      casesContainer.style.display = 'flex';
+      casesContainer.style.flexDirection = 'column';
+      casesContainer.style.gap = '8px';
+
+      (node.switchCases || []).forEach((cval, idx) => {
+        const caseRow = document.createElement('div');
+        caseRow.style.display = 'flex';
+        caseRow.style.gap = '4px';
+        
+        const inputVal = document.createElement('input');
+        inputVal.type = 'text';
+        inputVal.value = cval;
+        inputVal.style.width = '60px';
+        inputVal.placeholder = 'Valor';
+        inputVal.addEventListener('input', () => {
+          // Si cambia la key, ¿cambiamos el target? Mejor dejamos que el target se pierda o lo renombramos
+          const oldVal = node.switchCases[idx];
+          const target = node.conditionOutputs[oldVal];
+          delete node.conditionOutputs[oldVal];
+          node.switchCases[idx] = inputVal.value;
+          node.conditionOutputs[inputVal.value] = target;
+          markDirty();
+          renderCanvas(tab);
+        });
+
+        const selectOut = document.createElement('select');
+        selectOut.style.flex = '1';
+        buildNodeTargetOptions(selectOut, tab, node.conditionOutputs[cval]);
+        selectOut.addEventListener('change', () => {
+          node.conditionOutputs[node.switchCases[idx]] = selectOut.value;
+          markDirty();
+          renderCanvas(tab);
+        });
+
+        const btnDel = document.createElement('button');
+        btnDel.className = 'btn-small';
+        btnDel.style.color = 'var(--accent-danger)';
+        btnDel.textContent = '✕';
+        btnDel.addEventListener('click', () => {
+          delete node.conditionOutputs[node.switchCases[idx]];
+          node.switchCases.splice(idx, 1);
+          markDirty();
+          renderCanvas(tab);
+          updateInspector();
+        });
+
+        caseRow.appendChild(inputVal);
+        caseRow.appendChild(selectOut);
+        caseRow.appendChild(btnDel);
+        casesContainer.appendChild(caseRow);
+      });
+
+      const btnAddCase = document.createElement('button');
+      btnAddCase.className = 'btn-small';
+      btnAddCase.textContent = '+ Añadir Caso';
+      btnAddCase.style.marginTop = '4px';
+      btnAddCase.addEventListener('click', () => {
+        const newCase = (node.switchCases.length).toString();
+        node.switchCases.push(newCase);
+        node.conditionOutputs[newCase] = '';
+        markDirty();
+        renderCanvas(tab);
+        updateInspector();
+      });
+
+      fieldCases.appendChild(casesContainer);
+      fieldCases.appendChild(btnAddCase);
+      formEl.appendChild(fieldCases);
+
+      // Default output
+      const fieldDef = document.createElement('div');
+      fieldDef.className = 'inspector-field';
+      fieldDef.innerHTML = '<label>Destino por defecto (Default):</label>';
+      const selectDef = document.createElement('select');
+      buildNodeTargetOptions(selectDef, tab, node.conditionOutputs['default']);
+      selectDef.addEventListener('change', () => {
+        node.conditionOutputs['default'] = selectDef.value;
+        markDirty();
+        renderCanvas(tab);
+      });
+      fieldDef.appendChild(selectDef);
+      formEl.appendChild(fieldDef);
+    }
 
   } else {
     // --- INSPECTOR DIÁLOGO ---
@@ -2036,7 +2375,7 @@ function handleAddGenericNode(type) {
     y = Math.round(rect.height / 2 / tab.canvas.zoom - tab.canvas.panY);
   }
 
-  const prefix = type === 'variable' ? 'var_' : (type === 'event' ? 'evento_' : 'nudo_');
+  const prefix = type === 'variable' ? 'var_' : (type === 'event' ? 'evento_' : (type === 'condition' ? 'check_' : 'nudo_'));
   const existingTitles = new Set(tab.nodes.map(n => n.title));
   let title = prefix + (tab.nodes.length - 1);
   let counter = 1;
@@ -2054,11 +2393,24 @@ function handleAddGenericNode(type) {
     lines: type === 'dialogue' ? [{ actor: '', text: '' }] : [],
     choices: [],
     mutations: [],
-    goto: '__END__',
+    goto: '',
     varName: AppState.variables[0]?.name || '',
     varValue: 'true',
-    eventName: 'abrir_puerta',
-    eventParam: ''
+    eventName: 'DialogueEvent',
+    eventParam: 'DialogueEvent',
+    conditionVar: AppState.variables[0]?.name || '',
+    conditionMode: 'compare',
+    conditionOperator: '==',
+    conditionValue: 'true',
+    switchCases: ['0', '1', '2'],
+    conditionOutputs: {
+      'true': '',
+      'false': '',
+      '0': '',
+      '1': '',
+      '2': '',
+      'default': ''
+    }
   };
 
   const endIdx = tab.nodes.findIndex(n => n.title === '__END__');
@@ -2224,7 +2576,64 @@ function showModal({ title, bodyHTML, onConfirm }) {
   }, 50);
 }
 
+function handleQuickRewrite() {
+  const tab = getActiveTab();
+  if (!tab) {
+    alert('Abre un archivo de diálogo primero.');
+    return;
+  }
+
+  const dialogueNodes = Object.values(tab.nodes).filter(n => n.type === 'dialogue' || !n.type);
+  if (dialogueNodes.length === 0) {
+    alert('No hay nodos de diálogo en este archivo.');
+    return;
+  }
+
+  const modalBox = document.getElementById('modal-box');
+  if (modalBox) modalBox.classList.add('modal-wide');
+
+  let html = `<p style="color:var(--text-secondary); margin-bottom:12px;">Edita rápidamente los textos y hablantes de todos los nodos de diálogo a la vez:</p>`;
+  
+  dialogueNodes.forEach(node => {
+    html += `
+      <div class="quick-rewrite-item" data-node-id="${node.id}">
+        <div class="quick-rewrite-header">
+          <span>Nodo: ${escapeHtml(node.title || node.id)}</span>
+          <div>
+            <label style="font-size:11px; margin-right:4px;">Personaje:</label>
+            <input type="text" class="quick-rewrite-character" value="${escapeHtml(node.character || '')}" placeholder="Narrador/Personaje">
+          </div>
+        </div>
+        <textarea class="quick-rewrite-textarea" rows="2" placeholder="Texto del diálogo...">${escapeHtml(node.text || '')}</textarea>
+      </div>
+    `;
+  });
+
+  showModal({
+    title: `📝 Guión Rápido — ${tab.filename}`,
+    bodyHTML: html,
+    onConfirm: () => {
+      const items = document.querySelectorAll('.quick-rewrite-item');
+      items.forEach(el => {
+        const nodeId = el.dataset.nodeId;
+        const charInput = el.querySelector('.quick-rewrite-character');
+        const textInput = el.querySelector('.quick-rewrite-textarea');
+        if (tab.nodes[nodeId]) {
+          tab.nodes[nodeId].character = charInput.value.trim();
+          tab.nodes[nodeId].text = textInput.value;
+        }
+      });
+      tab.isDirty = true;
+      updateStatusBadge();
+      renderCanvas();
+      updateInspector();
+    }
+  });
+}
+
 function closeModal() {
+  const modalBox = document.getElementById('modal-box');
+  if (modalBox) modalBox.classList.remove('modal-wide');
   document.getElementById('modal-overlay')?.classList.add('hidden');
 }
 

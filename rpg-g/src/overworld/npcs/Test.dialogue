@@ -1,3 +1,60 @@
 ~ start
 
+=> check_10
+
+~ check_10
+
+if NarrativeManager.get_flag("respondio") == true
+	=> check_11
+=> nudo_9
+
+~ nudo_2
+
+A: que pena, toma una posion azul
+=> var_10
+
+~ nudo_3
+
+A: que bien toma una posion b:
+=> evento_10
+
+~ var_6
+
+do NarrativeManager.set_flag("respondio", true)
+=> END
+
+~ nudo_3_copy
+
+A: te sirvio la posion b:
+=> END
+
+~ nudo_2_copy
+
+A: te sirvio la posion a?
+=> END
+
+~ var_10
+
+do NarrativeManager.set_flag("estado", true)
+=> evento_10
+
+~ nudo_9
+
+A: Como Estas
+- Bien => nudo_2
+- Mal => nudo_3
+
+~ check_11
+
+if NarrativeManager.get_flag("estado") == true
+	=> nudo_2_copy
+=> nudo_3_copy
+
+~ evento_10
+
+do GameManager.trigger_event("DialogueEvent")
+=> var_6
+
+~ end
+
 => END

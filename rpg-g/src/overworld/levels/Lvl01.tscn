@@ -4,15 +4,53 @@
 [ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="2_eyghc"]
 [ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="3_0ydad"]
 [ext_resource type="PackedScene" uid="uid://627m0vq1pgow" path="res://src/overworld/npcs/npc_barnaby.tscn" id="3_eyghc"]
+[ext_resource type="Resource" uid="uid://0ii1rigngct4" path="res://src/overworld/npcs/Test.dialogue" id="4_s44nc"]
 [ext_resource type="PackedScene" uid="uid://tkrjy8dnqifu" path="res://src/overworld/interactables/chest.tscn" id="5_axe4l"]
 [ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="6_77vc6"]
+[ext_resource type="PackedScene" path="res://src/overworld/interactables/dialogue_event.tscn" id="6_dq17e"]
 [ext_resource type="Resource" uid="uid://dbhe8x2v6tggn" path="res://data/items/golden_key.tres" id="7_mwxlp"]
+[ext_resource type="Script" uid="uid://83c224l2dccq" path="res://src/core/pipeline/actions/minigame_action.gd" id="8_cet0f"]
 [ext_resource type="Resource" uid="uid://bh4box6poomqx" path="res://data/items/gold_coins.tres" id="8_n8rv5"]
 [ext_resource type="Resource" uid="uid://d2r6q7v2n8y4c" path="res://data/items/bread.tres" id="9_rcb5p"]
 [ext_resource type="Resource" uid="uid://8fc660t425el" path="res://data/items/antidote.tres" id="10_3bam5"]
 [ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="11_n8rv5"]
+[ext_resource type="PackedScene" path="res://src/overworld/interactables/pressure_plate.tscn" id="12_hes4d"]
 [ext_resource type="Texture2D" uid="uid://7phgavare8mx" path="res://assets/sprites/door_locked.svg" id="12_rcb5p"]
 [ext_resource type="PackedScene" uid="uid://crllyay0snx0b" path="res://src/shared/entities/enemies/generic_enemy.tscn" id="13_3bam5"]
+[ext_resource type="Script" uid="uid://f73vy602pjfk" path="res://src/core/pipeline/action_resource.gd" id="13_s44nc"]
+[ext_resource type="PackedScene" uid="uid://ckyt3sc6keqdu" path="res://src/overworld/interactables/pickup_item.tscn" id="14_3bam5"]
+[ext_resource type="Resource" uid="uid://bxps63a4a2vpn" path="res://data/items/red_potion.tres" id="15_fvo0o"]
+
+[sub_resource type="Resource" id="Resource_edlbh"]
+script = ExtResource("8_cet0f")
+win_level_path = "uid://dja7x3717s0pd"
+win_spawn_id = "1"
+lose_level_path = "uid://c36bmb6bwvii2"
+lose_spawn_id = "1"
+config = {
+"ammo_spawn_distance_multiplier": 1.5,
+"ammo_spawn_initial_distance": 250.0,
+"coin_density": 0.55,
+"item_pool": Array[String](["blue_potion", "red_potion", "green_herb"]),
+"max_coins": -1,
+"run_speed": 380.0,
+"speed_increase_amount": 25.0,
+"speed_increase_interval": 200.0,
+"target_value": 1500.0,
+"win_condition": 0
+}
+minigame_scene_path = "res://src/minigames/mg_runner/mg_runner_level.tscn"
+runner_win_mode = 0
+runner_target_distance = 1500.0
+runner_speed = 380.0
+runner_coin_density = 0.55
+runner_max_coins = -1
+runner_item_pool = Array[String](["blue_potion", "red_potion", "green_herb"])
+runner_speed_increase_interval = 200.0
+runner_speed_increase_amount = 25.0
+runner_ammo_initial_distance = 250.0
+runner_ammo_distance_multiplier = 1.5
+metadata/_custom_type_script = "uid://83c224l2dccq"
 
 [node name="TemplateLevel" type="Node2D" unique_id=187744379]
 y_sort_enabled = true
@@ -46,9 +84,15 @@ y_sort_enabled = true
 
 [node name="NPC_Barnaby" parent="Entities" unique_id=1127233890 instance=ExtResource("3_eyghc")]
 position = Vector2(231, 738)
+dialogue_resource = ExtResource("4_s44nc")
 
 [node name="GenericEnemy" parent="Entities" unique_id=1981586223 instance=ExtResource("13_3bam5")]
 position = Vector2(1394, 658)
+
+[node name="DialogueEvent" parent="Entities" unique_id=1780950499 instance=ExtResource("6_dq17e")]
+position = Vector2(147, 744)
+persistence_id = "3"
+actions = Array[ExtResource("13_s44nc")]([SubResource("Resource_edlbh")])
 
 [node name="Portals" type="Node2D" parent="." unique_id=265911282]
 
@@ -60,6 +104,11 @@ position = Vector2(697, 568)
 loot_items = Array[ExtResource("6_77vc6")]([ExtResource("7_mwxlp"), ExtResource("8_n8rv5"), ExtResource("9_rcb5p"), ExtResource("9_rcb5p"), ExtResource("10_3bam5")])
 chest_id = "54"
 persistence_id = "54"
+
+[node name="PressurePlate" parent="." unique_id=732398667 instance=ExtResource("12_hes4d")]
+position = Vector2(501, 874)
+persistence_id = null
+on_enter_actions = Array[ExtResource("13_s44nc")]([null])
 
 [node name="LevelPortal" parent="." unique_id=1271243254 instance=ExtResource("11_n8rv5")]
 position = Vector2(846, 1019)
@@ -91,8 +140,13 @@ anchor_bottom = 0.0
 offset_left = -33.0
 offset_top = -16.0
 offset_right = 31.0
+offset_bottom = 30.0
 grow_horizontal = 1
 grow_vertical = 1
 text = "1"
+
+[node name="PickupItem" parent="." unique_id=171384609 instance=ExtResource("14_3bam5")]
+position = Vector2(326, 566)
+item_data = ExtResource("15_fvo0o")
 
 [editable path="LevelPortal"]

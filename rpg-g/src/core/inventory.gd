@@ -28,5 +28,34 @@ func remove_item(item_id: String, amount: int = 1) -> bool:
 	inventory_changed.emit()
 	return true
 
+func use_item(item_id: String) -> bool:
+	if not items.has(item_id) or items[item_id] <= 0:
+		return false
+		
+	var item_db = get_node_or_null("/root/ItemDatabase")
+	if not item_db:
+		return false
+		
+	var data: ItemData = item_db.get_item(item_id)
+	if not data or data.type != ItemData.ItemType.CONSUMABLE:
+		return false
+		
+	var stats = get_node_or_null("/root/PlayerStats")
+	var consumed: bool = false
+	
+	if stats:
+		if data.heal_amount > 0:
+			stats.heal(data.heal_amount)
+			consumed = true
+		if data.damage_amount > 0:
+			stats.take_damage(data.damage_amount)
+			consumed = true
+			
+	if consumed:
+		remove_item(item_id, 1)
+		return true
+		
+	return false
+
 func get_items() -> Dictionary:
 	return items.duplicate()

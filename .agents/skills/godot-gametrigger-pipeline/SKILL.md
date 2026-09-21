@@ -64,7 +64,21 @@ Al crear una nueva acción personalizada:
 
 ---
 
-## 7. Puente de Eventos y Diálogos (`OnEventListener`)
-- **`GameManager.trigger_event(event_name: String, event_data: Variant)`**: Permite disparar eventos de forma global, por ejemplo desde diálogos mediante `do GameManager.trigger_event("mi_evento")` (generado por `DialogueApp`).
-- **`OnEventListener` (`res://src/core/pipeline/on_event_listener.gd`)**: Nodo componente que escucha `GameManager.game_event`. Al recibir el evento configurado en `listen_for_event`, ejecuta `force_trigger()` en su `target_trigger` (o su padre directo si no se especifica).
+## 7. Puente de Eventos y Diálogos (`DialogueEvent` y `OnEventListener`)
+- **`GameManager.trigger_event(event_name: String, event_data: Variant)`**: Permite disparar eventos globales desde cualquier lugar, especialmente desde diálogos generados en `DialogueApp` vía `do GameManager.trigger_event("NombreDelActor")`.
+- **`DialogueEvent` (`res://src/overworld/interactables/dialogue_event.gd`)**: Nodo `Node2D` invisible en runtime (con icono y etiqueta visual en el editor).
+  - Escucha la señal `GameManager.game_event`.
+  - Se activa si el evento coincide con su `name` o con `event_id`.
+  - Ejecuta una lista secuencial/paralela de `actions: Array[ActionResource]`.
+  - Soporta `one_shot` y persistencia de estado mediante `persistence_id` en `WorldStateManager`.
+- **`OnEventListener` (`res://src/core/pipeline/on_event_listener.gd`)**: Componente que escucha `GameManager.game_event` y llama a `force_trigger()` en un `GameTrigger` tradicional del nivel.
+
+---
+
+## 8. Persistencia de Interactables
+Los interactables del mapa (`PressurePlate`, `Chest`, `SwitchInteractable`, `DialogueEvent`) implementan el patrón canónico con `WorldStateManager`:
+- `@export_group("Persistencia")`
+- `@export var persistence_id: String = ""`
+- `_restore_state()` en `_ready()` cargando desde `WorldStateManager.load_state(persistence_id)`.
+- `_persist_state()` al cambiar de estado guardando en `WorldStateManager.save_state(persistence_id, data)`.
 

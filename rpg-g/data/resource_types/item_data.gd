@@ -46,6 +46,17 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY }
 		stackable = new_value
 		emit_changed()
 
+@export_group("Consumable Effects")
+@export var heal_amount: int = 0:
+	set(new_value):
+		heal_amount = new_value
+		emit_changed()
+
+@export var damage_amount: int = 0:
+	set(new_value):
+		damage_amount = new_value
+		emit_changed()
+
 @export_group("Visuals")
 @export var item_scale: Vector2 = Vector2(1, 1):
 	set(value):

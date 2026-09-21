@@ -14,6 +14,9 @@ func _ready() -> void:
 	if inv:
 		inv.inventory_changed.connect(_on_inventory_changed)
 	
+	if item_list:
+		item_list.item_activated.connect(_on_item_activated)
+	
 	refresh_ui()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -68,8 +71,20 @@ func refresh_ui() -> void:
 	for item_id in items:
 		var amount: int = items[item_id]
 		var data: ItemData = item_db.get_item(item_id)
+		var idx: int = -1
 		
 		if data:
-			item_list.add_item("%s (x%d)" % [data.name, amount], data.icon)
+			idx = item_list.add_item("%s (x%d)" % [data.name, amount], data.icon)
 		else:
-			item_list.add_item("%s (x%d)" % [item_id, amount])
+			idx = item_list.add_item("%s (x%d)" % [item_id, amount])
+			
+		item_list.set_item_metadata(idx, item_id)
+
+func _on_item_activated(index: int) -> void:
+	if not item_list:
+		return
+	var item_id = item_list.get_item_metadata(index)
+	if item_id and item_id is String:
+		var inv = get_node_or_null("/root/Inventory")
+		if inv:
+			inv.use_item(item_id)

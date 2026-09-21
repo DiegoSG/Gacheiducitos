@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DialogueApp — RPG-G</title>
+  <link rel="icon" href="favicon.ico">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,12 +16,14 @@
         <span class="shortcut-tip"><kbd>+</kbd> +Diálogo</span>
         <span class="shortcut-tip"><kbd>V</kbd> +Variable</span>
         <span class="shortcut-tip"><kbd>E</kbd> +Evento</span>
+        <span class="shortcut-tip"><kbd>C</kbd> +Condición</span>
         <span class="shortcut-tip"><kbd>F</kbd> Centrar</span>
         <span class="shortcut-tip"><kbd>Shift</kbd>+Arrastrar Selección</span>
         <span class="shortcut-tip"><kbd>Ctrl+C</kbd>/<kbd>V</kbd> Copiar/Pegar</span>
         <span class="shortcut-tip"><kbd>Supr</kbd> Borrar</span>
       </div>
       <div class="header-actions">
+        <button id="btn-quick-rewrite" title="Modo de re-escritura rápida de diálogos">📝 Guión Rápido</button>
         <button id="btn-save" title="Guardar cambios (Ctrl+S)">💾 Guardar</button>
         <span id="status-badge" class="badge">Listo</span>
       </div>
@@ -82,6 +85,7 @@
             <button id="btn-add-node" title="Añadir nodo de diálogo (+)">+ Diálogo</button>
             <button id="btn-add-var-node" title="Añadir nodo que modifica una variable">+ Variable</button>
             <button id="btn-add-event-node" title="Añadir nodo de evento del juego">+ Evento</button>
+            <button id="btn-add-condition-node" title="Añadir nodo de condición (C)">🔀 Condición</button>
             <button id="btn-fit-view" title="Ajustar y centrar vista (F)">⊞ Fit (F)</button>
             <span id="zoom-label">100%</span>
           </div>

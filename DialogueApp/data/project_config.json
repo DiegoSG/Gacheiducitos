@@ -1,16 +1,36 @@
 {
   "variables": [
     {
-      "name": "test",
+      "name": "estado",
+      "type": "bool",
+      "defaultValue": "false"
+    },
+    {
+      "name": "respondio",
+      "type": "bool",
+      "defaultValue": "false"
+    },
+    {
+      "name": "123",
       "type": "int",
-      "defaultValue": "1"
+      "defaultValue": "0"
     }
   ],
   "flags": [
     {
-      "name": "test",
+      "name": "estado",
+      "type": "bool",
+      "defaultValue": "false"
+    },
+    {
+      "name": "respondio",
+      "type": "bool",
+      "defaultValue": "false"
+    },
+    {
+      "name": "123",
       "type": "int",
-      "defaultValue": "1"
+      "defaultValue": "0"
     }
   ]
 }

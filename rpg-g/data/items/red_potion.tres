@@ -10,3 +10,4 @@ name = "Poción Roja"
 value = 50
 icon = ExtResource("2_icon")
 description = "Una poción de color carmesí. Recupera vida."
+heal_amount = 25
