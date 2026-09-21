@@ -59,3 +59,11 @@ func use_item(item_id: String) -> bool:
 
 func get_items() -> Dictionary:
 	return items.duplicate()
+
+func get_item_count(item_id: String) -> int:
+	return items.get(item_id, 0)
+
+func has_item_amount(item_id: String, amount: int) -> bool:
+	if amount <= 0:
+		return true
+	return get_item_count(item_id) >= amount

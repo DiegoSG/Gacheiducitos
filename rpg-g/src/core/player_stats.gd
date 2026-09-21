@@ -25,3 +25,16 @@ func take_damage(amount: int) -> void:
 func heal(amount: int) -> void:
 	self.health += amount
 	print("Player healed: ", amount, " | HP: ", health)
+
+func full_heal() -> void:
+	self.health = max_health
+	print("Player full healed | HP: ", health)
+
+func remove_gold(amount: int) -> bool:
+	if amount <= 0:
+		return true
+	if self.gold < amount:
+		return false
+	self.gold -= amount
+	print("Gold removed: ", amount, " | Total: ", gold)
+	return true

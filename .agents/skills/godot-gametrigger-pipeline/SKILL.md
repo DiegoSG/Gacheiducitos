@@ -44,7 +44,12 @@ El sistema de eventos se basa en el nodo `GameTrigger` (`Area2D` con lógica ext
 Ubicadas en `res://src/core/pipeline/actions/`:
 - `AnimAction`: Reproduce animaciones en `AnimationPlayer` o `AnimatedSprite2D`.
 - `DialogueAction`: Inicia un diálogo vía `DialogueManager`.
+- `DoorAction`: Bloquea, desbloquea, abre o cierra puertas/portales (`LevelPortal`).
+- `DestroyNodeAction`: Elimina o desvanece obstáculos y nodos del mapa.
 - `FlagAction`: Modifica banderas en `NarrativeManager`.
+- `GoldAction`: Añade o sustrae monedas de oro con cobro atómico y eventos de éxito/fallo (`on_success_event`, `on_fail_event`).
+- `HealthAction`: Modifica la salud del jugador en `PlayerStats` (curación completa `full_heal`, curación `+X`, o daño `-X`).
+- `ItemAction`: Añade o sustrae ítems del inventario mediante recurso `ItemData` con sustracción atómica y eventos de éxito/fallo.
 - `LevelAction`: Cambia de escena/nivel mediante `GameManager`.
 - `MinigameAction`: Carga y transiciona a un minijuego.
 - `QuestAction`: Actualiza el progreso de misiones.

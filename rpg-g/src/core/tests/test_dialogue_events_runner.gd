@@ -316,7 +316,7 @@ func _init() -> void:
 	dlg_item_evt.persistence_id = "item_evt_pers"
 
 	var item_act: ItemAction = ItemAction.new()
-	item_act.item_id = "red_potion"
+	item_act.item = red_pot
 	item_act.amount = 3
 	item_act.operation = "add"
 	item_act.show_feedback = false # Desactivar toast en test headless

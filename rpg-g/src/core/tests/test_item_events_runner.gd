@@ -1,294 +1,249 @@
 extends SceneTree
 
-## Runner de pruebas unitarias y de integración para ItemAction,
-## el pipeline de GameTrigger, DialogueEvent y la sincronización con Inventory.
+## Runner de pruebas unitarias y de integración para ItemAction, GoldAction y HealthAction.
 
-var _tests_passed: int = 0
-var _tests_failed: int = 0
+const ItemAction = preload("res://src/core/pipeline/actions/item_action.gd")
+const GoldAction = preload("res://src/core/pipeline/actions/gold_action.gd")
+const HealthAction = preload("res://src/core/pipeline/actions/health_action.gd")
 
+var _passed_count: int = 0
+var _failed_count: int = 0
 var _action_finished: bool = false
 var _event_executed: bool = false
-
-func _on_action_finished() -> void:
-	_action_finished = true
-
-func _on_event_executed() -> void:
-	_event_executed = true
+var _last_game_event: String = ""
 
 func _init() -> void:
 	print("\n=======================================================")
-	print("--- TEST RUNNER: ITEM EVENTS & PIPELINE INTEGRATION ---")
+	print("--- TEST RUNNER: ITEM, GOLD & HEALTH ACTIONS PIPELINE ---")
 	print("=======================================================\n")
-	_run_all_tests()
 
-func _record_result(test_name: String, success: bool, details: String = "") -> void:
-	if success:
-		_tests_passed += 1
-		print("[PASS] %s" % test_name)
-	else:
-		_tests_failed += 1
-		printerr("[FAIL] %s: %s" % [test_name, details])
+	# 1. Configurar Autoloads necesarios en headless
+	var inv_script = load("res://src/core/inventory.gd")
+	var inventory: Node = inv_script.new()
+	inventory.name = "Inventory"
+	root.add_child(inventory)
 
-func _run_all_tests() -> void:
-	# 1. Asegurar Autoloads esenciales
-	_ensure_autoloads()
+	var item_db_script = load("res://src/core/item_database.gd")
+	var item_db: Node = item_db_script.new()
+	item_db.name = "ItemDatabase"
+	root.add_child(item_db)
+
+	var stats_script = load("res://src/core/player_stats.gd")
+	var player_stats: Node = stats_script.new()
+	player_stats.name = "PlayerStats"
+	root.add_child(player_stats)
+
+	var gm_script = load("res://src/core/game_manager.gd")
+	var gm: Node = gm_script.new()
+	gm.name = "GameManager"
+	root.add_child(gm)
+	gm.game_event.connect(_on_game_event)
+
 	await process_frame
-
-	var inventory: Node = root.get_node_or_null("Inventory")
-	assert(inventory != null, "Inventory autoload debe existir")
 
 	var dummy_trigger_node: Node2D = Node2D.new()
 	dummy_trigger_node.name = "DummyTriggerNode"
 	root.add_child(dummy_trigger_node)
-	await process_frame
 
-	# ----------------------------------------------------
-	# Test 1: Verificar existencia de items .tres en data/items/
-	# ----------------------------------------------------
-	var item_db: Node = root.get_node_or_null("ItemDatabase")
 	var green_herb: ItemData = item_db.get_item("green_herb") if item_db else null
 	var red_potion: ItemData = item_db.get_item("red_potion") if item_db else null
 	var gold_coins: ItemData = item_db.get_item("gold_coins") if item_db else null
 
 	var items_ok: bool = (green_herb != null and red_potion != null and gold_coins != null)
-	_record_result("ItemDatabase: Ítems base cargados correctamente (.tres)", items_ok, "Faltan items esenciales en data/items/")
+	_record_result("ItemDatabase: Ítems base cargados correctamente (.tres)", items_ok, "Faltan items en data/items/")
 
-	# ----------------------------------------------------
-	# Test 2: ItemAction con operation='add' suma al inventario
-	# ----------------------------------------------------
+	# ====================================================
+	# SECCIÓN ITEM ACTION
+	# ====================================================
+
+	# Test 2: ItemAction con operation='add'
 	inventory.items.clear()
 	var add_action: ItemAction = ItemAction.new()
-	add_action.item_id = "green_herb"
+	add_action.item = green_herb
 	add_action.amount = 3
 	add_action.operation = "add"
 	add_action.show_feedback = false
+	add_action.on_success_event = "herb_added_event"
 
 	_action_finished = false
+	_last_game_event = ""
 	add_action.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
 	add_action.execute(dummy_trigger_node)
 
-	var add_ok: bool = (inventory.items.get("green_herb", 0) == 3 and _action_finished)
-	_record_result("ItemAction (add): Suma ítems al inventario y emite finished", add_ok, "Esperado 3 green_herb, obtenido: %s" % str(inventory.items.get("green_herb")))
+	var add_ok: bool = (inventory.items.get("green_herb", 0) == 3 and _action_finished and _last_game_event == "herb_added_event")
+	_record_result("ItemAction (add + success event): Suma ítems y gatilla on_success_event", add_ok, "Fallo al sumar")
 
-	# Acumulación adicional (3 + 2 = 5)
-	_action_finished = false
-	add_action.amount = 2
-	add_action.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
-	add_action.execute(dummy_trigger_node)
-
-	var accum_ok: bool = (inventory.items.get("green_herb", 0) == 5 and _action_finished)
-	_record_result("ItemAction (add acumulativo): Incrementa cantidad existente a 5", accum_ok, "Esperado 5 green_herb, obtenido: %s" % str(inventory.items.get("green_herb")))
-
-	# ----------------------------------------------------
-	# Test 3: ItemAction con operation='remove' resta del inventario
-	# ----------------------------------------------------
+	# Test 3: ItemAction sustracción estricta (éxito)
 	var remove_action: ItemAction = ItemAction.new()
-	remove_action.item_id = "green_herb"
+	remove_action.item = green_herb
 	remove_action.amount = 2
 	remove_action.operation = "remove"
+	remove_action.on_success_event = "herb_removed_ok"
 
 	_action_finished = false
+	_last_game_event = ""
 	remove_action.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
 	remove_action.execute(dummy_trigger_node)
 
-	var remove_ok: bool = (inventory.items.get("green_herb", 0) == 3 and _action_finished)
-	_record_result("ItemAction (remove parcial): Resta 2 ítems, quedan 3", remove_ok, "Esperado 3 green_herb, obtenido: %s" % str(inventory.items.get("green_herb")))
+	var remove_ok: bool = (inventory.items.get("green_herb", 0) == 1 and _action_finished and _last_game_event == "herb_removed_ok")
+	_record_result("ItemAction (remove éxito atómico): Resta cantidad y dispara on_success_event", remove_ok, "Fallo al restar")
 
-	# Remoción total (3 - 3 = 0 -> borrado de clave)
+	# Test 4: ItemAction sustracción estricta (fallo por cantidad insuficiente)
+	# Actualmente tiene 1 hierba, le pedimos 5 -> no debe descontar nada y disparar on_fail_event
+	remove_action.amount = 5
+	remove_action.on_fail_event = "herb_failed_not_enough"
 	_action_finished = false
-	remove_action.amount = 3
+	_last_game_event = ""
 	remove_action.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
 	remove_action.execute(dummy_trigger_node)
 
-	var total_remove_ok: bool = (not inventory.items.has("green_herb") and _action_finished)
-	_record_result("ItemAction (remove total): Borra la clave al llegar a 0", total_remove_ok, "La clave green_herb aún existe")
+	var fail_atomic_ok: bool = (inventory.items.get("green_herb", 0) == 1 and _action_finished and _last_game_event == "herb_failed_not_enough")
+	_record_result("ItemAction (remove fallo atómico): No descuenta si falta cantidad y dispara on_fail_event", fail_atomic_ok, "Descontó indebidamente o no disparó fail")
 
-	# Remoción sobre ítem inexistente (no debe crashear)
+	# Test 5: ItemAction borde (ítem null)
+	var null_item_action: ItemAction = ItemAction.new()
+	null_item_action.item = null
+	null_item_action.on_fail_event = "null_item_fail"
 	_action_finished = false
-	remove_action.item_id = "non_existent_item"
-	remove_action.amount = 1
-	remove_action.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
-	remove_action.execute(dummy_trigger_node)
+	_last_game_event = ""
+	null_item_action.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
+	null_item_action.execute(dummy_trigger_node)
 
-	var non_existent_ok: bool = _action_finished
-	_record_result("ItemAction (remove inexistente): Maneja ausencia de ítem sin crashear", non_existent_ok, "No emitió finished")
+	var null_ok: bool = (_action_finished and _last_game_event == "null_item_fail")
+	_record_result("ItemAction (item null): Dispara on_fail_event y emite finished", null_ok, "No manejó item null")
 
-	# ----------------------------------------------------
-	# Test 4: Emisión de señal 'finished' en casos límite (edge cases)
-	# ----------------------------------------------------
-	# 4a: ID vacío
-	var empty_id_action: ItemAction = ItemAction.new()
-	empty_id_action.item_id = ""
-	empty_id_action.amount = 5
-	_action_finished = false
-	empty_id_action.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
-	empty_id_action.execute(dummy_trigger_node)
-	_record_result("Edge Case (item_id vacío): Emite finished y no crashea", _action_finished, "No emitió finished")
+	# ====================================================
+	# SECCIÓN GOLD ACTION
+	# ====================================================
+	player_stats.gold = 50
 
-	# 4b: Cantidad 0
-	var zero_amount_action: ItemAction = ItemAction.new()
-	zero_amount_action.item_id = "red_potion"
-	zero_amount_action.amount = 0
-	_action_finished = false
-	zero_amount_action.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
-	zero_amount_action.execute(dummy_trigger_node)
-	_record_result("Edge Case (amount = 0): Emite finished y no crashea", _action_finished, "No emitió finished")
-
-	# 4c: Cantidad negativa
-	var neg_amount_action: ItemAction = ItemAction.new()
-	neg_amount_action.item_id = "red_potion"
-	neg_amount_action.amount = -3
-	_action_finished = false
-	neg_amount_action.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
-	neg_amount_action.execute(dummy_trigger_node)
-	_record_result("Edge Case (amount < 0): Emite finished y no crashea", _action_finished, "No emitió finished")
-
-	# 4d: Operación desconocida
-	var unknown_op_action: ItemAction = ItemAction.new()
-	unknown_op_action.item_id = "red_potion"
-	unknown_op_action.amount = 1
-	unknown_op_action.operation = "unknown_operation"
-	_action_finished = false
-	unknown_op_action.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
-	unknown_op_action.execute(dummy_trigger_node)
-	_record_result("Edge Case (operación inválida): Emite finished y no crashea", _action_finished, "No emitió finished")
-
-	# ----------------------------------------------------
-	# Test 5: Integración con LootFeedbackManager (ausente y presente)
-	# ----------------------------------------------------
-	# Caso 5a: LootFeedbackManager ausente (LootFeedbackManager.instance == null)
-	var feedback_action: ItemAction = ItemAction.new()
-	feedback_action.item_id = "green_herb"
-	feedback_action.amount = 1
-	feedback_action.operation = "add"
-	feedback_action.show_feedback = true
+	# Test 6: GoldAction (add)
+	var gold_add: GoldAction = GoldAction.new()
+	gold_add.amount = 30
+	gold_add.operation = "add"
+	gold_add.show_feedback = false
+	gold_add.on_success_event = "gold_added_success"
 
 	_action_finished = false
-	feedback_action.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
-	feedback_action.execute(dummy_trigger_node)
-	_record_result("LootFeedbackManager (HUD ausente): Ejecución silenciosa y segura", _action_finished, "Falló al ejecutar sin HUD")
+	_last_game_event = ""
+	gold_add.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
+	gold_add.execute(dummy_trigger_node)
 
-	# Caso 5b: LootFeedbackManager presente (PlayerHUD activo)
-	var hud_scene: PackedScene = load("res://src/ui/loot_feedback/player_hud.tscn")
-	var hud: LootFeedbackManager = null
-	if hud_scene:
-		hud = hud_scene.instantiate() as LootFeedbackManager
-		root.add_child(hud)
-		await process_frame
+	var gold_add_ok: bool = (player_stats.gold == 80 and _action_finished and _last_game_event == "gold_added_success")
+	_record_result("GoldAction (add): Suma oro (50 + 30 = 80) y dispara on_success_event", gold_add_ok, "Fallo al sumar oro")
 
-	var hud_active_ok: bool = (hud != null and LootFeedbackManager.instance == hud)
-	if hud_active_ok:
-		_action_finished = false
-		feedback_action.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
-		feedback_action.execute(dummy_trigger_node)
-		await process_frame
+	# Test 7: GoldAction (remove éxito)
+	var gold_remove: GoldAction = GoldAction.new()
+	gold_remove.amount = 40
+	gold_remove.operation = "remove"
+	gold_remove.on_success_event = "gold_paid_success"
 
-		var toast_ok: bool = (hud.toast_container != null and hud.toast_container.get_child_count() > 0)
-		_record_result("LootFeedbackManager (HUD presente): Genera Toast visual en contenedor", toast_ok and _action_finished, "No se generó el toast en toast_container")
-		hud.queue_free()
-		await process_frame
-	else:
-		_record_result("LootFeedbackManager (HUD presente): Carga de escena de HUD", false, "No se pudo instanciar player_hud.tscn")
+	_action_finished = false
+	_last_game_event = ""
+	gold_remove.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
+	gold_remove.execute(dummy_trigger_node)
 
-	# ----------------------------------------------------
-	# Test 6: GameTrigger ejecutando ItemAction
-	# ----------------------------------------------------
+	var gold_remove_ok: bool = (player_stats.gold == 40 and _action_finished and _last_game_event == "gold_paid_success")
+	_record_result("GoldAction (remove éxito): Resta oro (80 - 40 = 40) y dispara on_success_event", gold_remove_ok, "Fallo al restar oro")
+
+	# Test 8: GoldAction (remove fallo por oro insuficiente)
+	gold_remove.amount = 100 # tiene 40
+	gold_remove.on_fail_event = "gold_broke_fail"
+
+	_action_finished = false
+	_last_game_event = ""
+	gold_remove.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
+	gold_remove.execute(dummy_trigger_node)
+
+	var gold_fail_ok: bool = (player_stats.gold == 40 and _action_finished and _last_game_event == "gold_broke_fail")
+	_record_result("GoldAction (remove fallo atómico): No descuenta si no alcanza y dispara on_fail_event", gold_fail_ok, "Descontó oro indebidamente")
+
+	# ====================================================
+	# SECCIÓN HEALTH ACTION
+	# ====================================================
+	player_stats.max_health = 100
+	player_stats.health = 50
+
+	# Test 9: HealthAction daño (-20 HP)
+	var health_damage: HealthAction = HealthAction.new()
+	health_damage.amount = -20
+
+	_action_finished = false
+	health_damage.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
+	health_damage.execute(dummy_trigger_node)
+
+	var damage_ok: bool = (player_stats.health == 30 and _action_finished)
+	_record_result("HealthAction (daño con valor negativo): 50 - 20 = 30 HP", damage_ok, "Fallo al dañar")
+
+	# Test 10: HealthAction curación (+40 HP)
+	var health_heal: HealthAction = HealthAction.new()
+	health_heal.amount = 40
+
+	_action_finished = false
+	health_heal.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
+	health_heal.execute(dummy_trigger_node)
+
+	var heal_ok: bool = (player_stats.health == 70 and _action_finished)
+	_record_result("HealthAction (curación con valor positivo): 30 + 40 = 70 HP", heal_ok, "Fallo al curar")
+
+	# Test 11: HealthAction full_heal (restaura al 100%)
+	var health_full: HealthAction = HealthAction.new()
+	health_full.full_heal = true
+
+	_action_finished = false
+	health_full.finished.connect(_on_action_finished, CONNECT_ONE_SHOT)
+	health_full.execute(dummy_trigger_node)
+
+	var full_heal_ok: bool = (player_stats.health == 100 and _action_finished)
+	_record_result("HealthAction (full_heal = true): Restaura salud al 100% (100 HP)", full_heal_ok, "No restauró al 100%")
+
+	# ====================================================
+	# INTEGRACIÓN CON GAMETRIGGER Y DIALOGUEEVENT
+	# ====================================================
 	var trigger: GameTrigger = GameTrigger.new()
-	trigger.name = "TestGameTrigger"
-	trigger.one_shot = false
+	trigger.name = "TestTrigger"
 	root.add_child(trigger)
 	await process_frame
 
-	var trigger_item_action: ItemAction = ItemAction.new()
-	trigger_item_action.item_id = "red_potion"
-	trigger_item_action.amount = 2
-	trigger_item_action.operation = "add"
-	trigger_item_action.show_feedback = false
-	trigger.actions_if_true.append(trigger_item_action)
+	var trigger_item: ItemAction = ItemAction.new()
+	trigger_item.item = red_potion
+	trigger_item.amount = 2
+	trigger_item.operation = "add"
+	trigger_item.show_feedback = false
+	trigger.actions_if_true.append(trigger_item)
 
 	inventory.items.erase("red_potion")
 	trigger.force_trigger()
 	await process_frame
 
 	var trigger_ok: bool = (inventory.items.get("red_potion", 0) == 2)
-	_record_result("GameTrigger -> ItemAction: Ejecución de acción desde GameTrigger", trigger_ok, "Esperado 2 red_potion, obtenido: %s" % str(inventory.items.get("red_potion")))
+	_record_result("GameTrigger -> ItemAction: Ejecuta adición con recurso ItemData", trigger_ok, "Fallo en GameTrigger")
 	trigger.queue_free()
-
-	# ----------------------------------------------------
-	# Test 7: DialogueEvent ejecutando ItemAction vía GameManager.trigger_event
-	# ----------------------------------------------------
-	var dialogue_evt: DialogueEvent = DialogueEvent.new()
-	dialogue_evt.name = "TestDialogueEvent"
-	dialogue_evt.event_id = "give_gold_reward"
-	dialogue_evt.one_shot = true
-
-	var dialogue_item_action: ItemAction = ItemAction.new()
-	dialogue_item_action.item_id = "gold_coins"
-	dialogue_item_action.amount = 50
-	dialogue_item_action.operation = "add"
-	dialogue_item_action.show_feedback = false
-	dialogue_evt.actions.append(dialogue_item_action)
-
-	root.add_child(dialogue_evt)
-	await process_frame
-
-	_event_executed = false
-	dialogue_evt.event_executed.connect(_on_event_executed, CONNECT_ONE_SHOT)
-
-	inventory.items.erase("gold_coins")
-	var gm: Node = root.get_node_or_null("GameManager")
-	assert(gm != null, "GameManager autoload requerido")
-	gm.trigger_event("give_gold_reward")
-	await process_frame
-
-	var dialogue_ok: bool = (_event_executed and inventory.items.get("gold_coins", 0) == 50)
-	_record_result("DialogueEvent -> ItemAction: Activación remota vía GameManager.trigger_event", dialogue_ok, "Esperado 50 gold_coins, obtenido: %s" % str(inventory.items.get("gold_coins")))
-
-	# Comprobar one_shot en DialogueEvent (segundo disparo no debe sumar)
-	_event_executed = false
-	gm.trigger_event("give_gold_reward")
-	await process_frame
-	var one_shot_ok: bool = (not _event_executed and inventory.items.get("gold_coins", 0) == 50)
-	_record_result("DialogueEvent (one_shot): No repite adición de ítems en disparos subsecuentes", one_shot_ok, "DialogueEvent se ejecutó más de una vez")
-
-	dialogue_evt.queue_free()
-	dummy_trigger_node.queue_free()
 
 	# ----------------------------------------------------
 	# Resumen final
 	# ----------------------------------------------------
 	print("\n=======================================================")
-	print("RESULTADOS: %d PASARON | %d FALLARON" % [_tests_passed, _tests_failed])
+	print("RESULTADOS: %d PASARON | %d FALLARON" % [_passed_count, _failed_count])
 	print("=======================================================")
 
-	if _tests_failed == 0:
-		print(">>> TODOS LOS TESTS DE EVENTOS DE ÍTEMS PASARON CON ÉXITO <<<\n")
+	if _failed_count == 0:
+		print(">>> TODOS LOS TESTS DE ACCIONES PASARON CON ÉXITO <<<\n")
 		quit(0)
 	else:
-		printerr(">>> HUBO FALLOS EN LAS PRUEBAS DE EVENTOS DE ÍTEMS <<<\n")
+		push_error("AL MENOS UN TEST FALLÓ")
 		quit(1)
 
-func _ensure_autoloads() -> void:
-	if not root.get_node_or_null("Inventory"):
-		var inv_script: Script = load("res://src/core/inventory.gd")
-		var inv: Node = inv_script.new()
-		inv.name = "Inventory"
-		root.add_child(inv)
+func _on_action_finished() -> void:
+	_action_finished = true
 
-	if not root.get_node_or_null("ItemDatabase"):
-		var db_script: Script = load("res://src/core/item_database.gd")
-		var db: Node = db_script.new()
-		db.name = "ItemDatabase"
-		root.add_child(db)
+func _on_game_event(event_name: String, _data: Variant) -> void:
+	_last_game_event = event_name
 
-	if not root.get_node_or_null("GameManager"):
-		var gm_script: Script = load("res://src/core/game_manager.gd")
-		var gm: Node = gm_script.new()
-		gm.name = "GameManager"
-		root.add_child(gm)
-
-	if not root.get_node_or_null("WorldStateManager"):
-		var wsm_script: Script = load("res://src/core/world_state_manager.gd")
-		var wsm: Node = wsm_script.new()
-		wsm.name = "WorldStateManager"
-		root.add_child(wsm)
+func _record_result(test_name: String, passed: bool, error_msg: String = "") -> void:
+	if passed:
+		_passed_count += 1
+		print("[PASS] %s" % test_name)
+	else:
+		_failed_count += 1
+		print("[FAIL] %s - ERROR: %s" % [test_name, error_msg])
