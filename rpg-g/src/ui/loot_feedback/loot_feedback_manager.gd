@@ -24,7 +24,7 @@ func _ready() -> void:
 	instance = self
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	
-	var stats = get_node_or_null("/root/PlayerStats")
+	var stats := PlayerStats
 	if stats:
 		if not stats.health_changed.is_connected(_on_health_changed):
 			stats.health_changed.connect(_on_health_changed)
@@ -100,9 +100,9 @@ static func trigger_toast(item_data: ItemData, amount: int = 1) -> void:
 static func trigger_gold(amount: int) -> void:
 	if not instance or not instance.is_inside_tree() or amount <= 0:
 		return
-	var item_db = instance.get_node_or_null("/root/ItemDatabase")
+	var item_db := ItemDatabase
 	var gold_item: ItemData = null
-	if item_db and item_db.has_method("get_item"):
+	if item_db:
 		gold_item = item_db.get_item("gold_coins")
 	if not gold_item:
 		gold_item = load("res://data/items/gold_coins.tres")

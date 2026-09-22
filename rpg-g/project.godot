@@ -24,6 +24,8 @@ ItemDatabase="*res://src/core/item_database.gd"
 PlayerStats="*res://src/core/player_stats.gd"
 NarrativeManager="*res://src/core/narrative_manager.gd"
 WorldStateManager="*res://src/core/world_state_manager.gd"
+AlertSystem="*res://src/core/alert_system.gd"
+CheckpointManager="*res://src/core/checkpoint_manager.gd"
 
 [display]
 

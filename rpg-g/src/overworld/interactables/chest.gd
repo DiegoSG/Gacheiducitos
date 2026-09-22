@@ -24,7 +24,7 @@ func _ready() -> void:
 func _restore_state() -> void:
 	if persistence_id.is_empty():
 		return
-	var wsm := get_node_or_null("/root/WorldStateManager")
+	var wsm := WorldStateManager
 	if not wsm or not wsm.has_state(persistence_id):
 		return
 	var data: Dictionary = wsm.load_state(persistence_id)
@@ -96,6 +96,6 @@ func open_storage() -> void:
 func _persist_state() -> void:
 	if persistence_id.is_empty():
 		return
-	var wsm := get_node_or_null("/root/WorldStateManager")
+	var wsm := WorldStateManager
 	if wsm:
 		wsm.save_state(persistence_id, {"has_been_looted": has_been_looted, "is_open": is_open})

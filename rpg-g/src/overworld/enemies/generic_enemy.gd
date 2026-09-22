@@ -102,9 +102,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func _exit_tree() -> void:
-	var gm = _get_game_manager()
-	if gm:
-		gm.unregister_pursuer(self)
+	AlertSystem.unregister_pursuer(self)
 
 func _check_overlap_for_reaggro() -> void:
 	if lose_target_zone:
@@ -118,25 +116,19 @@ func _on_vision_entered(body: Node2D) -> void:
 		player = body as CharacterBody2D
 		current_state = State.CHASE
 		_cooldown_timer = 0.0
-		var gm = _get_game_manager()
-		if gm:
-			gm.register_pursuer(self)
+		AlertSystem.register_pursuer(self)
 
 func _on_lose_target_entered(body: Node2D) -> void:
 	if body.is_in_group("player") and (current_state == State.COOLDOWN or current_state == State.RETURNING):
 		player = body as CharacterBody2D
 		current_state = State.CHASE
 		_cooldown_timer = 0.0
-		var gm = _get_game_manager()
-		if gm:
-			gm.register_pursuer(self)
+		AlertSystem.register_pursuer(self)
 
 func _on_lose_target_exited(body: Node2D) -> void:
 	if body == player:
 		player = null
-		var gm = _get_game_manager()
-		if gm:
-			gm.unregister_pursuer(self)
+		AlertSystem.unregister_pursuer(self)
 			
 		if cooldown_duration > 0.0:
 			current_state = State.COOLDOWN
@@ -146,11 +138,6 @@ func _on_lose_target_exited(body: Node2D) -> void:
 				current_state = State.RETURNING
 			else:
 				current_state = State.IDLE
-
-func _get_game_manager() -> Node:
-	if is_inside_tree() and get_tree() and get_tree().root:
-		return get_tree().root.get_node_or_null("GameManager")
-	return get_node_or_null("/root/GameManager")
 
 func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: float) -> void:
 	if is_invulnerable: return
@@ -188,7 +175,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 func _restore_state() -> bool:
 	if persistence_id.is_empty():
 		return false
-	var wsm = get_node_or_null("/root/WorldStateManager")
+	var wsm := WorldStateManager
 	if wsm and wsm.has_state(persistence_id):
 		var data: Dictionary = wsm.load_state(persistence_id)
 		if data.get("is_dead", false):
@@ -199,6 +186,6 @@ func _restore_state() -> bool:
 func _persist_death() -> void:
 	if persistence_id.is_empty():
 		return
-	var wsm = get_node_or_null("/root/WorldStateManager")
+	var wsm := WorldStateManager
 	if wsm:
 		wsm.save_state(persistence_id, {"is_dead": true})

@@ -43,7 +43,7 @@ func _ready() -> void:
 func _restore_state() -> void:
 	if persistence_id.is_empty():
 		return
-	var wsm := get_node_or_null("/root/WorldStateManager")
+	var wsm := WorldStateManager
 	if wsm and wsm.has_state(persistence_id):
 		is_on = wsm.load_state(persistence_id).get("is_on", false)
 
@@ -73,7 +73,7 @@ func action() -> void:
 func _persist_state() -> void:
 	if persistence_id.is_empty():
 		return
-	var wsm := get_node_or_null("/root/WorldStateManager")
+	var wsm := WorldStateManager
 	if wsm:
 		wsm.save_state(persistence_id, {"is_on": is_on})
 

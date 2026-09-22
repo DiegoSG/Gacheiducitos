@@ -96,7 +96,7 @@ func _run_actions(actions: Array[ActionResource]) -> void:
 func _restore_state() -> void:
 	if persistence_id.is_empty():
 		return
-	var wsm: Node = get_node_or_null("/root/WorldStateManager")
+	var wsm := WorldStateManager
 	if wsm and wsm.has_state(persistence_id):
 		var data: Dictionary = wsm.load_state(persistence_id)
 		_has_triggered = data.get("has_triggered", false)
@@ -105,7 +105,7 @@ func _restore_state() -> void:
 func _persist_state() -> void:
 	if persistence_id.is_empty():
 		return
-	var wsm: Node = get_node_or_null("/root/WorldStateManager")
+	var wsm := WorldStateManager
 	if wsm:
 		wsm.save_state(persistence_id, {
 			"has_triggered": _has_triggered,

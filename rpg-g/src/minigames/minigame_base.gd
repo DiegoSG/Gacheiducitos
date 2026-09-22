@@ -27,10 +27,10 @@ func _notification(what: int) -> void:
 		_connect_game_manager()
 
 func _connect_game_manager() -> void:
-	var gm = get_node_or_null("/root/GameManager")
+	var gm := GameManager
 	if not gm and get_tree() and get_tree().root:
-		gm = get_tree().root.get_node_or_null("GameManager")
-	if gm and gm.has_method("complete_minigame"):
+		gm = GameManager
+	if gm:
 		if not game_finished.is_connected(gm.complete_minigame):
 			game_finished.connect(gm.complete_minigame)
 

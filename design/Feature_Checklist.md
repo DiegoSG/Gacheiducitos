@@ -206,3 +206,17 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
      - Eliminación del HUD legacy (`src/ui/hud/`) y scripts obsoletos en `tools/`.
      - Batería de pruebas automatizadas activas al 100%: `test_death_and_respawn_runner.gd`, `test_knockback_continuous_runner.gd` y `test_player_hud_runner.gd`.
 
+### 🔖 Checkpoint — 22 de Septiembre, 2026: *Modularización de GameManager, Desacoplamiento de Autoloads e Higiene Asíncrona*
+- **Sistemas y Mejoras Implementadas:**
+  1. **Desacoplamiento Modular de `GameManager`:**
+     - `AlertSystem` (`src/core/alert_system.gd`): Extraído como Autoload dedicado para gestión de perseguidores (`_active_pursuers`), estados de paz/alerta (`PEACE`/`ALERT`) y señal `alert_state_changed`.
+     - `CheckpointManager` (`src/core/checkpoint_manager.gd`): Extraído como Autoload dedicado para captura de snapshots de nivel (`register_level_entry`), restauración de estadísticas, inventario y ejecución de `respawn_player()`.
+     - `GameManager` (`src/core/game_manager.gd`): Reducido y enfocado estrictamente a transiciones de escena, orquestación de minijuegos y eventos globales.
+  2. **Resolución de Conflictos de Autoloads e Inferencia de Tipos:**
+     - Eliminación de colisiones `class_name` en singletons de autoload (`GameManager`, `Inventory`, `PlayerStats`, `ItemDatabase`, `NarrativeManager`, `WorldStateManager`, `AlertSystem`, `CheckpointManager`).
+     - Migración transversal de accesos hardcodeados (`get_node_or_null("/root/...")`) a acceso directo inferido (`var stats := PlayerStats`).
+  3. **Correcciones de Concurrencia y Estabilidad Asíncrona:**
+     - Protección contra crashes en temporizadores asíncronos mediante guard `is_instance_valid(self)` en `generic_enemy.gd`, `dummy_npc.gd` y `player.gd`.
+     - Prevención de soft-locks en `GameTrigger` con timeout de 10s y limpieza automática de conexiones con `CONNECT_ONE_SHOT`.
+     - Prevención de colisiones de estado en recursos compartidos duplicando instancias dinámicamente (`act.duplicate()`).
+     - Desacoplamiento mediante señal `game_won` en `mg_trampolin_player.gd`.

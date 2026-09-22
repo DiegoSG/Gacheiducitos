@@ -33,15 +33,13 @@ func _ready() -> void:
 	if hurtbox_component:
 		hurtbox_component.hit_received.connect(_on_hit_received)
 		
-	var stats = get_node_or_null("/root/PlayerStats")
+	var stats := PlayerStats
 	if stats:
 		if not stats.player_died.is_connected(_on_player_died):
 			stats.player_died.connect(_on_player_died)
 			
-	var gm = get_node_or_null("/root/GameManager")
-	if gm:
-		if not gm.player_respawned.is_connected(_on_player_respawned):
-			gm.player_respawned.connect(_on_player_respawned)
+	if not CheckpointManager.player_respawned.is_connected(_on_player_respawned):
+		CheckpointManager.player_respawned.connect(_on_player_respawned)
 	
 	# Conectarse a las señales de Dialogue Manager
 	var dm = Engine.get_singleton("DialogueManager")
@@ -171,7 +169,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	if is_invulnerable:
 		return
 	
-	var stats = get_node_or_null("/root/PlayerStats")
+	var stats := PlayerStats
 	if stats:
 		stats.take_damage(damage)
 	
@@ -217,13 +215,11 @@ func _on_player_died() -> void:
 		death_tween.parallel().tween_property(sprite, "modulate", Color(0.8, 0.2, 0.2, 0.8), 0.25)
 		
 	print("[Player] El jugador ha muerto. Solicitando respawn a GameManager...")
-	var gm = get_node_or_null("/root/GameManager")
-	if gm and gm.has_method("respawn_player"):
-		# Breve pausa para notar la caída antes del fader de respawn
-		var tree = get_tree()
-		if tree:
-			await tree.create_timer(0.5).timeout
-		gm.respawn_player()
+	# Breve pausa para notar la caída antes del fader de respawn
+	var tree = get_tree()
+	if tree:
+		await tree.create_timer(0.5).timeout
+	CheckpointManager.respawn_player()
 
 func _on_player_respawned() -> void:
 	is_dead = false

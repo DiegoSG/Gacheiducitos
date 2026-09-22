@@ -108,8 +108,8 @@ func _init() -> void:
 	player_stats.gold = 500
 	inventory.items = { "ancient_map": 1 }
 	
-	gm.register_level_entry(level1.scene_file_path, level1)
-	_record_result("GameManager: Registra active_checkpoint_scene_path al detectar CheckpointLevel", gm.active_checkpoint_scene_path == level1.scene_file_path)
+	CheckpointManager.register_level_entry(level1.scene_file_path, level1)
+	_record_result("CheckpointManager: Registra active_checkpoint_scene_path al detectar CheckpointLevel", CheckpointManager.active_checkpoint_scene_path == level1.scene_file_path)
 	
 	# Entramos a un Nivel 2 (No Checkpoint)
 	var level2: Node2D = Node2D.new()
@@ -118,8 +118,8 @@ func _init() -> void:
 	root.add_child(level2)
 	
 	# Al ENTRAR al nivel 2, se registra la entrada y se toma el snapshot de persistencia
-	gm.register_level_entry(level2.scene_file_path, level2)
-	_record_result("GameManager: Checkpoint activo sigue siendo Nivel 1 tras entrar a Nivel 2", gm.active_checkpoint_scene_path == level1.scene_file_path)
+	CheckpointManager.register_level_entry(level2.scene_file_path, level2)
+	_record_result("CheckpointManager: Checkpoint activo sigue siendo Nivel 1 tras entrar a Nivel 2", CheckpointManager.active_checkpoint_scene_path == level1.scene_file_path)
 
 	# DENTRO del Nivel 2, el jugador sufre daño, gasta oro, recoge un ítem y modifica el mundo
 	player_stats.health = 20
@@ -129,15 +129,15 @@ func _init() -> void:
 	
 	# Simulamos el Respawn del jugador tras morir en el Nivel 2
 	gm.current_scene = level2
-	await gm.respawn_player()
+	await CheckpointManager.respawn_player()
 	
 	var respawn_stats_ok: bool = (player_stats.health == 100 and player_stats.gold == 500)
 	var respawn_inv_ok: bool = (inventory.get_item_count("ancient_map") == 1 and inventory.get_item_count("gem") == 0)
 	var respawn_ws_ok: bool = not world_state.has_state("lvl2_item_picked")
 	
-	_record_result("GameManager.respawn_player: Restaura stats del checkpoint activo", respawn_stats_ok)
-	_record_result("GameManager.respawn_player: Restaura inventario del checkpoint activo", respawn_inv_ok)
-	_record_result("GameManager.respawn_player: Revierte persistencias del nivel 2", respawn_ws_ok)
+	_record_result("CheckpointManager.respawn_player: Restaura stats del checkpoint activo", respawn_stats_ok)
+	_record_result("CheckpointManager.respawn_player: Restaura inventario del checkpoint activo", respawn_inv_ok)
+	_record_result("CheckpointManager.respawn_player: Revierte persistencias del nivel 2", respawn_ws_ok)
 
 	# ====================================================
 	# RESUMEN FINAL

@@ -41,7 +41,7 @@ func _ready() -> void:
 func _restore_state() -> void:
 	if persistence_id.is_empty():
 		return
-	var wsm := get_node_or_null("/root/WorldStateManager")
+	var wsm := WorldStateManager
 	if wsm and wsm.has_state(persistence_id):
 		_has_triggered = wsm.load_state(persistence_id).get("has_triggered", false)
 
@@ -95,7 +95,7 @@ func _attempt_trigger(override_actions: Array[ActionResource] = []) -> void:
 	
 	# Evaluar condición si no es override directo
 	if override_actions.is_empty() and require_condition and not condition_flag.is_empty():
-		var narrative_manager: Node = get_tree().root.get_node_or_null("NarrativeManager") if get_tree() and get_tree().root else null
+		var narrative_manager = NarrativeManager if get_tree() and get_tree().root else null
 		if narrative_manager:
 			var actual_val: Variant = narrative_manager.get_flag(condition_flag)
 			var expected: Variant = _str_to_variant(condition_expected_value)
@@ -145,6 +145,6 @@ func _run_actions(array: Array[ActionResource]) -> void:
 func _persist_state() -> void:
 	if persistence_id.is_empty():
 		return
-	var wsm := get_node_or_null("/root/WorldStateManager")
+	var wsm := WorldStateManager
 	if wsm:
 		wsm.save_state(persistence_id, {"has_triggered": _has_triggered})

@@ -37,7 +37,7 @@ func execute(trigger_node: Node) -> void:
 		finished.emit()
 		return
 
-	var inv = trigger_node.get_node_or_null("/root/Inventory")
+	var inv := Inventory
 	if not inv:
 		push_warning("ItemAction: Autoload /root/Inventory no encontrado.")
 		_trigger_event(trigger_node, on_fail_event)
@@ -62,6 +62,6 @@ func execute(trigger_node: Node) -> void:
 func _trigger_event(node: Node, event_name: String) -> void:
 	if event_name.is_empty() or not node:
 		return
-	var gm = node.get_node_or_null("/root/GameManager")
-	if gm and gm.has_method("trigger_event"):
+	var gm := GameManager
+	if gm:
 		gm.trigger_event(event_name)

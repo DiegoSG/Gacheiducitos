@@ -23,7 +23,7 @@ func execute(trigger_node: Node) -> void:
 		finished.emit()
 		return
 
-	var ps = trigger_node.get_node_or_null("/root/PlayerStats")
+	var ps := PlayerStats
 	if not ps:
 		push_warning("HealthAction: Autoload /root/PlayerStats no encontrado.")
 		finished.emit()

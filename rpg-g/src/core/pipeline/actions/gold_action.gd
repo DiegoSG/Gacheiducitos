@@ -34,7 +34,7 @@ func execute(trigger_node: Node) -> void:
 		finished.emit()
 		return
 
-	var ps = trigger_node.get_node_or_null("/root/PlayerStats")
+	var ps := PlayerStats
 	if not ps:
 		push_warning("GoldAction: Autoload /root/PlayerStats no encontrado.")
 		_trigger_event(trigger_node, on_fail_event)
@@ -44,8 +44,8 @@ func execute(trigger_node: Node) -> void:
 	if operation == "add":
 		ps.add_gold(amount)
 		if show_feedback:
-			var item_db = trigger_node.get_node_or_null("/root/ItemDatabase")
-			if item_db and item_db.has_method("get_item"):
+			var item_db := ItemDatabase
+			if item_db:
 				var coin_res: ItemData = item_db.get_item("gold_coins")
 				if coin_res:
 					LootFeedbackManager.trigger_toast(coin_res, amount)
@@ -62,6 +62,6 @@ func execute(trigger_node: Node) -> void:
 func _trigger_event(node: Node, event_name: String) -> void:
 	if event_name.is_empty() or not node:
 		return
-	var gm = node.get_node_or_null("/root/GameManager")
-	if gm and gm.has_method("trigger_event"):
+	var gm := GameManager
+	if gm:
 		gm.trigger_event(event_name)

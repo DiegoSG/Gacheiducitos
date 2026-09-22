@@ -32,7 +32,7 @@ func use_item(item_id: String) -> bool:
 	if not items.has(item_id) or items[item_id] <= 0:
 		return false
 		
-	var item_db = get_node_or_null("/root/ItemDatabase")
+	var item_db := ItemDatabase
 	if not item_db:
 		return false
 		
@@ -40,7 +40,7 @@ func use_item(item_id: String) -> bool:
 	if not data or data.type != ItemData.ItemType.CONSUMABLE:
 		return false
 		
-	var stats = get_node_or_null("/root/PlayerStats")
+	var stats := PlayerStats
 	var consumed: bool = false
 	
 	if stats:

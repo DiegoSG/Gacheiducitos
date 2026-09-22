@@ -120,7 +120,7 @@ func _ready() -> void:
 func _restore_state() -> void:
 	if persistence_id.is_empty():
 		return
-	var wsm := get_node_or_null("/root/WorldStateManager")
+	var wsm := WorldStateManager
 	if not wsm or not wsm.has_state(persistence_id):
 		return
 	var data: Dictionary = wsm.load_state(persistence_id)
@@ -207,7 +207,7 @@ func _on_body_exited(body: Node2D) -> void:
 func _get_inventory_node() -> Node:
 	if Engine.has_singleton("Inventory"):
 		return Engine.get_singleton("Inventory")
-	var node = get_node_or_null("/root/Inventory")
+	var node := Inventory
 	if node:
 		return node
 	if is_inside_tree() and get_tree() and get_tree().root:
@@ -256,8 +256,8 @@ func _trigger_transition() -> void:
 	_is_triggered = true
 	portal_triggered.emit(target_level_path, exit_id)
 	opened.emit()
-	var game_manager = get_node_or_null("/root/GameManager")
-	if game_manager and game_manager.has_method("change_level"):
+	var game_manager := GameManager
+	if game_manager:
 		game_manager.change_level(target_level_path, exit_id)
 
 func _show_locked_feedback(msg: String) -> void:
@@ -290,7 +290,7 @@ func set_active_state(active: bool) -> void:
 func _persist_state() -> void:
 	if persistence_id.is_empty():
 		return
-	var wsm := get_node_or_null("/root/WorldStateManager")
+	var wsm := WorldStateManager
 	if wsm:
 		wsm.save_state(persistence_id, {"is_locked": is_locked, "is_active": is_active})
 

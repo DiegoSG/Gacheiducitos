@@ -7,7 +7,7 @@ extends Node
 @export var target_trigger: NodePath = NodePath("")
 
 func _ready() -> void:
-	var gm := get_node_or_null("/root/GameManager")
+	var gm := GameManager
 	if gm and gm.has_signal("game_event"):
 		if not gm.game_event.is_connected(_on_game_event):
 			gm.game_event.connect(_on_game_event)
@@ -15,7 +15,7 @@ func _ready() -> void:
 		push_warning("OnEventListener '%s': GameManager no encontrado." % name)
 
 func _exit_tree() -> void:
-	var gm := get_node_or_null("/root/GameManager")
+	var gm := GameManager
 	if gm and gm.has_signal("game_event") and gm.game_event.is_connected(_on_game_event):
 		gm.game_event.disconnect(_on_game_event)
 

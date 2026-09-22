@@ -120,7 +120,7 @@ func _mark_unique_as_dropped() -> void:
 			wsm.save_state(persistence_id, {"unique_dropped": true})
 
 func _get_world_state_manager() -> Node:
-	return get_node_or_null("/root/WorldStateManager")
+	return WorldStateManager
 
 ## Instancia el PickupItem en la escena con animación cinemática radial (Tween)
 func _spawn_pickup(item_res: ItemData, custom_amount: int, origin_pos: Vector2, delay_step: int = 0) -> PickupItem:

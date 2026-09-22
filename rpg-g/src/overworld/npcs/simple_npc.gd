@@ -11,7 +11,7 @@ func _init() -> void:
 	allow_during_alert = false
 
 func action() -> void:
-	if not allow_during_alert and GameManager and GameManager.is_in_alert():
+	if not allow_during_alert and AlertSystem.is_in_alert():
 		print("SimpleNPC: No se puede hablar con '%s' durante el estado de alerta." % npc_name)
 		return
 		

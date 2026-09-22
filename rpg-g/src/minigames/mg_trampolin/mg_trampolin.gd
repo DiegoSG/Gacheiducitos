@@ -173,7 +173,7 @@ func spawn_platform():
 func _spawn_platform_item(p_id: String, pos: Vector2) -> void:
 	var item_node = item_scene.instantiate() as MG_TrampolinItem
 	var tex = null
-	var item_db = get_node_or_null("/root/ItemDatabase")
+	var item_db := ItemDatabase
 	if item_db:
 		var data = item_db.get_item(p_id)
 		if data and data.icon:
