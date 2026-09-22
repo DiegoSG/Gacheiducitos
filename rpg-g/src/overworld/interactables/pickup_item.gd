@@ -40,6 +40,8 @@ var _capsule_radius: float = 10.0
 var _collision_offset: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
+	if persistence_id.is_empty():
+		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
 	if item_data:
 		if not item_data.changed.is_connected(_sync_with_resource):
 			item_data.changed.connect(_sync_with_resource)

@@ -48,3 +48,16 @@ func is_quest_completed(quest_id: String) -> bool:
 
 func is_quest_active(quest_id: String) -> bool:
 	return quests.get(quest_id) == "active"
+
+func create_snapshot() -> Dictionary:
+	return {
+		"flags": flags.duplicate(true),
+		"quests": quests.duplicate(true)
+	}
+
+func restore_snapshot(snapshot: Dictionary) -> void:
+	if snapshot.has("flags"):
+		flags = snapshot["flags"].duplicate(true)
+	if snapshot.has("quests"):
+		quests = snapshot["quests"].duplicate(true)
+	print("NarrativeManager: Snapshot restaurado")

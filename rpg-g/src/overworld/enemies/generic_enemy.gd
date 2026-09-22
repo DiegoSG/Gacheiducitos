@@ -38,6 +38,8 @@ var _start_position: Vector2 = Vector2.ZERO
 var _cooldown_timer: float = 0.0
 
 func _ready() -> void:
+	if persistence_id.is_empty():
+		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
 	if _restore_state():
 		return
 		

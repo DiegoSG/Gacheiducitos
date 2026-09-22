@@ -34,6 +34,8 @@ signal turned_off()
 @onready var sprite: Sprite2D = $Sprite2D if has_node("Sprite2D") else null
 
 func _ready() -> void:
+	if persistence_id.is_empty():
+		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
 	# Layer 5 (16) para ser detectable por ActionableFinder del player
 	collision_layer = 16
 	collision_mask = 0

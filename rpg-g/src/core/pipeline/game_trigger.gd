@@ -32,6 +32,8 @@ var _is_running: bool = false
 var _agents_inside: Array[Node2D] = []
 
 func _ready() -> void:
+	if persistence_id.is_empty():
+		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	_restore_state()

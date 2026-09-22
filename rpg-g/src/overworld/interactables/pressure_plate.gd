@@ -41,6 +41,8 @@ var _agents_inside: Array[Node2D] = []
 var _has_triggered: bool = false
 
 func _ready() -> void:
+	if persistence_id.is_empty():
+		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
 	collision_layer = 0
 	collision_mask = 2 # Detecta al jugador
 	if not Engine.is_editor_hint():

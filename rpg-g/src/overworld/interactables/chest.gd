@@ -16,6 +16,8 @@ var has_been_looted: bool = false
 @onready var chest_dialogue: Resource = preload("res://src/overworld/interactables/chest.dialogue")
 
 func _ready() -> void:
+	if persistence_id.is_empty():
+		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
 	if sprite:
 		sprite.texture = texture_open if is_open else texture_closed
 		sprite.modulate = Color.WHITE

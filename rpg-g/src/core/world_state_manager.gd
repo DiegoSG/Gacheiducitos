@@ -25,6 +25,16 @@ func has_state(persistence_id: String) -> bool:
 func clear_state(persistence_id: String) -> void:
 	_states.erase(persistence_id)
 
+func clear_ephemeral_states() -> void:
+	var keys_to_remove: Array[String] = []
+	for key in _states.keys():
+		var k = str(key)
+		if k.ends_with("_ephemeral") or k.begins_with("ephemeral_"):
+			keys_to_remove.append(key)
+	for key in keys_to_remove:
+		_states.erase(key)
+	print("[WorldStateManager] Estados efímeros limpiados. Restantes: ", _states.keys().size())
+
 func clear_all() -> void:
 	_states.clear()
 

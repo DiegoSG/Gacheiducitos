@@ -19,6 +19,44 @@ func _ready() -> void:
 	
 	refresh_ui()
 
+	# Botones de guardado/carga bajo el panel
+	var panel: Panel = $Control/Panel
+	var hbox := HBoxContainer.new()
+	hbox.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	hbox.position.y = panel.size.y + 10
+
+	var btn_save := Button.new()
+	btn_save.text = "Save Manual"
+	btn_save.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_save.pressed.connect(func() -> void:
+		if not is_instance_valid(self): return
+		var ss: Node = get_node_or_null("/root/SaveSystem")
+		if ss: ss.save_current_state(false)
+	)
+
+	var btn_load_manual := Button.new()
+	btn_load_manual.text = "Load Manual"
+	btn_load_manual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_load_manual.pressed.connect(func() -> void:
+		if not is_instance_valid(self): return
+		var ss: Node = get_node_or_null("/root/SaveSystem")
+		if ss: await ss.load_saved_state(false)
+	)
+
+	var btn_load_auto := Button.new()
+	btn_load_auto.text = "Load Auto"
+	btn_load_auto.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_load_auto.pressed.connect(func() -> void:
+		if not is_instance_valid(self): return
+		var ss: Node = get_node_or_null("/root/SaveSystem")
+		if ss: await ss.load_saved_state(true)
+	)
+
+	hbox.add_child(btn_save)
+	hbox.add_child(btn_load_manual)
+	hbox.add_child(btn_load_auto)
+	panel.add_child(hbox)
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_inventory") or (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_TAB):
 		toggle_inventory()

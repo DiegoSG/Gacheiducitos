@@ -106,6 +106,8 @@ var _is_triggered: bool = false
 static var debug_visuals_visible: bool = false
 
 func _ready() -> void:
+	if persistence_id.is_empty():
+		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
 	add_to_group("arrival_points")
 	_update_collision_layers()
 	if not Engine.is_editor_hint():

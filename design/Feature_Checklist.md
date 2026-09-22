@@ -220,3 +220,19 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
      - Prevención de soft-locks en `GameTrigger` con timeout de 10s y limpieza automática de conexiones con `CONNECT_ONE_SHOT`.
      - Prevención de colisiones de estado en recursos compartidos duplicando instancias dinámicamente (`act.duplicate()`).
      - Desacoplamiento mediante señal `game_won` en `mg_trampolin_player.gd`.
+
+---
+
+## 📌 Tareas Pendientes: Sistema de Slots y Mejoras de UI de Guardado
+*Especificación detallada documentada en: [`design/Sistema_Checkpoints_y_Guardado.md`](design/Sistema_Checkpoints_y_Guardado.md)*
+
+- [x] **Fase 1: Preparación de Snapshots en Subsistemas** (Implementado)
+- [x] **Fase 2: Rediseño de Checkpoints de Inicio de Nivel** (Implementado con Persistencia Efímera)
+- [x] **Fase 3: Autoguardado por Frecuencia de Checkpoints** (Implementado con `save_auto.json`)
+- [x] **Fase 4: Sistema de Guardado y Carga Persistente (Save/Load)** (Implementado separando Manual vs Auto)
+- [ ] **Fase 5: Sistema de Múltiples Slots (Saves Manuales y Autosaves)**
+  - [ ] Interfaz dedicada en el menú para administrar múltiples archivos de guardado (Slots).
+  - [ ] Metadatos del savegame para mostrar en la interfaz (tiempo jugado, ubicación, fecha de guardado).
+- [ ] **Fase 6: Verificación y Test Runner**
+  - [ ] Escena y test runner automatizado para validar el flujo completo de guardado/carga con múltiples slots.
+

@@ -20,6 +20,8 @@ signal event_executed()
 var _has_triggered: bool = false
 
 func _ready() -> void:
+	if persistence_id.is_empty():
+		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
 	if Engine.is_editor_hint():
 		_update_editor_label()
 		return

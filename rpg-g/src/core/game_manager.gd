@@ -61,6 +61,7 @@ func _deferred_load_minigame(path: String) -> void:
 
 	if is_instance_valid(current_scene):
 		current_scene.queue_free()
+		await get_tree().process_frame
 	
 	AlertSystem.clear_pursuers()
 	current_scene = s.instantiate()
@@ -121,7 +122,7 @@ func return_to_overworld() -> void:
 	print("GameManager: target_scene = ", target_scene)
 	change_level(target_scene)
 
-func change_level(target_level_path: String, spawn_id: String = "", exact_pos: Vector2 = Vector2.ZERO, use_exact: bool = false) -> void:
+func change_level(target_level_path: String, spawn_id: String = "", exact_pos: Vector2 = Vector2.ZERO, use_exact: bool = false, is_save_load: bool = false) -> void:
 	if _is_changing_level:
 		print("GameManager: Scene transition already in progress. Ignoring request for: ", target_level_path)
 		return
@@ -129,6 +130,11 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 		return
 
 	_is_changing_level = true
+	
+	if not is_save_load:
+		var wsm := WorldStateManager
+		if wsm:
+			wsm.clear_ephemeral_states()
 		
 	var fader: ScreenFader = FADER_SCENE.instantiate()
 	get_tree().root.add_child(fader)
@@ -151,6 +157,7 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 
 	if is_instance_valid(current_scene):
 		current_scene.queue_free()
+		await get_tree().process_frame
 		
 	AlertSystem.clear_pursuers()
 	current_scene = next_scene_resource.instantiate()
