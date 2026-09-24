@@ -30,7 +30,7 @@ func _ready() -> void:
 	var root: Window = get_tree().root
 	current_scene = root.get_child(root.get_child_count() - 1)
 	if is_instance_valid(current_scene):
-		CheckpointManager.register_level_entry(current_scene.scene_file_path, current_scene)
+		CheckpointManager.register_level_entry(current_scene.scene_file_path, current_scene, false)
 
 func load_minigame(minigame_path: String, player_pos: Vector2 = Vector2.ZERO) -> void:
 	if is_instance_valid(current_scene):
@@ -198,7 +198,7 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 	await fader.fade_in(0.4)
 	fader.queue_free()
 	_is_changing_level = false
-	CheckpointManager.register_level_entry(target_level_path, current_scene)
+	CheckpointManager.register_level_entry(target_level_path, current_scene, not is_save_load)
 	level_changed.emit(target_level_path, spawn_id)
 
 func _snap_scene_cameras(node: Node) -> void:

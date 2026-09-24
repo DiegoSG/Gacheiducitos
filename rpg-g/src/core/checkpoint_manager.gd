@@ -11,13 +11,15 @@ var _is_player_dead: bool = false
 @export var checkpoints_until_autosave: int = 3
 var _checkpoints_passed_count: int = 0
 
-func register_level_entry(scene_path: String, scene_node: Node) -> void:
+func register_level_entry(scene_path: String, scene_node: Node, is_organic: bool = true) -> void:
 	if not is_instance_valid(scene_node):
 		return
 		
 	# No registrar checkpoints en minijuegos
 	if scene_node.get_class() == "MinigameBase" or scene_node.is_class("MinigameBase") or (scene_node.get_script() and scene_node.get_script().get_global_name() == "MinigameBase") or scene_path.contains("/minigames/"):
 		return
+		
+	var is_same_scene: bool = (scene_path == active_checkpoint_scene_path)
 	
 	# Respaldar estado del mundo al inicio de este nivel (para revertir si muere aquí)
 	var ws := WorldStateManager
@@ -34,12 +36,18 @@ func register_level_entry(scene_path: String, scene_node: Node) -> void:
 	_capture_checkpoint_player_snapshot()
 	print("[CheckpointManager] Checkpoint activo actualizado a: ", active_checkpoint_scene_path)
 	
-	_checkpoints_passed_count += 1
-	if _checkpoints_passed_count >= checkpoints_until_autosave:
+	if not is_organic:
+		# Si cargamos partida o abrimos el juego, reiniciamos el contador de autoguardado
 		_checkpoints_passed_count = 0
-		var ss = get_node_or_null("/root/SaveSystem")
-		if ss and ss.has_method("save_slot"):
-			ss.save_slot(ss.AUTOSAVE_SLOT_ID)
+	elif not is_same_scene:
+		# Solo sumar al contador si es una transición orgánica (cruzar puerta) hacia un nivel distinto
+		_checkpoints_passed_count += 1
+		print("[CheckpointManager] Progreso hacia Autosave: ", _checkpoints_passed_count, " / ", checkpoints_until_autosave)
+		if _checkpoints_passed_count >= checkpoints_until_autosave:
+			_checkpoints_passed_count = 0
+			var ss = get_node_or_null("/root/SaveSystem")
+			if ss and ss.has_method("save_slot"):
+				ss.save_slot(ss.AUTOSAVE_SLOT_ID)
 
 func _capture_checkpoint_player_snapshot() -> void:
 	var stats := PlayerStats

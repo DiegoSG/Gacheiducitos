@@ -156,4 +156,3 @@ func save_current_state(is_autosave: bool = false) -> void:
 
 func load_saved_state(is_autosave: bool = false) -> void:
 	load_slot(AUTOSAVE_SLOT_ID if is_autosave else 1)
-
