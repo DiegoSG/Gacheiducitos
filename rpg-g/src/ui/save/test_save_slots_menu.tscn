@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://test_save_slots_menu"]
+
+[ext_resource type="Script" path="res://src/ui/save/test_save_slots_menu_runner.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://save_menu_ui" path="res://src/ui/save/save_menu_ui.tscn" id="2_save_menu"]
+
+[node name="TestSaveSlotsMenu" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="SaveMenuUI" parent="CanvasLayer" instance=ExtResource("2_save_menu")]
+offset_left = 50.0
+offset_top = 50.0

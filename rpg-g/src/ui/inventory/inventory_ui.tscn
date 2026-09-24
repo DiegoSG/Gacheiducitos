@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://inventory_ui_basic"]
+[gd_scene load_steps=3 format=3 uid="uid://inventory_ui_basic"]
 
 [ext_resource type="Script" path="res://src/ui/inventory/inventory_ui.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://save_menu_ui" path="res://src/ui/save/save_menu_ui.tscn" id="2_save_menu"]
 
 [node name="InventoryUI" type="CanvasLayer"]
 process_mode = 3
@@ -16,15 +17,15 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Panel" type="Panel" parent="Control"]
-custom_minimum_size = Vector2(200, 300)
+custom_minimum_size = Vector2(250, 480)
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -220.0
+offset_left = -270.0
 offset_top = 20.0
 offset_right = -20.0
-offset_bottom = 320.0
+offset_bottom = 500.0
 grow_horizontal = 0
 
 [node name="Label" type="Label" parent="Control/Panel"]
@@ -44,3 +45,11 @@ anchor_bottom = 1.0
 offset_top = 30.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="SaveMenuUI" parent="Control" instance=ExtResource("2_save_menu")]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 360.0
+offset_bottom = 500.0

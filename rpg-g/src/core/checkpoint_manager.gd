@@ -38,8 +38,8 @@ func register_level_entry(scene_path: String, scene_node: Node) -> void:
 	if _checkpoints_passed_count >= checkpoints_until_autosave:
 		_checkpoints_passed_count = 0
 		var ss = get_node_or_null("/root/SaveSystem")
-		if ss and ss.has_method("save_current_state"):
-			ss.save_current_state(true)
+		if ss and ss.has_method("save_slot"):
+			ss.save_slot(ss.AUTOSAVE_SLOT_ID)
 
 func _capture_checkpoint_player_snapshot() -> void:
 	var stats := PlayerStats
