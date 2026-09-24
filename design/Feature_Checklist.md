@@ -230,9 +230,9 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [x] **Fase 2: Rediseño de Checkpoints de Inicio de Nivel** (Implementado con Persistencia Efímera)
 - [x] **Fase 3: Autoguardado por Frecuencia de Checkpoints** (Implementado con `save_auto.json`)
 - [x] **Fase 4: Sistema de Guardado y Carga Persistente (Save/Load)** (Implementado separando Manual vs Auto)
-- [ ] **Fase 5: Sistema de Múltiples Slots (Saves Manuales y Autosaves)**
-  - [ ] Interfaz dedicada en el menú para administrar múltiples archivos de guardado (Slots).
-  - [ ] Metadatos del savegame para mostrar en la interfaz (tiempo jugado, ubicación, fecha de guardado).
-- [ ] **Fase 6: Verificación y Test Runner**
-  - [ ] Escena y test runner automatizado para validar el flujo completo de guardado/carga con múltiples slots.
+- [x] **Fase 5: Sistema de Múltiples Slots (Saves Manuales y Autosaves)**
+  - [x] Interfaz dedicada en el menú para administrar múltiples archivos de guardado (Slots).
+  - [x] Metadatos del savegame para mostrar en la interfaz (tiempo jugado, ubicación, fecha de guardado).
+- [x] **Fase 6: Verificación y Test Runner**
+  - [x] Escena y test runner automatizado para validar el flujo completo de guardado/carga con múltiples slots.
 
