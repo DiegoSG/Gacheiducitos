@@ -221,18 +221,32 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
      - Prevención de colisiones de estado en recursos compartidos duplicando instancias dinámicamente (`act.duplicate()`).
      - Desacoplamiento mediante señal `game_won` en `mg_trampolin_player.gd`.
 
+### 🔖 Checkpoint — 24 de Septiembre, 2026: *Persistencia Total, Sistema de Slots (4 Manuales + Autosave) y Gestión en Menú Tab*
+- **Sistemas y Mejoras Implementadas:**
+  1. **Persistencia Manual, Autosave y Efímera:**
+     - `SaveSystem`: Soporte para serialización JSON completa (`world_state`, `narrative`, `inventory`, `player_stats`, `level`).
+     - Desacoplamiento de persistencia efímera en `WorldStateManager` con `clear_ephemeral_states()` al cambiar de nivel.
+  2. **Sistema Visual de Múltiples Slots (`SaveMenuUI` & `SaveSlotUI`):**
+     - Integración simétrica en `InventoryUI` al abrir con tecla `TAB` (Save Menu a la izquierda, Inventario a la derecha).
+     - 4 Slots manuales con acciones independientes de Guardar, Cargar y Borrar.
+     - 1 Slot dedicado para el último Autoguardado (solo Cargar).
+     - Previsualización reactiva de metadatos (Ubicación/Nivel, Fecha/Hora, HP actual/máximo y Monedas de Oro).
+     - Borrado seguro de archivos de guardado en `user://` con actualización en tiempo real a `[Ranura Vacía]`.
+     - Corrección preventiva de árbol pausado (`get_tree().paused = false`) al solicitar carga de partida durante la pausa.
+  3. **Lógica Estricta de Autoguardado Orgánico:**
+     - `CheckpointManager`: Calibración del contador de frecuencia (3 puertas) excluyendo boot inicial, cargas de partida, respawn por muerte y retornos de minijuegos.
+  4. **Batería de Pruebas Automatizadas:**
+     - Escena y runner `test_save_slots_menu_runner.gd` para validación de estructura de slots y estado del botón de autosave.
+
 ---
 
-## 📌 Tareas Pendientes: Sistema de Slots y Mejoras de UI de Guardado
-*Especificación detallada documentada en: [`design/Sistema_Checkpoints_y_Guardado.md`](design/Sistema_Checkpoints_y_Guardado.md)*
-
-- [x] **Fase 1: Preparación de Snapshots en Subsistemas** (Implementado)
-- [x] **Fase 2: Rediseño de Checkpoints de Inicio de Nivel** (Implementado con Persistencia Efímera)
-- [x] **Fase 3: Autoguardado por Frecuencia de Checkpoints** (Implementado con `save_auto.json`)
-- [x] **Fase 4: Sistema de Guardado y Carga Persistente (Save/Load)** (Implementado separando Manual vs Auto)
-- [x] **Fase 5: Sistema de Múltiples Slots (Saves Manuales y Autosaves)**
-  - [x] Interfaz dedicada en el menú para administrar múltiples archivos de guardado (Slots).
-  - [x] Metadatos del savegame para mostrar en la interfaz (tiempo jugado, ubicación, fecha de guardado).
-- [x] **Fase 6: Verificación y Test Runner**
-  - [x] Escena y test runner automatizado para validar el flujo completo de guardado/carga con múltiples slots.
+## 📌 Tareas Pendientes: UI/HUD y Vertical Slice
+- [ ] **Diseño y Posicionamiento Definitivo del HUD:**
+  - [ ] Asignar lugares definitivos a todos los elementos del HUD (esquinas, slots, área dedicada del inventario y barra de accesos).
+  - [ ] Menú / Barra de acceso rápido (Hotbar).
+- [ ] **Minijuegos y Overworld:**
+  - [ ] Temas visuales para Trampolín, Smasher y Catcher.
+  - [ ] Editor manual de niveles y enemigos con sigilo en Excavación.
+  - [ ] Animación de salida de portal.
+  - [ ] Construcción de los 2 niveles interconectados para Vertical Slice.
 
