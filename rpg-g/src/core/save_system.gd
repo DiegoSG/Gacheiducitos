@@ -7,6 +7,7 @@ const MAX_MANUAL_SLOTS: int = 4
 
 signal game_saved(slot_id: int)
 signal game_loaded(slot_id: int)
+signal game_deleted(slot_id: int)
 
 func get_slot_path(slot_id: int) -> String:
 	if slot_id == AUTOSAVE_SLOT_ID:
@@ -156,3 +157,13 @@ func save_current_state(is_autosave: bool = false) -> void:
 
 func load_saved_state(is_autosave: bool = false) -> void:
 	load_slot(AUTOSAVE_SLOT_ID if is_autosave else 1)
+
+func delete_slot(slot_id: int) -> void:
+	var file_path: String = get_slot_path(slot_id)
+	if FileAccess.file_exists(file_path):
+		var err = DirAccess.remove_absolute(file_path)
+		if err == OK:
+			game_deleted.emit(slot_id)
+			print("[SaveSystem] Partida borrada exitosamente: ", file_path)
+		else:
+			push_error("[SaveSystem] Error al borrar el archivo: ", file_path)

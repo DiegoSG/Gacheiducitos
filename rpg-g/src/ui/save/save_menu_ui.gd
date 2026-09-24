@@ -11,6 +11,8 @@ func _ready() -> void:
 			ss.game_saved.connect(_on_game_saved)
 		if not ss.game_loaded.is_connected(_on_game_loaded):
 			ss.game_loaded.connect(_on_game_loaded)
+		if ss.has_signal("game_deleted") and not ss.game_deleted.is_connected(_on_game_deleted):
+			ss.game_deleted.connect(_on_game_deleted)
 	
 	_build_slots()
 	refresh()
@@ -28,6 +30,7 @@ func _build_slots() -> void:
 	autosave_slot.setup(ss.AUTOSAVE_SLOT_ID, true)
 	autosave_slot.save_requested.connect(_on_slot_save_requested)
 	autosave_slot.load_requested.connect(_on_slot_load_requested)
+	autosave_slot.delete_requested.connect(_on_slot_delete_requested)
 	
 	var separator = HSeparator.new()
 	slots_container.add_child(separator)
@@ -40,6 +43,7 @@ func _build_slots() -> void:
 		slot.setup(i, false)
 		slot.save_requested.connect(_on_slot_save_requested)
 		slot.load_requested.connect(_on_slot_load_requested)
+		slot.delete_requested.connect(_on_slot_delete_requested)
 
 func refresh() -> void:
 	if not is_instance_valid(self) or not is_inside_tree():
@@ -65,8 +69,16 @@ func _on_slot_load_requested(slot_id: int) -> void:
 	if ss:
 		ss.load_slot(slot_id)
 
+func _on_slot_delete_requested(slot_id: int) -> void:
+	var ss = get_node_or_null("/root/SaveSystem")
+	if ss and ss.has_method("delete_slot"):
+		ss.delete_slot(slot_id)
+
 func _on_game_saved(slot_id: int) -> void:
 	refresh()
 	
 func _on_game_loaded(slot_id: int) -> void:
+	refresh()
+
+func _on_game_deleted(slot_id: int) -> void:
 	refresh()

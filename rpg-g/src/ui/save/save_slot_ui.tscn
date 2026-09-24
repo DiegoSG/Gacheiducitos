@@ -48,3 +48,8 @@ text = "Guardar"
 [node name="LoadBtn" type="Button" parent="MarginContainer/HBoxContainer/ActionsContainer"]
 layout_mode = 2
 text = "Cargar"
+
+[node name="DeleteBtn" type="Button" parent="MarginContainer/HBoxContainer/ActionsContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+text = "Borrar"
