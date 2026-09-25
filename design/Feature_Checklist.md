@@ -238,6 +238,19 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
   4. **Batería de Pruebas Automatizadas:**
      - Escena y runner `test_save_slots_menu_runner.gd` para validación de estructura de slots y estado del botón de autosave.
 
+### 🔖 Checkpoint — 25 de Septiembre, 2026: *Autoguardado Orgánico Directo y Excepciones por Nivel (`LevelExceptionConfig`)*
+- **Sistemas y Mejoras Implementadas:**
+  1. **Componente Modular de Excepción de Nivel (`LevelExceptionConfig`):**
+     - Añadido componente para niveles con flags de configuración: `disable_autosave`, `respawn_level_path` y `respawn_spawn_id`.
+     - Especialmente diseñado para salas de Jefes (Bosses) y zonas donde no se deba sobrescribir el autoguardado en disco ni reaparecer dentro de la arena.
+  2. **Refactor de Autoguardado en `CheckpointManager`:**
+     - Eliminación del umbral/contador (`checkpoints_until_autosave` y `_checkpoints_passed_count`).
+     - Autoguardado automático en cada cambio orgánico de nivel salvo que exista excepción activa (`disable_autosave = true`).
+     - Respawn dinámico con `spawn_id` hacia el nivel configurado cuando el jugador muere dentro de una zona de excepción.
+  3. **Higiene y Limpieza de Código:**
+     - Corrección de advertencia `UNUSED_PARAMETER` para `_slot_id` en `save_menu_ui.gd`.
+     - Batería de pruebas automatizadas: `test_level_exception.tscn` / `test_level_exception.gd` (10/10 tests pasados).
+
 ---
 
 ## 📌 Tareas Pendientes: UI/HUD y Vertical Slice

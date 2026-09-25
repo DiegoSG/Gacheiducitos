@@ -74,11 +74,11 @@ func _on_slot_delete_requested(slot_id: int) -> void:
 	if ss and ss.has_method("delete_slot"):
 		ss.delete_slot(slot_id)
 
-func _on_game_saved(slot_id: int) -> void:
+func _on_game_saved(_slot_id: int) -> void:
 	refresh()
 	
-func _on_game_loaded(slot_id: int) -> void:
+func _on_game_loaded(_slot_id: int) -> void:
 	refresh()
 
-func _on_game_deleted(slot_id: int) -> void:
+func _on_game_deleted(_slot_id: int) -> void:
 	refresh()

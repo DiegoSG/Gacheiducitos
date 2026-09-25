@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://c36bmb6bwvii2"]
 
+[ext_resource type="Script" uid="uid://jqce8qh5dwj3" path="res://src/overworld/components/level_exception_config.gd" id="1_gctn1"]
 [ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="1_wkgao"]
 [ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="2_rtahy"]
 [ext_resource type="PackedScene" uid="uid://crllyay0snx0b" path="res://src/overworld/enemies/generic_enemy.tscn" id="3_rj3qk"]
@@ -64,9 +65,16 @@ persistence_id = "Chestito"
 [node name="LevelPortal" parent="Portals" unique_id=1271243254 instance=ExtResource("3_rtahy")]
 position = Vector2(949, 58)
 required_key_id = "1"
+persistence_id = "ephemeral_Portals/LevelPortal"
 target_level_path = "uid://dja7x3717s0pd"
 exit_id = "1"
 arrival_id = "1"
 
 [node name="Player" parent="." unique_id=1441524907 instance=ExtResource("3_tt3lc")]
 position = Vector2(122, 130)
+
+[node name="LevelExceptionConfig" type="Node" parent="." unique_id=1530923524]
+script = ExtResource("1_gctn1")
+respawn_level_path = "uid://peos64ed3b6n"
+respawn_spawn_id = "1"
+metadata/_custom_type_script = "uid://jqce8qh5dwj3"

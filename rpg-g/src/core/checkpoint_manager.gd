@@ -3,13 +3,11 @@ extends Node
 signal player_respawned
 
 var active_checkpoint_scene_path: String = ""
+var active_checkpoint_spawn_id: String = ""
 var active_checkpoint_player_snapshot: Dictionary = {}
 var level_entry_world_state_snapshot: Dictionary = {}
 var level_entry_narrative_snapshot: Dictionary = {}
 var _is_player_dead: bool = false
-
-@export var checkpoints_until_autosave: int = 3
-var _checkpoints_passed_count: int = 0
 
 func register_level_entry(scene_path: String, scene_node: Node, is_organic: bool = true) -> void:
 	if not is_instance_valid(scene_node):
@@ -31,23 +29,39 @@ func register_level_entry(scene_path: String, scene_node: Node, is_organic: bool
 	if nm:
 		level_entry_narrative_snapshot = nm.create_snapshot()
 	
-	# Cada nivel del overworld es un checkpoint donde reapareceremos al morir
-	active_checkpoint_scene_path = scene_path
-	_capture_checkpoint_player_snapshot()
-	print("[CheckpointManager] Checkpoint activo actualizado a: ", active_checkpoint_scene_path)
+	# Buscar configuración de excepción en la escena
+	var exception_config: LevelExceptionConfig = null
+	for child in scene_node.get_children():
+		if child is LevelExceptionConfig:
+			exception_config = child
+			break
+	if not exception_config:
+		for child in scene_node.find_children("*", "", true, false):
+			if child is LevelExceptionConfig:
+				exception_config = child
+				break
+
+	# Actualizar ruta de respawn y spawn_id según si hay excepción o nivel estándar
+	if exception_config:
+		active_checkpoint_scene_path = exception_config.respawn_level_path
+		active_checkpoint_spawn_id = exception_config.respawn_spawn_id
+	else:
+		active_checkpoint_scene_path = scene_path
+		active_checkpoint_spawn_id = ""
 	
-	if not is_organic:
-		# Si cargamos partida o abrimos el juego, reiniciamos el contador de autoguardado
-		_checkpoints_passed_count = 0
-	elif not is_same_scene:
-		# Solo sumar al contador si es una transición orgánica (cruzar puerta) hacia un nivel distinto
-		_checkpoints_passed_count += 1
-		print("[CheckpointManager] Progreso hacia Autosave: ", _checkpoints_passed_count, " / ", checkpoints_until_autosave)
-		if _checkpoints_passed_count >= checkpoints_until_autosave:
-			_checkpoints_passed_count = 0
-			var ss = get_node_or_null("/root/SaveSystem")
-			if ss and ss.has_method("save_slot"):
-				ss.save_slot(ss.AUTOSAVE_SLOT_ID)
+	_capture_checkpoint_player_snapshot()
+	print("[CheckpointManager] Checkpoint activo actualizado a: ", active_checkpoint_scene_path, " (Spawn ID: '", active_checkpoint_spawn_id, "')")
+	
+	# Si no hay excepción (o disable_autosave es false) y es transición orgánica (not is_same_scene), ejecuta autoguardado
+	var should_autosave: bool = is_organic and not is_same_scene
+	if exception_config and exception_config.disable_autosave:
+		should_autosave = false
+		
+	if should_autosave:
+		var ss = get_node_or_null("/root/SaveSystem")
+		if ss and ss.has_method("save_slot"):
+			print("[CheckpointManager] Transición orgánica detectada. Autoguardando en slot: ", ss.AUTOSAVE_SLOT_ID)
+			ss.save_slot(ss.AUTOSAVE_SLOT_ID)
 
 func _capture_checkpoint_player_snapshot() -> void:
 	var stats := PlayerStats
@@ -109,7 +123,10 @@ func respawn_player() -> void:
 		exact_pos = Vector2(p_dict["x"], p_dict["y"])
 		
 	if gm:
-		await gm.change_level(target_scene, "", exact_pos, true, true)
+		if not active_checkpoint_spawn_id.is_empty():
+			await gm.change_level(target_scene, active_checkpoint_spawn_id, exact_pos, true, true)
+		else:
+			await gm.change_level(target_scene, "", exact_pos, true, true)
 	
 	_is_player_dead = false
 	player_respawned.emit()

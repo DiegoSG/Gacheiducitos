@@ -46,10 +46,16 @@ Tanto el snapshot de inicio de nivel como el guardado manual/automático deben c
      - `NarrativeManager` (Flags narrativas y estado de misiones).
      - `WorldStateManager` (Estado de interactuables del nivel).
      - Posición de aparición (`spawn_id` o coordenadas iniciales).
-2. Si el nivel posee un nodo `CheckpointLevel` o es el punto de inicio inicial:
-   - Se promueve este snapshot a **Punto de Control Activo** (`active_checkpoint`).
-   - Se incrementa el contador de checkpoints recorridos.
-   - **Regla de Autoguardado:** Si el contador alcanza el umbral configurado ($N$ checkpoints, ej. cada 3 checkpoints), se dispara un guardado automático a disco (`auto_save()`).
+2. **Configuración de Excepción (`LevelExceptionConfig`):**
+   - El nivel puede incluir un nodo componente `LevelExceptionConfig`.
+   - Permite definir:
+     - `disable_autosave`: omite el guardado automático al cruzar a este nivel (ideal para salas de Bosses).
+     - `respawn_level_path`: nivel al que se redirige al jugador si muere aquí.
+     - `respawn_spawn_id`: identificador de `ArrivalSpawnPoint` donde reaparece el jugador tras morir.
+3. **Punto de Control Activo y Autoguardado:**
+   - Si no hay excepción, se promueve el nivel actual como checkpoint activo con reaparición por posición de entrada.
+   - Si hay excepción, se redirige el checkpoint activo a `respawn_level_path` y `respawn_spawn_id`.
+   - **Regla de Autoguardado:** En cada transición orgánica entre niveles distintos (`is_organic and not is_same_scene`), se dispara un guardado automático a disco (`SaveSystem.save_slot(AUTOSAVE_SLOT_ID)`), salvo que el nivel contenga `LevelExceptionConfig` con `disable_autosave = true`.
 
 ### 3.2 Secuencia de Muerte y Respawn (`respawn_player`)
 1. El jugador pierde toda su salud (`PlayerStats.health == 0`).
