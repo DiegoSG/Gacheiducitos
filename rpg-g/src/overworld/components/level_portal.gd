@@ -44,8 +44,6 @@ enum Mode {
 ## Si consume la llave del inventario al abrirse
 @export var consume_key: bool = false
 
-## Mensaje emergente o texto de diálogo cuando está bloqueada
-@export var locked_message: String = "Está cerrada con llave."
 
 ## Recurso de diálogo opcional para el bloqueo
 @export var locked_dialogue_resource: Resource
@@ -190,12 +188,12 @@ func _on_body_exited(body: Node2D) -> void:
 
 func _attempt_traverse() -> void:
 	if not is_active:
-		_show_locked_feedback("La puerta está atrancada y no responde.")
+		_show_locked_feedback()
 		return
 		
 	if is_locked:
 		if key == null or key.id.is_empty() or not Inventory.has_item_amount(key.id, 1):
-			_show_locked_feedback(locked_message)
+			_show_locked_feedback()
 			return
 		
 		if consume_key:
@@ -214,7 +212,7 @@ func _trigger_transition() -> void:
 	opened.emit()
 	GameManager.change_level(target_level_path, exit_id)
 
-func _show_locked_feedback(msg: String) -> void:
+func _show_locked_feedback() -> void:
 	locked.emit()
 	if locked_dialogue_resource:
 		DialogueManager.show_dialogue_balloon(locked_dialogue_resource, locked_dialogue_title)

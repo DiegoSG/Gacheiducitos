@@ -65,7 +65,7 @@ Para conectar tu nivel con otro mapa o habitación:
 3. **¿Quieres que la puerta esté cerrada con llave?**
    * En **`Key`**, arrastra el recurso `ItemData` de la llave (ej. `res://data/items/rusty_key.tres`). Asignarla marca la puerta como bloqueada.
    * Marca **`Consume Key`** si la llave debe desaparecer del inventario al usarse.
-   * (Opcional) Cambia **`Locked Message`** a tu gusto.
+   * (Opcional) Asigna **`Locked Dialogue Resource`** / **`Locked Dialogue Title`** para mostrar un diálogo al intentar abrirla cerrada.
 
 ### B. Cofres con Recompensas (`Chest`)
 1. Instancia `res://src/overworld/interactables/chest.tscn`.
