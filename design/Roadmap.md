@@ -21,9 +21,8 @@
 - [x] Variables unificadas (`GameVariables`, condiciones, `VariableWatcher`) integradas con DialogueApp
 - [x] Estados alterados (`StatusEffectData`) y efectos de ítems combinables
 - [x] Texto de puerta cerrada y pausa del juego durante diálogos
-- [ ] Sistema de armas: cambio y mejora de armas
-- [ ] Escudo
-- [ ] Remapeo estándar de controles y soporte completo de joystick
+- [ ] Equipamiento de 3 slots (arma cuerpo a cuerpo, escudo, arma arrojadiza) asignable desde el inventario — `design/Sistema_Armas_y_Escudo.md`
+- [ ] Mapa de controles estándar y soporte de joystick — `design/Controles_y_Input.md`
 - [ ] Menú principal y menú de pausa
 - [ ] Flujo de Game Over
 - [ ] Plantilla de nivel (`template_level.tscn`) y 2 niveles interconectados del Vertical Slice
@@ -42,6 +41,9 @@
 
 ## Backlog y Mejoras (TODO)
 - [ ] **Controles de Minijuegos en Móviles:** Pruebas en Android para controles táctiles en minijuegos.
+- [ ] **Cambio rápido de armas** (sin abrir el inventario; acciones `weapon_prev`/`weapon_next` reservadas).
+- [ ] **Selección rápida de ítems (hotbar).**
+- [ ] **Menú de remapeo de controles para el jugador.**
 - [ ] **Sistema de energía:** diseñado en `Sistema_Checkpoints_y_Guardado.md`, no implementado (la Poción Azul lo menciona).
 - [ ] **Registro de misiones visible:** `QuestAction` existe pero no hay UI de misiones.
 - [ ] **Backup `.bak` de partidas guardadas.**
