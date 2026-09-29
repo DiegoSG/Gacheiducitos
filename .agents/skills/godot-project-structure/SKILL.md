@@ -31,36 +31,36 @@ Gacheiducitos/
 │   │   ├── items/                # Instancias de recursos de ítems individuales (.tres)
 │   │   └── resource_types/       # Scripts GDScript que definen Custom Resources (ItemData)
 │   ├── src/                      # Código fuente y escenas del juego
-│   │   ├── core/                 # Infraestructura base y gestores globales (WorldStateManager, GameManager, etc.)
-│   │   │   ├── pipeline/         # Sistema de eventos (GameTrigger, OnEventListener, ActionResource)
+│   │   ├── core/                 # Infraestructura base y autoloads (GameManager, Inventory, SaveSystem...)
+│   │   │   ├── components/       # Componentes reutilizables (Hitbox, Hurtbox, HitEffect, LootDropComponent)
+│   │   │   ├── data/             # Datos generados (narrative_defaults.gd, lo escribe DialogueApp)
+│   │   │   ├── pipeline/         # Sistema de eventos (GameTrigger, ActionRunner, OnEventListener, ActionResource)
 │   │   │   │   └── actions/      # Acciones modulares (MinigameAction, DoorAction, etc.)
-│   │   │   ├── tests/            # Test runners automatizados (scripts headless SceneTree)
-│   │   │   ├── tools/            # Herramientas GDScript internas del motor
-│   │   │   └── utils/            # Scripts utilitarios y validadores
-
+│   │   │   ├── tests/            # Test runners automatizados (scripts SceneTree)
+│   │   │   ├── utils/            # Utilidades (PersistenceIdHelper, verify_items)
+│   │   │   └── collision_layers.gd # Constantes de capas de física (CollisionLayers)
 │   │   ├── minigames/            # Minijuegos desacoplados
-│   │   │   ├── minigame_base.gd  # Clase base para todos los minijuegos
+│   │   │   ├── minigame_base.gd  # Clase base (recompensas, pantalla de resultado, helpers de pool/iconos)
 │   │   │   ├── mg_catcher/       # Minijuego de atrapar objetos
 │   │   │   ├── mg_excavation/    # Minijuego de excavación
 │   │   │   ├── mg_runner/        # Minijuego runner
 │   │   │   ├── mg_smasher/       # Minijuego smasher
 │   │   │   ├── mg_trampolin/     # Minijuego de trampolín
-│   │   │   └── tests/            # Mocks y escenas de prueba de minijuegos
+│   │   │   └── tests/            # Mocks, escenas de prueba y menús de depuración config_mg_*
 │   │   ├── overworld/            # Todo lo perteneciente al mundo abierto
-│   │   │   ├── components/       # Componentes de nivel (cámara, portales, spawns, bordes)
-│   │   │   ├── interactables/    # Props interactivos (cofres, placas, interruptores, minijuegos)
-│   │   │   ├── levels/           # Mapas, habitaciones y plantillas de prototipado
-│   │   │   ├── npcs/             # NPCs del overworld y sus diálogos
-│   │   │   └── player/           # Controlador y escena del jugador
-│   │   ├── shared/               # Componentes y entidades reutilizables entre sistemas
-│   │   │   ├── components/       # Hitbox, Hurtbox, HitEffect, LootDropComponent
-│   │   │   └── entities/         # Enemigos genéricos, NPCs simples, dummies
+│   │   │   ├── components/       # Componentes de nivel (cámara, portales, spawns, bordes, LevelExceptionConfig)
+│   │   │   ├── enemies/          # Enemigos del overworld (GenericEnemy)
+│   │   │   ├── interactables/    # Props interactivos (cofres, placas, interruptores, pickups, minijuegos)
+│   │   │   ├── levels/           # Niveles (level_XX.tscn) y plantillas
+│   │   │   ├── npcs/             # NPCs, dummies y sus diálogos
+│   │   │   └── player/           # Controlador y escena del jugador (incluye el HUD)
 │   │   └── ui/                   # Interfaces de usuario
-│   │       ├── balloon/          # Diálogos y globos de texto
-│   │       ├── hud/              # HUD y barras de estado
+│   │       ├── balloon/          # Globo de diálogo (configurado como balloon_path del Dialogue Manager)
 │   │       ├── inventory/        # Interfaz de inventario
-│   │       └── screen_fader.*    # Sistema de transiciones de pantalla con fade
-│   └── tools/                    # Herramientas externas (scripts bash/python de procesado)
+│   │       ├── loot_feedback/    # HUD (player_hud.tscn) y toasts de botín
+│   │       ├── save/             # Menú y slots de guardado
+│   │       └── screen_fader.*    # Transiciones de pantalla con fade
+│   └── tools/                    # (crear solo cuando haga falta) Herramientas externas bash/python
 │       └── asset_tools/
 ```
 
@@ -102,7 +102,8 @@ Gacheiducitos/
 | Nueva Acción del Pipeline | `rpg-g/src/core/pipeline/actions/` |
 | Nuevo Nivel / Escena de juego | `rpg-g/src/overworld/levels/` |
 | Nuevo Interactuable del Mundo | `rpg-g/src/overworld/interactables/` |
-| Nuevo Componente de Combate | `rpg-g/src/shared/components/` |
+| Nuevo Componente reutilizable / de Combate | `rpg-g/src/core/components/` |
+| Nuevo Enemigo del overworld | `rpg-g/src/overworld/enemies/` |
 | Nueva Pantalla / Menú UI | `rpg-g/src/ui/<nombre>/` |
 | Documento o Mockup de Diseño | `design/` o `design/mockups/` |
 | Test Runner automatizado | `rpg-g/src/core/tests/` |

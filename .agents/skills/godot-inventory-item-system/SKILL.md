@@ -24,7 +24,6 @@ Esta habilidad se activa al registrar nuevos ítems, diseñar tablas de loot, aj
 
 ## 3. Scripts de Utilidad y Verificación
 - Usar `res://src/core/utils/verify_items.gd` para verificar que no existan IDs duplicados o recursos de iconos rotos.
-- Usar `res://src/core/tools/generate_items.gd` para generación por lotes de recursos de ítems si aplica.
 
 ---
 
@@ -38,3 +37,10 @@ Esta habilidad se activa al registrar nuevos ítems, diseñar tablas de loot, aj
 
 ## 6. Persistencia y Generación de IDs Únicos (`PersistenceIdHelper`)
 - **`PersistenceIdHelper` (`res://src/core/utils/persistence_id_helper.gd`):** Utilidad `@tool` con `generate_id(node, prefix) -> String` que genera identificadores deterministas y únicos para objetos persistentes en escena (`DialogueEvent`, `PressurePlate`).
+
+## 7. Oro (fuente única)
+- El oro vive SOLO en `PlayerStats.gold` (contador del HUD). `Inventory.GOLD_ITEM_ID` (= "gold_coins") se enruta ahí: `Inventory.add_item(Inventory.GOLD_ITEM_ID, n)`, `remove_item`, `get_item_count` y `has_item_amount` operan sobre PlayerStats y el oro nunca se guarda en `Inventory.items`.
+- Cualquier recompensa (cofre, pickup, ItemAction, minijuego) se entrega con `Inventory.add_item`; no llamar a `PlayerStats.add_gold` directamente desde gameplay.
+- `Inventory.remove_item` es atómico: devuelve false y no quita nada si no alcanza.
+- Feedback visual: única API `LootFeedbackManager.trigger_toast(item_data, amount)`.
+- `PersistenceIdHelper.runtime_key(node, persistence_id)` da la clave de persistencia en runtime (efímera si el id está vacío).

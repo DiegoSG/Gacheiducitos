@@ -36,3 +36,6 @@ Resumir: runners ejecutados, conteo PASS/FAIL, código de salida y los errores e
 
 ## 5. Nuevos runners
 - Nombre `test_<feature>_runner.gd` en `src/core/tests/`, `extends SceneTree`, contadores `_passed_count`/`_failed_count`, terminar con `quit(0 if _failed_count == 0 else 1)`.
+
+## 6. Chequeo de compilación que SÍ funciona
+Un script `extends SceneTree` que espera 2 `process_frame` y luego hace `ResourceLoader.load(ruta, "", CACHE_MODE_IGNORE)` de cada .gd/.tscn/.tres (comprobando `GDScript.can_instantiate()`) detecta errores de compilación con los autoloads ya activos. Los scripts de prueba no deben nombrar autoloads como identificadores: usar `root.get_node("Inventory")`. Tras crear un `class_name` nuevo, ejecutar antes `--import` para que Godot lo registre.

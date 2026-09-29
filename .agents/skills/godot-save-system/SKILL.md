@@ -19,7 +19,8 @@ Especificación completa: `design/Sistema_Checkpoints_y_Guardado.md`. Leerla ant
 3. Orden de restauración al cargar: `WorldStateManager` → `NarrativeManager` → `Inventory` → `PlayerStats` → `GameManager.change_level(...)`.
 4. Cada subsistema serializa **solo** su propio estado (desacoplamiento); `SaveSystem` solo orquesta.
 5. Añadir un campo nuevo persistente = actualizar `create_snapshot` + `restore_snapshot` del subsistema dueño y tolerar su ausencia en saves antiguos (`dict.get("campo", default)`).
-6. Interactables persistentes usan `persistence_id` único (ver `PersistenceIdHelper`).
+6. Interactables persistentes usan `persistence_id` único; en runtime la clave se obtiene con `PersistenceIdHelper.runtime_key(self, persistence_id)` (vacío = efímero del nivel). Nunca escribir en la propiedad exportada.
+7. El oro se guarda en `player_stats.gold` (no en `inventory`); la metadata del slot lo lee de ahí.
 
 ## 3. Verificación
 - Runners: `test_death_and_respawn_runner.gd`, `test_level_exception.tscn` (ver skill `godot-headless-test`).

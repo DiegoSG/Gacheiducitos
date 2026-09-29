@@ -60,18 +60,17 @@ Para conectar tu nivel con otro mapa o habitación:
      * `PORTAL`: Se activa automáticamente cuando el jugador camina sobre él (ideal para cambios de mapa abiertos).
      * `DOOR`: El jugador debe pararse frente a él y pulsar la tecla de interacción `Espacio` / `E` / Botón A del Joystick.
    * **`Target Level Path`**: Selecciona el archivo `.tscn` del nivel al que viaja (ej. `res://src/overworld/levels/overworld.tscn`).
-   * **`Arrival Id`**: El ID del `ArrivalSpawnPoint` en el nivel destino donde aparecerá el jugador (ej. `"from_forest"`).
-   * **`Exit Id`**: El ID propio de este portal (para vincular retornos).
+   * **`Exit Id`**: El `arrival_id` del punto del nivel destino donde aparecerá el jugador (ej. `"from_forest"`).
+   * **`Arrival Id`**: El ID propio de este portal, para que otros portales puedan llegar a él.
 3. **¿Quieres que la puerta esté cerrada con llave?**
-   * Marca **`Is Locked` = `true`**.
-   * En **`Required Key Id`**, escribe el ID del ítem (ej. `"rusty_key"` o `"boss_key"`).
+   * En **`Key`**, arrastra el recurso `ItemData` de la llave (ej. `res://data/items/rusty_key.tres`). Asignarla marca la puerta como bloqueada.
    * Marca **`Consume Key`** si la llave debe desaparecer del inventario al usarse.
    * (Opcional) Cambia **`Locked Message`** a tu gusto.
 
 ### B. Cofres con Recompensas (`Chest`)
 1. Instancia `res://src/overworld/interactables/chest.tscn`.
 2. En el **Inspector**:
-   * **`Loot Items`**: Añade los recursos `ItemData` que otorgará al abrirse (ej. arrastra `res://src/inventory/items/data/red_potion.tres` o `gold_coins.tres`).
+   * **`Loot Items`**: Añade los recursos `ItemData` que otorgará al abrirse (ej. arrastra `res://data/items/red_potion.tres` o `gold_coins.tres`).
    * **`Is Storage Enabled`**: Déjalo en `false` si es solo un cofre de botín.
 
 ### C. Ítems en el Suelo (`PickupItem`)
@@ -81,7 +80,7 @@ Para conectar tu nivel con otro mapa o habitación:
    * **`Custom Amount`**: Deja `-1` para cantidad por defecto o especifica un número (ej. `5` si son monedas).
 
 ### D. Enemigos con Patrulla y Loot (`GenericEnemy`)
-1. Instancia `res://src/shared/entities/enemies/generic_enemy.tscn`.
+1. Instancia `res://src/overworld/enemies/generic_enemy.tscn`.
 2. Posiciónalo donde deba patrullar.
 3. En el **Inspector**:
    * **`Speed`**: Velocidad de persecución (defecto `70.0`).

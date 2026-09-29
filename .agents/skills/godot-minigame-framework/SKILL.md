@@ -35,3 +35,9 @@ Antes de finalizar un minijuego:
 3. No incluir timers ciegos que fuercen transiciones abruptas ni código duplicado de victoria/derrota (lo gestiona la clase base).
 4. Probar en `test_[minijuego].tscn` y verificar el congelamiento completo y el retorno.
 
+## 4. Notas de implementación (post-refactor)
+- `GameManager.load_minigame(ruta)` (un argumento) pasa por `change_level` (fundido). GameManager es el ÚNICO que conecta `game_finished` a `complete_minigame`, también al ejecutar un minijuego suelto con F6. MinigameBase no se conecta sola.
+- Recompensas: `add_reward(id, n)`; para oro usar `Inventory.GOLD_ITEM_ID`. Al ganar, GameManager las entrega con `Inventory.add_item` (el oro va a PlayerStats).
+- Helpers en MinigameBase: `pick_item_from_pool(pool)`, `MinigameBase.get_item_icon(id)`, `MinigameBase.get_coin_texture()`. No duplicar esa lógica.
+- Los menús de depuración `config_mg_*` viven en `src/minigames/tests/`; el camino oficial para lanzar minijuegos es `MinigameAction`.
+- Trampolín: en modo ESPECIAL (`win_condition` 1) `target_value` es la altura de la plataforma especial.

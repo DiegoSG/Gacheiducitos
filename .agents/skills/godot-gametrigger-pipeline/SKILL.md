@@ -50,7 +50,7 @@ Ubicadas en `res://src/core/pipeline/actions/`:
 - `GoldAction`: Añade o sustrae monedas de oro con cobro atómico y eventos de éxito/fallo (`on_success_event`, `on_fail_event`).
 - `HealthAction`: Modifica la salud del jugador en `PlayerStats` (curación completa `full_heal`, curación `+X`, o daño `-X`).
 - `ItemAction`: Añade o sustrae ítems del inventario mediante recurso `ItemData` con sustracción atómica y eventos de éxito/fallo.
-- `LevelAction`: Cambia de escena/nivel mediante `GameManager`.
+- `LevelAction`: Cambia de nivel con `GameManager.change_level(level_scene_path, arrival_id)` (fundido + checkpoint). Debe ser la última acción.
 - `MinigameAction`: Carga y transiciona a un minijuego.
 - `QuestAction`: Actualiza el progreso de misiones.
 - `RunTriggerAction`: Ejecuta otro `GameTrigger` de forma remota.
@@ -87,3 +87,9 @@ Los interactables del mapa (`PressurePlate`, `Chest`, `SwitchInteractable`, `Dia
 - `_restore_state()` en `_ready()` cargando desde `WorldStateManager.load_state(persistence_id)`.
 - `_persist_state()` al cambiar de estado guardando en `WorldStateManager.save_state(persistence_id, data)`.
 
+## 9. Ejecución y semántica (post-refactor)
+- Toda lista de acciones se ejecuta con `ActionRunner.run(actions, context)` (`res://src/core/pipeline/action_runner.gd`), que respeta `wait_to_finish`. GameTrigger, DialogueEvent, PressurePlate y SwitchInteractable lo usan; no escribir bucles propios.
+- Condición (`require_condition`): se evalúa en todos los modos. Verdadera o sin condición -> `actions_if_true`; falsa -> `actions_if_false`.
+- `ON_ENTER_AND_EXIT`: al entrar `actions_if_true`, al salir `actions_if_false` (nunca repite las de entrada). Si la condición es falsa al entrar no se ejecuta nada. `one_shot` = un ciclo completo.
+- Helpers en `ActionResource`: `ActionResource.parse_value(texto)` (true/false/verdadero/falso/int/float) y `emit_game_event(nombre)`.
+- Autoloads se usan por nombre directo; no comprobar si existen.
