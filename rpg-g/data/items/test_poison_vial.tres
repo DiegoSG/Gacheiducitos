@@ -1,10 +1,10 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cqf5apsv0v33"]
 
-[ext_resource type="Script" path="res://data/resource_types/item_effects/item_effect.gd" id="1_25qlm"]
-[ext_resource type="Script" path="res://data/resource_types/item_effects/apply_status_effect.gd" id="2_cc7o6"]
-[ext_resource type="Resource" path="res://data/status_effects/poison.tres" id="3_dx8ua"]
-[ext_resource type="Texture2D" path="res://assets/items/icons/blue_potion.png" id="4_x4c3p"]
-[ext_resource type="Script" path="res://data/resource_types/item_data.gd" id="5_wgui5"]
+[ext_resource type="Script" uid="uid://des3f5n5boxxj" path="res://data/resource_types/item_effects/item_effect.gd" id="1_25qlm"]
+[ext_resource type="Script" uid="uid://ccn1xnjwt8nu5" path="res://data/resource_types/item_effects/apply_status_effect.gd" id="2_cc7o6"]
+[ext_resource type="Resource" uid="uid://23au38k65y61" path="res://data/status_effects/poison.tres" id="3_dx8ua"]
+[ext_resource type="Texture2D" uid="uid://c6nvax1vfp0d1" path="res://assets/items/icons/blue_potion.png" id="4_x4c3p"]
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="5_wgui5"]
 
 [sub_resource type="Resource" id="Resource_80aa8"]
 script = ExtResource("2_cc7o6")

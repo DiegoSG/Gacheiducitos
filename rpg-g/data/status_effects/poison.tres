@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="StatusEffectData" format=3]
+[gd_resource type="Resource" script_class="StatusEffectData" format=3 uid="uid://23au38k65y61"]
 
 [ext_resource type="Script" path="res://data/resource_types/status_effect_data.gd" id="1_8xk3d"]
 
