@@ -273,7 +273,7 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
   - [ ] Construcción de los 2 niveles interconectados para Vertical Slice.
   - [ ] Plantilla de nivel nueva.
 - [ ] **Combate y Controles (siguiente):**
-  - [ ] Equipamiento de 3 slots: arma, escudo y arrojadiza, asignados desde el inventario (`Sistema_Armas_y_Escudo.md`). Las armas no se mejoran, solo se cambian.
+  - [ ] Equipamiento: 2 slots de arma (una activa; atacar con arrojadiza = lanzar) + escudo, asignados desde el inventario (`Sistema_Armas_y_Escudo.md`). Las armas no se mejoran, solo se cambian.
   - [ ] Mapa de controles estándar y joystick (`Controles_y_Input.md`).
   - [ ] Más adelante: cambio rápido de armas, hotbar de ítems, menú de remapeo.
 - [ ] **Flujo de juego (después):** menú principal, menú de pausa, Game Over, audio básico.

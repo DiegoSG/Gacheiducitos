@@ -26,15 +26,13 @@
 | `interact` | E | A | ✕ |
 | `attack` | J / Clic izquierdo | X | ▢ |
 | `shield` (mantener) | K / Clic derecho | LT | L2 |
-| `weapon_prev` / `weapon_next` | Q / R · Rueda del ratón | LB / RB | L1 / R1 |
+| `weapon_prev` / `weapon_next` (alternar arma activa) | Q / R · Rueda del ratón | LB / RB | L1 / R1 |
 | `inventory` | I / Tab | Y | △ |
 | `pause` | Esc | Start | Options |
 | `jump` (minijuegos) | Espacio | A | ✕ |
-| `throw` (arrojadiza) — **a confirmar** | L / Clic central | RT | R2 |
 
 Notas:
-- `weapon_prev` / `weapon_next` quedan reservadas para el futuro "cambio rápido de armas".
-- `throw` es necesaria para el slot de arma arrojadiza (ver `Sistema_Armas_y_Escudo.md`); la asignación propuesta está pendiente de confirmación.
+- `weapon_prev` / `weapon_next` alternan entre los 2 slots de arma. `attack` usa el arma activa (si es arrojadiza, lanza): no hay acción `throw` (ver `Sistema_Armas_y_Escudo.md`).
 - Zona muerta del stick configurada (0.2).
 
 ## 4. Alcance de la Implementación
