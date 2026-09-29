@@ -7,14 +7,28 @@
 - [x] Sistema de Enemigos en Overworld (Patrullas, detección, persecución y LootDropComponent)
 - [x] Sistema de Inventario Base y UI conectada
 
-## Fase 2: Minijuegos y Bucle Principal (Milestone Actual)
+## Fase 2: Minijuegos y Bucle Principal (Completado)
 - [x] Base de Minijuegos existentes (Excavation, Catcher, Runner, Smasher, Trampolin)
-- [ ] Estandarización y ciclo de vida común (`MinigameBase` / `IMinigame`)
-- [ ] Sistema de victoria / derrota uniforme con UI desacoplada
-- [ ] Recolección de items/drops en minijuegos transferibles a `Inventory`
-- [ ] Triggers y señales de inicio desde el Overworld (`MinigameAction` / `GameTrigger`)
-- [ ] Retorno parametrizado al Overworld con nivel y spawn específico (reutilizando IDs de llegada de puertas/portales)
-- [ ] Herramientas de configuración y balance de minijuegos
+- [x] Estandarización y ciclo de vida común (`MinigameBase` / `IMinigame`)
+- [x] Sistema de victoria / derrota uniforme con UI desacoplada
+- [x] Recolección de items/drops en minijuegos transferibles a `Inventory`
+- [x] Triggers y señales de inicio desde el Overworld (`MinigameAction` / `GameTrigger`)
+- [x] Retorno parametrizado al Overworld con nivel y spawn específico (reutilizando IDs de llegada de puertas/portales)
+- [x] Herramientas de configuración y balance de minijuegos
+
+## Fase 2.5: Primer Jugable de Test (Milestone Actual)
+- [x] Limpieza integral del código (bugs, sistemas duplicados, tipado, código muerto) — 29 Sep 2026
+- [x] Variables unificadas (`GameVariables`, condiciones, `VariableWatcher`) integradas con DialogueApp
+- [x] Estados alterados (`StatusEffectData`) y efectos de ítems combinables
+- [x] Texto de puerta cerrada y pausa del juego durante diálogos
+- [ ] Sistema de armas: cambio y mejora de armas
+- [ ] Escudo
+- [ ] Remapeo estándar de controles y soporte completo de joystick
+- [ ] Menú principal y menú de pausa
+- [ ] Flujo de Game Over
+- [ ] Plantilla de nivel (`template_level.tscn`) y 2 niveles interconectados del Vertical Slice
+- [ ] Audio básico (música y efectos)
+- [ ] Animación de salida de portal
 
 ## Fase 3: Expansión de Contenido
 - [ ] Añadir NPCs y Diálogo avanzado (`DialogueManager`)
@@ -28,5 +42,9 @@
 
 ## Backlog y Mejoras (TODO)
 - [ ] **Controles de Minijuegos en Móviles:** Pruebas en Android para controles táctiles en minijuegos.
-- [ ] **Animación de salida de portal:** Desplazamiento desde el portal hacia el punto de spawn.
+- [ ] **Sistema de energía:** diseñado en `Sistema_Checkpoints_y_Guardado.md`, no implementado (la Poción Azul lo menciona).
+- [ ] **Registro de misiones visible:** `QuestAction` existe pero no hay UI de misiones.
+- [ ] **Backup `.bak` de partidas guardadas.**
+- [ ] **Scripts de test headless:** los runners de `src/core/tests/` no corren con `--script` (decisión: QA manual).
+- [ ] **DialogueApp:** nodos que mezclan texto y `do` pierden la mutación; switch con operadores distintos de `==`.
 

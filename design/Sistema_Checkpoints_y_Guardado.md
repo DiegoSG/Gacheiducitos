@@ -130,37 +130,16 @@ Tanto el snapshot de inicio de nivel como el guardado manual/automático deben c
 
 ---
 
-## 5. Matriz de Tareas Pendientes (Checklist de Implementación)
+## 5. Estado de Implementación (actualizado 29 Sep 2026)
 
-### Fase A: Preparación de Métodos Snapshot en Subsistemas
-- [ ] **PlayerStats:**
-  - [ ] Añadir variables de energía: `energy: int = 100`, `max_energy: int = 100`.
-  - [ ] Señal `energy_changed(current: int, max_val: int)`.
-  - [ ] Extender `create_snapshot()` y `restore_snapshot()` para incluir `energy` y `max_energy`.
-- [ ] **GameVariables:**
-  - [ ] Implementar `create_snapshot() -> Dictionary` (retorna copia de `flags` y `quests`).
-  - [ ] Implementar `restore_snapshot(snapshot: Dictionary) -> void`.
+### Implementado
+- [x] Snapshots por subsistema: `PlayerStats` (vida, oro, estados alterados activos), `Inventory`, `GameVariables` (flags y quests), `WorldStateManager`.
+- [x] `CheckpointManager`: snapshot de entrada de nivel (mundo + narrativa), filtro de minijuegos (`scene_node is MinigameBase`), respawn con restauración.
+- [x] Autoguardado en cada transición orgánica entre niveles distintos (se descartó el contador de N checkpoints), con excepción por nivel vía `LevelExceptionConfig`.
+- [x] `SaveSystem` con slots: `save_slot` / `load_slot` / `delete_slot` / metadata (el oro se lee de `player_stats.gold`).
+- [x] UI de slots en el inventario (4 manuales + autoguardado).
+- [x] Pruebas: `test_level_exception.tscn`, `test_death_and_respawn_runner.gd`.
 
-### Fase B: Extensión de CheckpointManager
-- [ ] **Snapshot de Inicio de Nivel Extendido:**
-  - [ ] Incluir `GameVariables.create_snapshot()` en `level_entry_world_state_snapshot`.
-  - [ ] Filtrar escenas de minijuegos para garantizar que `register_level_entry` solo procese Overworld.
-- [ ] **Contador y Frecuencia de Autoguardado:**
-  - [ ] Exportar / configurar `checkpoints_until_autosave: int = 3`.
-  - [ ] Variable interna `_checkpoints_passed_count: int = 0`.
-  - [ ] Disparar guardado automático al alcanzar el umbral.
-
-### Fase C: Módulo de Guardado Persistente (`SaveSystem` / Guardado a Disco)
-- [ ] **Serialización y Validación de Disco:**
-  - [ ] Implementar `save_to_file(slot_path: String, save_type: String) -> bool`.
-  - [ ] Implementar `load_from_file(slot_path: String) -> bool`.
-  - [ ] Manejo de archivos de respaldo (`.bak`) ante cierres inesperados.
-- [ ] **API de Guardado Manual:**
-  - [ ] Función pública `save_current_state(is_autosave: bool = false) -> void`.
-  - [ ] Función pública `load_saved_state() -> void`.
-
-### Fase D: Pruebas y Validación
-- [ ] Crear runner de pruebas `test_checkpoint_and_save_runner.gd`:
-  - [ ] Validar que un minijuego no sobrescriba el snapshot de checkpoint ni dispare autosave.
-  - [ ] Validar guardado manual y restauración fidedigna de HP, Oro, Energía, Items, Flags y Posición.
-  - [ ] Validar autoguardado tras $N$ checkpoints en el Overworld.
+### Pendiente
+- [ ] Sistema de energía (`energy` / `max_energy` en PlayerStats y en snapshots).
+- [ ] Backup `.bak` ante cierres inesperados.

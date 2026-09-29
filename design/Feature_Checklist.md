@@ -8,8 +8,7 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [x] Colliders dinámicos y visualización en editor de bordes de nivel (Referencia: `world_boundary_manager.gd`)
 - [x] Manager de transiciones entre niveles con Fade, ArrivalSpawnPoints y LevelPortals (Referencia: `game_manager.gd` / `level_portal.gd` / `arrival_spawn_point.gd`)
 - [x] Estandarización de Grilla 60x60 px (`tileset_60x60.png`, `core_tileset.tres`)
-- [x] Plantilla de nivel limpia y autónoma (`template_level.tscn`) con Player y BoundedCamera integrados
-- [x] Plantilla de prototipado de niveles legacy (`prototype_template.tscn`)
+- [ ] Plantilla de nivel (`template_level.tscn` / `prototype_template.tscn` fueron eliminadas; hay que recrear una)
 - [x] Auditoría integral: corrección de fugas de memoria, crashes en corrutinas, tipado estricto y optimización de código
 - [ ] TODO: Animación de salida del portal (el personaje se desplaza desde el portal hacia el punto de llegada / arrival point)
 - [x] Sistema de interacción base (Referencia: `actionable.gd`)
@@ -19,7 +18,7 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [x] Sistema de Interruptores/Palancas (`SwitchInteractable`) y Activadores de Eventos
 - [x] Placas de Presión y Triggers de Entrada/Salida (`PressurePlate` & `GameTrigger.ON_ENTER_AND_EXIT`)
 - [x] Nuevos Recursos de Pipeline: `DoorAction` (bloquear/desbloquear/activar) y `DestroyNodeAction` (eliminar/desvanecer obstáculos)
-- [x] Sistema de Salud Unificado, Muerte, Checkpoints y Respawn (`PlayerStats`, `CheckpointLevel`, `ArrivalSpawnPoint.RespawnPoint` y reversión de persistencia con `WorldStateManager`)
+- [x] Sistema de Salud Unificado, Muerte, Checkpoints y Respawn (`PlayerStats`, `CheckpointManager`, `ArrivalSpawnPoint.RespawnPoint` y reversión de persistencia con `WorldStateManager`)
 
 ---
 
@@ -251,6 +250,16 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
      - Corrección de advertencia `UNUSED_PARAMETER` para `_slot_id` en `save_menu_ui.gd`.
      - Batería de pruebas automatizadas: `test_level_exception.tscn` / `test_level_exception.gd` (10/10 tests pasados).
 
+### 🔖 Checkpoint — 29 de Septiembre, 2026: *Migración a Claude Code, Limpieza Integral y Sistemas de Variables y Estados*
+- **Migración de herramientas:** `CLAUDE.md`, skills compartidas (`.agents/skills`), subagentes `godot-reviewer`/`scene-auditor` y hook de higiene.
+- **Limpieza del código:** oro unificado en `PlayerStats.gold` (`Inventory.GOLD_ITEM_ID`), `ActionRunner` compartido, carga de escenas única, un solo globo de diálogo, persistencia sin ids horneados (`PersistenceIdHelper.runtime_key`), `CollisionLayers`, tipado estático, niveles renombrados a `level_0X.tscn`, código muerto eliminado.
+- **Nuevas funciones:**
+  1. `LevelPortal.locked_text` (texto de puerta cerrada en el globo).
+  2. Pausa compartida (`GameManager.request_pause/release_pause`) usada por diálogos e inventario.
+  3. `GameVariables` (rutas `flag.*`, `quest.*`, `player.*`, `item.*`, `status.*`), `Condition`/`ConditionSet`, `VariableAction`, `VariableWatcher`; DialogueApp gestiona las flags y muestra las variables del sistema.
+  4. `StatusEffectData` (velocidad, fuerza, resistencia, vida máxima, efecto periódico) y efectos de ítems (`consumable` + `effects`); enemigos venenosos configurables.
+- **Pruebas:** `test_level_portal_locked.tscn`, `test_dialogue_pause.tscn`, `test_game_variables.tscn`, `test_status_effects.tscn`.
+
 ---
 
 ## 📌 Tareas Pendientes: UI/HUD y Vertical Slice
@@ -262,4 +271,11 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
   - [ ] Editor manual de niveles y enemigos con sigilo en Excavación.
   - [ ] Animación de salida de portal.
   - [ ] Construcción de los 2 niveles interconectados para Vertical Slice.
+  - [ ] Plantilla de nivel nueva.
+- [ ] **Combate y Controles (siguiente):**
+  - [ ] Sistema de armas: cambio y mejora de armas.
+  - [ ] Escudo.
+  - [ ] Remapeo estándar de controles y soporte completo de joystick.
+- [ ] **Flujo de juego (después):** menú principal, menú de pausa, Game Over, audio básico.
+- [ ] **Contenido del usuario:** efectos del ítem Antídoto; borrar ítems `test_*` cuando no se necesiten.
 
