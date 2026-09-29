@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://ipr8hdi666g"
+path="res://.godot/imported/test_map_check.dialogue-5ce8dc8ab4c7479578e84db90d40010f.tres"
+
+[deps]
+
+source_file="res://src/core/tests/test_map_check.dialogue"
+dest_files=["res://.godot/imported/test_map_check.dialogue-5ce8dc8ab4c7479578e84db90d40010f.tres"]
+
+[params]
+
+defaults=true

@@ -8,8 +8,17 @@
 [ext_resource type="Script" uid="uid://bxdhxu84pm80t" path="res://src/core/variables/condition.gd" id="7_condition"]
 [ext_resource type="Script" uid="uid://bkhbymhr7ilo4" path="res://src/core/variables/condition_set.gd" id="8_condition_set"]
 [ext_resource type="Script" uid="uid://wkxkyrk7tked" path="res://src/core/variables/variable_watcher.gd" id="9_watcher"]
+[ext_resource type="PackedScene" uid="uid://ckyt3sc6keqdu" path="res://src/overworld/interactables/pickup_item.tscn" id="10_6vw8n"]
 [ext_resource type="Script" uid="uid://f73vy602pjfk" path="res://src/core/pipeline/action_resource.gd" id="10_ar"]
+[ext_resource type="Resource" uid="uid://g3aow6onnlpw" path="res://data/items/ancient_map.tres" id="11_6vw8n"]
 [ext_resource type="Script" path="res://src/core/pipeline/actions/variable_action.gd" id="11_var_action"]
+[ext_resource type="Script" path="res://src/core/pipeline/actions/dialogue_action.gd" id="12_dialogue_action"]
+[ext_resource type="Resource" path="res://src/core/tests/test_map_check.dialogue" id="13_map_dialogue"]
+[ext_resource type="Texture2D" path="res://assets/sprites/npc_kawaii_cat.png" id="14_npc_tex"]
+
+[sub_resource type="Resource" id="Resource_aoc1l"]
+script = ExtResource("8_condition_set")
+metadata/_custom_type_script = "uid://bkhbymhr7ilo4"
 
 [sub_resource type="Resource" id="Resource_set_flag"]
 script = ExtResource("11_var_action")
@@ -29,10 +38,28 @@ value = "true"
 script = ExtResource("8_condition_set")
 conditions = Array[ExtResource("7_condition")]([SubResource("Resource_condition")])
 
+[sub_resource type="Resource" id="Resource_map_dialogue"]
+script = ExtResource("12_dialogue_action")
+dialogue_resource = ExtResource("13_map_dialogue")
+dialogue_title = "start"
+
+[sub_resource type="Resource" id="Resource_has_map"]
+script = ExtResource("7_condition")
+var_path = "item.ancient_map"
+operator = 3
+value = "1"
+
+[sub_resource type="Resource" id="Resource_has_map_set"]
+script = ExtResource("8_condition_set")
+conditions = Array[ExtResource("7_condition")]([SubResource("Resource_has_map")])
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_npc"]
+radius = 40.0
+
 [node name="TestGameVariables" type="Node2D" unique_id=494635230]
 
 [node name="Player" parent="." unique_id=193638612 instance=ExtResource("1_player")]
-position = Vector2(300, 540)
+position = Vector2(311, 532)
 
 [node name="Switch" parent="." unique_id=1263000966 instance=ExtResource("2_switch")]
 position = Vector2(500, 540)
@@ -51,11 +78,29 @@ arrival_id = "test_game_variables"
 collision_layer = 0
 collision_mask = 0
 script = ExtResource("4_trigger")
+conditions = SubResource("Resource_aoc1l")
 actions_if_true = Array[ExtResource("10_ar")]([SubResource("Resource_unlock")])
 
 [node name="VariableWatcher" type="Node" parent="LockedPortal/UnlockTrigger" unique_id=1216693896]
 script = ExtResource("9_watcher")
 conditions = SubResource("Resource_condition_set")
+
+[node name="MapCheckNPC" type="Area2D" parent="." unique_id=771200431]
+position = Vector2(300, 780)
+collision_layer = 16
+collision_mask = 2
+script = ExtResource("4_trigger")
+trigger_mode = 3
+one_shot = false
+conditions = SubResource("Resource_has_map_set")
+actions_if_true = Array[ExtResource("10_ar")]([SubResource("Resource_map_dialogue")])
+
+[node name="Sprite2D" type="Sprite2D" parent="MapCheckNPC" unique_id=771200432]
+scale = Vector2(0.15, 0.15)
+texture = ExtResource("14_npc_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MapCheckNPC" unique_id=771200433]
+shape = SubResource("CircleShape2D_npc")
 
 [node name="Instructions" type="Label" parent="." unique_id=1169091327]
 offset_left = 40.0
@@ -64,4 +109,9 @@ offset_right = 1200.0
 offset_bottom = 120.0
 text = "Camina al portal de la derecha: esta cerrado (mensaje de puerta cerrada).
 Ve al interruptor (izquierda) y pulsa E/Espacio: flag.test_switch = true, el VariableWatcher desbloquea el portal.
-Vuelve al portal: ahora debe dejarte pasar (lleva a level_01)."
+Vuelve al portal: ahora debe dejarte pasar (lleva a level_01).
+NPC gato (abajo izquierda): habla con E/Espacio. Sin el mapa antiguo no pasa nada; recoge el mapa antiguo y vuelve a hablar: muestra un dialogo."
+
+[node name="PickupItem" parent="." unique_id=171384609 instance=ExtResource("10_6vw8n")]
+position = Vector2(552, 678)
+item_data = ExtResource("11_6vw8n")
