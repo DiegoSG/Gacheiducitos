@@ -17,7 +17,8 @@ func _load_items_from_dir() -> void:
 		push_warning("[ItemDatabase] No existe el directorio de ítems: %s" % ITEMS_DIRECTORY)
 		return
 
-	var files: PackedStringArray = DirAccess.get_files_at(ITEMS_DIRECTORY)
+	# ResourceLoader.list_directory resuelve los .remap de un juego exportado (DirAccess no)
+	var files: PackedStringArray = ResourceLoader.list_directory(ITEMS_DIRECTORY)
 	for file_name: String in files:
 		if file_name.ends_with(".tres"):
 			var item: Resource = load(ITEMS_DIRECTORY + file_name)

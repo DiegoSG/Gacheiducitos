@@ -14,7 +14,7 @@ enum TriggerMode {
 @export var trigger_mode: TriggerMode = TriggerMode.ON_ENTER
 ## En ON_ENTER_AND_EXIT un "uso" es un ciclo completo entrar + salir.
 @export var one_shot: bool = true
-## ID único para persistencia. Si está vacío, no se persiste.
+## ID único para persistencia. Si está vacío, el estado solo dura mientras el jugador siga en este nivel (clave efímera).
 @export var persistence_id: String = ""
 
 @export_group("Condición")
@@ -39,10 +39,10 @@ var _is_running: bool = false
 ## Solo ON_ENTER_AND_EXIT: true entre una entrada que ejecutó actions_if_true y su salida correspondiente.
 var _cycle_open: bool = false
 var _agents_inside: Array[Node2D] = []
+var _persistence_key: String = ""
 
 func _ready() -> void:
-	if persistence_id.is_empty():
-		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
+	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	_restore_state()
@@ -50,10 +50,10 @@ func _ready() -> void:
 		call_deferred("_attempt_trigger")
 
 func _restore_state() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
-	if WorldStateManager.has_state(persistence_id):
-		_has_triggered = WorldStateManager.load_state(persistence_id).get("has_triggered", false)
+	if WorldStateManager.has_state(_persistence_key):
+		_has_triggered = WorldStateManager.load_state(_persistence_key).get("has_triggered", false)
 
 func _on_body_entered(body: Node2D) -> void:
 	if not _agents_inside.has(body):
@@ -151,6 +151,6 @@ func _end_cycle() -> void:
 	_is_running = false
 
 func _persist_state() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
-	WorldStateManager.save_state(persistence_id, {"has_triggered": _has_triggered})
+	WorldStateManager.save_state(_persistence_key, {"has_triggered": _has_triggered})

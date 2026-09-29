@@ -13,10 +13,11 @@ extends CharacterBody2D
 
 @export_group("Persistencia")
 ## Si tiene un valor asignado, su muerte se guarda en WorldStateManager y no vuelve a aparecer.
-## Si está vacío (""), no hay persistencia y reaparece siempre.
+## Si está vacío (""), el estado solo dura mientras el jugador siga en este nivel (clave efímera).
 @export var persistence_id: String = ""
 
 var current_health: int = 3
+var _persistence_key: String = ""
 
 @onready var vision_zone: Area2D = get_node_or_null("VisionZone")
 @onready var sprite: Sprite2D = $Sprite2D
@@ -41,8 +42,7 @@ var _start_position: Vector2 = Vector2.ZERO
 var _cooldown_timer: float = 0.0
 
 func _ready() -> void:
-	if persistence_id.is_empty():
-		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
+	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
 	if _restore_state():
 		return
 		
@@ -178,19 +178,19 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 		get_tree().create_timer(iframe_duration).timeout.connect(func() -> void: if is_inside_tree(): is_invulnerable = false)
 
 func _restore_state() -> bool:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return false
 	var wsm := WorldStateManager
-	if wsm and wsm.has_state(persistence_id):
-		var data: Dictionary = wsm.load_state(persistence_id)
+	if wsm and wsm.has_state(_persistence_key):
+		var data: Dictionary = wsm.load_state(_persistence_key)
 		if data.get("is_dead", false):
 			queue_free()
 			return true
 	return false
 
 func _persist_death() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
 	var wsm := WorldStateManager
 	if wsm:
-		wsm.save_state(persistence_id, {"is_dead": true})
+		wsm.save_state(_persistence_key, {"is_dead": true})

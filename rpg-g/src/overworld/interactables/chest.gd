@@ -13,24 +13,24 @@ const CHEST_DIALOGUE: Resource = preload("res://src/overworld/interactables/ches
 
 var is_open: bool = false
 var has_been_looted: bool = false
+var _persistence_key: String = ""
 
 @onready var sprite: Sprite2D = $Sprite2D
 
 func _ready() -> void:
-	if persistence_id.is_empty():
-		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
+	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
 	if sprite:
 		sprite.texture = texture_open if is_open else texture_closed
 		sprite.modulate = Color.WHITE
 	_restore_state()
 
 func _restore_state() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
 	var wsm := WorldStateManager
-	if not wsm or not wsm.has_state(persistence_id):
+	if not wsm or not wsm.has_state(_persistence_key):
 		return
-	var data: Dictionary = wsm.load_state(persistence_id)
+	var data: Dictionary = wsm.load_state(_persistence_key)
 	has_been_looted = data.get("has_been_looted", false)
 	is_open = data.get("is_open", false)
 	if sprite:
@@ -47,7 +47,7 @@ func open_chest() -> void:
 	if sprite:
 		sprite.texture = texture_open
 		sprite.modulate = Color.WHITE
-	print("Chest ", persistence_id, " opened.")
+	print("Chest ", _persistence_key, " opened.")
 
 	if not has_been_looted:
 		give_loot()
@@ -63,7 +63,7 @@ func close_chest() -> void:
 	if sprite:
 		sprite.texture = texture_closed
 		sprite.modulate = Color.WHITE
-	print("Chest ", persistence_id, " closed.")
+	print("Chest ", _persistence_key, " closed.")
 	show_message("closed")
 	_persist_state()
 
@@ -92,8 +92,8 @@ func open_storage() -> void:
 	print("Opening storage UI (Not implemented yet)...")
 
 func _persist_state() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
 	var wsm := WorldStateManager
 	if wsm:
-		wsm.save_state(persistence_id, {"has_been_looted": has_been_looted, "is_open": is_open})
+		wsm.save_state(_persistence_key, {"has_been_looted": has_been_looted, "is_open": is_open})

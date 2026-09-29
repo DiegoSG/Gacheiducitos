@@ -12,7 +12,7 @@ signal loot_dropped(dropped_pickups: Array[PickupItem])
 @export_range(0, 10) var unique_probability: int = 10
 ## ID de persistencia para WorldStateManager.
 ## Si tiene un valor asignado, la entrega del drop único se guarda para siempre.
-## Si está vacío (""), no hay persistencia y se recalcula cada vez.
+## Si está vacío (""), el estado solo dura mientras el jugador siga en este nivel (clave efímera).
 @export var persistence_id: String = ""
 
 @export_group("Standard Loot Table")
@@ -40,16 +40,15 @@ signal loot_dropped(dropped_pickups: Array[PickupItem])
 @export var scatter_delay: float = 0.05
 
 var _has_dropped_unique: bool = false
+var _persistence_key: String = ""
 
 func _ready() -> void:
-	if persistence_id.is_empty():
-		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
+	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
 	if Engine.is_editor_hint():
 		return
-	if not persistence_id.is_empty():
-		var wsm = _get_world_state_manager()
-		if wsm and wsm.has_state(persistence_id):
-			_has_dropped_unique = wsm.load_state(persistence_id).get("unique_dropped", false)
+	if not _persistence_key.is_empty():
+		if WorldStateManager and WorldStateManager.has_state(_persistence_key):
+			_has_dropped_unique = WorldStateManager.load_state(_persistence_key).get("unique_dropped", false)
 
 ## Ejecuta la lógica completa de loot y spawnea los objetos en el nivel.
 func drop_loot(spawn_pos: Vector2 = global_position) -> Array[PickupItem]:
@@ -108,21 +107,16 @@ func _roll_probability(prob_rating: int) -> bool:
 	return roll <= prob_rating
 
 func _is_unique_already_dropped() -> bool:
-	if not persistence_id.is_empty():
-		var wsm = _get_world_state_manager()
-		if wsm and wsm.has_state(persistence_id):
-			return wsm.load_state(persistence_id).get("unique_dropped", false)
+	if not _persistence_key.is_empty():
+		if WorldStateManager and WorldStateManager.has_state(_persistence_key):
+			return WorldStateManager.load_state(_persistence_key).get("unique_dropped", false)
 	return _has_dropped_unique
 
 func _mark_unique_as_dropped() -> void:
 	_has_dropped_unique = true
-	if not persistence_id.is_empty():
-		var wsm = _get_world_state_manager()
-		if wsm:
-			wsm.save_state(persistence_id, {"unique_dropped": true})
-
-func _get_world_state_manager() -> Node:
-	return WorldStateManager
+	if not _persistence_key.is_empty():
+		if WorldStateManager:
+			WorldStateManager.save_state(_persistence_key, {"unique_dropped": true})
 
 ## Instancia el PickupItem en la escena con animación cinemática radial (Tween)
 func _spawn_pickup(item_res: ItemData, custom_amount: int, origin_pos: Vector2, delay_step: int = 0) -> PickupItem:

@@ -33,21 +33,21 @@ signal turned_off()
 
 @onready var sprite: Sprite2D = $Sprite2D if has_node("Sprite2D") else null
 
+var _persistence_key: String = ""
+
 func _ready() -> void:
-	if persistence_id.is_empty():
-		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
-	# Layer 5 (16) para ser detectable por ActionableFinder del player
-	collision_layer = 16
+	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
+	collision_layer = CollisionLayers.ACTIONABLE
 	collision_mask = 0
 	_update_visuals()
 	_restore_state()
 
 func _restore_state() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
 	var wsm := WorldStateManager
-	if wsm and wsm.has_state(persistence_id):
-		is_on = wsm.load_state(persistence_id).get("is_on", false)
+	if wsm and wsm.has_state(_persistence_key):
+		is_on = wsm.load_state(_persistence_key).get("is_on", false)
 
 func _update_visuals() -> void:
 	if not is_node_ready():
@@ -73,8 +73,8 @@ func action() -> void:
 	_persist_state()
 
 func _persist_state() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
 	var wsm := WorldStateManager
 	if wsm:
-		wsm.save_state(persistence_id, {"is_on": is_on})
+		wsm.save_state(_persistence_key, {"is_on": is_on})

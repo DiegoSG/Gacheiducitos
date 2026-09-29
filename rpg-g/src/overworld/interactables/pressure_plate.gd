@@ -39,12 +39,12 @@ signal state_changed(is_pressed: bool)
 
 var _agents_inside: Array[Node2D] = []
 var _has_triggered: bool = false
+var _persistence_key: String = ""
 
 func _ready() -> void:
-	if persistence_id.is_empty():
-		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
+	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
 	collision_layer = 0
-	collision_mask = 2 # Detecta al jugador
+	collision_mask = CollisionLayers.PLAYER
 	if not Engine.is_editor_hint():
 		if not body_entered.is_connected(_on_body_entered):
 			body_entered.connect(_on_body_entered)
@@ -91,20 +91,20 @@ func _on_body_exited(body: Node2D) -> void:
 		ActionRunner.run(on_exit_actions, self)
 
 func _restore_state() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
 	var wsm := WorldStateManager
-	if wsm and wsm.has_state(persistence_id):
-		var data: Dictionary = wsm.load_state(persistence_id)
+	if wsm and wsm.has_state(_persistence_key):
+		var data: Dictionary = wsm.load_state(_persistence_key)
 		_has_triggered = data.get("has_triggered", false)
 		is_pressed = data.get("is_pressed", false)
 
 func _persist_state() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
 	var wsm := WorldStateManager
 	if wsm:
-		wsm.save_state(persistence_id, {
+		wsm.save_state(_persistence_key, {
 			"has_triggered": _has_triggered,
 			"is_pressed": is_pressed
 		})

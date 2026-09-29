@@ -38,3 +38,17 @@ static func generate_id(node: Node, prefix: String = "") -> String:
 
 	var tag: String = prefix if not prefix.is_empty() else node.name.to_snake_case()
 	return "%s_%s_%s" % [scene_id, tag, deterministic_hash]
+
+
+## Clave de persistencia a usar en runtime.
+## Si [param explicit_id] tiene valor, el estado es permanente (se guarda en la partida).
+## Si está vacío, devuelve una clave "efímera" basada en la ruta del nodo: el estado dura
+## solo mientras el jugador siga en el nivel (WorldStateManager la limpia al cambiar de nivel).
+## Nunca asignes el resultado a la propiedad exportada persistence_id: en scripts @tool
+## quedaría guardado dentro de la escena.
+static func runtime_key(node: Node, explicit_id: String) -> String:
+	if not explicit_id.is_empty():
+		return explicit_id
+	if node.owner:
+		return "ephemeral_" + str(node.owner.get_path_to(node))
+	return str(node.get_path()) + "_ephemeral"

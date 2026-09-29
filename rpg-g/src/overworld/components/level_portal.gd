@@ -100,10 +100,10 @@ enum Mode {
 @onready var arrival_label: Label = $SpawnPoint/ArrivalIdLabel if has_node("SpawnPoint/ArrivalIdLabel") else null
 
 var _is_triggered: bool = false
+var _persistence_key: String = ""
 
 func _ready() -> void:
-	if persistence_id.is_empty():
-		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
+	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
 	add_to_group("arrival_points")
 	_update_collision_layers()
 	if not Engine.is_editor_hint():
@@ -116,26 +116,24 @@ func _ready() -> void:
 	_update_visuals()
 
 func _restore_state() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
 	var wsm := WorldStateManager
-	if not wsm or not wsm.has_state(persistence_id):
+	if not wsm or not wsm.has_state(_persistence_key):
 		return
-	var data: Dictionary = wsm.load_state(persistence_id)
+	var data: Dictionary = wsm.load_state(_persistence_key)
 	is_locked = data.get("is_locked", is_locked)
 	is_active = data.get("is_active", is_active)
 
 func _update_collision_layers() -> void:
-	# Layer 2 es Player (collision_mask = 2 para detectar entrada física)
-	# Layer 5 (16) es Actionable (collision_layer = 16 para que ActionableFinder del player lo detecte)
 	if mode == Mode.DOOR:
-		collision_layer = 16 # Actionable layer
-		collision_mask = 2   # Detecta al jugador
+		collision_layer = CollisionLayers.ACTIONABLE
+		collision_mask = CollisionLayers.PLAYER
 		if has_node("SolidBody/SolidCollision"):
 			$SolidBody/SolidCollision.set_deferred("disabled", false)
 	else:
 		collision_layer = 0
-		collision_mask = 2   # Solo detecta al jugador por toque
+		collision_mask = CollisionLayers.PLAYER
 		if has_node("SolidBody/SolidCollision"):
 			$SolidBody/SolidCollision.set_deferred("disabled", true)
 
@@ -243,11 +241,11 @@ func set_active_state(active: bool) -> void:
 	_persist_state()
 
 func _persist_state() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
 	var wsm := WorldStateManager
 	if wsm:
-		wsm.save_state(persistence_id, {"is_locked": is_locked, "is_active": is_active})
+		wsm.save_state(_persistence_key, {"is_locked": is_locked, "is_active": is_active})
 
 func get_spawn_position() -> Vector2:
 	if has_node("SpawnPoint"):

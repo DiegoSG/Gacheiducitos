@@ -18,10 +18,10 @@ signal event_executed()
 @export var actions: Array[ActionResource] = []
 
 var _has_triggered: bool = false
+var _persistence_key: String = ""
 
 func _ready() -> void:
-	if persistence_id.is_empty():
-		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
+	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
 	if Engine.is_editor_hint():
 		_update_editor_label()
 		return
@@ -43,19 +43,19 @@ func _on_game_event(event_name: String, _event_data: Variant = null) -> void:
 	event_executed.emit()
 
 func _restore_state() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
 	var wsm := WorldStateManager
-	if wsm and wsm.has_state(persistence_id):
-		var data: Dictionary = wsm.load_state(persistence_id)
+	if wsm and wsm.has_state(_persistence_key):
+		var data: Dictionary = wsm.load_state(_persistence_key)
 		_has_triggered = data.get("has_triggered", false)
 
 func _persist_state() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
 	var wsm := WorldStateManager
 	if wsm:
-		wsm.save_state(persistence_id, {"has_triggered": _has_triggered})
+		wsm.save_state(_persistence_key, {"has_triggered": _has_triggered})
 
 func _update_editor_label() -> void:
 	queue_redraw()

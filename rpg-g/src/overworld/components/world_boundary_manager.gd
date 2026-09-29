@@ -128,7 +128,7 @@ func _create_boundaries() -> void:
 
 	_static_body = StaticBody2D.new()
 	_static_body.name = "WorldBoundaries"
-	_static_body.collision_layer = 1
+	_static_body.collision_layer = CollisionLayers.WORLD
 	_static_body.collision_mask = 0
 	add_child(_static_body)
 

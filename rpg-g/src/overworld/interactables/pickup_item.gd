@@ -28,6 +28,7 @@ var can_be_collected: bool = true
 var _pending_start_pos: Vector2 = Vector2.INF
 var _pending_target_pos: Vector2 = Vector2.INF
 var _pending_duration: float = 0.45
+var _persistence_key: String = ""
 
 # Internal state (not exported)
 var _item_icon: Texture2D
@@ -40,8 +41,7 @@ var _capsule_radius: float = 10.0
 var _collision_offset: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
-	if persistence_id.is_empty():
-		persistence_id = "ephemeral_" + str(owner.get_path_to(self)) if owner else str(get_path()) + "_ephemeral"
+	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
 	if item_data:
 		if not item_data.changed.is_connected(_sync_with_resource):
 			item_data.changed.connect(_sync_with_resource)
@@ -201,14 +201,14 @@ func _on_drop_animation_finished() -> void:
 				break
 
 func _is_already_collected() -> bool:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return false
-	if WorldStateManager.has_state(persistence_id):
-		var data: Dictionary = WorldStateManager.load_state(persistence_id)
+	if WorldStateManager.has_state(_persistence_key):
+		var data: Dictionary = WorldStateManager.load_state(_persistence_key)
 		return data.get("is_collected", false)
 	return false
 
 func _persist_collected() -> void:
-	if persistence_id.is_empty():
+	if _persistence_key.is_empty():
 		return
-	WorldStateManager.save_state(persistence_id, {"is_collected": true})
+	WorldStateManager.save_state(_persistence_key, {"is_collected": true})
