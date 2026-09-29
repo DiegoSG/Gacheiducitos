@@ -1,4 +1,4 @@
-extends Node2D
+extends MinigameBase
 
 # Configurable paths
 @export var insect_scene: PackedScene = preload("res://src/minigames/mg_smasher/insect.tscn")
@@ -7,8 +7,6 @@ extends Node2D
 @onready var score_label = $UI/HUD/ScoreLabel
 @onready var time_label = $UI/HUD/TimeLabel
 @onready var lives_label = $UI/HUD/LivesLabel
-@onready var message_overlay = $UI/MessageOverlay
-@onready var message_label = $UI/MessageOverlay/Label
 
 # State
 var initial_speed: float = 100.0
@@ -76,8 +74,6 @@ func setup_game() -> void:
 	spawn_timer.autostart = true
 	spawn_timer.timeout.connect(_on_spawn_timeout)
 	add_child(spawn_timer)
-	
-	print("Smasher initialized: ", game_mode, " target: ", target_value)
 
 func _process(delta: float) -> void:
 	if game_over:
@@ -125,7 +121,7 @@ func spawn_insect() -> void:
 	for i in range(to_spawn):
 		var start_idx = available_starts[i]
 		# Ensure end hole is roughly on the opposite side
-		var end_idx = (start_idx + holes.size() / 2 + (randi() % 3 - 1)) % holes.size()
+		var end_idx = (start_idx + floori(holes.size() / 2.0) + (randi() % 3 - 1)) % holes.size()
 		# Make sure end != start
 		if start_idx == end_idx:
 			end_idx = (start_idx + 1) % holes.size()
@@ -138,33 +134,18 @@ func spawn_insect() -> void:
 
 func _on_insect_smashed() -> void:
 	score += 1
-	print("Score: ", score)
 	if game_mode == "COUNT" and score >= target_value:
 		win()
 
 func _on_insect_escaped() -> void:
 	lives -= 1
-	print("Life lost! Lives remaining: ", lives)
 	if lives <= 0:
 		lose()
 
 func win() -> void:
 	game_over = true
-	if message_overlay:
-		message_overlay.show()
-		message_label.text = "¡VICTORIA!"
-	print("Smasher: WIN!")
-	finish_game()
+	finish(true)
 
 func lose() -> void:
 	game_over = true
-	if message_overlay:
-		message_overlay.show()
-		message_label.text = "GAME OVER"
-	print("Smasher: LOSE!")
-	finish_game()
-
-func finish_game() -> void:
-	# Visual feedback or UI could be added here
-	await get_tree().create_timer(1.0).timeout
-	GameManager.return_to_overworld()
+	finish(false)

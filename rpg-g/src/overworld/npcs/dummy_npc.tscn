@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://de6b37r8ps5c0"]
+
+[ext_resource type="Script" uid="uid://cre47deufg0be" path="res://src/overworld/npcs/dummy_npc.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://5y8dic30fvq8" path="res://assets/sprites/straw_dummy.png" id="2_dummy"]
+[ext_resource type="PackedScene" path="res://src/core/components/hurtbox_component.tscn" id="3_hurtbox"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(30, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(32, 30)
+
+[node name="DummyNPC" type="CharacterBody2D" unique_id=1022085605]
+collision_layer = 8
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=997064357]
+scale = Vector2(0.065, 0.065)
+texture = ExtResource("2_dummy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=874401216]
+shape = SubResource("RectangleShape2D_body")
+
+[node name="HurtboxComponent" parent="." unique_id=223798546 instance=ExtResource("3_hurtbox")]
+collision_layer = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtboxComponent" unique_id=406361551]
+shape = SubResource("RectangleShape2D_hurtbox")

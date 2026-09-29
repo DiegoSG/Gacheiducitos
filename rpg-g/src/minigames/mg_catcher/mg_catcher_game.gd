@@ -1,4 +1,4 @@
-extends Node2D
+extends MinigameBase
 
 @export var point_scene: PackedScene = preload("res://src/minigames/mg_catcher/falling_item_point.tscn")
 @export var bomb_scene: PackedScene = preload("res://src/minigames/mg_catcher/falling_item_bomb.tscn")
@@ -7,14 +7,14 @@ extends Node2D
 @onready var score_label = $UI/HUD/ScoreLabel
 @onready var time_label = $UI/HUD/TimeLabel
 @onready var lives_label = $UI/HUD/LivesLabel
-@onready var message_overlay = $UI/MessageOverlay
-@onready var message_label = $UI/MessageOverlay/Label
 
 var base_fall_speed: float = 200.0
 var spawn_rate: float = 1.0
 var max_falling_objects: int = 10
-var game_mode: String = "TIME" # "TIME" or "COUNT"
+var game_mode: String = "TIME"
 var target_value: float = 30.0
+var item_pool: Array = []
+var critical_item_ids: Array[String] = []
 
 var score: int = 0
 var lives: int = 3
@@ -22,7 +22,7 @@ var time_left: float = 0.0
 var game_over: bool = false
 var active_objects: int = 0
 
-var spawn_timer: Timer
+var spawn_timer: Timer = null
 
 func _ready() -> void:
 	var config = GameManager.minigame_config
@@ -33,6 +33,13 @@ func _ready() -> void:
 		game_mode = config.get("game_mode", "TIME")
 		target_value = config.get("target_value", 30.0)
 		lives = config.get("lives", 3)
+		if config.has("item_pool") and config["item_pool"] is Array:
+			item_pool = config["item_pool"]
+		if config.has("critical_item_ids") and config["critical_item_ids"] is Array:
+			var c_ids: Array[String] = []
+			for id in config["critical_item_ids"]:
+				c_ids.append(str(id))
+			critical_item_ids = c_ids
 		
 	time_left = target_value if game_mode == "TIME" else 0.0
 	
@@ -44,14 +51,14 @@ func _ready() -> void:
 	spawn_timer.timeout.connect(_on_spawn_timeout)
 	add_child(spawn_timer)
 	
-	# We need a floor area to catch missed items
+	# Floor area a la altura de los pies del jugador
 	var floor_area = Area2D.new()
 	floor_area.add_to_group("catcher_floor")
 	var screen_size = get_viewport_rect().size
-	floor_area.global_position = Vector2(screen_size.x / 2.0, screen_size.y + 50)
+	floor_area.global_position = Vector2(screen_size.x / 2.0, 990.0)
 	var shape = CollisionShape2D.new()
 	var rect = RectangleShape2D.new()
-	rect.size = Vector2(screen_size.x + 200, 100)
+	rect.size = Vector2(screen_size.x + 200, 80)
 	shape.shape = rect
 	floor_area.add_child(shape)
 	add_child(floor_area)
@@ -86,33 +93,73 @@ func _on_spawn_timeout() -> void:
 	var screen_size = get_viewport_rect().size
 	var spawn_x = randf_range(50, screen_size.x - 50)
 	
+	# Determinar si es un item del pool de inventario o si es crítico
+	var chosen_item_id: String = ""
+	var is_crit: bool = false
+	var custom_texture: Texture2D = null
+	
+	if not is_bomb:
+		# Evaluar si seleccionamos un item del pool
+		if not item_pool.is_empty():
+			if item_pool[0] is Dictionary:
+				chosen_item_id = pick_item_from_pool(item_pool)
+				is_crit = _is_pool_entry_critical(chosen_item_id)
+			elif randf() < 0.35:
+				# Si es un Array de Strings (ej. ["blue_potion", "red_potion", "green_herb"])
+				# 35% de probabilidad de que este punto caiga como ítem de inventario
+				chosen_item_id = pick_item_from_pool(item_pool)
+		
+		# Si está explícitamente en la lista de críticos
+		if not chosen_item_id.is_empty() and critical_item_ids.has(chosen_item_id):
+			is_crit = true
+		elif chosen_item_id.is_empty() and not critical_item_ids.is_empty():
+			# Si no hay pool pero se especificó que los puntos normales son críticos
+			if critical_item_ids.has("point"):
+				is_crit = true
+		
+		if not chosen_item_id.is_empty():
+			custom_texture = get_item_icon(chosen_item_id)
+
 	add_child(item)
-	item.setup(base_fall_speed, Vector2(spawn_x, -50))
-	item.hit_floor.connect(_on_item_hit_floor)
-	item.caught.connect(_on_item_caught)
+	item.setup(base_fall_speed, Vector2(spawn_x, -50), is_crit, chosen_item_id, custom_texture)
+	item.hit_floor.connect(func(_type): pass)
+	item.expired.connect(_on_item_expired)
+	item.caught.connect(func(type): _on_item_caught(type, item))
 	
 	# track active objects count
 	item.tree_exited.connect(func(): active_objects -= 1)
 	active_objects += 1
 
-func _on_item_hit_floor(item_type: int) -> void:
-	if item_type == FallingItemBase.ItemType.POINT:
-		# Missed a point item = lose life
-		lives -= 1
-		print("Missed point item! Lives: ", lives)
-		check_lives()
-	# Bomb hitting floor = nothing happens
+## Indica si la entrada del pool (formato Dictionary) con ese id está marcada como crítica.
+func _is_pool_entry_critical(entry_id: String) -> bool:
+	if entry_id.is_empty():
+		return false
+	for entry: Variant in item_pool:
+		if entry is Dictionary and str(entry.get("id", "")) == entry_id:
+			return bool(entry.get("is_critical", false))
+	return false
 
-func _on_item_caught(item_type: int) -> void:
+func _on_item_expired(is_crit: bool) -> void:
+	if is_crit:
+		# Si era un item crítico obligatorio y expiró en el suelo, se pierde vida
+		lives -= 1
+		_update_ui()
+		check_lives()
+
+func _on_item_caught(item_type: int, item: FallingItemBase) -> void:
 	if item_type == FallingItemBase.ItemType.POINT:
 		score += 1
-		print("Caught point item! Score: ", score)
+		if not item.item_id.is_empty():
+			add_reward(item.item_id, 1)
+		else:
+			add_reward(Inventory.GOLD_ITEM_ID, 1)
+
 		if game_mode == "COUNT" and score >= target_value:
 			win()
 	elif item_type == FallingItemBase.ItemType.BOMB:
 		lives -= 1
-		print("Caught bomb! Lives: ", lives)
 		check_lives()
+	_update_ui()
 
 func check_lives() -> void:
 	if lives <= 0:
@@ -121,21 +168,9 @@ func check_lives() -> void:
 func win() -> void:
 	if game_over: return
 	game_over = true
-	if message_overlay:
-		message_overlay.show()
-		message_label.text = "¡VICTORIA!"
-	print("Catcher: WIN!")
-	finish_game()
+	finish(true)
 
 func lose() -> void:
 	if game_over: return
 	game_over = true
-	if message_overlay:
-		message_overlay.show()
-		message_label.text = "GAME OVER"
-	print("Catcher: LOSE!")
-	finish_game()
-
-func finish_game() -> void:
-	await get_tree().create_timer(1.0).timeout
-	GameManager.return_to_overworld()
+	finish(false)

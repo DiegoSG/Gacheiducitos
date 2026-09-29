@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://b3qk8hfwt5dkm"]
+
+[ext_resource type="Script" uid="uid://des3f5n5boxxj" path="res://data/resource_types/item_effects/item_effect.gd" id="1_dwnrl"]
+[ext_resource type="Script" uid="uid://d16uy3sjibu42" path="res://data/resource_types/item_effects/cure_status_effect.gd" id="2_dh2nf"]
+[ext_resource type="Texture2D" uid="uid://bo6yul305n7km" path="res://assets/items/icons/green_herb.png" id="3_7gs5f"]
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="4_mp62i"]
+
+[sub_resource type="Resource" id="Resource_4det8"]
+script = ExtResource("2_dh2nf")
+
+[resource]
+script = ExtResource("4_mp62i")
+id = "test_antidote"
+name = "Antidoto (test)"
+icon = ExtResource("3_7gs5f")
+description = "Placeholder de prueba."
+consumable = true
+effects = Array[ExtResource("1_dwnrl")]([SubResource("Resource_4det8")])

@@ -1,15 +1,39 @@
 extends Actionable
 
+const CHEST_DIALOGUE: Resource = preload("res://src/overworld/interactables/chest.dialogue")
+
 @export_group("Loot & Storage")
 @export var loot_items: Array[ItemData] = []
 @export var is_storage_enabled: bool = false
-@export var chest_id: String = "" # Unique ID for persistence if needed later
+@export var persistence_id: String = ""
+
+@export_group("Visuals")
+@export var texture_closed: Texture2D = preload("res://assets/sprites/chest_closed.png")
+@export var texture_open: Texture2D = preload("res://assets/sprites/chest_open.png")
 
 var is_open: bool = false
 var has_been_looted: bool = false
+var _persistence_key: String = ""
 
 @onready var sprite: Sprite2D = $Sprite2D
-@onready var chest_dialogue: Resource = preload("res://src/overworld/interactables/chest.dialogue")
+
+func _ready() -> void:
+	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
+	if sprite:
+		sprite.texture = texture_open if is_open else texture_closed
+		sprite.modulate = Color.WHITE
+	_restore_state()
+
+func _restore_state() -> void:
+	if _persistence_key.is_empty():
+		return
+	if not WorldStateManager.has_state(_persistence_key):
+		return
+	var data: Dictionary = WorldStateManager.load_state(_persistence_key)
+	has_been_looted = data.get("has_been_looted", false)
+	is_open = data.get("is_open", false)
+	if sprite:
+		sprite.texture = texture_open if is_open else texture_closed
 
 func action() -> void:
 	if not is_open:
@@ -19,61 +43,52 @@ func action() -> void:
 
 func open_chest() -> void:
 	is_open = true
-	# Visual feedback for open chest
-	sprite.modulate = Color(1.0, 1.0, 1.0) # Original color or "active"
-	# In a real game, you'd change the sprite to an open version here.
-	print("Chest ", chest_id, " opened.")
-	
+	if sprite:
+		sprite.texture = texture_open
+		sprite.modulate = Color.WHITE
+
 	if not has_been_looted:
 		give_loot()
 	else:
 		show_message("empty")
-	
+
 	if is_storage_enabled:
 		open_storage()
+	_persist_state()
 
 func close_chest() -> void:
 	is_open = false
-	sprite.modulate = Color(0.6, 0.4, 0.2) # Back to "closed" brown
-	print("Chest ", chest_id, " closed.")
+	if sprite:
+		sprite.texture = texture_closed
+		sprite.modulate = Color.WHITE
 	show_message("closed")
+	_persist_state()
 
 func give_loot() -> void:
 	if loot_items.is_empty():
 		show_message("empty")
 		has_been_looted = true
+		_persist_state()
 		return
-		
-	var item_names = []
+
 	for item in loot_items:
 		if item:
-			if item.id == "gold_coins":
-				PlayerStats.add_gold(item.value)
-				item_names.append(str(item.value) + " monedas de oro")
-			else:
-				Inventory.add_item(item.id, 1)
-				item_names.append(item.name)
-	
-	var message = "Obtuviste:\n"
-	for name in item_names:
-		message += "- " + name + "\n"
-	
-	show_loot_dialogue(message.strip_edges())
-	has_been_looted = true
+			var amount: int = 1
+			if item.id == Inventory.GOLD_ITEM_ID:
+				amount = item.value
+			Inventory.add_item(item.id, amount)
+			LootFeedbackManager.trigger_toast(item, amount)
 
-func show_loot_dialogue(loot_message: String) -> void:
-	if Engine.has_singleton("DialogueManager"):
-		var dialogue_manager = Engine.get_singleton("DialogueManager")
-		dialogue_manager.show_dialogue_balloon(chest_dialogue, "loot", [{"loot_message": loot_message}])
-	else:
-		print("Has encontrado: ", loot_message)
+	has_been_looted = true
+	_persist_state()
 
 func show_message(title: String) -> void:
-	if Engine.has_singleton("DialogueManager"):
-		var dialogue_manager = Engine.get_singleton("DialogueManager")
-		dialogue_manager.show_dialogue_balloon(chest_dialogue, title)
-	else:
-		print("DIÁLOGO: ", title)
+	DialogueManager.show_dialogue_balloon(CHEST_DIALOGUE, title)
 
 func open_storage() -> void:
-	print("Opening storage UI (Not implemented yet)...")
+	pass
+
+func _persist_state() -> void:
+	if _persistence_key.is_empty():
+		return
+	WorldStateManager.save_state(_persistence_key, {"has_been_looted": has_been_looted, "is_open": is_open})

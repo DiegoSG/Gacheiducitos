@@ -72,8 +72,10 @@ var mutation_cooldown: Timer = Timer.new()
 
 
 func _ready() -> void:
+	# El juego se pausa durante los diálogos; el globo debe seguir funcionando
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	balloon.hide()
-	Engine.get_singleton("DialogueManager").mutated.connect(_on_mutated)
+	DialogueManager.mutated.connect(_on_mutated)
 
 	# If the responses menu doesn't have a next action set, use this one
 	if responses_menu.next_action.is_empty():
@@ -88,7 +90,7 @@ func _ready() -> void:
 		start()
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if is_instance_valid(dialogue_line):
 		progress.visible = not dialogue_label.is_typing and dialogue_line.responses.size() == 0 and not dialogue_line.has_tag("voice")
 

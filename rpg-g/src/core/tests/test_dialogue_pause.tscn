@@ -1,0 +1,25 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://src/overworld/enemies/generic_enemy.tscn" id="2_enemy"]
+[ext_resource type="PackedScene" path="res://src/overworld/npcs/npc_barnaby.tscn" id="3_npc"]
+
+[node name="TestDialoguePause" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(300, 540)
+
+[node name="Barnaby" parent="." instance=ExtResource("3_npc")]
+position = Vector2(420, 540)
+
+[node name="GenericEnemy" parent="." instance=ExtResource("2_enemy")]
+position = Vector2(1100, 540)
+attack_damage = 0
+
+[node name="Instructions" type="Label" parent="."]
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 1200.0
+offset_bottom = 120.0
+text = "Acercate al enemigo para que te persiga, vuelve junto a Barnaby y habla (E/Espacio).
+Durante el dialogo el enemigo debe quedar congelado. Abre/cierra el inventario (I) durante el dialogo: el juego no debe reanudarse hasta cerrar ambos."

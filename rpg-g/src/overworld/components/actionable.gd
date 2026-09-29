@@ -1,8 +1,13 @@
 class_name Actionable
 extends Area2D
 
-# const Balloon = preload("res://scenes/ui/dialogue_balloon.tscn")
+@export var one_shot: bool = false
+@export var allow_during_alert: bool = true
+var triggered: bool = false
 
 func action() -> void:
-	print("Interacted with " + name)
+	if not allow_during_alert and AlertSystem.is_in_alert():
+		return
+	if one_shot and triggered: return
+	triggered = true
 	# Default behavior: override this in specific interactables

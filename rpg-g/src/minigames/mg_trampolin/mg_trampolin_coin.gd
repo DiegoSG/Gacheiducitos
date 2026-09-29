@@ -7,21 +7,17 @@ signal collected
 
 @export var coin_scale: float = 0.05
 
-func _ready():
+func _ready() -> void:
 	# Usar el icono de oro del proyecto
 	if has_node("Sprite2D"):
-		var sprite = $Sprite2D
-		var tex = load("res://assets/items/icons/coin_v2.png")
-		if not tex:
-			tex = load("res://assets/items/icons/gold_coins.png")
-		sprite.texture = tex
-		sprite.modulate = Color.WHITE # Reset modulation
+		var sprite: Sprite2D = $Sprite2D
+		sprite.texture = MinigameBase.get_coin_texture()
+		sprite.modulate = Color.WHITE
 		sprite.scale = Vector2(coin_scale, coin_scale)
-	
+
 	body_entered.connect(_on_body_entered)
 
-func _on_body_entered(body):
+func _on_body_entered(body: Node2D) -> void:
 	if body is MG_TrampolinPlayer:
 		collected.emit()
-		# Feedback visual/sonoro podría ir aquí
 		queue_free()

@@ -9,12 +9,12 @@ const TileType = MGT.TileType
 const WinCondition = MGT.WinCondition
 
 static func generate_level(width: int, height: int, config: Dictionary) -> Array:
-	var grid = []
-	
+	var grid: Array = []
+
 	# Obtener parámetros de configuración
-	var densidad_tierra = config.get("densidad_tierra", 0.45)
-	var prob_piedra = config.get("probabilidad_piedra", 0.15)
-	var seed_value = config.get("seed", -1)
+	var densidad_tierra: float = config.get("densidad_tierra", 0.45)
+	var prob_piedra: float = config.get("probabilidad_piedra", 0.15)
+	var seed_value: Variant = config.get("seed", -1)
 	
 	# Configurar seed
 	if seed_value != -1:
@@ -22,7 +22,7 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 	
 	# Inicializar grid vacío
 	for y in range(height):
-		var row = []
+		var row: Array = []
 		for x in range(width):
 			row.append(TileType.EMPTY)
 		grid.append(row)
@@ -49,19 +49,22 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 	for y in range(1, 4):
 		for x in range(1, 4):
 			grid[y][x] = TileType.EMPTY
-	
-	# Paso 5: Colocar piedras en zonas vacías (y sobre tierra también)
+
+	# Paso 5: Colocar piedras y bombas ambientales en zonas con soporte inferior
+	var prob_bomba_ambiental: float = config.get("prob_bomba_ambiental", 0.04)
 	for y in range(3, height - 3):
 		for x in range(3, width - 3):
 			if randf() < prob_piedra:
 				# Solo colocar si hay algo debajo (no flotar en el aire inicialmente)
 				if y < height - 1 and grid[y + 1][x] != TileType.EMPTY:
-					grid[y][x] = TileType.PIEDRA
+					if randf() < prob_bomba_ambiental:
+						grid[y][x] = TileType.BOMBA
+					else:
+						grid[y][x] = TileType.PIEDRA
 	
-	# Paso 6: Colocar monedas (ITEM_RECOMPENSA = 6)
-	var num_monedas = config.get("num_monedas", 10)
-	var coins_placed = 0
-	var empty_or_dirt_spaces = []
+	# Paso 6: Colocar monedas (ITEM_RECOMPENSA)
+	var num_monedas: int = config.get("num_monedas", 10)
+	var empty_or_dirt_spaces: Array = []
 	for y in range(3, height - 3):
 		for x in range(3, width - 3):
 			if grid[y][x] == TileType.EMPTY or grid[y][x] == TileType.TIERRA:
@@ -71,12 +74,32 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 	
 	for i in range(min(num_monedas, empty_or_dirt_spaces.size())):
 		var pos = empty_or_dirt_spaces[i]
-		# Asegurar que no esté en el aire (que haya algo abajo)
 		if pos.y < height - 1 and grid[pos.y + 1][pos.x] != TileType.EMPTY:
 			grid[pos.y][pos.x] = TileType.ITEM_RECOMPENSA
 		else:
-			# Si está en el aire, buscar otro lugar o simplemente no ponerla aquí (el loop continuará)
-			num_monedas += 1 # Intentar compensar
+			num_monedas += 1
+
+	# Paso 6.5: Colocar ítems de inventario y bombas manuales reemplazando tierra visible
+	var deliver_items = config.get("deliver_items", false)
+	if deliver_items:
+		var dirt_spaces = []
+		for y in range(2, height - 2):
+			for x in range(2, width - 2):
+				if grid[y][x] == TileType.TIERRA:
+					dirt_spaces.append(Vector2i(x, y))
+		dirt_spaces.shuffle()
+		
+		# Colocar entre 3 y 6 items de inventario visibles reemplazando tierra
+		var num_items_inv = randi_range(3, 6)
+		for i in range(min(num_items_inv, dirt_spaces.size())):
+			var p = dirt_spaces.pop_back()
+			grid[p.y][p.x] = TileType.ITEM_INVENTARIO
+			
+		# Colocar 2-4 pickups de bombas manuales para que el jugador pueda plantar
+		var num_bomb_pickups = randi_range(2, 4)
+		for i in range(min(num_bomb_pickups, dirt_spaces.size())):
+			var p = dirt_spaces.pop_back()
+			grid[p.y][p.x] = TileType.BOMB_PICKUP
 
 	# Paso 7: Colocar ítem de misión si es necesario
 	if config.get("win_condition") == WinCondition.SPECIFIC_ITEM:
@@ -91,7 +114,7 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 		if not mission_item_placed:
 			grid[3][3] = TileType.ITEM_MISION
 
-	# Paso 7: Colocar salida en la zona inferior derecha
+	# Paso 7.5: Colocar salida en la zona inferior derecha
 	var exit_placed = false
 	for attempt in range(50):
 		var ex = randi_range(width - 10, width - 3)
@@ -106,7 +129,6 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 	
 	# Paso 8: Validar conectividad (Flood Fill desde inicio)
 	if not _is_reachable(grid, width, height, Vector2i(1, 1)):
-		print("Nivel no alcanzable, regenerando...")
 		return generate_level(width, height, config)
 	
 	return grid

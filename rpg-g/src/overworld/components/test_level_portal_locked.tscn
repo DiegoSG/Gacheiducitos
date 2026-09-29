@@ -1,0 +1,36 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://src/overworld/components/level_portal.tscn" id="2_portal"]
+
+[node name="TestLevelPortalLocked" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(300, 540)
+
+[node name="LockedPortal" parent="." instance=ExtResource("2_portal")]
+position = Vector2(700, 540)
+is_locked = true
+locked_text = "Portal de prueba cerrado.
+Texto con dos puntos: se muestra literal.
+- Esta línea empieza con guion y no es una opción."
+target_level_path = "res://src/overworld/levels/level_01.tscn"
+exit_id = "start"
+arrival_id = "test_locked"
+
+[node name="InactiveDoor" parent="." instance=ExtResource("2_portal")]
+position = Vector2(1100, 540)
+mode = 1
+is_active = false
+locked_text = "Puerta de prueba atrancada (is_active = false)."
+target_level_path = "res://src/overworld/levels/level_01.tscn"
+exit_id = "start"
+arrival_id = "test_inactive"
+
+[node name="Instructions" type="Label" parent="."]
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 1200.0
+offset_bottom = 120.0
+text = "Camina hacia el portal de la izquierda (cerrado): debe mostrar 3 lineas literales.
+Ponte frente a la puerta de la derecha y pulsa E/Espacio: debe mostrar su texto de atrancada."
