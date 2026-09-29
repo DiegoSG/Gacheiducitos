@@ -22,7 +22,7 @@ func execute(trigger_node: Node) -> void:
 		
 	var t_node: Node = trigger_node.get_node_or_null(target_node)
 	if not t_node:
-		print("VisColAction: No se encontró target ", target_node)
+		push_warning("VisColAction: No se encontró target ", target_node)
 		finished.emit()
 		return
 		

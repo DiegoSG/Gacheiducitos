@@ -9,12 +9,12 @@ const TileType = MGT.TileType
 const WinCondition = MGT.WinCondition
 
 static func generate_level(width: int, height: int, config: Dictionary) -> Array:
-	var grid = []
-	
+	var grid: Array = []
+
 	# Obtener parámetros de configuración
-	var densidad_tierra = config.get("densidad_tierra", 0.45)
-	var prob_piedra = config.get("probabilidad_piedra", 0.15)
-	var seed_value = config.get("seed", -1)
+	var densidad_tierra: float = config.get("densidad_tierra", 0.45)
+	var prob_piedra: float = config.get("probabilidad_piedra", 0.15)
+	var seed_value: Variant = config.get("seed", -1)
 	
 	# Configurar seed
 	if seed_value != -1:
@@ -22,7 +22,7 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 	
 	# Inicializar grid vacío
 	for y in range(height):
-		var row = []
+		var row: Array = []
 		for x in range(width):
 			row.append(TileType.EMPTY)
 		grid.append(row)
@@ -49,9 +49,9 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 	for y in range(1, 4):
 		for x in range(1, 4):
 			grid[y][x] = TileType.EMPTY
-	
+
 	# Paso 5: Colocar piedras y bombas ambientales en zonas con soporte inferior
-	var prob_bomba_ambiental = config.get("prob_bomba_ambiental", 0.04)
+	var prob_bomba_ambiental: float = config.get("prob_bomba_ambiental", 0.04)
 	for y in range(3, height - 3):
 		for x in range(3, width - 3):
 			if randf() < prob_piedra:
@@ -63,8 +63,8 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 						grid[y][x] = TileType.PIEDRA
 	
 	# Paso 6: Colocar monedas (ITEM_RECOMPENSA)
-	var num_monedas = config.get("num_monedas", 10)
-	var empty_or_dirt_spaces = []
+	var num_monedas: int = config.get("num_monedas", 10)
+	var empty_or_dirt_spaces: Array = []
 	for y in range(3, height - 3):
 		for x in range(3, width - 3):
 			if grid[y][x] == TileType.EMPTY or grid[y][x] == TileType.TIERRA:
@@ -129,7 +129,6 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 	
 	# Paso 8: Validar conectividad (Flood Fill desde inicio)
 	if not _is_reachable(grid, width, height, Vector2i(1, 1)):
-		print("Nivel no alcanzable, regenerando...")
 		return generate_level(width, height, config)
 	
 	return grid

@@ -45,9 +45,8 @@ func _ready() -> void:
 func _restore_state() -> void:
 	if _persistence_key.is_empty():
 		return
-	var wsm := WorldStateManager
-	if wsm and wsm.has_state(_persistence_key):
-		is_on = wsm.load_state(_persistence_key).get("is_on", false)
+	if WorldStateManager.has_state(_persistence_key):
+		is_on = WorldStateManager.load_state(_persistence_key).get("is_on", false)
 
 func _update_visuals() -> void:
 	if not is_node_ready():
@@ -75,6 +74,4 @@ func action() -> void:
 func _persist_state() -> void:
 	if _persistence_key.is_empty():
 		return
-	var wsm := WorldStateManager
-	if wsm:
-		wsm.save_state(_persistence_key, {"is_on": is_on})
+	WorldStateManager.save_state(_persistence_key, {"is_on": is_on})

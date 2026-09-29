@@ -118,10 +118,9 @@ func _ready() -> void:
 func _restore_state() -> void:
 	if _persistence_key.is_empty():
 		return
-	var wsm := WorldStateManager
-	if not wsm or not wsm.has_state(_persistence_key):
+	if not WorldStateManager.has_state(_persistence_key):
 		return
-	var data: Dictionary = wsm.load_state(_persistence_key)
+	var data: Dictionary = WorldStateManager.load_state(_persistence_key)
 	is_locked = data.get("is_locked", is_locked)
 	is_active = data.get("is_active", is_active)
 
@@ -205,7 +204,6 @@ func _attempt_traverse() -> void:
 		_update_visuals()
 		unlocked.emit()
 		_persist_state()
-		print("[LevelPortal] Puerta desbloqueada con llave '%s' (consumida: %s)" % [key.id, str(consume_key)])
 
 	# Puerta/Portal abierto y listo para viajar
 	_trigger_transition()
@@ -220,8 +218,6 @@ func _show_locked_feedback(msg: String) -> void:
 	locked.emit()
 	if locked_dialogue_resource:
 		DialogueManager.show_dialogue_balloon(locked_dialogue_resource, locked_dialogue_title)
-	else:
-		print("[LevelPortal Bloqueado]: ", msg)
 
 ## Métodos públicos para ser activados por eventos / interruptores
 func unlock() -> void:
@@ -243,9 +239,7 @@ func set_active_state(active: bool) -> void:
 func _persist_state() -> void:
 	if _persistence_key.is_empty():
 		return
-	var wsm := WorldStateManager
-	if wsm:
-		wsm.save_state(_persistence_key, {"is_locked": is_locked, "is_active": is_active})
+	WorldStateManager.save_state(_persistence_key, {"is_locked": is_locked, "is_active": is_active})
 
 func get_spawn_position() -> Vector2:
 	if has_node("SpawnPoint"):

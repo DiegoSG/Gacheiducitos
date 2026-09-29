@@ -24,13 +24,13 @@ func set_active(active: bool) -> void:
 func _physics_process(delta: float) -> void:
 	if not continuous_damage or not monitoring:
 		return
-		
+
 	if _attack_timer > 0.0:
 		_attack_timer -= delta
 		return
-		
-	var overlapping = get_overlapping_areas()
-	for area in overlapping:
+
+	var overlapping: Array[Area2D] = get_overlapping_areas()
+	for area: Area2D in overlapping:
 		if area is HurtboxComponent:
 			_apply_hit(area)
 			_attack_timer = attack_rate
@@ -45,12 +45,12 @@ func _on_area_entered(area: Area2D) -> void:
 func _apply_hit(area: HurtboxComponent) -> void:
 	# Calculamos la dirección simplificada desde el padre del hitbox al padre del hurtbox
 	# para que el knockback tenga sentido.
-	var attack_direction = (area.global_position - global_position).normalized()
+	var attack_direction: Vector2 = (area.global_position - global_position).normalized()
 	area.take_hit(damage, attack_direction, knockback_force)
-	
-	var scene_root = get_tree().current_scene if get_tree() else null
+
+	var scene_root: Node = get_tree().current_scene if get_tree() else null
 	if is_instance_valid(scene_root):
-		var effect = HIT_EFFECT.instantiate()
+		var effect: Node = HIT_EFFECT.instantiate()
 		scene_root.add_child(effect)
 		effect.global_position = area.global_position
 

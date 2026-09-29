@@ -59,37 +59,37 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY }
 
 @export_group("Visuals")
 @export var item_scale: Vector2 = Vector2(1, 1):
-	set(value):
-		item_scale = value
+	set(new_value):
+		item_scale = new_value
 		emit_changed()
 
 @export_group("Collision Settings")
 @export var collision_type: ShapeType = ShapeType.CIRCLE:
-	set(value):
-		collision_type = value
+	set(new_value):
+		collision_type = new_value
 		emit_changed()
 
 @export var circle_radius: float = 16.0:
-	set(value):
-		circle_radius = value
+	set(new_value):
+		circle_radius = new_value
 		emit_changed()
 
 @export var rectangle_size: Vector2 = Vector2(32, 32):
-	set(value):
-		rectangle_size = value
+	set(new_value):
+		rectangle_size = new_value
 		emit_changed()
 
 @export var capsule_height: float = 30.0:
-	set(value):
-		capsule_height = value
+	set(new_value):
+		capsule_height = new_value
 		emit_changed()
 
 @export var capsule_radius: float = 10.0:
-	set(value):
-		capsule_radius = value
+	set(new_value):
+		capsule_radius = new_value
 		emit_changed()
 
 @export var collision_offset: Vector2 = Vector2.ZERO:
-	set(value):
-		collision_offset = value
+	set(new_value):
+		collision_offset = new_value
 		emit_changed()

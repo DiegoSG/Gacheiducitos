@@ -10,7 +10,6 @@ func _init() -> void:
 
 func action() -> void:
 	if not allow_during_alert and AlertSystem.is_in_alert():
-		print("SimpleNPC: No se puede hablar con '%s' durante el estado de alerta." % npc_name)
 		return
 		
 	if not dialogue_resource:

@@ -76,7 +76,7 @@ func _ready() -> void:
 	_start_game()
 
 func _load_configuration() -> void:
-	var cfg = GameManager.minigame_config
+	var cfg: Dictionary = GameManager.minigame_config
 	if cfg.is_empty():
 		return
 		
@@ -114,7 +114,7 @@ func _start_game() -> void:
 	next_ammo_spawn_distance = ammo_spawn_initial_distance
 	ammo_spawn_step = ammo_spawn_initial_distance
 	time_between_spawns = 1.7 * (350.0 / run_speed)
-	spawn_timer = 1.0 # Breve respiro al iniciar
+	spawn_timer = 1.0
 
 func _process(delta: float) -> void:
 	if not is_playing:
@@ -134,14 +134,12 @@ func _process(delta: float) -> void:
 				c.speed = run_speed
 			elif c is MG_RunnerEnemy:
 				c.speed = run_speed + 40.0
-		print("[Runner] ¡Velocidad aumentada a: %.1f! (Distancia: %.0f m)" % [run_speed, current_distance])
 	
 	# Comprobar aparición de munición a distancia creciente
 	if current_distance >= next_ammo_spawn_distance:
 		_spawn_ammo_pickup()
 		ammo_spawn_step *= ammo_spawn_distance_multiplier
 		next_ammo_spawn_distance += ammo_spawn_step
-		print("[Runner] Munición generada a %.0f m. Próxima en %.0f m" % [current_distance, next_ammo_spawn_distance])
 
 	# Scroll visual del suelo
 	ground_scroll_offset = fmod(ground_scroll_offset + (run_speed * delta), 120.0)
@@ -162,7 +160,7 @@ func _update_ui() -> void:
 		distance_label.text = "Distancia: %d / %d m" % [int(current_distance), int(target_value)]
 	else:
 		distance_label.text = "Distancia: %d m" % int(current_distance)
-		
+
 	coins_label.text = "Monedas: %d" % coins_collected
 	ammo_label.text = "Balas (Z): %d/3" % player.ammo
 
@@ -196,14 +194,13 @@ func _spawn_ammo_pickup() -> void:
 	pickup.speed = run_speed
 	# Se coloca flotando a altura media/baja
 	pickup.position = Vector2(SPAWN_X + 150.0, GROUND_Y - 55.0)
-	pickup.collected.connect(func(_p):
+	pickup.collected.connect(func(_p) -> void:
 		player.add_ammo(1)
-		print("[Runner] Munición recogida! Balas: ", player.ammo)
 	)
 	world_objects.add_child(pickup)
 
 func _spawn_wave() -> void:
-	var roll = randf()
+	var roll: float = randf()
 	
 	if roll < 0.38:
 		# Ola de Obstáculo Terrestre (Salto) + monedas en arco seguro
@@ -296,8 +293,8 @@ func _spawn_random_item() -> void:
 	var chosen_id: String = pick_item_from_pool(item_pool)
 	if chosen_id.is_empty():
 		return
-		
-	var pickup = PICKUP_SCENE.instantiate() as MG_RunnerPickup
+
+	var pickup: MG_RunnerPickup = PICKUP_SCENE.instantiate() as MG_RunnerPickup
 	pickup.pickup_type = MG_RunnerPickup.PickupType.RANDOM_ITEM
 	pickup.item_id = chosen_id
 	pickup.amount = 1

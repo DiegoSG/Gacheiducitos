@@ -31,7 +31,6 @@ func _ready() -> void:
 		CheckpointManager.register_level_entry(current_scene.scene_file_path, current_scene, false)
 
 func trigger_event(event_name: String, event_data: Variant = null) -> void:
-	print("[GameManager] trigger_event: '%s'" % event_name)
 	game_event.emit(event_name, event_data)
 
 ## Carga un minijuego con transición (fundido). Guarda la escena previa y las rutas de retorno
@@ -45,7 +44,6 @@ func load_minigame(minigame_path: String) -> void:
 	# (Para que las escenas de prueba o el Overworld se preserven correctamente)
 	if is_instance_valid(current_scene) and not (current_scene is MinigameBase):
 		previous_scene_path = current_scene.scene_file_path
-		print("GameManager: Saved return path: ", previous_scene_path)
 
 	# Extraer rutas de retorno de la config si existen, o usar la escena previa
 	_minigame_win_path = minigame_config.get("win_level_path", previous_scene_path)
@@ -56,8 +54,6 @@ func load_minigame(minigame_path: String) -> void:
 	change_level(minigame_path)
 
 func complete_minigame(success: bool, results: Dictionary = {}) -> void:
-	print("GameManager: complete_minigame called. Success: ", success)
-	
 	# Entregar recompensas (el oro se enruta solo a PlayerStats desde Inventory.add_item)
 	var pending_items: Dictionary = {}
 	if results.has("items"):
@@ -84,7 +80,6 @@ func complete_minigame(success: bool, results: Dictionary = {}) -> void:
 
 func return_to_overworld() -> void:
 	var target_scene: String = previous_scene_path if not previous_scene_path.is_empty() else DEFAULT_LEVEL_PATH
-	print("GameManager: return_to_overworld -> ", target_scene)
 	change_level(target_scene)
 
 # Conecta game_finished de un MinigameBase a complete_minigame (única fuente de esta conexión)
@@ -96,7 +91,6 @@ func _connect_minigame_finished(scene: Node) -> void:
 
 func change_level(target_level_path: String, spawn_id: String = "", exact_pos: Vector2 = Vector2.ZERO, use_exact: bool = false, is_save_load: bool = false) -> void:
 	if _is_changing_level:
-		print("GameManager: Scene transition already in progress. Ignoring request for: ", target_level_path)
 		return
 	if target_level_path.is_empty():
 		return

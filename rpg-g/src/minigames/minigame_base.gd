@@ -27,14 +27,12 @@ func add_reward(item_id: String, amount: int = 1) -> void:
 		session_rewards[item_id] += amount
 	else:
 		session_rewards[item_id] = amount
-	print("[MinigameBase] Recompensa añadida al buffer: ", item_id, " x", amount)
 
 ## Llamar a esta función cuando el minijuego termina (ganar o perder).
 func finish(success: bool, skip_screen: bool = false) -> void:
 	if _is_finishing:
 		return
 	_is_finishing = true
-	print("[MinigameBase] Minijuego finalizado. Victoria: ", success)
 	
 	# Si estamos en modo headless (tests automatizados) o se solicita omitir, finalizar de inmediato
 	if skip_screen or DisplayServer.get_name() == "headless":

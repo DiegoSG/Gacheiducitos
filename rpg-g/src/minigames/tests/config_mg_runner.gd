@@ -25,7 +25,7 @@ var config = {
 	"item_pool": ["blue_potion", "red_potion", "green_herb"]
 }
 
-func _ready():
+func _ready() -> void:
 	win_condition_option.item_selected.connect(_on_win_condition_selected)
 	target_value_slider.value_changed.connect(_on_target_value_changed)
 	speed_slider.value_changed.connect(_on_speed_changed)
@@ -37,13 +37,13 @@ func _ready():
 	_setup_options()
 	_update_ui()
 
-func _setup_options():
+func _setup_options() -> void:
 	win_condition_option.clear()
 	win_condition_option.add_item("Por Distancia (Metros)", 0)
 	win_condition_option.add_item("Por Objeto Clave (Meta)", 1)
 	win_condition_option.select(config.win_condition)
 
-func _update_ui():
+func _update_ui() -> void:
 	match config.win_condition:
 		0: # Distancia
 			target_label.text = "Distancia Meta:"
@@ -67,7 +67,7 @@ func _update_ui():
 	dist_factor_slider.set_value_no_signal(config.distance_factor)
 	dist_factor_label.text = "%.2f" % config.distance_factor
 
-func _on_win_condition_selected(index: int):
+func _on_win_condition_selected(index: int) -> void:
 	config.win_condition = index
 	if index == 0:
 		config.target_value = 1500
@@ -76,7 +76,7 @@ func _on_win_condition_selected(index: int):
 		config.target_distance_range = Vector2(800.0, 1200.0)
 	_update_ui()
 
-func _on_target_value_changed(value: float):
+func _on_target_value_changed(value: float) -> void:
 	if config.win_condition == 0:
 		config.target_value = int(value)
 		target_value_label.text = "%d m" % config.target_value
@@ -84,21 +84,21 @@ func _on_target_value_changed(value: float):
 		config.target_distance_range = Vector2(value, value + 400.0)
 		target_value_label.text = "~%d m" % int(value)
 
-func _on_speed_changed(value: float):
+func _on_speed_changed(value: float) -> void:
 	config.run_speed = int(value)
 	speed_label.text = str(config.run_speed)
 
-func _on_density_changed(value: float):
+func _on_density_changed(value: float) -> void:
 	config.coin_density = value
 	density_label.text = "%.2f" % config.coin_density
 
-func _on_dist_factor_changed(value: float):
+func _on_dist_factor_changed(value: float) -> void:
 	config.distance_factor = value
 	dist_factor_label.text = "%.2f" % config.distance_factor
 
-func _on_start_pressed():
+func _on_start_pressed() -> void:
 	GameManager.minigame_config = config
 	GameManager.load_minigame("res://src/minigames/mg_runner/mg_runner_level.tscn")
 
-func _on_exit_pressed():
+func _on_exit_pressed() -> void:
 	GameManager.return_to_overworld()

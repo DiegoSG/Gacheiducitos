@@ -72,14 +72,13 @@ func _on_body_entered(body: Node2D) -> void:
 		_persist_state()
 		pressed.emit()
 		state_changed.emit(true)
-		print("[PressurePlate]: Pisada por '%s'. Ejecutando on_enter_actions..." % body.name)
 		ActionRunner.run(on_enter_actions, self)
 
 func _on_body_exited(body: Node2D) -> void:
 	if _agents_inside.has(body):
 		_agents_inside.erase(body)
 		
-	_agents_inside = _agents_inside.filter(func(a): return is_instance_valid(a))
+	_agents_inside = _agents_inside.filter(func(a: Node2D) -> bool: return is_instance_valid(a))
 	if _agents_inside.is_empty() and is_pressed:
 		if one_shot:
 			return
@@ -87,24 +86,20 @@ func _on_body_exited(body: Node2D) -> void:
 		_persist_state()
 		released.emit()
 		state_changed.emit(false)
-		print("[PressurePlate]: Despresionada. Ejecutando on_exit_actions...")
 		ActionRunner.run(on_exit_actions, self)
 
 func _restore_state() -> void:
 	if _persistence_key.is_empty():
 		return
-	var wsm := WorldStateManager
-	if wsm and wsm.has_state(_persistence_key):
-		var data: Dictionary = wsm.load_state(_persistence_key)
+	if WorldStateManager.has_state(_persistence_key):
+		var data: Dictionary = WorldStateManager.load_state(_persistence_key)
 		_has_triggered = data.get("has_triggered", false)
 		is_pressed = data.get("is_pressed", false)
 
 func _persist_state() -> void:
 	if _persistence_key.is_empty():
 		return
-	var wsm := WorldStateManager
-	if wsm:
-		wsm.save_state(_persistence_key, {
-			"has_triggered": _has_triggered,
-			"is_pressed": is_pressed
-		})
+	WorldStateManager.save_state(_persistence_key, {
+		"has_triggered": _has_triggered,
+		"is_pressed": is_pressed
+	})

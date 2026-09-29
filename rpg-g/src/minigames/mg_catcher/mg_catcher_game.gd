@@ -11,9 +11,9 @@ extends MinigameBase
 var base_fall_speed: float = 200.0
 var spawn_rate: float = 1.0
 var max_falling_objects: int = 10
-var game_mode: String = "TIME" # "TIME" or "COUNT"
+var game_mode: String = "TIME"
 var target_value: float = 30.0
-var item_pool: Array = [] # Array[Dictionary]: [{"id": "blue_potion", "chance": 0.4, "is_critical": true}, ...]
+var item_pool: Array = []
 var critical_item_ids: Array[String] = []
 
 var score: int = 0
@@ -22,7 +22,7 @@ var time_left: float = 0.0
 var game_over: bool = false
 var active_objects: int = 0
 
-var spawn_timer: Timer
+var spawn_timer: Timer = null
 
 func _ready() -> void:
 	var config = GameManager.minigame_config
@@ -143,27 +143,21 @@ func _on_item_expired(is_crit: bool) -> void:
 	if is_crit:
 		# Si era un item crítico obligatorio y expiró en el suelo, se pierde vida
 		lives -= 1
-		print("[Catcher] ¡Objeto crítico perdido en el suelo! Vidas: ", lives)
 		_update_ui()
 		check_lives()
-	else:
-		print("[Catcher] Objeto no crítico expiró en el suelo.")
 
 func _on_item_caught(item_type: int, item: FallingItemBase) -> void:
 	if item_type == FallingItemBase.ItemType.POINT:
 		score += 1
 		if not item.item_id.is_empty():
 			add_reward(item.item_id, 1)
-			print("[Catcher] ¡Atrapado objeto especial: %s!" % item.item_id)
 		else:
 			add_reward(Inventory.GOLD_ITEM_ID, 1)
-			print("[Catcher] Atrapado punto normal. Score: ", score)
-			
+
 		if game_mode == "COUNT" and score >= target_value:
 			win()
 	elif item_type == FallingItemBase.ItemType.BOMB:
 		lives -= 1
-		print("[Catcher] ¡Bomba atrapada! Vidas: ", lives)
 		check_lives()
 	_update_ui()
 
@@ -174,11 +168,9 @@ func check_lives() -> void:
 func win() -> void:
 	if game_over: return
 	game_over = true
-	print("Catcher: WIN!")
 	finish(true)
 
 func lose() -> void:
 	if game_over: return
 	game_over = true
-	print("Catcher: LOSE!")
 	finish(false)

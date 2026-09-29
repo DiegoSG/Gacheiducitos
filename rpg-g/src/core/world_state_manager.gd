@@ -26,7 +26,6 @@ func clear_ephemeral_states() -> void:
 			keys_to_remove.append(key)
 	for key in keys_to_remove:
 		_states.erase(key)
-	print("[WorldStateManager] Estados efímeros limpiados. Restantes: ", _states.keys().size())
 
 func clear_all() -> void:
 	_states.clear()
@@ -36,4 +35,3 @@ func create_snapshot() -> Dictionary:
 
 func restore_snapshot(snapshot: Dictionary) -> void:
 	_states = snapshot.duplicate(true)
-	print("[WorldStateManager] Snapshot restaurado -> Claves: ", _states.keys())

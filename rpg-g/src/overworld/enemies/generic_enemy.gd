@@ -146,10 +146,9 @@ func _on_lose_target_exited(body: Node2D) -> void:
 
 func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: float) -> void:
 	if is_invulnerable: return
-	
+
 	current_health -= damage
-	print("Enemy hit! Health: ", current_health)
-	
+
 	# Componente físico del empujón
 	velocity = attack_direction * knockback_force
 	
@@ -180,9 +179,8 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 func _restore_state() -> bool:
 	if _persistence_key.is_empty():
 		return false
-	var wsm := WorldStateManager
-	if wsm and wsm.has_state(_persistence_key):
-		var data: Dictionary = wsm.load_state(_persistence_key)
+	if WorldStateManager.has_state(_persistence_key):
+		var data: Dictionary = WorldStateManager.load_state(_persistence_key)
 		if data.get("is_dead", false):
 			queue_free()
 			return true
@@ -191,6 +189,4 @@ func _restore_state() -> bool:
 func _persist_death() -> void:
 	if _persistence_key.is_empty():
 		return
-	var wsm := WorldStateManager
-	if wsm:
-		wsm.save_state(_persistence_key, {"is_dead": true})
+	WorldStateManager.save_state(_persistence_key, {"is_dead": true})

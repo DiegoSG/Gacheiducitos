@@ -28,23 +28,19 @@ func add_gold(amount: int) -> void:
 	if amount <= 0:
 		return
 	gold += amount
-	print("Gold added: ", amount, " | Total: ", gold)
 
 func take_damage(amount: int) -> void:
 	if amount <= 0:
 		return
 	health -= amount
-	print("Player took damage: ", amount, " | HP: ", health)
 
 func heal(amount: int) -> void:
 	if amount <= 0:
 		return
 	health += amount
-	print("Player healed: ", amount, " | HP: ", health)
 
 func full_heal() -> void:
 	health = max_health
-	print("Player full healed | HP: ", health)
 
 func remove_gold(amount: int) -> bool:
 	if amount <= 0:
@@ -52,7 +48,6 @@ func remove_gold(amount: int) -> bool:
 	if gold < amount:
 		return false
 	gold -= amount
-	print("Gold removed: ", amount, " | Total: ", gold)
 	return true
 
 func create_snapshot() -> Dictionary:
@@ -71,4 +66,3 @@ func restore_snapshot(snapshot: Dictionary) -> void:
 		health = int(snapshot["health"])
 	if snapshot.has("gold"):
 		gold = int(snapshot["gold"])
-	print("PlayerStats: Snapshot restaurado -> HP: ", health, "/", max_health, " | Oro: ", gold)

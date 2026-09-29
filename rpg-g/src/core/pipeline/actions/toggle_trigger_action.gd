@@ -19,7 +19,7 @@ func execute(trigger_node: Node) -> void:
 		
 	var t_node: Node = trigger_node.get_node_or_null(target_trigger)
 	if not t_node:
-		print("ToggleTriggerAction: No se encontró target ", target_trigger)
+		push_warning("ToggleTriggerAction: No se encontró target ", target_trigger)
 		finished.emit()
 		return
 		

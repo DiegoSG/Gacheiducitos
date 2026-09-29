@@ -52,8 +52,8 @@ func setup(item_data: ItemData, amount: int = 1) -> void:
 	# Animación de aparición (scale pop & fade in)
 	scale = Vector2(0.85, 0.85)
 	modulate.a = 0.0
-	
-	var tw = create_tween()
+
+	var tw: Tween = create_tween()
 	tw.set_parallel(true)
 	tw.tween_property(self, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(self, "modulate:a", 1.0, 0.10)
@@ -72,7 +72,7 @@ func add_amount(amount: int) -> void:
 		_is_fading = false
 		
 	# Punch de escala para refuerzo visual
-	var tw = create_tween()
+	var tw: Tween = create_tween()
 	tw.tween_property(self, "scale", Vector2(1.22, 1.22), 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(self, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 

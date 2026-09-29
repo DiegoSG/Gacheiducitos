@@ -74,8 +74,6 @@ func setup_game() -> void:
 	spawn_timer.autostart = true
 	spawn_timer.timeout.connect(_on_spawn_timeout)
 	add_child(spawn_timer)
-	
-	print("Smasher initialized: ", game_mode, " target: ", target_value)
 
 func _process(delta: float) -> void:
 	if game_over:
@@ -136,22 +134,18 @@ func spawn_insect() -> void:
 
 func _on_insect_smashed() -> void:
 	score += 1
-	print("Score: ", score)
 	if game_mode == "COUNT" and score >= target_value:
 		win()
 
 func _on_insect_escaped() -> void:
 	lives -= 1
-	print("Life lost! Lives remaining: ", lives)
 	if lives <= 0:
 		lose()
 
 func win() -> void:
 	game_over = true
-	print("Smasher: WIN!")
 	finish(true)
 
 func lose() -> void:
 	game_over = true
-	print("Smasher: LOSE!")
 	finish(false)

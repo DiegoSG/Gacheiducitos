@@ -12,7 +12,7 @@ func _ready() -> void:
 func setup(p_item_id: String, texture: Texture2D) -> void:
 	item_id = p_item_id
 	if texture and has_node("Sprite2D"):
-		var sprite = $Sprite2D
+		var sprite: Sprite2D = $Sprite2D
 		sprite.texture = texture
 		sprite.scale = Vector2(0.6, 0.6)
 

@@ -55,7 +55,5 @@ func execute(trigger_node: Node) -> void:
 		
 		if instance is Node2D:
 			(instance as Node2D).global_position = spawn_pos
-			
-		print("[SpawnAction]: '%s' spawneado en posición global %s" % [instance.name, str(spawn_pos)])
 
 	finished.emit()

@@ -47,7 +47,7 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	if not _persistence_key.is_empty():
-		if WorldStateManager and WorldStateManager.has_state(_persistence_key):
+		if WorldStateManager.has_state(_persistence_key):
 			_has_dropped_unique = WorldStateManager.load_state(_persistence_key).get("unique_dropped", false)
 
 ## Ejecuta la lógica completa de loot y spawnea los objetos en el nivel.
@@ -60,12 +60,12 @@ func drop_loot(spawn_pos: Vector2 = global_position) -> Array[PickupItem]:
 	# 1. Procesar Ítem Único (One-Time Drop)
 	if unique_item and not _is_unique_already_dropped():
 		if _roll_probability(unique_probability):
-			var unique_pickup = _spawn_pickup(unique_item, -1, spawn_pos, drop_index)
+			var unique_pickup: PickupItem = _spawn_pickup(unique_item, -1, spawn_pos, drop_index)
 			if unique_pickup:
 				spawned_pickups.append(unique_pickup)
 				drop_index += 1
 			_mark_unique_as_dropped()
-	
+
 	# 2. Procesar Tabla de Loot Estándar
 	var candidates: Array[ItemData] = []
 	for item in loot_table:
@@ -79,7 +79,7 @@ func drop_loot(spawn_pos: Vector2 = global_position) -> Array[PickupItem]:
 		candidates.shuffle()
 		var count_to_spawn: int = mini(drop_count, candidates.size())
 		for i in range(count_to_spawn):
-			var pickup = _spawn_pickup(candidates[i], -1, spawn_pos, drop_index)
+			var pickup: PickupItem = _spawn_pickup(candidates[i], -1, spawn_pos, drop_index)
 			if pickup:
 				spawned_pickups.append(pickup)
 				drop_index += 1
@@ -88,7 +88,7 @@ func drop_loot(spawn_pos: Vector2 = global_position) -> Array[PickupItem]:
 	if enable_coins and max_coins > 0 and coin_item_data:
 		var coins_amount: int = randi_range(min_coins, max_coins)
 		if coins_amount > 0:
-			var coin_pickup = _spawn_pickup(coin_item_data, coins_amount, spawn_pos, drop_index)
+			var coin_pickup: PickupItem = _spawn_pickup(coin_item_data, coins_amount, spawn_pos, drop_index)
 			if coin_pickup:
 				spawned_pickups.append(coin_pickup)
 				drop_index += 1
@@ -108,15 +108,14 @@ func _roll_probability(prob_rating: int) -> bool:
 
 func _is_unique_already_dropped() -> bool:
 	if not _persistence_key.is_empty():
-		if WorldStateManager and WorldStateManager.has_state(_persistence_key):
+		if WorldStateManager.has_state(_persistence_key):
 			return WorldStateManager.load_state(_persistence_key).get("unique_dropped", false)
 	return _has_dropped_unique
 
 func _mark_unique_as_dropped() -> void:
 	_has_dropped_unique = true
 	if not _persistence_key.is_empty():
-		if WorldStateManager:
-			WorldStateManager.save_state(_persistence_key, {"unique_dropped": true})
+		WorldStateManager.save_state(_persistence_key, {"unique_dropped": true})
 
 ## Instancia el PickupItem en la escena con animación cinemática radial (Tween)
 func _spawn_pickup(item_res: ItemData, custom_amount: int, origin_pos: Vector2, delay_step: int = 0) -> PickupItem:
@@ -126,8 +125,8 @@ func _spawn_pickup(item_res: ItemData, custom_amount: int, origin_pos: Vector2, 
 	var target_parent: Node = _find_spawn_parent()
 	if not target_parent:
 		return null
-		
-	var pickup = pickup_item_scene.instantiate() as PickupItem
+
+	var pickup: PickupItem = pickup_item_scene.instantiate() as PickupItem
 	if not pickup:
 		return null
 		

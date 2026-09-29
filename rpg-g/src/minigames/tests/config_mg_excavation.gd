@@ -39,7 +39,7 @@ var config = {
 @onready var player_logic_check = $VBoxContainer/VisibilidadDebug/PlayerLogic
 @onready var rock_logic_check = $VBoxContainer/VisibilidadDebug/RockLogic
 
-func _ready():
+func _ready() -> void:
 	# Configurar valores iniciales
 	densidad_tierra_slider.value = config.densidad_tierra
 	prob_piedra_slider.value = config.probabilidad_piedra
@@ -72,7 +72,7 @@ func _ready():
 	# Actualizar labels
 	_update_labels()
 
-func _update_labels():
+func _update_labels() -> void:
 	densidad_tierra_label.text = "%.2f" % config.densidad_tierra
 	prob_piedra_label.text = "%.2f" % config.probabilidad_piedra
 	num_enemigos_label.text = str(config.num_enemigos)
@@ -81,19 +81,19 @@ func _update_labels():
 	tiempo_limite_label.text = "%d:%02d" % [config.tiempo_limite / 60, config.tiempo_limite % 60]
 	escala_label.text = "%.1fx" % config.escala
 
-func _on_densidad_tierra_changed(value: float):
+func _on_densidad_tierra_changed(value: float) -> void:
 	config.densidad_tierra = value
 	_update_labels()
 
-func _on_prob_piedra_changed(value: float):
+func _on_prob_piedra_changed(value: float) -> void:
 	config.probabilidad_piedra = value
 	_update_labels()
 
-func _on_num_enemigos_changed(value: float):
+func _on_num_enemigos_changed(value: float) -> void:
 	config.num_enemigos = int(value)
 	_update_labels()
 
-func _on_num_monedas_changed(value: float):
+func _on_num_monedas_changed(value: float) -> void:
 	config.num_monedas = int(value)
 	# Limitar el target amount al número de monedas
 	target_amount_slider.max_value = config.num_monedas
@@ -102,33 +102,33 @@ func _on_num_monedas_changed(value: float):
 		target_amount_slider.value = config.target_amount
 	_update_labels()
 
-func _on_win_condition_selected(index: int):
+func _on_win_condition_selected(index: int) -> void:
 	config.win_condition = index
 	_update_target_amount_visibility()
 	_update_labels()
 
-func _on_target_amount_changed(value: float):
+func _on_target_amount_changed(value: float) -> void:
 	config.target_amount = int(value)
 	_update_labels()
 
-func _update_target_amount_visibility():
+func _update_target_amount_visibility() -> void:
 	target_amount_container.visible = (config.win_condition == 1) # Cantidad específica
 
-func _on_tiempo_limite_changed(value: float):
+func _on_tiempo_limite_changed(value: float) -> void:
 	config.tiempo_limite = int(value)
 	_update_labels()
 
-func _on_escala_changed(value: float):
+func _on_escala_changed(value: float) -> void:
 	config.escala = value
 	_update_labels()
 
-func _on_player_logic_toggled(button_pressed: bool):
+func _on_player_logic_toggled(button_pressed: bool) -> void:
 	config.show_player_logic = button_pressed
 
-func _on_rock_logic_toggled(button_pressed: bool):
+func _on_rock_logic_toggled(button_pressed: bool) -> void:
 	config.show_rock_logic = button_pressed
 
-func _on_start_pressed():
+func _on_start_pressed() -> void:
 	# Obtener seed del input
 	var seed_text = seed_input.text.strip_edges()
 	if seed_text.is_empty():
@@ -142,11 +142,6 @@ func _on_start_pressed():
 	# Cargar el minijuego
 	GameManager.load_minigame("res://src/minigames/mg_excavation/mg_excavation_game.tscn")
 
-func _on_exit_pressed():
-	print("DebugConfig: Exit button pressed")
+func _on_exit_pressed() -> void:
 	# Volver al overworld
-	if GameManager.previous_scene_path == "":
-		print("DebugConfig: WARNING - previous_scene_path is empty!")
-	else:
-		print("DebugConfig: Returning to: ", GameManager.previous_scene_path)
 	GameManager.return_to_overworld()

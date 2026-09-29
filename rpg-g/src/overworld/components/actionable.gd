@@ -7,9 +7,7 @@ var triggered: bool = false
 
 func action() -> void:
 	if not allow_during_alert and AlertSystem.is_in_alert():
-		print("Actionable: Interaction blocked during alert state for: ", name)
 		return
 	if one_shot and triggered: return
 	triggered = true
-	print("Interacted with " + name)
 	# Default behavior: override this in specific interactables

@@ -26,9 +26,7 @@ func _ready() -> void:
 		_update_editor_label()
 		return
 	_restore_state()
-	var gm := GameManager
-	if gm:
-		gm.game_event.connect(_on_game_event)
+	GameManager.game_event.connect(_on_game_event)
 
 func _on_game_event(event_name: String, _event_data: Variant = null) -> void:
 	if event_name.is_empty():
@@ -45,17 +43,14 @@ func _on_game_event(event_name: String, _event_data: Variant = null) -> void:
 func _restore_state() -> void:
 	if _persistence_key.is_empty():
 		return
-	var wsm := WorldStateManager
-	if wsm and wsm.has_state(_persistence_key):
-		var data: Dictionary = wsm.load_state(_persistence_key)
+	if WorldStateManager.has_state(_persistence_key):
+		var data: Dictionary = WorldStateManager.load_state(_persistence_key)
 		_has_triggered = data.get("has_triggered", false)
 
 func _persist_state() -> void:
 	if _persistence_key.is_empty():
 		return
-	var wsm := WorldStateManager
-	if wsm:
-		wsm.save_state(_persistence_key, {"has_triggered": _has_triggered})
+	WorldStateManager.save_state(_persistence_key, {"has_triggered": _has_triggered})
 
 func _update_editor_label() -> void:
 	queue_redraw()

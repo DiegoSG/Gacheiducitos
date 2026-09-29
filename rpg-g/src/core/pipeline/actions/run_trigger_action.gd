@@ -15,7 +15,7 @@ func execute(trigger_node: Node) -> void:
 		
 	var t_node: Node = trigger_node.get_node_or_null(target_trigger)
 	if not t_node:
-		print("RunTriggerAction: No se encontró target ", target_trigger)
+		push_warning("RunTriggerAction: No se encontró target ", target_trigger)
 		finished.emit()
 		return
 

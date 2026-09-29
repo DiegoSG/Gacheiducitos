@@ -17,13 +17,13 @@ func get_action_name() -> String:
 
 func execute(trigger_node: Node) -> void:
 	if target_node.is_empty():
-		print("AnimAction: NodePath vacío")
+		push_warning("AnimAction: NodePath vacío")
 		finished.emit()
 		return
-		
+
 	var t_node: Node = trigger_node.get_node_or_null(target_node)
 	if not t_node:
-		print("AnimAction: No se encontró el target en path ", target_node)
+		push_warning("AnimAction: No se encontró el target en path ", target_node)
 		finished.emit()
 		return
 		
@@ -69,8 +69,8 @@ func execute(trigger_node: Node) -> void:
 			return
 
 	if not handled:
-		print("AnimAction: No se pudo reproducir ", animation_name, " en ", target_node)
-		
+		push_warning("AnimAction: No se pudo reproducir ", animation_name, " en ", target_node)
+
 	finished.emit()
 
 func _on_anim_finished(_anim: String) -> void:

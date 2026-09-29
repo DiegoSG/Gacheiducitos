@@ -29,7 +29,7 @@ var config = {
 	"lives": 3
 }
 
-func _ready():
+func _ready() -> void:
 	# Configurar valores iniciales
 	initial_speed_slider.value = config.initial_speed
 	final_speed_slider.value = config.final_speed
@@ -61,37 +61,37 @@ func _update_labels():
 	target_value_label.text = str(config.target_value)
 	lives_label.text = str(config.lives)
 
-func _on_initial_speed_changed(value: float):
+func _on_initial_speed_changed(value: float) -> void:
 	config.initial_speed = value
 	_update_labels()
 
-func _on_final_speed_changed(value: float):
+func _on_final_speed_changed(value: float) -> void:
 	config.final_speed = value
 	_update_labels()
 
-func _on_spawn_points_changed(value: float):
+func _on_spawn_points_changed(value: float) -> void:
 	config.num_spawn_points = int(value)
 	_update_labels()
 
-func _on_bugs_per_spawn_changed(value: float):
+func _on_bugs_per_spawn_changed(value: float) -> void:
 	config.bugs_per_spawn = int(value)
 	_update_labels()
 
-func _on_game_mode_selected(index: int):
+func _on_game_mode_selected(index: int) -> void:
 	config.game_mode = "TIME" if index == 0 else "COUNT"
 	_update_labels()
 
-func _on_target_value_changed(value: float):
+func _on_target_value_changed(value: float) -> void:
 	config.target_value = value
 	_update_labels()
 
-func _on_lives_changed(value: float):
+func _on_lives_changed(value: float) -> void:
 	config.lives = int(value)
 	_update_labels()
 
-func _on_start_pressed():
+func _on_start_pressed() -> void:
 	GameManager.minigame_config = config
 	GameManager.load_minigame("res://src/minigames/mg_smasher/mg_smasher_game.tscn")
 
-func _on_exit_pressed():
+func _on_exit_pressed() -> void:
 	GameManager.return_to_overworld()

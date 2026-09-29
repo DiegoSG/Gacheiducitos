@@ -70,8 +70,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _draw() -> void:
 	if not Engine.is_editor_hint() and not debug_bounds_visible:
 		return
-		
-	var bounds_rect = Rect2(Vector2.ZERO, level_bounds)
+
+	var bounds_rect: Rect2 = Rect2(Vector2.ZERO, level_bounds)
 	
 	# Marco exterior
 	draw_rect(bounds_rect, border_color, false, line_width)
@@ -86,17 +86,17 @@ func _draw() -> void:
 	draw_line(Vector2.ZERO, Vector2(0, corner_len), corner_color, c_thick)
 	
 	# Superior Derecha
-	var top_right = Vector2(level_bounds.x, 0)
+	var top_right: Vector2 = Vector2(level_bounds.x, 0)
 	draw_line(top_right, top_right + Vector2(-corner_len, 0), corner_color, c_thick)
 	draw_line(top_right, top_right + Vector2(0, corner_len), corner_color, c_thick)
-	
+
 	# Inferior Izquierda
-	var bl = Vector2(0, level_bounds.y)
+	var bl: Vector2 = Vector2(0, level_bounds.y)
 	draw_line(bl, bl + Vector2(corner_len, 0), corner_color, c_thick)
 	draw_line(bl, bl + Vector2(0, -corner_len), corner_color, c_thick)
-	
+
 	# Inferior Derecha
-	var br = level_bounds
+	var br: Vector2 = level_bounds
 	draw_line(br, br + Vector2(-corner_len, 0), corner_color, c_thick)
 	draw_line(br, br + Vector2(0, -corner_len), corner_color, c_thick)
 	
@@ -110,7 +110,7 @@ func _draw() -> void:
 		draw_string(font, Vector2(16, 28), info_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, corner_color)
 
 func _update_camera_bounds() -> void:
-	var root = get_parent()
+	var root: Node = get_parent()
 	if not root:
 		return
 	for child in root.find_children("*", "Camera2D", true, false):

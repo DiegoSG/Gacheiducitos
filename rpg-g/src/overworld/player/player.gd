@@ -205,8 +205,7 @@ func _on_player_died() -> void:
 		var death_tween: Tween = create_tween()
 		death_tween.tween_property(sprite, "rotation_degrees", 90.0, 0.25)
 		death_tween.parallel().tween_property(sprite, "modulate", Color(0.8, 0.2, 0.2, 0.8), 0.25)
-		
-	print("[Player] El jugador ha muerto. Solicitando respawn a GameManager...")
+
 	# Breve pausa para notar la caída antes del fader de respawn
 	var tree: SceneTree = get_tree()
 	if tree:
@@ -224,7 +223,6 @@ func _on_player_respawned() -> void:
 	if hurtbox_component:
 		hurtbox_component.set_deferred("monitoring", true)
 		hurtbox_component.set_deferred("monitorable", true)
-	print("[Player] Jugador restablecido tras respawn.")
 
 
 func attack() -> void:

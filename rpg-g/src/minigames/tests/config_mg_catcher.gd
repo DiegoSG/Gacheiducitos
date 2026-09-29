@@ -26,7 +26,7 @@ var config = {
 	"lives": 3
 }
 
-func _ready():
+func _ready() -> void:
 	# Configurar valores iniciales
 	fall_speed_slider.value = config.base_fall_speed
 	spawn_rate_slider.value = config.spawn_rate
@@ -55,33 +55,33 @@ func _update_labels():
 	target_value_label.text = str(config.target_value)
 	lives_label.text = str(config.lives)
 
-func _on_fall_speed_changed(value: float):
+func _on_fall_speed_changed(value: float) -> void:
 	config.base_fall_speed = value
 	_update_labels()
 
-func _on_spawn_rate_changed(value: float):
+func _on_spawn_rate_changed(value: float) -> void:
 	config.spawn_rate = value
 	_update_labels()
 
-func _on_max_objects_changed(value: float):
+func _on_max_objects_changed(value: float) -> void:
 	config.max_falling_objects = int(value)
 	_update_labels()
 
-func _on_game_mode_selected(index: int):
+func _on_game_mode_selected(index: int) -> void:
 	config.game_mode = "TIME" if index == 0 else "COUNT"
 	_update_labels()
 
-func _on_target_value_changed(value: float):
+func _on_target_value_changed(value: float) -> void:
 	config.target_value = value
 	_update_labels()
 
-func _on_lives_changed(value: float):
+func _on_lives_changed(value: float) -> void:
 	config.lives = int(value)
 	_update_labels()
 
-func _on_start_pressed():
+func _on_start_pressed() -> void:
 	GameManager.minigame_config = config
 	GameManager.load_minigame("res://src/minigames/mg_catcher/mg_catcher_game.tscn")
 
-func _on_exit_pressed():
+func _on_exit_pressed() -> void:
 	GameManager.return_to_overworld()

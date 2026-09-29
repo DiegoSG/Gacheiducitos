@@ -27,10 +27,9 @@ func _ready() -> void:
 func _restore_state() -> void:
 	if _persistence_key.is_empty():
 		return
-	var wsm := WorldStateManager
-	if not wsm or not wsm.has_state(_persistence_key):
+	if not WorldStateManager.has_state(_persistence_key):
 		return
-	var data: Dictionary = wsm.load_state(_persistence_key)
+	var data: Dictionary = WorldStateManager.load_state(_persistence_key)
 	has_been_looted = data.get("has_been_looted", false)
 	is_open = data.get("is_open", false)
 	if sprite:
@@ -47,7 +46,6 @@ func open_chest() -> void:
 	if sprite:
 		sprite.texture = texture_open
 		sprite.modulate = Color.WHITE
-	print("Chest ", _persistence_key, " opened.")
 
 	if not has_been_looted:
 		give_loot()
@@ -63,7 +61,6 @@ func close_chest() -> void:
 	if sprite:
 		sprite.texture = texture_closed
 		sprite.modulate = Color.WHITE
-	print("Chest ", _persistence_key, " closed.")
 	show_message("closed")
 	_persist_state()
 
@@ -89,11 +86,9 @@ func show_message(title: String) -> void:
 	DialogueManager.show_dialogue_balloon(CHEST_DIALOGUE, title)
 
 func open_storage() -> void:
-	print("Opening storage UI (Not implemented yet)...")
+	pass
 
 func _persist_state() -> void:
 	if _persistence_key.is_empty():
 		return
-	var wsm := WorldStateManager
-	if wsm:
-		wsm.save_state(_persistence_key, {"has_been_looted": has_been_looted, "is_open": is_open})
+	WorldStateManager.save_state(_persistence_key, {"has_been_looted": has_been_looted, "is_open": is_open})

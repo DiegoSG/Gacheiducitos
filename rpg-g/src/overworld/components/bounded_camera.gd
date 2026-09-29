@@ -15,11 +15,11 @@ func _ready() -> void:
 		snap_to_target()
 
 func _connect_boundary_manager() -> void:
-	var tree = get_tree()
+	var tree: SceneTree = get_tree()
 	if tree:
-		var managers = tree.get_nodes_in_group("world_boundary_managers")
+		var managers: Array = tree.get_nodes_in_group("world_boundary_managers")
 		if not managers.is_empty():
-			var mgr = managers[0]
+			var mgr: Variant = managers[0]
 			if mgr.has_method("get_level_bounds"):
 				setup_bounds(mgr.get_level_bounds())
 			if mgr.has_signal("bounds_changed") and not mgr.bounds_changed.is_connected(setup_bounds):

@@ -7,42 +7,42 @@ const TileType = MGT.TileType
 const WinCondition = MGT.WinCondition
 
 # Configuración del grid
-const CELL_SIZE = 16
-var grid_width = 40
-var grid_height = 23
+const CELL_SIZE: int = 16
+var grid_width: int = 40
+var grid_height: int = 23
 
 # Grid de tiles (Array 2D)
-var grid = []
+var grid: Array = []
 
 # Referencia al jugador
-var player_grid_pos = Vector2i(1, 1)
+var player_grid_pos: Vector2i = Vector2i(1, 1)
 var is_player_dead: bool = false
 
 # Estado de la misión
-var total_coins = 0
-var coins_collected = 0
-var mission_item_collected = false
-var current_win_condition = WinCondition.ALL_COINS
-var target_coin_amount = 0
+var total_coins: int = 0
+var coins_collected: int = 0
+var mission_item_collected: bool = false
+var current_win_condition: int = WinCondition.ALL_COINS
+var target_coin_amount: int = 0
 
 # Configuración recibida del debug screen
-var config = {}
+var config: Dictionary = {}
 
 # Sistema de gravedad
-var gravity_timer = 0.0
-const GRAVITY_TICK = 0.12 # Mismo delay que el movimiento del jugador
+var gravity_timer: float = 0.0
+const GRAVITY_TICK: float = 0.12 # Mismo delay que el movimiento del jugador
 
 # Sistema de movimiento continuo
-var move_timer = 0.0
-const MOVE_DELAY = 0.12
-var current_direction = Vector2i.ZERO
+var move_timer: float = 0.0
+const MOVE_DELAY: float = 0.12
+var current_direction: Vector2i = Vector2i.ZERO
 
 # Sistema de empuje de piedras y visuales
-var is_pushing_rock = false
-const PUSH_DELAY = 0.24 # Mitad de velocidad al empujar
-var falling_visuals = {} # "x,y" -> { "visual_pos": Vector2, "rotation": float, "type": int }
-var falling_objects = {} # "x,y" -> true (coordenadas de las que ya venían cayendo)
-var pending_falls = {} # "x,y" -> ticks_remaining (objetos que quieren empezar a caer)
+var is_pushing_rock: bool = false
+const PUSH_DELAY: float = 0.24 # Mitad de velocidad al empujar
+var falling_visuals: Dictionary = {} # "x,y" -> { "visual_pos": Vector2, "rotation": float, "type": int }
+var falling_objects: Dictionary = {} # "x,y" -> true (coordenadas de las que ya venían cayendo)
+var pending_falls: Dictionary = {} # "x,y" -> ticks_remaining (objetos que quieren empezar a caer)
 
 # Sistema de bombas
 var player_bombs_ammo: int = 0
@@ -54,29 +54,28 @@ var item_pool: Array = []
 
 # Texturas
 var coin_texture: Texture2D = null
-var bomb_texture = null
-var potion_texture = null
-var player_texture = null
+var bomb_texture: Texture2D = null
+var potion_texture: Texture2D = null
+var player_texture: Texture2D = null
 
 # Sistema de interpolación suave
-var visual_player_pos : Vector2
-var interp_speed = 15.0
+var visual_player_pos: Vector2 = Vector2.ZERO
+var interp_speed: float = 15.0
 
 # Gestión de inputs refinada
-var input_stack = [] # Lista de direcciones presionadas en orden
+var input_stack: Array = [] # Lista de direcciones presionadas en orden
 
 # Cámara
-var camera : Camera2D
+var camera: Camera2D = null
 
-func _ready():
+func _ready() -> void:
 	# Textura de moneda compartida (con fallback) desde MinigameBase
 	coin_texture = get_coin_texture()
-	bomb_texture = load("res://assets/items/icons/iron_key.png") # o icono representativo
-	potion_texture = load("res://assets/items/icons/blue_potion.png")
-	player_texture = load("res://assets/sprites/player_down.png")
-	
+	bomb_texture = load("res://assets/items/icons/iron_key.png") as Texture2D
+	potion_texture = load("res://assets/items/icons/blue_potion.png") as Texture2D
+	player_texture = load("res://assets/sprites/player_down.png") as Texture2D
+
 	config = GameManager.minigame_config
-	print("MG_Excavation Engine iniciado con config:", config)
 	
 	deliver_items = config.get("deliver_items", false)
 	player_bombs_ammo = config.get("initial_bombs", 1)
@@ -106,7 +105,7 @@ func _ready():
 	
 	queue_redraw()
 
-func _setup_camera():
+func _setup_camera() -> void:
 	camera = Camera2D.new()
 	add_child(camera)
 	camera.make_current()
@@ -128,13 +127,13 @@ func _setup_camera():
 	
 	_update_camera_position()
 
-func _update_camera_position():
+func _update_camera_position() -> void:
 	if camera:
 		# La posición de la cámara debe ser relativa al mundo global
 		# visual_player_pos está en coordenadas locales del grid
 		camera.global_position = self.global_position + (visual_player_pos * self.scale)
 
-func _initialize_falling_visuals():
+func _initialize_falling_visuals() -> void:
 	falling_visuals.clear()
 	for y in range(grid_height):
 		for x in range(grid_width):
@@ -147,12 +146,12 @@ func _initialize_falling_visuals():
 					"type": tile
 				}
 
-func _process(delta):
+func _process(delta: float) -> void:
 	if is_player_dead:
 		_interpolate_visuals(delta) # Seguir interpolando aunque muera para ver el impacto
 		queue_redraw()
 		return
-		
+
 	# Procesar cuenta regresiva de bombas colocadas por el jugador
 	_update_placed_bombs(delta)
 
@@ -163,10 +162,10 @@ func _process(delta):
 	if gravity_timer >= GRAVITY_TICK:
 		gravity_timer = 0.0
 		_update_gravity()
-	
+
 	if not is_player_dead:
 		_handle_continuous_movement(delta)
-	
+
 	_interpolate_visuals(delta)
 	_update_camera_position()
 	queue_redraw()
@@ -177,7 +176,7 @@ func _handle_bomb_planting(delta: float) -> void:
 			if space_held_timer >= 0.0:
 				space_held_timer += delta
 				if space_held_timer >= BOMB_PLANT_HOLD_TIME:
-					space_held_timer = -1.0 # Evitar repetir hasta soltar
+					space_held_timer = -1.0
 					_try_plant_bomb()
 		else:
 			space_held_timer = 0.0
@@ -186,7 +185,6 @@ func _handle_bomb_planting(delta: float) -> void:
 
 func _try_plant_bomb() -> void:
 	if player_bombs_ammo <= 0:
-		print("[Excavation] Sin bombas disponibles para colocar.")
 		return
 	
 	# Verificar si ya hay una bomba en la posición del jugador
@@ -199,7 +197,6 @@ func _try_plant_bomb() -> void:
 		"pos": player_grid_pos,
 		"timer": 4.0
 	})
-	print("[Excavation] Bomba colocada en (%d, %d). ¡Huye! Bombas restantes: %d" % [player_grid_pos.x, player_grid_pos.y, player_bombs_ammo])
 	queue_redraw()
 
 func _update_placed_bombs(delta: float) -> void:
@@ -213,8 +210,6 @@ func _update_placed_bombs(delta: float) -> void:
 	active_placed_bombs = remaining
 
 func _explode_at(center_pos: Vector2i, reason: String = "EXPLOSIÓN") -> void:
-	print("[Excavation] %s en (%d, %d)" % [reason, center_pos.x, center_pos.y])
-	
 	# Destruir área de 3x3
 	var player_caught = false
 	var chain_explosions: Array[Vector2i] = []
@@ -256,7 +251,7 @@ func _explode_at(center_pos: Vector2i, reason: String = "EXPLOSIÓN") -> void:
 	if player_caught:
 		_player_crushed(reason)
 
-func _interpolate_visuals(delta):
+func _interpolate_visuals(delta: float) -> void:
 	# Interpolar jugador
 	var target_player_world = grid_to_world(player_grid_pos)
 	visual_player_pos = visual_player_pos.lerp(target_player_world, interp_speed * delta)
@@ -268,8 +263,8 @@ func _interpolate_visuals(delta):
 		var target_world = grid_to_world(Vector2i(int(coords[0]), int(coords[1])))
 		data.visual_pos = data.visual_pos.lerp(target_world, interp_speed * delta)
 
-func _handle_continuous_movement(delta):
-	var direction = Vector2i.ZERO
+func _handle_continuous_movement(delta: float) -> void:
+	var direction: Vector2i = Vector2i.ZERO
 	
 	if input_stack.size() > 0:
 		direction = input_stack[-1] # Usar la última tecla presionada
@@ -290,32 +285,30 @@ func _handle_continuous_movement(delta):
 			move_timer = 0.0
 			_handle_player_action(current_direction)
 
-func _handle_player_action(direction: Vector2i):
+func _handle_player_action(direction: Vector2i) -> void:
 	if Input.is_action_pressed("ui_accept"):
 		_try_dig_adjacent(direction)
 	else:
 		_try_move_player(direction)
 
-func _initialize_grid():
+func _initialize_grid() -> void:
 	grid.clear()
 	for y in range(grid_height):
-		var row = []
+		var row: Array = []
 		for x in range(grid_width):
 			row.append(TileType.EMPTY)
 		grid.append(row)
 
-func _generate_level():
+func _generate_level() -> void:
 	var LevelGen = load("res://src/minigames/mg_excavation/level_generator.gd")
 	grid = LevelGen.generate_level(grid_width, grid_height, config)
-	print("Nivel generado proceduralmente")
 
-func _count_total_coins():
+func _count_total_coins() -> void:
 	total_coins = 0
 	for y in range(grid_height):
 		for x in range(grid_width):
 			if grid[y][x] == TileType.ITEM_RECOMPENSA:
 				total_coins += 1
-	print("Total de monedas en el nivel: ", total_coins)
 	if current_win_condition == WinCondition.ALL_COINS:
 		target_coin_amount = total_coins
 
@@ -424,7 +417,7 @@ func _draw():
 					var rock_logic_pos = grid_to_world(Vector2i(x, y)) - Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0)
 					draw_rect(Rect2(rock_logic_pos, Vector2(CELL_SIZE, CELL_SIZE)), Color.BLUE, false, 1)
 
-func _get_tile_color(tile: TileType) -> Color:
+func _get_tile_color(tile: int) -> Color:
 	match tile:
 		TileType.EMPTY:
 			return Color(0.1, 0.1, 0.15)
@@ -488,13 +481,11 @@ func _collect_tile(pos: Vector2i, tile: int, from_dig: bool = false) -> bool:
 	match tile:
 		TileType.BOMB_PICKUP:
 			player_bombs_ammo += 1
-			print("[Excavation] ¡Bomba recogida%s! Total: %d" % [suffix, player_bombs_ammo])
 		TileType.ITEM_INVENTARIO:
 			var item_id: String = Inventory.GOLD_ITEM_ID
 			if item_pool.size() > 0:
 				item_id = str(item_pool[randi() % item_pool.size()])
 			add_reward(item_id, 1)
-			print("[Excavation] ¡Ítem de inventario recogido%s: %s!" % [suffix, item_id])
 		TileType.ITEM_RECOMPENSA:
 			add_reward(Inventory.GOLD_ITEM_ID, 1)
 			coins_collected += 1
@@ -507,8 +498,8 @@ func _collect_tile(pos: Vector2i, tile: int, from_dig: bool = false) -> bool:
 			return false
 	return true
 
-func _try_move_player(direction: Vector2i):
-	var new_pos = player_grid_pos + direction
+func _try_move_player(direction: Vector2i) -> void:
+	var new_pos: Vector2i = player_grid_pos + direction
 	
 	if not _in_bounds(new_pos):
 		return
@@ -548,17 +539,14 @@ func _try_move_player(direction: Vector2i):
 			if _is_win_condition_met():
 				player_grid_pos = new_pos
 				queue_redraw()
-				print("¡Nivel completado!")
 				finish(true)
-			else:
-				print("No has cumplido la condición de victoria")
 
 func _try_push_rock(rock_pos: Vector2i, direction: Vector2i) -> bool:
 	# Solo se pueden empujar horizontalmente
 	if direction.y != 0:
 		return false
-	
-	var push_dest = rock_pos + direction
+
+	var push_dest: Vector2i = rock_pos + direction
 	
 	# Verificar límites
 	if not _in_bounds(push_dest):
@@ -572,11 +560,11 @@ func _try_push_rock(rock_pos: Vector2i, direction: Vector2i) -> bool:
 	# Empujar la piedra o bomba
 	grid[push_dest.y][push_dest.x] = pushed_tile
 	grid[rock_pos.y][rock_pos.x] = TileType.EMPTY
-	
+
 	# Actualizar rotación visual y transferencia de estado
 	var old_key = str(rock_pos.x) + "," + str(rock_pos.y)
 	var new_key = str(push_dest.x) + "," + str(push_dest.y)
-	
+
 	# Si por alguna razón no existe el visual, lo inicializamos en la posición vieja
 	var data = falling_visuals.get(old_key, {
 		"visual_pos": grid_to_world(rock_pos),
@@ -588,12 +576,11 @@ func _try_push_rock(rock_pos: Vector2i, direction: Vector2i) -> bool:
 	falling_visuals[new_key] = data
 	if new_key != old_key:
 		falling_visuals.erase(old_key)
-	
-	print("Empujando objeto:", pushed_tile)
+
 	return true
 
-func _try_dig_adjacent(direction: Vector2i):
-	var target_pos = player_grid_pos + direction
+func _try_dig_adjacent(direction: Vector2i) -> void:
+	var target_pos: Vector2i = player_grid_pos + direction
 	
 	if not _in_bounds(target_pos):
 		return
@@ -793,13 +780,11 @@ func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictio
 			
 	return result
 
-func _player_crushed(reason: String = ""):
+func _player_crushed(reason: String = "") -> void:
 	if is_player_dead:
 		return
 	is_player_dead = true
-	
-	print("¡JUGADOR APLASTADO! Razón: ", reason, " en posición: ", player_grid_pos)
-	
+
 	# Feedback visual inmediato
 	queue_redraw()
 	

@@ -25,7 +25,6 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 
 	is_knocked_back = true
 	health -= damage
-	print("Dummy golpeado! HP restante: %d" % health)
 
 	# Efecto visual de daño
 	sprite.modulate = Color.RED
@@ -46,5 +45,4 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 
 	# Si su salud llega a cero, muere
 	if health <= 0:
-		print("Dummy destruido!")
 		queue_free()

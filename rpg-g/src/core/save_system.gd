@@ -42,15 +42,13 @@ func save_slot(slot_id: int) -> void:
 		file.store_string(JSON.stringify(data, "\t"))
 		file.close()
 		game_saved.emit(slot_id)
-		print("[SaveSystem] Partida guardada en: ", file_path)
 	else:
 		push_error("[SaveSystem] Error guardando archivo: ", file_path)
 
 func load_slot(slot_id: int) -> void:
 	var file_path: String = get_slot_path(slot_id)
-	
+
 	if not FileAccess.file_exists(file_path):
-		print("[SaveSystem] No save file found at: ", file_path)
 		return
 
 	var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
@@ -88,7 +86,6 @@ func load_slot(slot_id: int) -> void:
 		await GameManager.change_level(path, "", pos, true, true)
 
 	game_loaded.emit(slot_id)
-	print("[SaveSystem] Partida cargada exitosamente desde slot: ", slot_id)
 
 func get_slot_metadata(slot_id: int) -> Dictionary:
 	var path: String = get_slot_path(slot_id)
@@ -145,6 +142,5 @@ func delete_slot(slot_id: int) -> void:
 		var err: Error = DirAccess.remove_absolute(file_path)
 		if err == OK:
 			game_deleted.emit(slot_id)
-			print("[SaveSystem] Partida borrada exitosamente: ", file_path)
 		else:
 			push_error("[SaveSystem] Error al borrar el archivo: ", file_path)

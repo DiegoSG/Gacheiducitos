@@ -15,12 +15,10 @@ func add_item(item_id: String, amount: int = 1) -> void:
 
 	if item_id == GOLD_ITEM_ID:
 		PlayerStats.add_gold(amount)
-		print("Objeto recogido: ", item_id, " x", amount)
 		return
 
 	items[item_id] = int(items.get(item_id, 0)) + amount
 	inventory_changed.emit()
-	print("Objeto recogido: ", item_id, " x", amount)
 
 ## Atómico: si no hay cantidad suficiente devuelve false y no quita nada.
 func remove_item(item_id: String, amount: int = 1) -> bool:
@@ -86,4 +84,3 @@ func restore_snapshot(snapshot: Dictionary) -> void:
 	# Migración de saves antiguos: el oro se guardaba dentro de items; ahora vive solo en PlayerStats
 	items.erase(GOLD_ITEM_ID)
 	inventory_changed.emit()
-	print("Inventory: Snapshot restaurado -> Items: ", items)

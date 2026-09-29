@@ -26,9 +26,8 @@ var item_pool: Array = [] # Array[Dictionary]: [{"id": "blue_potion", "chance": 
 enum WinCondition { ALTURA, ESPECIAL, MONEDAS }
 enum CoinPattern { LINEA, CUADRO, V, V_INVERTIDA }
 
-func _ready():
+func _ready() -> void:
 	config = GameManager.minigame_config
-	print("Trampolin iniciado con config:", config)
 	if config.has("item_pool") and config["item_pool"] is Array:
 		item_pool = config["item_pool"]
 	
@@ -52,7 +51,7 @@ func _ready():
 	for i in range(12):
 		spawn_platform()
 
-func _process(_delta):
+func _process(_delta: float) -> void:
 	if !player: return
 	
 	# La cámara sigue al jugador solo HACIA ARRIBA
@@ -85,11 +84,11 @@ func _process(_delta):
 	if player.global_position.y > camera.global_position.y + 600:
 		_game_over()
 
-func _check_win_conditions():
+func _check_win_conditions() -> void:
 	if win_condition_met: return
-	
-	var cond = config.get("win_condition", WinCondition.ALTURA)
-	var target = config.get("target_value", 100)
+
+	var cond: int = config.get("win_condition", WinCondition.ALTURA)
+	var target: float = config.get("target_value", 100.0)
 	
 	match cond:
 		WinCondition.ALTURA:
@@ -104,26 +103,23 @@ func _win_game(reason: String) -> void:
 		return
 	win_condition_met = true
 	set_process(false)
-	print("VICTORIA: ", reason)
-	# La pantalla de victoria la muestra MinigameBase.finish()
 	finish(true)
 
 func _on_special_platform_reached() -> void:
 	_win_game("¡Trampolín especial encontrado!")
 
-func _on_coin_collected():
+func _on_coin_collected() -> void:
 	coins_collected += 1
 	add_reward(Inventory.GOLD_ITEM_ID, 1)
-	print("Monedas: ", coins_collected)
 	if config.get("win_condition") == WinCondition.MONEDAS:
 		$UI/ScoreLabel.text = "Monedas: %d/%d" % [coins_collected, config.get("target_value")]
 
-func spawn_platform():
-	var new_plat = PLATFORM_SCENE.instantiate()
+func spawn_platform() -> void:
+	var new_plat: Node2D = PLATFORM_SCENE.instantiate()
 	platforms_container.add_child(new_plat)
 	
 	# Posición aleatoria en el ancho del juego
-	var x_pos = randf_range(-game_width/2.0 + 40, game_width/2.0 - 40)
+	var x_pos: float = randf_range(-game_width/2.0 + 40, game_width/2.0 - 40)
 	last_platform_y -= spawn_distance
 	new_plat.global_position = Vector2(x_pos, last_platform_y)
 	
@@ -147,7 +143,6 @@ func spawn_platform():
 			new_plat.modulate = Color.GOLD
 			new_plat.add_to_group("special_platform")
 			special_platform_spawned = true
-			print("Plataforma especial aparecida a altura: ", current_h)
 
 func _spawn_platform_item(p_id: String, pos: Vector2) -> void:
 	var item_node = ITEM_SCENE.instantiate() as MG_TrampolinItem
@@ -159,23 +154,21 @@ func _spawn_platform_item(p_id: String, pos: Vector2) -> void:
 
 func _on_platform_item_collected(p_id: String) -> void:
 	add_reward(p_id, 1)
-	print("[Trampolin] ¡Item recogido sobre plataforma!: ", p_id)
 
-func _game_over():
-	print("GAME OVER - Trampolin")
+func _game_over() -> void:
 	set_process(false)
 	finish(win_condition_met)
 
-func spawn_base_floor():
-	var start_y = last_platform_y + 100.0
+func spawn_base_floor() -> void:
+	var start_y: float = last_platform_y + 100.0
 	for x in range(-300, 301, 80):
 		var base_plat = PLATFORM_SCENE.instantiate()
 		platforms_container.add_child(base_plat)
 		base_plat.global_position = Vector2(x, start_y)
 
-func _spawn_coin_pattern(y_base: float):
-	var pattern = randi() % 4
-	var center_x = randf_range(-game_width/4.0, game_width/4.0)
+func _spawn_coin_pattern(y_base: float) -> void:
+	var pattern: int = randi() % 4
+	var center_x: float = randf_range(-game_width/4.0, game_width/4.0)
 	
 	match pattern:
 		CoinPattern.LINEA:
@@ -194,8 +187,8 @@ func _spawn_coin_pattern(y_base: float):
 			for offset in offsets:
 				_spawn_one_coin(Vector2(center_x, y_base) + offset)
 
-func _spawn_one_coin(pos: Vector2):
-	var coin = COIN_SCENE.instantiate()
+func _spawn_one_coin(pos: Vector2) -> void:
+	var coin: Node2D = COIN_SCENE.instantiate()
 	add_child(coin)
 	coin.global_position = pos
 	coin.collected.connect(_on_coin_collected)

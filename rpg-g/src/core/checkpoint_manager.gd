@@ -21,7 +21,6 @@ func register_level_entry(scene_path: String, scene_node: Node, is_organic: bool
 	
 	# Respaldar estado del mundo al inicio de este nivel (para revertir si muere aquí)
 	level_entry_world_state_snapshot = WorldStateManager.create_snapshot()
-	print("[CheckpointManager] WorldState snapshot registrado para el nivel: ", scene_path)
 	level_entry_narrative_snapshot = NarrativeManager.create_snapshot()
 	
 	# Buscar configuración de excepción en la escena
@@ -39,9 +38,8 @@ func register_level_entry(scene_path: String, scene_node: Node, is_organic: bool
 	else:
 		active_checkpoint_scene_path = scene_path
 		active_checkpoint_spawn_id = ""
-	
+
 	_capture_checkpoint_player_snapshot()
-	print("[CheckpointManager] Checkpoint activo actualizado a: ", active_checkpoint_scene_path, " (Spawn ID: '", active_checkpoint_spawn_id, "')")
 	
 	# Si no hay excepción (o disable_autosave es false) y es transición orgánica (not is_same_scene), ejecuta autoguardado
 	var should_autosave: bool = is_organic and not is_same_scene
@@ -49,7 +47,6 @@ func register_level_entry(scene_path: String, scene_node: Node, is_organic: bool
 		should_autosave = false
 		
 	if should_autosave:
-		print("[CheckpointManager] Transición orgánica detectada. Autoguardando en slot: ", SaveSystem.AUTOSAVE_SLOT_ID)
 		SaveSystem.save_slot(SaveSystem.AUTOSAVE_SLOT_ID)
 
 func _capture_checkpoint_player_snapshot() -> void:
@@ -68,7 +65,6 @@ func respawn_player() -> void:
 	if _is_player_dead:
 		return
 	_is_player_dead = true
-	print("[CheckpointManager] Iniciando secuencia de Respawn del jugador...")
 	
 	var target_scene: String = active_checkpoint_scene_path
 	if target_scene.is_empty():
@@ -101,4 +97,3 @@ func respawn_player() -> void:
 	
 	_is_player_dead = false
 	player_respawned.emit()
-	print("[CheckpointManager] Respawn completado con éxito en: ", target_scene)

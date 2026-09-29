@@ -56,5 +56,4 @@ func execute(trigger_node: Node) -> void:
 		DoorOperation.TOGGLE_ACTIVE:
 			portal.set_active_state(not portal.is_active)
 
-	print("[DoorAction]: Operación %s ejecutada sobre '%s'" % [DoorOperation.keys()[operation], portal.name])
 	finished.emit()
