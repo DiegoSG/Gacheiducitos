@@ -20,7 +20,7 @@ func execute(trigger_node: Node) -> void:
 		finished.emit()
 		return
 		
-	var t_node = trigger_node.get_node_or_null(target_node)
+	var t_node: Node = trigger_node.get_node_or_null(target_node)
 	if not t_node:
 		print("VisColAction: No se encontró target ", target_node)
 		finished.emit()
@@ -40,5 +40,5 @@ func _set_collisions_recursive(node: Node, enabled: bool) -> void:
 	if node is CollisionShape2D or node is CollisionPolygon2D:
 		node.set_deferred("disabled", not enabled)
 		
-	for child in node.get_children():
+	for child: Node in node.get_children():
 		_set_collisions_recursive(child, enabled)

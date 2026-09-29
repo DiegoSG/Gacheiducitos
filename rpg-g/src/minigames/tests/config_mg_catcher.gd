@@ -81,7 +81,7 @@ func _on_lives_changed(value: float):
 
 func _on_start_pressed():
 	GameManager.minigame_config = config
-	GameManager.load_minigame("res://src/minigames/mg_catcher/mg_catcher_game.tscn", Vector2.ZERO)
+	GameManager.load_minigame("res://src/minigames/mg_catcher/mg_catcher_game.tscn")
 
 func _on_exit_pressed():
 	GameManager.return_to_overworld()

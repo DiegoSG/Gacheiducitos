@@ -13,7 +13,7 @@ enum MinigameType {
 	CUSTOM_SCENE = 5
 }
 
-const MINIGAME_SCENE_PATHS = {
+const MINIGAME_SCENE_PATHS: Dictionary = {
 	MinigameType.RUNNER: "res://src/minigames/mg_runner/mg_runner_level.tscn",
 	MinigameType.EXCAVATION: "res://src/minigames/mg_excavation/mg_excavation_game.tscn",
 	MinigameType.CATCHER: "res://src/minigames/mg_catcher/mg_catcher_game.tscn",
@@ -89,26 +89,10 @@ var trampolin_item_pool: Array[String] = ["blue_potion", "red_potion", "green_he
 @export_file("*.tscn") var lose_level_path: String = ""
 @export var lose_spawn_id: String = "spawn_lose"
 
-var _raw_config: Dictionary = {}
-## Diccionario de compatibilidad y ajustes manuales opcionales
+## Overrides avanzados opcionales: sus claves se fusionan al final de get_built_config()
+## y tienen precedencia sobre los parámetros del minijuego elegido.
 @export_group("Ajustes Avanzados")
-@export var config: Dictionary = {}:
-	set(val):
-		_raw_config = val
-	get:
-		var built = get_built_config()
-		for k in _raw_config:
-			built[k] = _raw_config[k]
-		return built
-
-var _raw_scene_path: String = ""
-@export_file("*.tscn") var minigame_scene_path: String = "":
-	set(val):
-		_raw_scene_path = val
-	get:
-		if not _raw_scene_path.is_empty():
-			return _raw_scene_path
-		return get_minigame_scene_path()
+@export var config: Dictionary = {}
 
 func _get_property_list() -> Array[Dictionary]:
 	var list: Array[Dictionary] = []
@@ -400,8 +384,6 @@ func get_minigame_scene_path() -> String:
 		return custom_scene_path
 	if MINIGAME_SCENE_PATHS.has(minigame_type):
 		return MINIGAME_SCENE_PATHS[minigame_type]
-	if not minigame_scene_path.is_empty():
-		return minigame_scene_path
 	return ""
 
 func get_built_config() -> Dictionary:
@@ -453,36 +435,28 @@ func get_built_config() -> Dictionary:
 		MinigameType.CUSTOM_SCENE:
 			pass
 
-	# Si se especificaron claves en el diccionario config legacy/avanzado, tienen precedencia
-	for k in _raw_config:
-		c[k] = _raw_config[k]
+	# Los overrides avanzados (config) se fusionan una sola vez y tienen precedencia
+	c.merge(config, true)
 
 	return c
 
 func get_action_name() -> String:
-	var type_name = MinigameType.keys()[minigame_type] if minigame_type < MinigameType.size() else "Custom"
+	var type_name: String = MinigameType.keys()[minigame_type] if minigame_type < MinigameType.size() else "Custom"
 	return "MinigameAction: %s" % type_name
 
-func execute(trigger_node: Node) -> void:
-	var tree = trigger_node.get_tree()
-	var game_manager = tree.root.get_node_or_null("GameManager")
-	
-	if game_manager:
-		var target_scene = get_minigame_scene_path()
-		if target_scene.is_empty():
-			push_error("MinigameAction: No target scene specified for %s" % get_action_name())
-			finished.emit()
-			return
+func execute(_trigger_node: Node) -> void:
+	var target_scene: String = get_minigame_scene_path()
+	if target_scene.is_empty():
+		push_error("MinigameAction: No target scene specified for %s" % get_action_name())
+		finished.emit()
+		return
 
-		var final_config = get_built_config()
-		final_config["win_level_path"] = win_level_path
-		final_config["win_spawn_id"] = win_spawn_id
-		final_config["lose_level_path"] = lose_level_path
-		final_config["lose_spawn_id"] = lose_spawn_id
-		
-		game_manager.minigame_config = final_config
-		game_manager.load_minigame(target_scene)
-	else:
-		print("MinigameAction: GameManager not found!")
-		
+	var final_config: Dictionary = get_built_config()
+	final_config["win_level_path"] = win_level_path
+	final_config["win_spawn_id"] = win_spawn_id
+	final_config["lose_level_path"] = lose_level_path
+	final_config["lose_spawn_id"] = lose_spawn_id
+
+	GameManager.minigame_config = final_config
+	GameManager.load_minigame(target_scene)
 	finished.emit()

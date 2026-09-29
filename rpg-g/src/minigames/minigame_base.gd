@@ -14,25 +14,11 @@ signal game_finished(success: bool, results: Dictionary)
 var session_rewards: Dictionary = {}
 var _is_finishing: bool = false
 var _result_ui: CanvasLayer = null
-var _last_success: bool = false
 
-func _enter_tree() -> void:
-	_connect_game_manager()
-
-func _ready() -> void:
-	_connect_game_manager()
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_ENTER_TREE or what == NOTIFICATION_READY:
-		_connect_game_manager()
-
-func _connect_game_manager() -> void:
-	var gm := GameManager
-	if not gm and get_tree() and get_tree().root:
-		gm = GameManager
-	if gm:
-		if not game_finished.is_connected(gm.complete_minigame):
-			game_finished.connect(gm.complete_minigame)
+## Rutas de la textura de moneda (con fallback) y caché compartida entre minijuegos.
+const COIN_TEXTURE_PATH: String = "res://assets/items/icons/coin_v2.png"
+const COIN_TEXTURE_FALLBACK_PATH: String = "res://assets/items/icons/gold_coins.png"
+static var _coin_texture_cache: Texture2D = null
 
 ## Añade un ítem al buffer local de la sesión.
 ## No se añade al inventario real hasta que se llama a finish().
@@ -48,7 +34,6 @@ func finish(success: bool, skip_screen: bool = false) -> void:
 	if _is_finishing:
 		return
 	_is_finishing = true
-	_last_success = success
 	print("[MinigameBase] Minijuego finalizado. Victoria: ", success)
 	
 	# Si estamos en modo headless (tests automatizados) o se solicita omitir, finalizar de inmediato
@@ -68,40 +53,40 @@ func _show_result_screen(success: bool) -> void:
 	add_child(_result_ui)
 	
 	# Control contenedor raíz de pantalla completa que procesa en pausa
-	var root_ctrl = Control.new()
+	var root_ctrl: Control = Control.new()
 	root_ctrl.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root_ctrl.process_mode = Node.PROCESS_MODE_ALWAYS
 	_result_ui.add_child(root_ctrl)
 	
 	# Fondo oscuro semi-transparente
-	var backdrop = ColorRect.new()
+	var backdrop: ColorRect = ColorRect.new()
 	backdrop.color = Color(0, 0, 0, 0.8)
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root_ctrl.add_child(backdrop)
 	
 	# Contenedor centrado
-	var center = CenterContainer.new()
+	var center: CenterContainer = CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root_ctrl.add_child(center)
 	
 	# Panel contenedor
-	var panel = PanelContainer.new()
+	var panel: PanelContainer = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(420, 240)
 	center.add_child(panel)
 	
-	var margin = MarginContainer.new()
+	var margin: MarginContainer = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 32)
 	margin.add_theme_constant_override("margin_top", 28)
 	margin.add_theme_constant_override("margin_right", 32)
 	margin.add_theme_constant_override("margin_bottom", 28)
 	panel.add_child(margin)
 	
-	var vbox = VBoxContainer.new()
+	var vbox: VBoxContainer = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 18)
 	margin.add_child(vbox)
 	
 	# Título de Victoria / Derrota
-	var title_label = Label.new()
+	var title_label: Label = Label.new()
 	title_label.text = "¡VICTORIA!" if success else "¡DERROTA!"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.add_theme_font_size_override("font_size", 34)
@@ -109,7 +94,7 @@ func _show_result_screen(success: bool) -> void:
 	vbox.add_child(title_label)
 	
 	# Mensaje descriptivo y desglose de recompensas
-	var desc_label = Label.new()
+	var desc_label: Label = Label.new()
 	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc_label.add_theme_font_size_override("font_size", 16)
 	
@@ -117,8 +102,8 @@ func _show_result_screen(success: bool) -> void:
 		if session_rewards.is_empty():
 			desc_label.text = "¡Has completado el desafío con éxito!"
 		else:
-			var loot_text = "¡Desafío superado!\n\nRecompensas obtenidas:"
-			for item_id in session_rewards:
+			var loot_text: String = "¡Desafío superado!\n\nRecompensas obtenidas:"
+			for item_id: String in session_rewards:
 				loot_text += "\n• %s: +%d" % [item_id.capitalize().replace("_", " "), session_rewards[item_id]]
 			desc_label.text = loot_text
 	else:
@@ -126,16 +111,16 @@ func _show_result_screen(success: bool) -> void:
 	vbox.add_child(desc_label)
 	
 	# Botón interactivo para continuar
-	var continue_btn = Button.new()
+	var continue_btn: Button = Button.new()
 	continue_btn.text = "Continuar (Volver al mapa)"
 	continue_btn.custom_minimum_size = Vector2(260, 48)
 	continue_btn.process_mode = Node.PROCESS_MODE_ALWAYS
-	continue_btn.pressed.connect(func(): _on_continue_pressed(success))
+	continue_btn.pressed.connect(func() -> void: _on_continue_pressed(success))
 	vbox.add_child(continue_btn)
 	continue_btn.grab_focus()
 	
 	# Indicador de atajo de teclado
-	var prompt_label = Label.new()
+	var prompt_label: Label = Label.new()
 	prompt_label.text = "O presiona ESPACIO / ENTER para volver"
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_label.add_theme_font_size_override("font_size", 12)
@@ -147,12 +132,6 @@ func _exit_tree() -> void:
 	if get_tree() and get_tree().paused:
 		get_tree().paused = false
 
-func _unhandled_input(event: InputEvent) -> void:
-	if _is_finishing and _result_ui != null:
-		if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_select") or event.is_action_pressed("ui_cancel"):
-			get_viewport().set_input_as_handled()
-			_on_continue_pressed(_last_success)
-
 func _on_continue_pressed(success: bool) -> void:
 	if get_tree() and get_tree().paused:
 		get_tree().paused = false
@@ -162,5 +141,40 @@ func _on_continue_pressed(success: bool) -> void:
 	_emit_finished(success)
 
 func _emit_finished(success: bool) -> void:
-	_connect_game_manager()
 	game_finished.emit(success, {"items": session_rewards})
+
+## Elige un id de ítem de un pool. Acepta Array de String (elección uniforme)
+## o Array de Dictionary {"id": String, "chance": float} (probabilidad acumulada).
+## Devuelve "" si no se elige nada (pool vacío o la tirada no cae en ninguna entrada).
+func pick_item_from_pool(pool: Array) -> String:
+	if pool.is_empty():
+		return ""
+	if pool[0] is Dictionary:
+		var roll: float = randf()
+		var accum: float = 0.0
+		for entry: Variant in pool:
+			if not entry is Dictionary:
+				continue
+			var entry_dict: Dictionary = entry
+			accum += float(entry_dict.get("chance", 0.3))
+			if roll <= accum:
+				return str(entry_dict.get("id", ""))
+		return ""
+	return str(pool[randi() % pool.size()])
+
+## Devuelve el icono del ítem según ItemDatabase, o null si no existe o no tiene icono.
+static func get_item_icon(item_id: String) -> Texture2D:
+	if item_id.is_empty():
+		return null
+	var data: ItemData = ItemDatabase.get_item(item_id)
+	if data == null:
+		return null
+	return data.icon
+
+## Devuelve la textura de la moneda (coin_v2.png con fallback a gold_coins.png), cacheada.
+static func get_coin_texture() -> Texture2D:
+	if _coin_texture_cache == null:
+		_coin_texture_cache = load(COIN_TEXTURE_PATH) as Texture2D
+		if _coin_texture_cache == null:
+			_coin_texture_cache = load(COIN_TEXTURE_FALLBACK_PATH) as Texture2D
+	return _coin_texture_cache

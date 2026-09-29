@@ -73,7 +73,7 @@ func _on_body_entered(body: Node2D) -> void:
 		pressed.emit()
 		state_changed.emit(true)
 		print("[PressurePlate]: Pisada por '%s'. Ejecutando on_enter_actions..." % body.name)
-		_run_actions(on_enter_actions)
+		ActionRunner.run(on_enter_actions, self)
 
 func _on_body_exited(body: Node2D) -> void:
 	if _agents_inside.has(body):
@@ -88,12 +88,7 @@ func _on_body_exited(body: Node2D) -> void:
 		released.emit()
 		state_changed.emit(false)
 		print("[PressurePlate]: Despresionada. Ejecutando on_exit_actions...")
-		_run_actions(on_exit_actions)
-
-func _run_actions(actions: Array[ActionResource]) -> void:
-	for act in actions:
-		if act:
-			act.execute(self)
+		ActionRunner.run(on_exit_actions, self)
 
 func _restore_state() -> void:
 	if persistence_id.is_empty():

@@ -2,8 +2,6 @@ extends SceneTree
 
 ## Runner de pruebas automatizadas para Sistema de Muerte, Checkpoints, Snapshots y Respawn.
 
-const CheckpointLevelScript = preload("res://src/overworld/components/checkpoint_level.gd")
-
 var _passed_count: int = 0
 var _failed_count: int = 0
 var _died_emitted: bool = false
@@ -85,14 +83,10 @@ func _init() -> void:
 	# ========================================================
 	# TEST 4: Registro de Checkpoint y Respawn en GameManager
 	# ========================================================
-	# Creamos un nodo mock para nivel 1 con CheckpointLevel y un ArrivalSpawnPoint "RespawnPoint"
+	# Creamos un nodo mock para nivel 1 con un ArrivalSpawnPoint "RespawnPoint"
 	var level1: Node2D = Node2D.new()
 	level1.name = "Level1Checkpoint"
 	level1.scene_file_path = "res://src/overworld/levels/mock_checkpoint_level.tscn"
-	
-	var cp_component: Node = CheckpointLevelScript.new()
-	cp_component.name = "CheckpointLevel"
-	level1.add_child(cp_component)
 	
 	var respawn_marker: Marker2D = Marker2D.new()
 	respawn_marker.name = "RespawnMarker"
@@ -109,12 +103,12 @@ func _init() -> void:
 	inventory.items = { "ancient_map": 1 }
 	
 	CheckpointManager.register_level_entry(level1.scene_file_path, level1)
-	_record_result("CheckpointManager: Registra active_checkpoint_scene_path al detectar CheckpointLevel", CheckpointManager.active_checkpoint_scene_path == level1.scene_file_path)
+	_record_result("CheckpointManager: Registra active_checkpoint_scene_path al registrar la entrada a un nivel", CheckpointManager.active_checkpoint_scene_path == level1.scene_file_path)
 	
 	# Entramos a un Nivel 2 (No Checkpoint)
 	var level2: Node2D = Node2D.new()
 	level2.name = "Level2Danger"
-	level2.scene_file_path = "res://src/overworld/levels/Lvl01.tscn"
+	level2.scene_file_path = "res://src/overworld/levels/level_01.tscn"
 	root.add_child(level2)
 	
 	# Al ENTRAR al nivel 2, se registra la entrada y se toma el snapshot de persistencia

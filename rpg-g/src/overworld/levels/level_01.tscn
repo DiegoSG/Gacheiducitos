@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="3_0ydad"]
 [ext_resource type="PackedScene" uid="uid://627m0vq1pgow" path="res://src/overworld/npcs/npc_barnaby.tscn" id="3_eyghc"]
 [ext_resource type="Resource" uid="uid://osefela8lutb" path="res://data/items/leather_cap.tres" id="4_bum6v"]
-[ext_resource type="Resource" uid="uid://0ii1rigngct4" path="res://src/overworld/npcs/Test.dialogue" id="4_s44nc"]
+[ext_resource type="Resource" uid="uid://0ii1rigngct4" path="res://src/overworld/npcs/test.dialogue" id="4_s44nc"]
 [ext_resource type="PackedScene" uid="uid://tkrjy8dnqifu" path="res://src/overworld/interactables/chest.tscn" id="5_axe4l"]
 [ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="6_77vc6"]
 [ext_resource type="PackedScene" path="res://src/overworld/interactables/dialogue_event.tscn" id="6_dq17e"]
@@ -30,19 +30,6 @@ win_level_path = "uid://dja7x3717s0pd"
 win_spawn_id = "1"
 lose_level_path = "uid://c36bmb6bwvii2"
 lose_spawn_id = "1"
-config = {
-"ammo_spawn_distance_multiplier": 1.5,
-"ammo_spawn_initial_distance": 250.0,
-"coin_density": 0.55,
-"item_pool": Array[String](["blue_potion", "red_potion", "green_herb"]),
-"max_coins": -1,
-"run_speed": 380.0,
-"speed_increase_amount": 25.0,
-"speed_increase_interval": 200.0,
-"target_value": 1500.0,
-"win_condition": 0
-}
-minigame_scene_path = "res://src/minigames/mg_runner/mg_runner_level.tscn"
 runner_win_mode = 0
 runner_target_distance = 1500.0
 runner_speed = 380.0

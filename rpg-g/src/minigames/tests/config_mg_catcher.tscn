@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://src/minigames/mg_catcher/config_mg_catcher.gd" id="1"]
+[ext_resource type="Script" uid="uid://c1t0yr1oxhk4x" path="res://src/minigames/tests/config_mg_catcher.gd" id="1"]
 
 [node name="CatcherConfig" type="Control"]
 layout_mode = 3

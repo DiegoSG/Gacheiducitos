@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b2t2e0sdue2d7"]
 
-[ext_resource type="Script" uid="uid://cumorwx11v42r" path="res://src/minigames/mg_runner/config_mg_runner.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cumorwx11v42r" path="res://src/minigames/tests/config_mg_runner.gd" id="1_script"]
 
 [node name="RunnerConfig" type="Control" unique_id=1503950090]
 layout_mode = 3

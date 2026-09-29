@@ -7,8 +7,6 @@ extends MinigameBase
 @onready var score_label = $UI/HUD/ScoreLabel
 @onready var time_label = $UI/HUD/TimeLabel
 @onready var lives_label = $UI/HUD/LivesLabel
-@onready var message_overlay = $UI/MessageOverlay
-@onready var message_label = $UI/MessageOverlay/Label
 
 var base_fall_speed: float = 200.0
 var spawn_rate: float = 1.0
@@ -104,19 +102,12 @@ func _on_spawn_timeout() -> void:
 		# Evaluar si seleccionamos un item del pool
 		if not item_pool.is_empty():
 			if item_pool[0] is Dictionary:
-				var roll = randf()
-				var accum = 0.0
-				for entry in item_pool:
-					accum += entry.get("chance", 0.3)
-					if roll <= accum:
-						chosen_item_id = str(entry.get("id", ""))
-						is_crit = entry.get("is_critical", false)
-						break
-			else:
+				chosen_item_id = pick_item_from_pool(item_pool)
+				is_crit = _is_pool_entry_critical(chosen_item_id)
+			elif randf() < 0.35:
 				# Si es un Array de Strings (ej. ["blue_potion", "red_potion", "green_herb"])
 				# 35% de probabilidad de que este punto caiga como ítem de inventario
-				if randf() < 0.35:
-					chosen_item_id = str(item_pool[randi() % item_pool.size()])
+				chosen_item_id = pick_item_from_pool(item_pool)
 		
 		# Si está explícitamente en la lista de críticos
 		if not chosen_item_id.is_empty() and critical_item_ids.has(chosen_item_id):
@@ -126,11 +117,8 @@ func _on_spawn_timeout() -> void:
 			if critical_item_ids.has("point"):
 				is_crit = true
 		
-		var item_db := ItemDatabase
-		if not chosen_item_id.is_empty() and item_db:
-			var item_res = item_db.get_item(chosen_item_id)
-			if item_res and item_res.icon:
-				custom_texture = item_res.icon
+		if not chosen_item_id.is_empty():
+			custom_texture = get_item_icon(chosen_item_id)
 
 	add_child(item)
 	item.setup(base_fall_speed, Vector2(spawn_x, -50), is_crit, chosen_item_id, custom_texture)
@@ -141,6 +129,15 @@ func _on_spawn_timeout() -> void:
 	# track active objects count
 	item.tree_exited.connect(func(): active_objects -= 1)
 	active_objects += 1
+
+## Indica si la entrada del pool (formato Dictionary) con ese id está marcada como crítica.
+func _is_pool_entry_critical(entry_id: String) -> bool:
+	if entry_id.is_empty():
+		return false
+	for entry: Variant in item_pool:
+		if entry is Dictionary and str(entry.get("id", "")) == entry_id:
+			return bool(entry.get("is_critical", false))
+	return false
 
 func _on_item_expired(is_crit: bool) -> void:
 	if is_crit:
@@ -159,7 +156,7 @@ func _on_item_caught(item_type: int, item: FallingItemBase) -> void:
 			add_reward(item.item_id, 1)
 			print("[Catcher] ¡Atrapado objeto especial: %s!" % item.item_id)
 		else:
-			add_reward("gold_coin", 1)
+			add_reward(Inventory.GOLD_ITEM_ID, 1)
 			print("[Catcher] Atrapado punto normal. Score: ", score)
 			
 		if game_mode == "COUNT" and score >= target_value:

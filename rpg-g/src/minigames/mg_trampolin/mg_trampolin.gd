@@ -1,9 +1,9 @@
 extends MinigameBase
 
-var platform_scene = load("res://src/minigames/mg_trampolin/mg_trampolin_platform.tscn")
-var player_scene = load("res://src/minigames/mg_trampolin/mg_trampolin_player.tscn")
-var coin_scene = load("res://src/minigames/mg_trampolin/mg_trampolin_coin.tscn")
-var item_scene = load("res://src/minigames/mg_trampolin/mg_trampolin_item.tscn")
+const PLATFORM_SCENE: PackedScene = preload("res://src/minigames/mg_trampolin/mg_trampolin_platform.tscn")
+const PLAYER_SCENE: PackedScene = preload("res://src/minigames/mg_trampolin/mg_trampolin_player.tscn")
+const COIN_SCENE: PackedScene = preload("res://src/minigames/mg_trampolin/mg_trampolin_coin.tscn")
+const ITEM_SCENE: PackedScene = preload("res://src/minigames/mg_trampolin/mg_trampolin_item.tscn")
 
 @onready var camera = $Camera2D
 @onready var platforms_container = $Platforms
@@ -36,10 +36,10 @@ func _ready():
 	last_platform_y = get_viewport_rect().size.y - 100.0
 	
 	# Spawn del jugador
-	player = player_scene.instantiate()
+	player = PLAYER_SCENE.instantiate() as MG_TrampolinPlayer
 	add_child(player)
 	player.global_position = Vector2(0, last_platform_y - 50.0)
-	player.died.connect(_on_player_died)
+	player.special_platform_reached.connect(_on_special_platform_reached)
 	
 	# Centrar cámara en el jugador inicial
 	camera.make_current()
@@ -63,9 +63,6 @@ func _process(_delta):
 	if player.global_position.y < last_platform_y + 1200:
 		spawn_platform()
 	
-	if win_condition_met and not _is_finishing:
-		finish(true)
-		
 	# Actualizar Score basado en la altura máxima alcanzada (Y negativa)
 	var current_score = floor(-player.global_position.y / 10.0)
 	if current_score > max_score:
@@ -102,34 +99,27 @@ func _check_win_conditions():
 			if coins_collected >= target:
 				_win_game("¡Monedas recolectadas!")
 
-func _win_game(reason: String):
+func _win_game(reason: String) -> void:
+	if win_condition_met:
+		return
 	win_condition_met = true
+	set_process(false)
 	print("VICTORIA: ", reason)
-	
-	# Mostrar cartel de victoria
-	var win_label = Label.new()
-	win_label.text = "¡GANASTE!\n" + reason + "\n\nPresiona cualquier tecla para salir"
-	win_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	win_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	win_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	win_label.modulate = Color.YELLOW
-	win_label.add_theme_font_size_override("font_size", 48)
-	
-	var bg = ColorRect.new()
-	bg.color = Color(0, 0, 0, 0.7)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	$UI.add_child(bg)
-	$UI.add_child(win_label)
+	# La pantalla de victoria la muestra MinigameBase.finish()
+	finish(true)
+
+func _on_special_platform_reached() -> void:
+	_win_game("¡Trampolín especial encontrado!")
 
 func _on_coin_collected():
 	coins_collected += 1
-	add_reward("gold_coin", 1)
+	add_reward(Inventory.GOLD_ITEM_ID, 1)
 	print("Monedas: ", coins_collected)
 	if config.get("win_condition") == WinCondition.MONEDAS:
 		$UI/ScoreLabel.text = "Monedas: %d/%d" % [coins_collected, config.get("target_value")]
 
 func spawn_platform():
-	var new_plat = platform_scene.instantiate()
+	var new_plat = PLATFORM_SCENE.instantiate()
 	platforms_container.add_child(new_plat)
 	
 	# Posición aleatoria en el ancho del juego
@@ -140,18 +130,7 @@ func spawn_platform():
 	# Spawn de items coleccionables sobre la plataforma (siempre apoyados en ella)
 	var item_chance = config.get("item_spawn_chance", 0.25)
 	if not item_pool.is_empty() and randf() < item_chance:
-		var chosen_id: String = ""
-		if item_pool[0] is Dictionary:
-			var roll = randf()
-			var accum = 0.0
-			for entry in item_pool:
-				accum += entry.get("chance", 0.5)
-				if roll <= accum:
-					chosen_id = str(entry.get("id", ""))
-					break
-		else:
-			chosen_id = str(item_pool[randi() % item_pool.size()])
-			
+		var chosen_id: String = pick_item_from_pool(item_pool)
 		if not chosen_id.is_empty():
 			_spawn_platform_item(chosen_id, Vector2(x_pos, last_platform_y - 25.0))
 	
@@ -162,7 +141,7 @@ func spawn_platform():
 	
 	# Manejar plataforma especial si es la condición
 	if config.get("win_condition") == WinCondition.ESPECIAL and not special_platform_spawned:
-		var target_h = config.get("special_height", 300)
+		var target_h = config.get("target_value", 100)
 		var current_h = floor(-last_platform_y / 10.0)
 		if current_h >= target_h:
 			new_plat.modulate = Color.GOLD
@@ -171,13 +150,8 @@ func spawn_platform():
 			print("Plataforma especial aparecida a altura: ", current_h)
 
 func _spawn_platform_item(p_id: String, pos: Vector2) -> void:
-	var item_node = item_scene.instantiate() as MG_TrampolinItem
-	var tex = null
-	var item_db := ItemDatabase
-	if item_db:
-		var data = item_db.get_item(p_id)
-		if data and data.icon:
-			tex = data.icon
+	var item_node = ITEM_SCENE.instantiate() as MG_TrampolinItem
+	var tex: Texture2D = get_item_icon(p_id)
 	add_child(item_node)
 	item_node.global_position = pos
 	item_node.setup(p_id, tex)
@@ -187,9 +161,6 @@ func _on_platform_item_collected(p_id: String) -> void:
 	add_reward(p_id, 1)
 	print("[Trampolin] ¡Item recogido sobre plataforma!: ", p_id)
 
-func _on_player_died():
-	_game_over()
-
 func _game_over():
 	print("GAME OVER - Trampolin")
 	set_process(false)
@@ -198,7 +169,7 @@ func _game_over():
 func spawn_base_floor():
 	var start_y = last_platform_y + 100.0
 	for x in range(-300, 301, 80):
-		var base_plat = platform_scene.instantiate()
+		var base_plat = PLATFORM_SCENE.instantiate()
 		platforms_container.add_child(base_plat)
 		base_plat.global_position = Vector2(x, start_y)
 
@@ -224,7 +195,7 @@ func _spawn_coin_pattern(y_base: float):
 				_spawn_one_coin(Vector2(center_x, y_base) + offset)
 
 func _spawn_one_coin(pos: Vector2):
-	var coin = coin_scene.instantiate()
+	var coin = COIN_SCENE.instantiate()
 	add_child(coin)
 	coin.global_position = pos
 	coin.collected.connect(_on_coin_collected)

@@ -45,7 +45,7 @@ func _ready() -> void:
 	# -------------------------------------------------------------
 	var standard_level := Node2D.new()
 	standard_level.name = "StandardLevel"
-	standard_level.scene_file_path = "res://src/overworld/levels/Lvl01.tscn"
+	standard_level.scene_file_path = "res://src/overworld/levels/level_01.tscn"
 	add_child(standard_level)
 	
 	_autosave_count = 0
@@ -69,7 +69,7 @@ func _ready() -> void:
 	var exception_config := LevelExceptionConfig.new()
 	exception_config.name = "LevelExceptionConfig"
 	exception_config.disable_autosave = true
-	exception_config.respawn_level_path = "res://src/overworld/levels/Lvl01.tscn"
+	exception_config.respawn_level_path = "res://src/overworld/levels/level_01.tscn"
 	exception_config.respawn_spawn_id = "BossDoorEntrance"
 	exception_level.add_child(exception_config)
 	add_child(exception_level)
@@ -78,7 +78,7 @@ func _ready() -> void:
 	cm.register_level_entry(exception_level.scene_file_path, exception_level, true)
 	
 	_record_result("Excepción activa: autoguardado salta/se omite", _autosave_count == 0)
-	_record_result("Excepción activa: active_checkpoint_scene_path actualizado a respawn_level_path", cm.active_checkpoint_scene_path == "res://src/overworld/levels/Lvl01.tscn")
+	_record_result("Excepción activa: active_checkpoint_scene_path actualizado a respawn_level_path", cm.active_checkpoint_scene_path == "res://src/overworld/levels/level_01.tscn")
 	_record_result("Excepción activa: active_checkpoint_spawn_id registrado correctamente", cm.active_checkpoint_spawn_id == "BossDoorEntrance")
 	
 	# -------------------------------------------------------------
@@ -92,7 +92,7 @@ func _ready() -> void:
 	var allowed_config := LevelExceptionConfig.new()
 	allowed_config.name = "LevelExceptionConfig"
 	allowed_config.disable_autosave = false
-	allowed_config.respawn_level_path = "res://src/overworld/levels/Lvl02.tscn"
+	allowed_config.respawn_level_path = "res://src/overworld/levels/level_02.tscn"
 	allowed_config.respawn_spawn_id = "SubHubSpawn"
 	allowed_level.add_child(allowed_config)
 	add_child(allowed_level)
@@ -101,7 +101,7 @@ func _ready() -> void:
 	cm.register_level_entry(allowed_level.scene_file_path, allowed_level, true)
 	
 	_record_result("Excepción con disable_autosave=false: ejecuta autoguardado", _autosave_count == 1)
-	_record_result("Excepción con disable_autosave=false: active_checkpoint_scene_path actualizado", cm.active_checkpoint_scene_path == "res://src/overworld/levels/Lvl02.tscn")
+	_record_result("Excepción con disable_autosave=false: active_checkpoint_scene_path actualizado", cm.active_checkpoint_scene_path == "res://src/overworld/levels/level_02.tscn")
 	_record_result("Excepción con disable_autosave=false: active_checkpoint_spawn_id registrado", cm.active_checkpoint_spawn_id == "SubHubSpawn")
 	
 	# -------------------------------------------------------------
@@ -109,7 +109,7 @@ func _ready() -> void:
 	# -------------------------------------------------------------
 	var non_organic_level := Node2D.new()
 	non_organic_level.name = "LoadedLevel"
-	non_organic_level.scene_file_path = "res://src/overworld/levels/Lvl03.tscn"
+	non_organic_level.scene_file_path = "res://src/overworld/levels/level_03.tscn"
 	add_child(non_organic_level)
 	
 	_autosave_count = 0

@@ -64,7 +64,6 @@ persistence_id = "Chestito"
 
 [node name="LevelPortal" parent="Portals" unique_id=1271243254 instance=ExtResource("3_rtahy")]
 position = Vector2(949, 58)
-required_key_id = "1"
 persistence_id = "ephemeral_Portals/LevelPortal"
 target_level_path = "uid://dja7x3717s0pd"
 exit_id = "1"

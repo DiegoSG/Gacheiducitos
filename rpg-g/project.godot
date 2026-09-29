@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="RPG_G"
-run/main_scene="res://src/overworld/levels/Lvl01.tscn"
+run/main_scene="res://src/overworld/levels/level_01.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
@@ -27,6 +27,10 @@ WorldStateManager="*res://src/core/world_state_manager.gd"
 AlertSystem="*res://src/core/alert_system.gd"
 CheckpointManager="*res://src/core/checkpoint_manager.gd"
 SaveSystem="*res://src/core/save_system.gd"
+
+[dialogue_manager]
+
+runtime/balloon_path="res://src/ui/balloon/example_balloon.tscn"
 
 [display]
 
@@ -104,7 +108,7 @@ attack={
 
 [internationalization]
 
-locale/translations_pot_files=PackedStringArray("res://src/overworld/npcs/barnaby.dialogue", "res://src/overworld/interactables/chest.dialogue", "res://src/overworld/npcs/Test.dialogue")
+locale/translations_pot_files=PackedStringArray("res://src/overworld/npcs/barnaby.dialogue", "res://src/overworld/interactables/chest.dialogue", "res://src/overworld/npcs/test.dialogue")
 
 [rendering]
 

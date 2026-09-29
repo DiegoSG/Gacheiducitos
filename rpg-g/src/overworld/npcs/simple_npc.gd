@@ -5,8 +5,6 @@ class_name SimpleNPC
 @export var dialogue_resource: DialogueResource
 @export var dialogue_start_title: String = "start"
 
-const BALLOON_SCENE = preload("res://src/ui/balloon/example_balloon.tscn")
-
 func _init() -> void:
 	allow_during_alert = false
 
@@ -19,6 +17,4 @@ func action() -> void:
 		push_warning("NPC '%s' is missing a dialogue resource." % npc_name)
 		return
 		
-	var balloon = BALLOON_SCENE.instantiate()
-	get_tree().root.add_child(balloon)
-	balloon.start(dialogue_resource, dialogue_start_title)
+	DialogueManager.show_dialogue_balloon(dialogue_resource, dialogue_start_title)

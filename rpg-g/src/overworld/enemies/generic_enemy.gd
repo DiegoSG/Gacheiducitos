@@ -8,6 +8,8 @@ extends CharacterBody2D
 @export var return_to_start_position: bool = true
 @export var return_speed: float = 70.0
 @export var attack_damage: int = 1
+## Intervalo (segundos) entre golpes de daño continuo del hitbox
+@export var attack_rate: float = 0.6
 
 @export_group("Persistencia")
 ## Si tiene un valor asignado, su muerte se guarda en WorldStateManager y no vuelve a aparecer.
@@ -16,7 +18,8 @@ extends CharacterBody2D
 
 var current_health: int = 3
 
-@onready var vision_zone: Area2D = get_node_or_null("VisionZone") if get_node_or_null("VisionZone") else get_node_or_null("DetectionZone")
+@onready var vision_zone: Area2D = get_node_or_null("VisionZone")
+@onready var sprite: Sprite2D = $Sprite2D
 @onready var lose_target_zone: Area2D = get_node_or_null("LoseTargetZone")
 @onready var hitbox_component: HitboxComponent = $HitboxComponent
 @onready var hurtbox_component: HurtboxComponent = $HurtboxComponent
@@ -64,7 +67,7 @@ func _ready() -> void:
 		# Configuramos daño configurable y activamos el hitbox permanentemente con daño continuo
 		hitbox_component.damage = attack_damage
 		hitbox_component.continuous_damage = true
-		hitbox_component.attack_rate = 0.6
+		hitbox_component.attack_rate = attack_rate
 		hitbox_component.set_active(true)
 
 func _physics_process(delta: float) -> void:
@@ -76,7 +79,7 @@ func _physics_process(delta: float) -> void:
 	match current_state:
 		State.CHASE:
 			if player != null:
-				var direction = global_position.direction_to(player.global_position)
+				var direction: Vector2 = global_position.direction_to(player.global_position)
 				velocity = direction * speed
 			else:
 				velocity = velocity.move_toward(Vector2.ZERO, speed * 4 * delta)
@@ -90,9 +93,9 @@ func _physics_process(delta: float) -> void:
 				else:
 					current_state = State.IDLE
 		State.RETURNING:
-			var distance = global_position.distance_to(_start_position)
+			var distance: float = global_position.distance_to(_start_position)
 			if distance > 4.0:
-				var direction = global_position.direction_to(_start_position)
+				var direction: Vector2 = global_position.direction_to(_start_position)
 				velocity = direction * return_speed
 			else:
 				global_position = _start_position
@@ -158,21 +161,21 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 		return
 		
 	is_stunned = true
-	get_tree().create_timer(0.3).timeout.connect(func(): if is_inside_tree(): is_stunned = false)
+	get_tree().create_timer(0.3).timeout.connect(func() -> void: if is_inside_tree(): is_stunned = false)
 	
 	if has_iframes and iframe_duration > 0.0:
 		is_invulnerable = true
 		
 		# Efecto visual de parpadeo temporal (0.2s por loop completo)
-		var blink_time = 0.1
-		var loops = int(max(1.0, iframe_duration / (blink_time * 2)))
-		
-		var tween = create_tween()
+		var blink_time: float = 0.1
+		var loops: int = int(max(1.0, iframe_duration / (blink_time * 2)))
+
+		var tween: Tween = create_tween()
 		tween.set_loops(loops)
-		tween.tween_property($Sprite2D, "modulate:a", 0.2, blink_time)
-		tween.tween_property($Sprite2D, "modulate:a", 1.0, blink_time)
-		
-		get_tree().create_timer(iframe_duration).timeout.connect(func(): if is_inside_tree(): is_invulnerable = false)
+		tween.tween_property(sprite, "modulate:a", 0.2, blink_time)
+		tween.tween_property(sprite, "modulate:a", 1.0, blink_time)
+
+		get_tree().create_timer(iframe_duration).timeout.connect(func() -> void: if is_inside_tree(): is_invulnerable = false)
 
 func _restore_state() -> bool:
 	if persistence_id.is_empty():

@@ -1,7 +1,7 @@
 class_name DoorAction
 extends ActionResource
 
-## Modifica el estado de un LevelPortal o Puerta en el mapa (abrir, cerrar, bloquear, desbloquear, activar, desactivar).
+## Modifica el estado de un LevelPortal en el mapa (bloquear, desbloquear, activar, desactivar).
 
 enum DoorOperation {
 	UNLOCK,          ## Desbloquea la puerta (quita el candado)
@@ -26,60 +26,35 @@ func execute(trigger_node: Node) -> void:
 		push_warning("DoorAction: target_door_path está vacío.")
 		finished.emit()
 		return
-		
-	var door_node: Node = trigger_node.get_node_or_null(target_door_path)
-	if not door_node:
+
+	var target: Node = trigger_node.get_node_or_null(target_door_path)
+	if not target:
 		push_warning("DoorAction: No se encontró la puerta en la ruta: %s" % str(target_door_path))
 		finished.emit()
 		return
-		
-	if not (door_node is LevelPortal):
-		# Intento de fallback si el script tiene los métodos correspondientes
-		if not door_node.has_method("unlock") and not ("is_locked" in door_node):
-			push_warning("DoorAction: El nodo objetivo '%s' no es un LevelPortal." % door_node.name)
-			finished.emit()
-			return
+
+	var portal: LevelPortal = target as LevelPortal
+	if portal == null:
+		push_warning("DoorAction: El nodo objetivo '%s' no es un LevelPortal." % target.name)
+		finished.emit()
+		return
 
 	match operation:
 		DoorOperation.UNLOCK:
-			if door_node.has_method("unlock"):
-				door_node.unlock()
-			elif "is_locked" in door_node:
-				door_node.is_locked = false
+			portal.unlock()
 		DoorOperation.LOCK:
-			if door_node.has_method("lock"):
-				door_node.lock()
-			elif "is_locked" in door_node:
-				door_node.is_locked = true
+			portal.lock()
 		DoorOperation.ACTIVATE:
-			if door_node.has_method("set_active_state"):
-				door_node.set_active_state(true)
-			elif "is_active" in door_node:
-				door_node.is_active = true
+			portal.set_active_state(true)
 		DoorOperation.DEACTIVATE:
-			if door_node.has_method("set_active_state"):
-				door_node.set_active_state(false)
-			elif "is_active" in door_node:
-				door_node.is_active = false
+			portal.set_active_state(false)
 		DoorOperation.TOGGLE_LOCK:
-			if "is_locked" in door_node:
-				if door_node.is_locked:
-					if door_node.has_method("unlock"):
-						door_node.unlock()
-					else:
-						door_node.is_locked = false
-				else:
-					if door_node.has_method("lock"):
-						door_node.lock()
-					else:
-						door_node.is_locked = true
+			if portal.is_locked:
+				portal.unlock()
+			else:
+				portal.lock()
 		DoorOperation.TOGGLE_ACTIVE:
-			if "is_active" in door_node:
-				var new_state = not door_node.is_active
-				if door_node.has_method("set_active_state"):
-					door_node.set_active_state(new_state)
-				else:
-					door_node.is_active = new_state
+			portal.set_active_state(not portal.is_active)
 
-	print("[DoorAction]: Operación %s ejecutada sobre '%s'" % [DoorOperation.keys()[operation], door_node.name])
+	print("[DoorAction]: Operación %s ejecutada sobre '%s'" % [DoorOperation.keys()[operation], portal.name])
 	finished.emit()

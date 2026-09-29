@@ -1,5 +1,7 @@
 extends Actionable
 
+const CHEST_DIALOGUE: Resource = preload("res://src/overworld/interactables/chest.dialogue")
+
 @export_group("Loot & Storage")
 @export var loot_items: Array[ItemData] = []
 @export var is_storage_enabled: bool = false
@@ -13,7 +15,6 @@ var is_open: bool = false
 var has_been_looted: bool = false
 
 @onready var sprite: Sprite2D = $Sprite2D
-@onready var chest_dialogue: Resource = preload("res://src/overworld/interactables/chest.dialogue")
 
 func _ready() -> void:
 	if persistence_id.is_empty():
@@ -75,22 +76,17 @@ func give_loot() -> void:
 
 	for item in loot_items:
 		if item:
-			if item.id == "gold_coins":
-				PlayerStats.add_gold(item.value)
-				LootFeedbackManager.trigger_loot_pickup(item, global_position, item.value)
-			else:
-				Inventory.add_item(item.id, 1)
-				LootFeedbackManager.trigger_loot_pickup(item, global_position, 1)
+			var amount: int = 1
+			if item.id == Inventory.GOLD_ITEM_ID:
+				amount = item.value
+			Inventory.add_item(item.id, amount)
+			LootFeedbackManager.trigger_toast(item, amount)
 
 	has_been_looted = true
 	_persist_state()
 
 func show_message(title: String) -> void:
-	if Engine.has_singleton("DialogueManager"):
-		var dialogue_manager = Engine.get_singleton("DialogueManager")
-		dialogue_manager.show_dialogue_balloon(chest_dialogue, title)
-	else:
-		print("DIÁLOGO: ", title)
+	DialogueManager.show_dialogue_balloon(CHEST_DIALOGUE, title)
 
 func open_storage() -> void:
 	print("Opening storage UI (Not implemented yet)...")

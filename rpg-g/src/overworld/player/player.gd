@@ -33,29 +33,23 @@ func _ready() -> void:
 	if hurtbox_component:
 		hurtbox_component.hit_received.connect(_on_hit_received)
 		
-	var stats := PlayerStats
-	if stats:
-		if not stats.player_died.is_connected(_on_player_died):
-			stats.player_died.connect(_on_player_died)
+	if not PlayerStats.player_died.is_connected(_on_player_died):
+		PlayerStats.player_died.connect(_on_player_died)
 			
 	if not CheckpointManager.player_respawned.is_connected(_on_player_respawned):
 		CheckpointManager.player_respawned.connect(_on_player_respawned)
 	
 	# Conectarse a las señales de Dialogue Manager
-	var dm = Engine.get_singleton("DialogueManager")
-	if dm:
-		if not dm.dialogue_started.is_connected(_on_dialogue_started):
-			dm.dialogue_started.connect(_on_dialogue_started)
-		if not dm.dialogue_ended.is_connected(_on_dialogue_ended):
-			dm.dialogue_ended.connect(_on_dialogue_ended)
+	if not DialogueManager.dialogue_started.is_connected(_on_dialogue_started):
+		DialogueManager.dialogue_started.connect(_on_dialogue_started)
+	if not DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
+		DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 
 func _exit_tree() -> void:
-	var dm = Engine.get_singleton("DialogueManager")
-	if dm:
-		if dm.dialogue_started.is_connected(_on_dialogue_started):
-			dm.dialogue_started.disconnect(_on_dialogue_started)
-		if dm.dialogue_ended.is_connected(_on_dialogue_ended):
-			dm.dialogue_ended.disconnect(_on_dialogue_ended)
+	if DialogueManager.dialogue_started.is_connected(_on_dialogue_started):
+		DialogueManager.dialogue_started.disconnect(_on_dialogue_started)
+	if DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
+		DialogueManager.dialogue_ended.disconnect(_on_dialogue_ended)
 
 func _on_dialogue_started(_resource: DialogueResource) -> void:
 	is_dialogue_active = true
@@ -63,7 +57,7 @@ func _on_dialogue_started(_resource: DialogueResource) -> void:
 
 func _on_dialogue_ended(_resource: DialogueResource) -> void:
 	# Damos un pequeñísimo delay para no atrapar el mismo input que cerró el diálogo
-	var tree = get_tree()
+	var tree: SceneTree = get_tree()
 	if not tree:
 		is_dialogue_active = false
 		return
@@ -150,14 +144,14 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	if is_dead:
 		return
 	
-	var tree = get_tree()
+	var tree: SceneTree = get_tree()
 	
 	# Aplicar siempre knockback físico hacia atrás
 	if knockback_force > 0:
 		is_stunned = true
 		knockback_velocity = attack_direction * knockback_force
 		if tree:
-			tree.create_timer(0.3).timeout.connect(func():
+			tree.create_timer(0.3).timeout.connect(func() -> void:
 				if is_inside_tree() and not is_dead:
 					is_stunned = false
 			)
@@ -169,9 +163,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	if is_invulnerable:
 		return
 	
-	var stats := PlayerStats
-	if stats:
-		stats.take_damage(damage)
+	PlayerStats.take_damage(damage)
 	
 	if is_dead:
 		return
@@ -179,13 +171,13 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	is_invulnerable = true
 	
 	# Efecto de I-frames visuales (parpadeo de 1 segundo)
-	var tween = create_tween()
+	var tween: Tween = create_tween()
 	tween.set_loops(5) # 5 parpadeos de 0.2s c/u = 1 seg de i-frames
-	tween.tween_property($Sprite2D, "modulate:a", 0.2, 0.1)
-	tween.tween_property($Sprite2D, "modulate:a", 1.0, 0.1)
+	tween.tween_property(sprite, "modulate:a", 0.2, 0.1)
+	tween.tween_property(sprite, "modulate:a", 1.0, 0.1)
 	
 	if tree:
-		tree.create_timer(1.0).timeout.connect(func():
+		tree.create_timer(1.0).timeout.connect(func() -> void:
 			if is_inside_tree():
 				is_invulnerable = false
 		)
@@ -210,13 +202,13 @@ func _on_player_died() -> void:
 		
 	# Feedback visual de muerte (fade/rotación suave)
 	if sprite:
-		var death_tween = create_tween()
+		var death_tween: Tween = create_tween()
 		death_tween.tween_property(sprite, "rotation_degrees", 90.0, 0.25)
 		death_tween.parallel().tween_property(sprite, "modulate", Color(0.8, 0.2, 0.2, 0.8), 0.25)
 		
 	print("[Player] El jugador ha muerto. Solicitando respawn a GameManager...")
 	# Breve pausa para notar la caída antes del fader de respawn
-	var tree = get_tree()
+	var tree: SceneTree = get_tree()
 	if tree:
 		await tree.create_timer(0.5).timeout
 	CheckpointManager.respawn_player()
@@ -245,22 +237,22 @@ func attack() -> void:
 		slash_sprite.visible = true
 		slash_sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 		slash_sprite.scale = Vector2(0.06, 0.06)
-		var tween = create_tween()
+		var tween: Tween = create_tween()
 		tween.set_parallel(true)
 		tween.tween_property(slash_sprite, "scale", Vector2(0.13, 0.13), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tween.tween_property(slash_sprite, "modulate:a", 0.0, 0.15)
 	
 	# Slight lunge of the player sprite
 	if sprite:
-		var original_pos = Vector2.ZERO
-		var lunge_offset = last_direction.normalized() * 6.0
-		var lunge_tween = create_tween()
+		var original_pos: Vector2 = Vector2.ZERO
+		var lunge_offset: Vector2 = last_direction.normalized() * 6.0
+		var lunge_tween: Tween = create_tween()
 		lunge_tween.tween_property(sprite, "position", lunge_offset, 0.06)
 		lunge_tween.tween_property(sprite, "position", original_pos, 0.09)
 		
 	# Activar hitbox por un instante
 	hitbox_component.set_active(true)
-	var tree = get_tree()
+	var tree: SceneTree = get_tree()
 	if tree:
 		await tree.create_timer(0.18).timeout
 	if not is_inside_tree():
@@ -276,7 +268,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 		
 	if event.is_action_pressed("ui_accept"):
-		var actionables = actionable_finder.get_overlapping_areas()
+		var actionables: Array[Area2D] = actionable_finder.get_overlapping_areas()
 		for area in actionables:
 			if area.has_method("action"):
 				get_viewport().set_input_as_handled()

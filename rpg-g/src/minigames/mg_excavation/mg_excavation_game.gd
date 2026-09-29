@@ -16,6 +16,7 @@ var grid = []
 
 # Referencia al jugador
 var player_grid_pos = Vector2i(1, 1)
+var is_player_dead: bool = false
 
 # Estado de la misión
 var total_coins = 0
@@ -52,7 +53,7 @@ var deliver_items: bool = false
 var item_pool: Array = []
 
 # Texturas
-var coin_texture = null
+var coin_texture: Texture2D = null
 var bomb_texture = null
 var potion_texture = null
 var player_texture = null
@@ -68,10 +69,8 @@ var input_stack = [] # Lista de direcciones presionadas en orden
 var camera : Camera2D
 
 func _ready():
-	# Cargar textura de moneda con fallback
-	coin_texture = load("res://assets/items/icons/coin_v2.png")
-	if not coin_texture:
-		coin_texture = load("res://assets/items/icons/gold_coins.png")
+	# Textura de moneda compartida (con fallback) desde MinigameBase
+	coin_texture = get_coin_texture()
 	bomb_texture = load("res://assets/items/icons/iron_key.png") # o icono representativo
 	potion_texture = load("res://assets/items/icons/blue_potion.png")
 	player_texture = load("res://assets/sprites/player_down.png")
@@ -224,7 +223,7 @@ func _explode_at(center_pos: Vector2i, reason: String = "EXPLOSIÓN") -> void:
 		for dx in range(-1, 2):
 			var tx = center_pos.x + dx
 			var ty = center_pos.y + dy
-			if tx >= 0 and tx < grid_width and ty >= 0 and ty < grid_height:
+			if _in_bounds(Vector2i(tx, ty)):
 				var t = grid[ty][tx]
 				# Encadenar si hay otra bomba ambiental
 				if (dx != 0 or dy != 0) and t == TileType.BOMBA:
@@ -477,10 +476,41 @@ func _input(event):
 		else:
 			input_stack.erase(dir)
 
+## Indica si una posición de grid está dentro de los límites del nivel.
+func _in_bounds(pos: Vector2i) -> bool:
+	return pos.x >= 0 and pos.x < grid_width and pos.y >= 0 and pos.y < grid_height
+
+## Procesa la recogida del contenido de un tile (bomba, ítem de inventario, moneda o ítem de misión).
+## Devuelve true si el tile era recogible; el llamador vacía el tile y mueve al jugador.
+## from_dig indica que se recogió al excavar (solo afecta al texto del log).
+func _collect_tile(pos: Vector2i, tile: int, from_dig: bool = false) -> bool:
+	var suffix: String = " al excavar" if from_dig else ""
+	match tile:
+		TileType.BOMB_PICKUP:
+			player_bombs_ammo += 1
+			print("[Excavation] ¡Bomba recogida%s! Total: %d" % [suffix, player_bombs_ammo])
+		TileType.ITEM_INVENTARIO:
+			var item_id: String = Inventory.GOLD_ITEM_ID
+			if item_pool.size() > 0:
+				item_id = str(item_pool[randi() % item_pool.size()])
+			add_reward(item_id, 1)
+			print("[Excavation] ¡Ítem de inventario recogido%s: %s!" % [suffix, item_id])
+		TileType.ITEM_RECOMPENSA:
+			add_reward(Inventory.GOLD_ITEM_ID, 1)
+			coins_collected += 1
+			var key: String = str(pos.x) + "," + str(pos.y)
+			if falling_visuals.has(key):
+				falling_visuals.erase(key)
+		TileType.ITEM_MISION:
+			mission_item_collected = true
+		_:
+			return false
+	return true
+
 func _try_move_player(direction: Vector2i):
 	var new_pos = player_grid_pos + direction
 	
-	if new_pos.x < 0 or new_pos.x >= grid_width or new_pos.y < 0 or new_pos.y >= grid_height:
+	if not _in_bounds(new_pos):
 		return
 	
 	var target_tile = grid[new_pos.y][new_pos.x]
@@ -508,32 +538,8 @@ func _try_move_player(direction: Vector2i):
 			player_grid_pos = new_pos
 			queue_redraw()
 		
-		TileType.BOMB_PICKUP:
-			player_bombs_ammo += 1
-			print("[Excavation] ¡Bomba recogida! Total: %d" % player_bombs_ammo)
-			grid[new_pos.y][new_pos.x] = TileType.EMPTY
-			player_grid_pos = new_pos
-			queue_redraw()
-		
-		TileType.ITEM_INVENTARIO:
-			var item_id = "gold_coin"
-			if item_pool.size() > 0:
-				item_id = item_pool[randi() % item_pool.size()]
-			add_reward(item_id, 1)
-			print("[Excavation] ¡Ítem de inventario recogido: %s!" % item_id)
-			grid[new_pos.y][new_pos.x] = TileType.EMPTY
-			player_grid_pos = new_pos
-			queue_redraw()
-		
-		TileType.ITEM_MISION, TileType.ITEM_RECOMPENSA:
-			if target_tile == TileType.ITEM_RECOMPENSA:
-				add_reward("gold_coin", 1)
-				coins_collected += 1
-				var key = str(new_pos.x) + "," + str(new_pos.y)
-				if falling_visuals.has(key):
-					falling_visuals.erase(key)
-			elif target_tile == TileType.ITEM_MISION:
-				mission_item_collected = true
+		TileType.BOMB_PICKUP, TileType.ITEM_INVENTARIO, TileType.ITEM_MISION, TileType.ITEM_RECOMPENSA:
+			_collect_tile(new_pos, target_tile)
 			grid[new_pos.y][new_pos.x] = TileType.EMPTY
 			player_grid_pos = new_pos
 			queue_redraw()
@@ -555,7 +561,7 @@ func _try_push_rock(rock_pos: Vector2i, direction: Vector2i) -> bool:
 	var push_dest = rock_pos + direction
 	
 	# Verificar límites
-	if push_dest.x < 0 or push_dest.x >= grid_width or push_dest.y < 0 or push_dest.y >= grid_height:
+	if not _in_bounds(push_dest):
 		return false
 	
 	# Verificar que el destino esté vacío
@@ -589,37 +595,15 @@ func _try_push_rock(rock_pos: Vector2i, direction: Vector2i) -> bool:
 func _try_dig_adjacent(direction: Vector2i):
 	var target_pos = player_grid_pos + direction
 	
-	if target_pos.x < 0 or target_pos.x >= grid_width or target_pos.y < 0 or target_pos.y >= grid_height:
+	if not _in_bounds(target_pos):
 		return
-	
+
 	var target_tile = grid[target_pos.y][target_pos.x]
-	
+
 	if target_tile == TileType.TIERRA:
 		grid[target_pos.y][target_pos.x] = TileType.EMPTY
 		queue_redraw()
-	elif target_tile == TileType.BOMB_PICKUP:
-		player_bombs_ammo += 1
-		print("[Excavation] ¡Bomba recogida al excavar! Total: %d" % player_bombs_ammo)
-		grid[target_pos.y][target_pos.x] = TileType.EMPTY
-		queue_redraw()
-	elif target_tile == TileType.ITEM_INVENTARIO:
-		var item_id = "gold_coin"
-		if item_pool.size() > 0:
-			item_id = item_pool[randi() % item_pool.size()]
-		add_reward(item_id, 1)
-		print("[Excavation] ¡Ítem de inventario recogido al excavar: %s!" % item_id)
-		grid[target_pos.y][target_pos.x] = TileType.EMPTY
-		queue_redraw()
-	elif target_tile == TileType.ITEM_MISION or target_tile == TileType.ITEM_RECOMPENSA:
-		if target_tile == TileType.ITEM_RECOMPENSA:
-			add_reward("gold_coin", 1)
-			coins_collected += 1
-			var key = str(target_pos.x) + "," + str(target_pos.y)
-			if falling_visuals.has(key):
-				falling_visuals.erase(key)
-		elif target_tile == TileType.ITEM_MISION:
-			mission_item_collected = true
-		
+	elif _collect_tile(target_pos, target_tile, true):
 		grid[target_pos.y][target_pos.x] = TileType.EMPTY
 		queue_redraw()
 
@@ -632,9 +616,6 @@ func _is_win_condition_met() -> bool:
 		WinCondition.SPECIFIC_ITEM:
 			return mission_item_collected
 	return false
-
-# Estado del juego
-var is_player_dead = false
 
 func _update_gravity():
 	if is_player_dead:

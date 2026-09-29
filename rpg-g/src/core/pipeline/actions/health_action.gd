@@ -23,21 +23,11 @@ func execute(trigger_node: Node) -> void:
 		finished.emit()
 		return
 
-	var ps := PlayerStats
-	if not ps:
-		push_warning("HealthAction: Autoload /root/PlayerStats no encontrado.")
-		finished.emit()
-		return
-
 	if full_heal:
-		if ps.has_method("full_heal"):
-			ps.full_heal()
-		else:
-			ps.health = ps.max_health
-	else:
-		if amount > 0:
-			ps.heal(amount)
-		elif amount < 0:
-			ps.take_damage(abs(amount))
+		PlayerStats.full_heal()
+	elif amount > 0:
+		PlayerStats.heal(amount)
+	elif amount < 0:
+		PlayerStats.take_damage(absi(amount))
 
 	finished.emit()

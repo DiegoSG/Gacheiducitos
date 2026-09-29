@@ -35,16 +35,17 @@ func _init() -> void:
 
 	# 4. Probar acumulación de recompensas en sesión local
 	dummy.add_reward("blue_potion", 2)
-	dummy.add_reward("gold_coin", 10)
+	dummy.add_reward("gold_coins", 10)
 	assert(dummy.session_rewards["blue_potion"] == 2, "Recompensa de poción azul incorrecta")
-	assert(dummy.session_rewards["gold_coin"] == 10, "Recompensa de monedas incorrecta")
+	assert(dummy.session_rewards["gold_coins"] == 10, "Recompensa de monedas incorrecta")
 	assert(not inventory.items.has("blue_potion"), "El inventario global NO debe tener los ítems antes de terminar")
 	print("[PASS] Buffer de recompensas de sesión almacena ítems sin contaminar el inventario prematuramente.")
 
 	# 5. Probar MinigameAction configurado
 	var action_script = load("res://src/core/pipeline/actions/minigame_action.gd")
 	var action = action_script.new()
-	action.minigame_scene_path = "res://src/minigames/tests/dummy_minigame.tscn"
+	action.minigame_type = MinigameAction.MinigameType.CUSTOM_SCENE
+	action.custom_scene_path = "res://src/minigames/tests/dummy_minigame.tscn"
 	action.win_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
 	action.win_spawn_id = "spawn_win"
 	action.lose_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
@@ -112,7 +113,7 @@ func _init() -> void:
 		assert(trig.actions_if_true.size() > 0, "Trigger '%s' debe tener al menos una acción" % trigger_name)
 		var mg_act = trig.actions_if_true[0]
 		assert(mg_act is MinigameAction, "La acción de '%s' debe ser MinigameAction" % trigger_name)
-		assert(ResourceLoader.exists(mg_act.minigame_scene_path), "La escena '%s' del minijuego debe existir" % mg_act.minigame_scene_path)
+		assert(ResourceLoader.exists(mg_act.get_minigame_scene_path()), "La escena '%s' del minijuego debe existir" % mg_act.get_minigame_scene_path())
 	print("[PASS] Los 5 triggers individuales (Catcher, Excavation, Runner, Smasher, Trampolin) verificados en test_minigame_flow.tscn.")
 	flow_inst.queue_free()
 

@@ -24,44 +24,28 @@ func get_action_name() -> String:
 func execute(trigger_node: Node) -> void:
 	if not trigger_node:
 		push_warning("GoldAction: trigger_node es null.")
-		_trigger_event(trigger_node, on_fail_event)
+		emit_game_event(on_fail_event)
 		finished.emit()
 		return
 
 	if amount <= 0:
 		push_warning("GoldAction: amount debe ser mayor a 0.")
-		_trigger_event(trigger_node, on_fail_event)
-		finished.emit()
-		return
-
-	var ps := PlayerStats
-	if not ps:
-		push_warning("GoldAction: Autoload /root/PlayerStats no encontrado.")
-		_trigger_event(trigger_node, on_fail_event)
+		emit_game_event(on_fail_event)
 		finished.emit()
 		return
 
 	if operation == "add":
-		ps.add_gold(amount)
+		PlayerStats.add_gold(amount)
 		if show_feedback:
-			var item_db := ItemDatabase
-			if item_db:
-				var coin_res: ItemData = item_db.get_item("gold_coins")
-				if coin_res:
-					LootFeedbackManager.trigger_toast(coin_res, amount)
-		_trigger_event(trigger_node, on_success_event)
+			var coin_res: ItemData = ItemDatabase.get_item(Inventory.GOLD_ITEM_ID)
+			if coin_res:
+				LootFeedbackManager.trigger_toast(coin_res, amount)
+		emit_game_event(on_success_event)
 	elif operation == "remove":
-		if ps.has_method("remove_gold") and ps.remove_gold(amount):
-			_trigger_event(trigger_node, on_success_event)
+		if PlayerStats.remove_gold(amount):
+			emit_game_event(on_success_event)
 		else:
 			# Fallo: no alcanza el oro (no se descuenta nada)
-			_trigger_event(trigger_node, on_fail_event)
+			emit_game_event(on_fail_event)
 
 	finished.emit()
-
-func _trigger_event(node: Node, event_name: String) -> void:
-	if event_name.is_empty() or not node:
-		return
-	var gm := GameManager
-	if gm:
-		gm.trigger_event(event_name)

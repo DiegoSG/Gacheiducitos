@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" uid="uid://d4nrydse76qng" path="res://src/minigames/mg_trampolin/trampolin_config.gd" id="1"]
+[ext_resource type="Script" uid="uid://d4nrydse76qng" path="res://src/minigames/tests/config_mg_trampolin.gd" id="1"]
 
 [node name="TrampolinConfig" type="Control"]
 layout_mode = 3

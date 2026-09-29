@@ -140,7 +140,7 @@ func _on_start_pressed():
 	GameManager.minigame_config = config
 	
 	# Cargar el minijuego
-	GameManager.load_minigame("res://src/minigames/mg_excavation/mg_excavation_game.tscn", Vector2.ZERO)
+	GameManager.load_minigame("res://src/minigames/mg_excavation/mg_excavation_game.tscn")
 
 func _on_exit_pressed():
 	print("DebugConfig: Exit button pressed")

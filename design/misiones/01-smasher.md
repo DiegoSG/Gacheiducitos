@@ -16,7 +16,7 @@ El minijuego es un desafío de reflejos, coordinación visomotora y selección r
 * **Escena Principal:** `res://src/minigames/mg_smasher/mg_smasher_game.tscn`
 * **Script del Controlador:** `res://src/minigames/mg_smasher/mg_smasher_game.gd` (Hereda de `MinigameBase`)
 * **Entidad Objetivo:** `res://src/minigames/mg_smasher/insect.tscn` y `insect.gd`
-* **Configurador Inspector:** `res://src/minigames/mg_smasher/config_mg_smasher.gd`
+* **Configurador Inspector:** `res://src/minigames/tests/config_mg_smasher.gd`
 
 ---
 

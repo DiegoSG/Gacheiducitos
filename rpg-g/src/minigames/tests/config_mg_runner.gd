@@ -98,7 +98,7 @@ func _on_dist_factor_changed(value: float):
 
 func _on_start_pressed():
 	GameManager.minigame_config = config
-	GameManager.load_minigame("res://src/minigames/mg_runner/mg_runner_level.tscn", Vector2.ZERO)
+	GameManager.load_minigame("res://src/minigames/mg_runner/mg_runner_level.tscn")
 
 func _on_exit_pressed():
 	GameManager.return_to_overworld()

@@ -1,7 +1,8 @@
 extends CharacterBody2D
 class_name MG_TrampolinPlayer
 
-signal died
+## Emitida al rebotar sobre la plataforma especial (condición de victoria ESPECIAL).
+signal special_platform_reached
 
 const GRAVITY = 800.0
 const JUMP_FORCE = -600.0
@@ -46,7 +47,7 @@ func _physics_process(delta: float):
 		if velocity.y > 0 and collider.is_in_group("trampolin_platform"):
 			velocity.y = JUMP_FORCE
 			if collider.is_in_group("special_platform"):
-				get_parent()._win_game("¡Trampolín especial encontrado!")
+				special_platform_reached.emit()
 	
 	# Paredes sólidas (bloqueo)
 	var half_width = game_area_width / 2.0
@@ -56,7 +57,3 @@ func _physics_process(delta: float):
 	elif global_position.x < -half_width:
 		global_position.x = -half_width
 		velocity.x = 0
-
-func die():
-	died.emit()
-	queue_free()

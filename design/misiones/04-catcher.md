@@ -20,7 +20,7 @@ El minijuego es un desafío de coordinación lateral, posicionamiento táctico y
 * **Script del Controlador:** `res://src/minigames/mg_catcher/mg_catcher_game.gd` (Hereda de `MinigameBase`)
 * **Personaje del Jugador:** `res://src/minigames/mg_catcher/catcher_player.gd` y `catcher_player.tscn`
 * **Entidades Descendentes:** `res://src/minigames/mg_catcher/falling_item_base.gd`, `falling_item_point.tscn` y `falling_item_bomb.tscn`
-* **Configurador Inspector:** `res://src/minigames/mg_catcher/config_mg_catcher.gd`
+* **Configurador Inspector:** `res://src/minigames/tests/config_mg_catcher.gd`
 
 ---
 

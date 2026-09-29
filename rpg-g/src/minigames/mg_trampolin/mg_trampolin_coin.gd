@@ -10,11 +10,8 @@ signal collected
 func _ready():
 	# Usar el icono de oro del proyecto
 	if has_node("Sprite2D"):
-		var sprite = $Sprite2D
-		var tex = load("res://assets/items/icons/coin_v2.png")
-		if not tex:
-			tex = load("res://assets/items/icons/gold_coins.png")
-		sprite.texture = tex
+		var sprite: Sprite2D = $Sprite2D
+		sprite.texture = MinigameBase.get_coin_texture()
 		sprite.modulate = Color.WHITE # Reset modulation
 		sprite.scale = Vector2(coin_scale, coin_scale)
 	

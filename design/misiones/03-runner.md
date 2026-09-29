@@ -19,7 +19,7 @@ El minijuego es un side-scroller de desplazamiento lateral continuo a alta veloc
 * **Personaje del Runner:** `res://src/minigames/mg_runner/mg_runner_player.gd` y `mg_runner_player.tscn`
 * **Proyectiles y Combate:** `res://src/minigames/mg_runner/mg_runner_bullet.gd` y `mg_runner_bullet.tscn`
 * **Entidades de Obstáculo y Enemigo:** `res://src/minigames/mg_runner/mg_runner_obstacle.gd` y `mg_runner_enemy.gd`
-* **Configurador Inspector:** `res://src/minigames/mg_runner/config_mg_runner.gd`
+* **Configurador Inspector:** `res://src/minigames/tests/config_mg_runner.gd`
 
 ---
 

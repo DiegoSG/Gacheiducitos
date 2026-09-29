@@ -17,7 +17,7 @@ func execute(trigger_node: Node) -> void:
 		finished.emit()
 		return
 		
-	var t_node = trigger_node.get_node_or_null(target_trigger)
+	var t_node: Node = trigger_node.get_node_or_null(target_trigger)
 	if not t_node:
 		print("ToggleTriggerAction: No se encontró target ", target_trigger)
 		finished.emit()

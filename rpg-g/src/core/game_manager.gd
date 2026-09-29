@@ -5,15 +5,11 @@ extends Node
 signal level_changed(target_level_path: String, spawn_id: String)
 signal game_event(event_name: String, event_data: Variant)
 
-func trigger_event(event_name: String, event_data: Variant = null) -> void:
-	print("[GameManager] trigger_event: '%s'" % event_name)
-	game_event.emit(event_name, event_data)
-
 const FADER_SCENE: PackedScene = preload("res://src/ui/screen_fader.tscn")
+const DEFAULT_LEVEL_PATH: String = "res://src/overworld/levels/level_01.tscn"
 
 var current_scene: Node = null
 var previous_scene_path: String = ""
-var player_return_position: Vector2 = Vector2.ZERO
 
 # Configuración de minijuego (para debug y persistencia)
 var minigame_config: Dictionary = {}
@@ -30,97 +26,73 @@ func _ready() -> void:
 	var root: Window = get_tree().root
 	current_scene = root.get_child(root.get_child_count() - 1)
 	if is_instance_valid(current_scene):
+		# Permite ejecutar un minijuego suelto (F6) y que igualmente entregue recompensas
+		_connect_minigame_finished(current_scene)
 		CheckpointManager.register_level_entry(current_scene.scene_file_path, current_scene, false)
 
-func load_minigame(minigame_path: String, player_pos: Vector2 = Vector2.ZERO) -> void:
-	if is_instance_valid(current_scene):
-		# Solo guardar la escena previa si NO es ya parte de una partida de minijuego
-		# (Para que las escenas de prueba o el Overworld se preserven correctamente)
-		if not (current_scene is MinigameBase):
-			previous_scene_path = current_scene.scene_file_path
-			player_return_position = player_pos
-			print("GameManager: Saved return path: ", previous_scene_path)
-			
-	# Extraer rutas de retorno de la config si existen, o usar default
+func trigger_event(event_name: String, event_data: Variant = null) -> void:
+	print("[GameManager] trigger_event: '%s'" % event_name)
+	game_event.emit(event_name, event_data)
+
+## Carga un minijuego con transición (fundido). Guarda la escena previa y las rutas de retorno
+## definidas en minigame_config.
+func load_minigame(minigame_path: String) -> void:
+	if minigame_path.is_empty():
+		push_error("GameManager: Cannot load empty minigame path.")
+		return
+
+	# Solo guardar la escena previa si NO es ya parte de una partida de minijuego
+	# (Para que las escenas de prueba o el Overworld se preserven correctamente)
+	if is_instance_valid(current_scene) and not (current_scene is MinigameBase):
+		previous_scene_path = current_scene.scene_file_path
+		print("GameManager: Saved return path: ", previous_scene_path)
+
+	# Extraer rutas de retorno de la config si existen, o usar la escena previa
 	_minigame_win_path = minigame_config.get("win_level_path", previous_scene_path)
 	_minigame_win_spawn_id = minigame_config.get("win_spawn_id", "")
 	_minigame_lose_path = minigame_config.get("lose_level_path", previous_scene_path)
 	_minigame_lose_spawn_id = minigame_config.get("lose_spawn_id", "")
-		
-	call_deferred("_deferred_load_minigame", minigame_path)
 
-func _deferred_load_minigame(path: String) -> void:
-	if path.is_empty():
-		push_error("GameManager: Cannot load empty minigame path.")
-		return
-
-	var s = ResourceLoader.load(path)
-	if not s:
-		push_error("GameManager: Failed to load scene: %s" % path)
-		return
-
-	if is_instance_valid(current_scene):
-		current_scene.queue_free()
-		await get_tree().process_frame
-	
-	AlertSystem.clear_pursuers()
-	current_scene = s.instantiate()
-	get_tree().root.add_child(current_scene)
-	get_tree().current_scene = current_scene
-	
-	# Conexión explícita e infalible de la señal game_finished
-	if current_scene.has_signal("game_finished"):
-		if not current_scene.game_finished.is_connected(complete_minigame):
-			current_scene.game_finished.connect(complete_minigame)
-			print("GameManager: Conectado con éxito a 'game_finished' de ", current_scene.name)
-	
-	# If returning to Overworld, restore player position
-	if path == previous_scene_path and player_return_position != Vector2.ZERO:
-		if current_scene.has_node("Player"):
-			current_scene.get_node("Player").position = player_return_position
+	change_level(minigame_path)
 
 func complete_minigame(success: bool, results: Dictionary = {}) -> void:
 	print("GameManager: complete_minigame called. Success: ", success)
 	
-	# Guardar items para animar su llegada en el HUD del Overworld
+	# Entregar recompensas (el oro se enruta solo a PlayerStats desde Inventory.add_item)
 	var pending_items: Dictionary = {}
 	if results.has("items"):
-		pending_items = results["items"]
-		var inventory := Inventory
-		if not inventory and get_tree() and get_tree().root:
-			inventory = Inventory
-			
-		if inventory:
-			for item_id in pending_items:
-				inventory.add_item(item_id, pending_items[item_id])
+		pending_items = results["items"] as Dictionary
+		for item_id: String in pending_items:
+			Inventory.add_item(item_id, int(pending_items[item_id]))
 			
 	# Determinar a dónde ir y qué spawn usar
-	var target_scene = _minigame_win_path if success else _minigame_lose_path
-	var target_spawn_id = _minigame_win_spawn_id if success else _minigame_lose_spawn_id
+	var target_scene: String = _minigame_win_path if success else _minigame_lose_path
+	var target_spawn_id: String = _minigame_win_spawn_id if success else _minigame_lose_spawn_id
 	
 	# Fallback si por alguna razón están vacíos
 	if target_scene.is_empty():
-		target_scene = previous_scene_path if not previous_scene_path.is_empty() else "res://src/overworld/levels/Lvl01.tscn"
+		target_scene = previous_scene_path if not previous_scene_path.is_empty() else DEFAULT_LEVEL_PATH
 		
 	# Usar el sistema de transiciones con fader
 	await change_level(target_scene, target_spawn_id)
 	
-	# Si obtuvimos items del minijuego, animar su llegada en el HUD
-	if not pending_items.is_empty():
-		var item_db := ItemDatabase
-		if item_db:
-			for item_id: String in pending_items:
-				var data: ItemData = item_db.get_item(item_id)
-				if data and LootFeedbackManager.instance:
-					var center_screen: Vector2 = get_viewport().get_visible_rect().size * 0.5
-					LootFeedbackManager.trigger_screen_loot(data, center_screen, pending_items[item_id])
+	# Si obtuvimos items del minijuego, mostrar su llegada
+	for item_id: String in pending_items:
+		var data: ItemData = ItemDatabase.get_item(item_id)
+		if data:
+			LootFeedbackManager.trigger_toast(data, int(pending_items[item_id]))
 
 func return_to_overworld() -> void:
-	print("GameManager: return_to_overworld called")
-	# Retrocompatibilidad temporal para los minijuegos no actualizados aún
-	var target_scene: String = previous_scene_path if previous_scene_path != "" else "res://src/overworld/levels/Lvl01.tscn"
-	print("GameManager: target_scene = ", target_scene)
+	var target_scene: String = previous_scene_path if not previous_scene_path.is_empty() else DEFAULT_LEVEL_PATH
+	print("GameManager: return_to_overworld -> ", target_scene)
 	change_level(target_scene)
+
+# Conecta game_finished de un MinigameBase a complete_minigame (única fuente de esta conexión)
+func _connect_minigame_finished(scene: Node) -> void:
+	if scene is MinigameBase:
+		var minigame: MinigameBase = scene as MinigameBase
+		if not minigame.game_finished.is_connected(complete_minigame):
+			minigame.game_finished.connect(complete_minigame)
 
 func change_level(target_level_path: String, spawn_id: String = "", exact_pos: Vector2 = Vector2.ZERO, use_exact: bool = false, is_save_load: bool = false) -> void:
 	if _is_changing_level:
@@ -132,9 +104,7 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 	_is_changing_level = true
 	
 	if not is_save_load:
-		var wsm := WorldStateManager
-		if wsm:
-			wsm.clear_ephemeral_states()
+		WorldStateManager.clear_ephemeral_states()
 		
 	var fader: ScreenFader = FADER_SCENE.instantiate()
 	get_tree().root.add_child(fader)
@@ -145,7 +115,7 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 		
 	await fader.fade_out(0.4)
 
-	var next_scene_resource = ResourceLoader.load(target_level_path)
+	var next_scene_resource: PackedScene = ResourceLoader.load(target_level_path) as PackedScene
 	if not next_scene_resource:
 		push_error("GameManager: Failed to load target level: %s" % target_level_path)
 		await fader.fade_in(0.2)
@@ -163,6 +133,7 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 	current_scene = next_scene_resource.instantiate()
 	get_tree().root.add_child(current_scene)
 	get_tree().current_scene = current_scene
+	_connect_minigame_finished(current_scene)
 	
 	# Posicionar al jugador en el spawn deseado
 	if current_scene.has_node("Player"):
@@ -183,7 +154,7 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 						break
 			# 2. Fallback de compatibilidad para escenas heredadas (SpawnPoints/ID)
 			if not found_spawn and current_scene.has_node("SpawnPoints/" + spawn_id):
-				var spawn_node = current_scene.get_node("SpawnPoints/" + spawn_id)
+				var spawn_node: Node2D = current_scene.get_node("SpawnPoints/" + spawn_id) as Node2D
 				player.global_position = spawn_node.global_position
 				found_spawn = true
 				

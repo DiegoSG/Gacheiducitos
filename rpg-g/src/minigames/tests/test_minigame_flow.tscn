@@ -11,17 +11,6 @@ script = ExtResource("4_minigame_action")
 minigame_type = 2
 win_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
 lose_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
-config = {
-"base_fall_speed": 220.0,
-"critical_item_ids": Array[String](["falling_bomb", "falling_rock"]),
-"game_mode": "COUNT",
-"item_pool": Array[String](["blue_potion", "red_potion", "green_herb"]),
-"lives": 3,
-"max_falling_objects": 8,
-"spawn_rate": 0.8,
-"target_value": 5.0
-}
-minigame_scene_path = "res://src/minigames/mg_catcher/mg_catcher_game.tscn"
 catcher_game_mode = 0
 catcher_target_value = 5.0
 catcher_lives = 3
@@ -38,16 +27,6 @@ script = ExtResource("4_minigame_action")
 minigame_type = 1
 win_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
 lose_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
-config = {
-"deliver_items": false,
-"escala": 1.5,
-"initial_bombs": 1,
-"item_pool": Array[String](["blue_potion", "red_potion", "green_herb"]),
-"rocks": 10,
-"target_amount": 3,
-"win_condition": 1
-}
-minigame_scene_path = "res://src/minigames/mg_excavation/mg_excavation_game.tscn"
 excavation_win_condition = 1
 excavation_target_amount = 3
 excavation_rocks = 10
@@ -60,19 +39,6 @@ excavation_item_pool = Array[String](["blue_potion", "red_potion", "green_herb"]
 script = ExtResource("4_minigame_action")
 win_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
 lose_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
-config = {
-"ammo_spawn_distance_multiplier": 1.5,
-"ammo_spawn_initial_distance": 250.0,
-"coin_density": 0.6,
-"item_pool": Array[String](["blue_potion", "red_potion", "green_herb"]),
-"max_coins": -1,
-"run_speed": 400.0,
-"speed_increase_amount": 25.0,
-"speed_increase_interval": 200.0,
-"target_value": 1500.0,
-"win_condition": 0
-}
-minigame_scene_path = "res://src/minigames/mg_runner/mg_runner_level.tscn"
 runner_win_mode = 0
 runner_target_distance = 300.0
 runner_speed = 400.0
@@ -89,14 +55,6 @@ script = ExtResource("4_minigame_action")
 minigame_type = 3
 win_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
 lose_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
-config = {
-"final_speed": 300.0,
-"game_mode": "COUNT",
-"initial_speed": 150.0,
-"lives": 3,
-"target_value": 5.0
-}
-minigame_scene_path = "res://src/minigames/mg_smasher/mg_smasher_game.tscn"
 smasher_game_mode = 0
 smasher_target_value = 18.0
 smasher_initial_speed = 150.0
@@ -108,13 +66,6 @@ script = ExtResource("4_minigame_action")
 minigame_type = 4
 win_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
 lose_level_path = "res://src/minigames/tests/test_minigame_flow.tscn"
-config = {
-"item_pool": Array[String](["blue_potion", "red_potion", "green_herb"]),
-"item_spawn_chance": 0.25,
-"target_value": 5.0,
-"win_condition": 1
-}
-minigame_scene_path = "res://src/minigames/mg_trampolin/mg_trampolin.tscn"
 trampolin_win_condition = 1
 trampolin_target_value = 5.0
 trampolin_item_chance = 0.25

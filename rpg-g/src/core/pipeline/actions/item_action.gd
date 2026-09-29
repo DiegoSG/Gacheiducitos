@@ -27,41 +27,26 @@ func get_action_name() -> String:
 func execute(trigger_node: Node) -> void:
 	if not trigger_node:
 		push_warning("ItemAction: trigger_node es null.")
-		_trigger_event(trigger_node, on_fail_event)
+		emit_game_event(on_fail_event)
 		finished.emit()
 		return
 
 	if not item or item.id.is_empty() or amount <= 0:
 		push_warning("ItemAction: Ítem no configurado o cantidad inválida.")
-		_trigger_event(trigger_node, on_fail_event)
-		finished.emit()
-		return
-
-	var inv := Inventory
-	if not inv:
-		push_warning("ItemAction: Autoload /root/Inventory no encontrado.")
-		_trigger_event(trigger_node, on_fail_event)
+		emit_game_event(on_fail_event)
 		finished.emit()
 		return
 
 	if operation == "add":
-		inv.add_item(item.id, amount)
+		Inventory.add_item(item.id, amount)
 		if show_feedback:
 			LootFeedbackManager.trigger_toast(item, amount)
-		_trigger_event(trigger_node, on_success_event)
+		emit_game_event(on_success_event)
 	elif operation == "remove":
-		if inv.has_method("has_item_amount") and inv.has_item_amount(item.id, amount):
-			inv.remove_item(item.id, amount)
-			_trigger_event(trigger_node, on_success_event)
+		# remove_item es atómico: si no alcanza la cantidad no quita nada y devuelve false
+		if Inventory.remove_item(item.id, amount):
+			emit_game_event(on_success_event)
 		else:
-			# Fallo: no tiene el ítem o no alcanza la cantidad requerida (no se quita nada)
-			_trigger_event(trigger_node, on_fail_event)
+			emit_game_event(on_fail_event)
 
 	finished.emit()
-
-func _trigger_event(node: Node, event_name: String) -> void:
-	if event_name.is_empty() or not node:
-		return
-	var gm := GameManager
-	if gm:
-		gm.trigger_event(event_name)

@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" uid="uid://n3jrrp45335r" path="res://src/minigames/mg_trampolin/mg_trampolin_player.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://dpskff3v5ckv0" path="res://assets/sprites/player_up.png" id="2_player_up"]
+[ext_resource type="Texture2D" uid="uid://cs1fpv662r7j8" path="res://assets/sprites/player_up.png" id="2_player_up"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_player"]
 radius = 18.0

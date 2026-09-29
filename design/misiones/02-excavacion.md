@@ -21,7 +21,7 @@ El minijuego es un rompecabezas de acción táctica y física de gravedad en una
 * **Script del Controlador:** `res://src/minigames/mg_excavation/mg_excavation_game.gd` (Hereda de `MinigameBase`, clase `MG_ExcavationGame`)
 * **Generador de Niveles:** `res://src/minigames/mg_excavation/level_generator.gd`
 * **Tipos y Enums:** `res://src/minigames/mg_excavation/mg_excavation_types.gd` (`TileType`, `WinCondition`)
-* **Configurador Inspector:** `res://src/minigames/mg_excavation/config_mg_excavation.gd`
+* **Configurador Inspector:** `res://src/minigames/tests/config_mg_excavation.gd`
 
 ---
 

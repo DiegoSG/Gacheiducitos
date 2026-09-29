@@ -17,7 +17,7 @@ El minijuego es un ascenso vertical continuo de saltos acrobáticos sobre plataf
 * **Personaje Jugador:** `res://src/minigames/mg_trampolin/mg_trampolin_player.gd` y `mg_trampolin_player.tscn`
 * **Plataforma Básica:** `res://src/minigames/mg_trampolin/mg_trampolin_platform.tscn`
 * **Pickups y Coleccionables:** `res://src/minigames/mg_trampolin/mg_trampolin_coin.tscn` y `mg_trampolin_item.tscn`
-* **Configurador Inspector:** `res://src/minigames/mg_trampolin/config_mg_trampolin.gd`
+* **Configurador Inspector:** `res://src/minigames/tests/config_mg_trampolin.gd`
 
 ---
 

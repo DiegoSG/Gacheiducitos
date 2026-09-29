@@ -14,16 +14,9 @@ enum QuestState { START, COMPLETE }
 func get_action_name() -> String:
 	return "QuestAction (%s: %s)" % [quest_id, "START" if state == QuestState.START else "COMPLETE"]
 
-func execute(trigger_node: Node) -> void:
-	var tree = trigger_node.get_tree()
-	var narrative_manager = tree.root.get_node_or_null("NarrativeManager")
-	
-	if narrative_manager:
-		if state == QuestState.START:
-			narrative_manager.start_quest(quest_id)
-		else:
-			narrative_manager.complete_quest(quest_id)
+func execute(_trigger_node: Node) -> void:
+	if state == QuestState.START:
+		NarrativeManager.start_quest(quest_id)
 	else:
-		print("QuestAction: NarrativeManager not found!")
-		
+		NarrativeManager.complete_quest(quest_id)
 	finished.emit()

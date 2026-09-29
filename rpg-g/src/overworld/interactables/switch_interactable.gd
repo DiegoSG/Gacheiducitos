@@ -65,10 +65,10 @@ func action() -> void:
 
 	if is_on:
 		turned_on.emit()
-		_run_actions(trigger_actions)
+		ActionRunner.run(trigger_actions, self)
 	else:
 		turned_off.emit()
-		_run_actions(off_actions)
+		ActionRunner.run(off_actions, self)
 
 	_persist_state()
 
@@ -78,8 +78,3 @@ func _persist_state() -> void:
 	var wsm := WorldStateManager
 	if wsm:
 		wsm.save_state(persistence_id, {"is_on": is_on})
-
-func _run_actions(actions: Array[ActionResource]) -> void:
-	for act in actions:
-		if act:
-			act.execute(self)

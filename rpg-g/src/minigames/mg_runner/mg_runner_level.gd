@@ -98,6 +98,8 @@ func _load_configuration() -> void:
 	item_spawn_rate = cfg.get("item_spawn_rate", item_spawn_rate)
 	speed_increase_interval = cfg.get("speed_increase_interval", speed_increase_interval)
 	speed_increase_amount = cfg.get("speed_increase_amount", speed_increase_amount)
+	ammo_spawn_initial_distance = cfg.get("ammo_spawn_initial_distance", ammo_spawn_initial_distance)
+	ammo_spawn_distance_multiplier = cfg.get("ammo_spawn_distance_multiplier", ammo_spawn_distance_multiplier)
 	
 	if cfg.has("item_pool") and cfg["item_pool"] is Array:
 		item_pool = cfg["item_pool"]
@@ -280,7 +282,7 @@ func _spawn_coin_pattern(pattern: CoinPattern, base_x: float) -> void:
 			break
 		var pickup = PICKUP_SCENE.instantiate() as MG_RunnerPickup
 		pickup.pickup_type = MG_RunnerPickup.PickupType.COIN
-		pickup.item_id = "gold_coins"
+		pickup.item_id = Inventory.GOLD_ITEM_ID
 		pickup.amount = 1
 		pickup.speed = run_speed
 		pickup.position = Vector2(base_x + pos.x, pos.y)
@@ -291,18 +293,7 @@ func _spawn_coin_pattern(pattern: CoinPattern, base_x: float) -> void:
 func _spawn_random_item() -> void:
 	if item_pool.is_empty():
 		return
-	var chosen_id: String = ""
-	if item_pool[0] is Dictionary:
-		var roll = randf()
-		var accum = 0.0
-		for entry in item_pool:
-			accum += entry.get("chance", 0.3)
-			if roll <= accum:
-				chosen_id = str(entry.get("id", ""))
-				break
-	else:
-		chosen_id = str(item_pool[randi() % item_pool.size()])
-		
+	var chosen_id: String = pick_item_from_pool(item_pool)
 	if chosen_id.is_empty():
 		return
 		
@@ -318,7 +309,7 @@ func _spawn_random_item() -> void:
 
 func _on_coin_collected(_p: MG_RunnerPickup) -> void:
 	coins_collected += 1
-	add_reward("gold_coins", 1)
+	add_reward(Inventory.GOLD_ITEM_ID, 1)
 
 func _on_random_item_collected(p: MG_RunnerPickup) -> void:
 	add_reward(p.item_id, p.amount)
@@ -339,6 +330,5 @@ func _win_game() -> void:
 	finish(true)
 
 func _unhandled_input(event: InputEvent) -> void:
-	super._unhandled_input(event)
 	if is_playing and event.is_action_pressed("ui_cancel"):
 		finish(false)

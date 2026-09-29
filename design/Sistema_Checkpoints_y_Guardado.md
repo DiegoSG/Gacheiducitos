@@ -98,7 +98,7 @@ Tanto el snapshot de inicio de nivel como el guardado manual/automático deben c
   "timestamp": 1726998000,
   "playtime_seconds": 1240.5,
   "level": {
-    "scene_path": "res://src/overworld/levels/Lvl02.tscn",
+    "scene_path": "res://src/overworld/levels/level_02.tscn",
     "player_position": { "x": 450.0, "y": 320.0 }
   },
   "player_stats": {

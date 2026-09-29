@@ -7,6 +7,7 @@ enum State { RUNNING, JUMPING, DUCKING }
 var state: State = State.RUNNING
 
 const GROUND_Y: float = 820.0
+const BULLET_SCENE: PackedScene = preload("res://src/minigames/mg_runner/mg_runner_bullet.tscn")
 
 # Parámetros físicos configurables en Inspector
 @export var jump_velocity: float = -1050.0
@@ -23,7 +24,6 @@ var velocity_y: float = 0.0
 var ammo: int = 3
 var is_dead: bool = false
 var _jump_buffer: float = 0.0
-var bullet_scene: PackedScene = null
 
 @onready var visual: Node2D = $Visual
 @onready var sprite: Sprite2D = $Visual/Sprite2D
@@ -55,7 +55,7 @@ func _input(event: InputEvent) -> void:
 	# Salto (Espacio, Flechas, WASD y Gamepad ya están mapeados en ui_accept / ui_up)
 	if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_up"):
 		try_jump()
-	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_Z:
+	elif event.is_action_pressed("attack"):
 		_shoot()
 
 func try_jump() -> void:
@@ -76,7 +76,7 @@ func try_jump() -> void:
 		_jump_buffer = 0.18
 
 func _is_duck_pressed() -> bool:
-	return Input.is_action_pressed("ui_down") or Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN)
+	return Input.is_action_pressed("ui_down")
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -151,9 +151,7 @@ func _set_ducking_state() -> void:
 func _shoot() -> void:
 	if ammo > 0:
 		ammo -= 1
-		if not bullet_scene:
-			bullet_scene = load("res://src/minigames/mg_runner/mg_runner_bullet.tscn")
-		var bullet = bullet_scene.instantiate()
+		var bullet: MG_RunnerBullet = BULLET_SCENE.instantiate() as MG_RunnerBullet
 		bullet.player = self
 		get_parent().add_child(bullet)
 		var spawn_y = position.y - (duck_height * 0.5 if state == State.DUCKING else stand_height * 0.5)

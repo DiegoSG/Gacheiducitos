@@ -5,6 +5,7 @@ signal collected(pickup: MG_RunnerPickup)
 
 enum PickupType { COIN, RANDOM_ITEM, TARGET_OBJECT, AMMO }
 @export var pickup_type: PickupType = PickupType.COIN
+# Literal equivalente a Inventory.GOLD_ITEM_ID (una constante de autoload no sirve como valor por defecto de un @export).
 @export var item_id: String = "gold_coins"
 @export var amount: int = 1
 @export var is_victory_target: bool = false
@@ -37,16 +38,13 @@ func _setup_visuals() -> void:
 	elif pickup_type == PickupType.COIN:
 		if glow:
 			glow.visible = false
-		var coin_tex = load("res://assets/items/icons/coin_v2.png")
-		if not coin_tex:
-			coin_tex = load("res://assets/items/icons/gold_coins.png")
-		_apply_texture_and_scale(coin_tex, coin_target_size)
+		_apply_texture_and_scale(MinigameBase.get_coin_texture(), coin_target_size)
 	elif pickup_type == PickupType.AMMO:
 		if glow:
 			glow.visible = false
-		var ammo_tex = load("res://assets/items/icons/iron_key.png") # o icon.svg coloreado
+		var ammo_tex: Texture2D = load("res://assets/items/icons/iron_key.png") as Texture2D # o icon.svg coloreado
 		if not ammo_tex:
-			ammo_tex = load("res://icon.svg")
+			ammo_tex = load("res://icon.svg") as Texture2D
 		sprite.modulate = Color(1.0, 0.4, 0.2) # Resplandor anaranjado de proyectil/munición
 		_apply_texture_and_scale(ammo_tex, ammo_target_size)
 	else:
@@ -55,24 +53,22 @@ func _setup_visuals() -> void:
 		_load_and_scale_item(item_id, item_target_size)
 
 func _load_and_scale_item(target_id: String, desired_pixel_size: float) -> void:
-	# 1. Intentar cargar desde ItemData .tres
-	var item_res_path = "res://data/items/%s.tres" % target_id
-	if ResourceLoader.exists(item_res_path):
-		var res = load(item_res_path)
-		if res and "icon" in res and res.icon:
-			_apply_texture_and_scale(res.icon, desired_pixel_size)
-			return
+	# 1. Intentar obtener el icono desde ItemDatabase
+	var item_icon: Texture2D = MinigameBase.get_item_icon(target_id)
+	if item_icon:
+		_apply_texture_and_scale(item_icon, desired_pixel_size)
+		return
 			
 	# 2. Intentar cargar desde icono png
 	var png_path = "res://assets/items/icons/%s.png" % target_id
 	if ResourceLoader.exists(png_path):
-		var tex = load(png_path)
+		var tex: Texture2D = load(png_path) as Texture2D
 		if tex:
 			_apply_texture_and_scale(tex, desired_pixel_size)
 			return
 
 	# 3. Fallback a icon.svg
-	var fallback_tex = load("res://icon.svg")
+	var fallback_tex: Texture2D = load("res://icon.svg") as Texture2D
 	sprite.modulate = Color(1.0, 0.85, 0.1) if is_victory_target else Color(0.3, 0.7, 1.0)
 	_apply_texture_and_scale(fallback_tex, desired_pixel_size)
 

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cokkajhh3ub0y"]
 
-[ext_resource type="Script" uid="uid://djtm0ly54lh60" path="res://src/minigames/mg_excavation/debug_config.gd" id="1"]
+[ext_resource type="Script" uid="uid://djtm0ly54lh60" path="res://src/minigames/tests/config_mg_excavation.gd" id="1"]
 
 [node name="DebugConfig" type="Control"]
 layout_mode = 3

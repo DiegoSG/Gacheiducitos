@@ -15,16 +15,11 @@ func get_slot_path(slot_id: int) -> String:
 	return SAVE_PATH_SLOT_PATTERN % slot_id
 
 func save_slot(slot_id: int) -> void:
-	var gm := GameManager
-	var ws := WorldStateManager
-	var ps := PlayerStats
-	var inv := Inventory
-	var nm := NarrativeManager
-
-	if not gm or not is_instance_valid(gm.current_scene):
+	if not is_instance_valid(GameManager.current_scene):
 		return
 
-	var player: Node2D = gm.current_scene.get_node_or_null("Player") as Node2D
+	var current_scene: Node = GameManager.current_scene
+	var player: Node2D = current_scene.get_node_or_null("Player") as Node2D
 	var p_pos: Vector2 = player.global_position if player else Vector2.ZERO
 
 	var data: Dictionary = {
@@ -32,13 +27,13 @@ func save_slot(slot_id: int) -> void:
 		"save_type": "auto" if slot_id == AUTOSAVE_SLOT_ID else "manual",
 		"timestamp": Time.get_unix_time_from_system(),
 		"level": {
-			"scene_path": gm.current_scene.scene_file_path,
+			"scene_path": current_scene.scene_file_path,
 			"player_position": {"x": p_pos.x, "y": p_pos.y}
 		},
-		"player_stats": ps.create_snapshot() if ps else {},
-		"inventory": inv.create_snapshot() if inv else {},
-		"narrative": nm.create_snapshot() if nm else {},
-		"world_state": ws.create_snapshot() if ws else {}
+		"player_stats": PlayerStats.create_snapshot(),
+		"inventory": Inventory.create_snapshot(),
+		"narrative": NarrativeManager.create_snapshot(),
+		"world_state": WorldStateManager.create_snapshot()
 	}
 
 	var file_path: String = get_slot_path(slot_id)
@@ -59,6 +54,9 @@ func load_slot(slot_id: int) -> void:
 		return
 
 	var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
+	if not file:
+		push_error("[SaveSystem] No se pudo abrir el archivo: ", file_path)
+		return
 	var content: String = file.get_as_text()
 	file.close()
 
@@ -68,31 +66,26 @@ func load_slot(slot_id: int) -> void:
 
 	var data: Dictionary = parsed as Dictionary
 
-	var ws := WorldStateManager
-	if ws and data.has("world_state"):
-		ws.restore_snapshot(data["world_state"])
+	if data.has("world_state"):
+		WorldStateManager.restore_snapshot(data["world_state"])
 
-	var nm := NarrativeManager
-	if nm and data.has("narrative"):
-		nm.restore_snapshot(data["narrative"])
+	if data.has("narrative"):
+		NarrativeManager.restore_snapshot(data["narrative"])
 
-	var inv := Inventory
-	if inv and data.has("inventory"):
-		inv.restore_snapshot(data["inventory"])
+	if data.has("inventory"):
+		Inventory.restore_snapshot(data["inventory"])
 
-	var ps := PlayerStats
-	if ps and data.has("player_stats"):
-		ps.restore_snapshot(data["player_stats"])
+	if data.has("player_stats"):
+		PlayerStats.restore_snapshot(data["player_stats"])
 
-	var gm := GameManager
-	if gm and data.has("level"):
+	if data.has("level"):
 		var level_data: Dictionary = data["level"] as Dictionary
 		var path: String = level_data.get("scene_path", "")
 		var pos_dict: Dictionary = level_data.get("player_position", {"x": 0, "y": 0})
 		var pos: Vector2 = Vector2(pos_dict["x"], pos_dict["y"])
 
 		get_tree().paused = false
-		await gm.change_level(path, "", pos, true, true)
+		await GameManager.change_level(path, "", pos, true, true)
 
 	game_loaded.emit(slot_id)
 	print("[SaveSystem] Partida cargada exitosamente desde slot: ", slot_id)
@@ -124,17 +117,12 @@ func get_slot_metadata(slot_id: int) -> Dictionary:
 		
 	var hp: int = 0
 	var max_hp: int = 0
+	var gold: int = 0
 	if data.has("player_stats") and data["player_stats"] is Dictionary:
 		var stats_dict: Dictionary = data["player_stats"] as Dictionary
-		hp = stats_dict.get("health", 0)
-		max_hp = stats_dict.get("max_health", 0)
-		
-	var gold: int = 0
-	if data.has("inventory") and data["inventory"] is Dictionary:
-		var inv_dict: Dictionary = data["inventory"] as Dictionary
-		if inv_dict.has("items") and inv_dict["items"] is Dictionary:
-			var items_dict: Dictionary = inv_dict["items"] as Dictionary
-			gold = items_dict.get("gold_coins", 0)
+		hp = int(stats_dict.get("health", 0))
+		max_hp = int(stats_dict.get("max_health", 0))
+		gold = int(stats_dict.get("gold", 0))
 			
 	return {
 		"exists": true,
@@ -151,17 +139,10 @@ func get_all_slots_metadata() -> Array[Dictionary]:
 		result.append(get_slot_metadata(i))
 	return result
 
-# --- Compatibilidad hacia atrás opcional (o para scripts externos que no actualizamos) ---
-func save_current_state(is_autosave: bool = false) -> void:
-	save_slot(AUTOSAVE_SLOT_ID if is_autosave else 1)
-
-func load_saved_state(is_autosave: bool = false) -> void:
-	load_slot(AUTOSAVE_SLOT_ID if is_autosave else 1)
-
 func delete_slot(slot_id: int) -> void:
 	var file_path: String = get_slot_path(slot_id)
 	if FileAccess.file_exists(file_path):
-		var err = DirAccess.remove_absolute(file_path)
+		var err: Error = DirAccess.remove_absolute(file_path)
 		if err == OK:
 			game_deleted.emit(slot_id)
 			print("[SaveSystem] Partida borrada exitosamente: ", file_path)

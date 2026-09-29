@@ -9,17 +9,15 @@ func _ready() -> void:
 	if control:
 		control.visible = false
 		
-	var inv := Inventory
-	if inv:
-		inv.inventory_changed.connect(_on_inventory_changed)
-	
+	Inventory.inventory_changed.connect(_on_inventory_changed)
+
 	if item_list:
 		item_list.item_activated.connect(_on_item_activated)
 	
 	refresh_ui()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("toggle_inventory") or (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_TAB):
+	if event.is_action_pressed("toggle_inventory"):
 		toggle_inventory()
 		get_viewport().set_input_as_handled()
 	elif is_open() and event.is_action_pressed("ui_cancel"):
@@ -59,19 +57,14 @@ func refresh_ui() -> void:
 		return
 	item_list.clear()
 	
-	var inv := Inventory
-	var item_db := ItemDatabase
-	if not inv or not item_db:
-		return
-		
-	var items: Dictionary = inv.get_items()
+	var items: Dictionary = Inventory.get_items()
 	if items.is_empty():
 		item_list.add_item("(Inventario vacío)")
 		return
 		
-	for item_id in items:
+	for item_id: String in items:
 		var amount: int = items[item_id]
-		var data: ItemData = item_db.get_item(item_id)
+		var data: ItemData = ItemDatabase.get_item(item_id)
 		var idx: int = -1
 		
 		if data:
@@ -84,8 +77,6 @@ func refresh_ui() -> void:
 func _on_item_activated(index: int) -> void:
 	if not item_list:
 		return
-	var item_id = item_list.get_item_metadata(index)
-	if item_id and item_id is String:
-		var inv := Inventory
-		if inv:
-			inv.use_item(item_id)
+	var item_id: Variant = item_list.get_item_metadata(index)
+	if item_id is String and not (item_id as String).is_empty():
+		Inventory.use_item(item_id as String)

@@ -39,13 +39,8 @@ func _on_game_event(event_name: String, _event_data: Variant = null) -> void:
 		return
 	_has_triggered = true
 	_persist_state()
-	_run_actions()
+	ActionRunner.run(actions, self)
 	event_executed.emit()
-
-func _run_actions() -> void:
-	for act: ActionResource in actions:
-		if act:
-			act.execute(self)
 
 func _restore_state() -> void:
 	if persistence_id.is_empty():

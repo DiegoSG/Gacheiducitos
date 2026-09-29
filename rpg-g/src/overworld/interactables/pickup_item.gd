@@ -80,21 +80,21 @@ func _sync_with_resource() -> void:
 		_update_collision_shape()
 
 func _clear_visuals() -> void:
-	var sprite = get_node_or_null("Sprite2D")
+	var sprite: Sprite2D = get_node_or_null("Sprite2D")
 	if sprite:
 		sprite.texture = null
-	var col_shape_node = get_node_or_null("CollisionShape2D")
+	var col_shape_node: CollisionShape2D = get_node_or_null("CollisionShape2D")
 	if col_shape_node:
 		col_shape_node.shape = null
 
 func _update_visuals() -> void:
-	var sprite = get_node_or_null("Sprite2D")
+	var sprite: Sprite2D = get_node_or_null("Sprite2D")
 	if sprite:
 		sprite.texture = _item_icon
 		sprite.scale = _item_scale
 
 func _update_collision_shape() -> void:
-	var col_shape_node = get_node_or_null("CollisionShape2D")
+	var col_shape_node: CollisionShape2D = get_node_or_null("CollisionShape2D")
 	if not col_shape_node: return
 	
 	col_shape_node.position = _collision_offset
@@ -104,14 +104,14 @@ func _update_collision_shape() -> void:
 			if col_shape_node.shape is CircleShape2D:
 				(col_shape_node.shape as CircleShape2D).radius = _circle_radius
 			else:
-				var shape = CircleShape2D.new()
+				var shape: CircleShape2D = CircleShape2D.new()
 				shape.radius = _circle_radius
 				col_shape_node.shape = shape
 		ItemData.ShapeType.RECTANGLE:
 			if col_shape_node.shape is RectangleShape2D:
 				(col_shape_node.shape as RectangleShape2D).size = _rectangle_size
 			else:
-				var shape = RectangleShape2D.new()
+				var shape: RectangleShape2D = RectangleShape2D.new()
 				shape.size = _rectangle_size
 				col_shape_node.shape = shape
 		ItemData.ShapeType.CAPSULE:
@@ -120,7 +120,7 @@ func _update_collision_shape() -> void:
 				cap.radius = _capsule_radius
 				cap.height = _capsule_height
 			else:
-				var shape = CapsuleShape2D.new()
+				var shape: CapsuleShape2D = CapsuleShape2D.new()
 				shape.radius = _capsule_radius
 				shape.height = _capsule_height
 				col_shape_node.shape = shape
@@ -131,19 +131,11 @@ func _on_body_entered(body: Node2D) -> void:
 	if not can_be_collected: return
 	
 	if body.is_in_group("player") or body.name == "Player":
-		var inv = _get_autoload("Inventory")
-		var ps = _get_autoload("PlayerStats")
-		
-		var qty: int = custom_amount if custom_amount > 0 else 1
-		if item_data.id == "gold_coins":
-			var gold_val: int = custom_amount if custom_amount >= 0 else item_data.value
-			if ps and ps.has_method("add_gold"):
-				ps.add_gold(gold_val)
-			LootFeedbackManager.trigger_loot_pickup(item_data, global_position, gold_val)
-		else:
-			if inv and inv.has_method("add_item"):
-				inv.add_item(item_data.id, qty)
-			LootFeedbackManager.trigger_loot_pickup(item_data, global_position, qty)
+		# El oro usa el valor del recurso por defecto; el resto de ítems, 1 unidad
+		var default_amount: int = item_data.value if item_data.id == Inventory.GOLD_ITEM_ID else 1
+		var qty: int = custom_amount if custom_amount > 0 else default_amount
+		Inventory.add_item(item_data.id, qty)
+		LootFeedbackManager.trigger_toast(item_data, qty)
 		
 		_persist_collected()
 		queue_free()
@@ -208,26 +200,15 @@ func _on_drop_animation_finished() -> void:
 				_on_body_entered(body)
 				break
 
-func _get_autoload(autoload_name: String) -> Node:
-	if is_inside_tree() and get_tree() and get_tree().root:
-		return get_tree().root.get_node_or_null(autoload_name)
-	var main_loop = Engine.get_main_loop()
-	if main_loop and "root" in main_loop and main_loop.root:
-		return main_loop.root.get_node_or_null(autoload_name)
-	return null
-
 func _is_already_collected() -> bool:
 	if persistence_id.is_empty():
 		return false
-	var wsm: Node = _get_autoload("WorldStateManager")
-	if wsm and wsm.has_state(persistence_id):
-		var data: Dictionary = wsm.load_state(persistence_id)
+	if WorldStateManager.has_state(persistence_id):
+		var data: Dictionary = WorldStateManager.load_state(persistence_id)
 		return data.get("is_collected", false)
 	return false
 
 func _persist_collected() -> void:
 	if persistence_id.is_empty():
 		return
-	var wsm: Node = _get_autoload("WorldStateManager")
-	if wsm:
-		wsm.save_state(persistence_id, {"is_collected": true})
+	WorldStateManager.save_state(persistence_id, {"is_collected": true})

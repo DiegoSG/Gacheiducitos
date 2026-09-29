@@ -54,6 +54,7 @@ func _update_ui():
 func _on_win_condition_selected(index: int):
 	config.win_condition = index
 	if index == 0: config.target_value = 100
+	elif index == 1: config.target_value = config.special_height # En modo Especial, target_value es la altura de la plataforma
 	elif index == 2: config.target_value = 10
 	_update_ui()
 
@@ -67,11 +68,13 @@ func _on_coin_density_changed(value: float):
 
 func _on_special_height_changed(value: float):
 	config.special_height = int(value)
+	if config.win_condition == 1:
+		config.target_value = config.special_height
 	special_height_label.text = str(config.special_height)
 
 func _on_start_pressed():
 	GameManager.minigame_config = config
-	GameManager.load_minigame("res://src/minigames/mg_trampolin/mg_trampolin.tscn", Vector2.ZERO)
+	GameManager.load_minigame("res://src/minigames/mg_trampolin/mg_trampolin.tscn")
 
 func _on_exit_pressed():
 	GameManager.return_to_overworld()

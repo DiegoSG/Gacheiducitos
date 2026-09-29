@@ -7,8 +7,6 @@ extends MinigameBase
 @onready var score_label = $UI/HUD/ScoreLabel
 @onready var time_label = $UI/HUD/TimeLabel
 @onready var lives_label = $UI/HUD/LivesLabel
-@onready var message_overlay = $UI/MessageOverlay
-@onready var message_label = $UI/MessageOverlay/Label
 
 # State
 var initial_speed: float = 100.0

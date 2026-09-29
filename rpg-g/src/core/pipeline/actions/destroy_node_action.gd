@@ -42,7 +42,7 @@ func execute(trigger_node: Node) -> void:
 			finished.emit()
 			return
 		else:
-			tween.finished.connect(func(): _finalize_destroy(target))
+			tween.finished.connect(func() -> void: _finalize_destroy(target))
 			finished.emit()
 			return
 	else:
@@ -63,5 +63,5 @@ func _finalize_destroy(target: Node) -> void:
 func _disable_collision_recursively(node: Node) -> void:
 	if node is CollisionShape2D or node is CollisionPolygon2D:
 		node.set_deferred("disabled", true)
-	for child in node.get_children():
+	for child: Node in node.get_children():
 		_disable_collision_recursively(child)

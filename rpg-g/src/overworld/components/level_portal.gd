@@ -41,9 +41,6 @@ enum Mode {
 			is_locked = true
 		_update_visuals()
 
-## ID del ítem requerido en el Inventario para abrir (ej. 'rusty_key'). Si está vacío y 'key' es nulo, se abre sin ítem.
-@export var required_key_id: String = ""
-
 ## Si consume la llave del inventario al abrirse
 @export var consume_key: bool = false
 
@@ -103,7 +100,6 @@ enum Mode {
 @onready var arrival_label: Label = $SpawnPoint/ArrivalIdLabel if has_node("SpawnPoint/ArrivalIdLabel") else null
 
 var _is_triggered: bool = false
-static var debug_visuals_visible: bool = false
 
 func _ready() -> void:
 	if persistence_id.is_empty():
@@ -115,7 +111,7 @@ func _ready() -> void:
 			body_entered.connect(_on_body_entered)
 		if not body_exited.is_connected(_on_body_exited):
 			body_exited.connect(_on_body_exited)
-		_set_debug_visibility(debug_visuals_visible)
+		_set_debug_visibility(ArrivalSpawnPoint.debug_visuals_visible)
 		_restore_state()
 	_update_visuals()
 
@@ -144,18 +140,7 @@ func _update_collision_layers() -> void:
 			$SolidBody/SolidCollision.set_deferred("disabled", true)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if Engine.is_editor_hint():
-		return
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_F3:
-			get_viewport().set_input_as_handled()
-			toggle_debug_visuals()
-
-func toggle_debug_visuals() -> void:
-	debug_visuals_visible = not debug_visuals_visible
-	for node in get_tree().get_nodes_in_group("arrival_points"):
-		if node.has_method("_set_debug_visibility"):
-			node._set_debug_visibility(debug_visuals_visible)
+	ArrivalSpawnPoint.handle_debug_input(self, event)
 
 func _set_debug_visibility(p_visible: bool) -> void:
 	if has_node("ExitIdLabel"):
@@ -206,50 +191,23 @@ func _on_body_exited(body: Node2D) -> void:
 	if body.name == "Player" or body.is_in_group("player"):
 		_is_triggered = false
 
-func _get_inventory_node() -> Node:
-	if Engine.has_singleton("Inventory"):
-		return Engine.get_singleton("Inventory")
-	var node := Inventory
-	if node:
-		return node
-	if is_inside_tree() and get_tree() and get_tree().root:
-		for child in get_tree().root.get_children():
-			if child.name == "Inventory" or child.get_script() == preload("res://src/core/inventory.gd"):
-				return child
-	return null
-
-func _get_effective_key_id() -> String:
-	if key and not key.id.is_empty():
-		return key.id
-	return required_key_id
-
 func _attempt_traverse() -> void:
 	if not is_active:
 		_show_locked_feedback("La puerta está atrancada y no responde.")
 		return
 		
 	if is_locked:
-		var effective_key_id: String = _get_effective_key_id()
-		if not effective_key_id.is_empty():
-			var inventory = _get_inventory_node()
-			var has_key: bool = false
-			if inventory and inventory.has_method("get_items"):
-				has_key = inventory.get_items().get(effective_key_id, 0) > 0
-			
-			if has_key:
-				if consume_key and inventory:
-					inventory.remove_item(effective_key_id, 1)
-				is_locked = false
-				_update_visuals()
-				unlocked.emit()
-				_persist_state()
-				print("[LevelPortal] Puerta desbloqueada con llave '%s' (consumida: %s)" % [effective_key_id, str(consume_key)])
-			else:
-				_show_locked_feedback(locked_message)
-				return
-		else:
+		if key == null or key.id.is_empty() or not Inventory.has_item_amount(key.id, 1):
 			_show_locked_feedback(locked_message)
 			return
+		
+		if consume_key:
+			Inventory.remove_item(key.id, 1)
+		is_locked = false
+		_update_visuals()
+		unlocked.emit()
+		_persist_state()
+		print("[LevelPortal] Puerta desbloqueada con llave '%s' (consumida: %s)" % [key.id, str(consume_key)])
 
 	# Puerta/Portal abierto y listo para viajar
 	_trigger_transition()
@@ -258,17 +216,12 @@ func _trigger_transition() -> void:
 	_is_triggered = true
 	portal_triggered.emit(target_level_path, exit_id)
 	opened.emit()
-	var game_manager := GameManager
-	if game_manager:
-		game_manager.change_level(target_level_path, exit_id)
+	GameManager.change_level(target_level_path, exit_id)
 
 func _show_locked_feedback(msg: String) -> void:
 	locked.emit()
-	var dm = get_node_or_null("/root/DialogueManager")
-	if not dm and Engine.has_singleton("DialogueManager"):
-		dm = Engine.get_singleton("DialogueManager")
-	if locked_dialogue_resource and dm:
-		dm.show_dialogue_balloon(locked_dialogue_resource, locked_dialogue_title)
+	if locked_dialogue_resource:
+		DialogueManager.show_dialogue_balloon(locked_dialogue_resource, locked_dialogue_title)
 	else:
 		print("[LevelPortal Bloqueado]: ", msg)
 
@@ -310,26 +263,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 	if arrival_id.strip_edges().is_empty():
 		warnings.append("Debe asignar un 'arrival_id' único para este portal.")
 	else:
-		var root_node: Node = null
-		if Engine.is_editor_hint() and get_tree() and get_tree().edited_scene_root:
-			root_node = get_tree().edited_scene_root
-		elif get_owner():
-			root_node = get_owner()
-		elif get_parent():
-			root_node = get_parent()
-			while root_node.get_parent() and not (root_node.get_parent() is Window):
-				root_node = root_node.get_parent()
-				
-		if root_node:
-			var duplicates = _find_duplicate_arrival_ids(root_node, arrival_id)
-			if duplicates > 1:
-				warnings.append("Existe otro portal o spawn point con el mismo arrival_id ('%s'). Deben ser únicos." % arrival_id)
+		var root_node: Node = ArrivalSpawnPoint.find_scene_root(self)
+		if root_node and ArrivalSpawnPoint.count_arrival_id(root_node, arrival_id) > 1:
+			warnings.append("Existe otro portal o spawn point con el mismo arrival_id ('%s'). Deben ser únicos." % arrival_id)
 	return warnings
-
-func _find_duplicate_arrival_ids(node: Node, target_id: String) -> int:
-	var count: int = 0
-	if "arrival_id" in node and node.arrival_id == target_id:
-		count += 1
-	for child in node.get_children():
-		count += _find_duplicate_arrival_ids(child, target_id)
-	return count
