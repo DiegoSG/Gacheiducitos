@@ -21,7 +21,7 @@ func register_level_entry(scene_path: String, scene_node: Node, is_organic: bool
 	
 	# Respaldar estado del mundo al inicio de este nivel (para revertir si muere aquí)
 	level_entry_world_state_snapshot = WorldStateManager.create_snapshot()
-	level_entry_narrative_snapshot = NarrativeManager.create_snapshot()
+	level_entry_narrative_snapshot = GameVariables.create_snapshot()
 	
 	# Buscar configuración de excepción en la escena
 	var exception_config: LevelExceptionConfig = null
@@ -73,10 +73,10 @@ func respawn_player() -> void:
 		else:
 			target_scene = GameManager.DEFAULT_LEVEL_PATH
 		
-	# 1. Revertir WorldStateManager y NarrativeManager al inicio del nivel
+	# 1. Revertir WorldStateManager y GameVariables al inicio del nivel
 	WorldStateManager.restore_snapshot(level_entry_world_state_snapshot)
 	if not level_entry_narrative_snapshot.is_empty():
-		NarrativeManager.restore_snapshot(level_entry_narrative_snapshot)
+		GameVariables.restore_snapshot(level_entry_narrative_snapshot)
 		
 	# 2. Restaurar Stats e Inventario del checkpoint activo
 	if active_checkpoint_player_snapshot.has("stats"):

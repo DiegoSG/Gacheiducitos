@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://src/overworld/enemies/generic_enemy.tscn" id="2_enemy"]
+[ext_resource type="PackedScene" path="res://src/overworld/interactables/pickup_item.tscn" id="3_pickup"]
+[ext_resource type="Resource" path="res://data/items/test_poison_vial.tres" id="4_poison"]
+[ext_resource type="Resource" path="res://data/items/test_antidote.tres" id="5_antidote"]
+[ext_resource type="Resource" path="res://data/items/test_speed_boost.tres" id="6_boost"]
+
+[node name="TestStatusEffects" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(300, 540)
+
+[node name="PoisonousEnemy" parent="." instance=ExtResource("2_enemy")]
+position = Vector2(1200, 540)
+is_poisonous = true
+poison_chance = 100.0
+
+[node name="PickupPoisonVial" parent="." instance=ExtResource("3_pickup")]
+position = Vector2(500, 400)
+item_data = ExtResource("4_poison")
+
+[node name="PickupAntidote" parent="." instance=ExtResource("3_pickup")]
+position = Vector2(600, 400)
+item_data = ExtResource("5_antidote")
+
+[node name="PickupSpeedBoost" parent="." instance=ExtResource("3_pickup")]
+position = Vector2(700, 400)
+item_data = ExtResource("6_boost")
+
+[node name="Instructions" type="Label" parent="."]
+offset_left = 40.0
+offset_top = 120.0
+offset_right = 1400.0
+offset_bottom = 240.0
+text = "Recoge los 3 pickups (vial de veneno, antidoto, impulso de velocidad) caminando sobre ellos.
+Abre el inventario con I y haz doble clic en un item para usarlo. Estados activos: fila bajo la vida en el HUD.
+El enemigo verde-veneno (derecha) envenena al golpear: espera ~5 s por cada punto de vida perdido; el antidoto lo cura."

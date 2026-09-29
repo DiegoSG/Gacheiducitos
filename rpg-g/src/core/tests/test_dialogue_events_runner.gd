@@ -38,11 +38,11 @@ func _init() -> void:
 		wsm.name = "WorldStateManager"
 		root.add_child(wsm)
 
-	var nm: Node = root.get_node_or_null("NarrativeManager")
+	var nm: Node = root.get_node_or_null("GameVariables")
 	if not nm:
-		var nm_script: GDScript = load("res://src/core/narrative_manager.gd")
+		var nm_script: GDScript = load("res://src/core/game_variables.gd")
 		nm = nm_script.new()
-		nm.name = "NarrativeManager"
+		nm.name = "GameVariables"
 		root.add_child(nm)
 
 	var inv: Node = root.get_node_or_null("Inventory")
@@ -68,8 +68,8 @@ func _init() -> void:
 	dlg_event_1.one_shot = true
 	dlg_event_1.persistence_id = "test_pers_1"
 
-	var flag_act_1: FlagAction = FlagAction.new()
-	flag_act_1.flag_id = "test_flag_1"
+	var flag_act_1: VariableAction = VariableAction.new()
+	flag_act_1.var_path = "flag.test_flag_1"
 	flag_act_1.value = "true"
 	dlg_event_1.actions.append(flag_act_1)
 
@@ -79,7 +79,7 @@ func _init() -> void:
 	root.add_child(dlg_event_1)
 	await process_frame
 
-	assert(nm.get_flag("test_flag_1") != true, "El flag inicial no debe ser true antes del evento")
+	assert(nm.get_var("flag.test_flag_1") != true, "El flag inicial no debe ser true antes del evento")
 	assert(_event_executed_emitted == false, "event_executed no debió haberse emitido todavía")
 
 	# Disparar evento desde GameManager
@@ -87,9 +87,9 @@ func _init() -> void:
 	await process_frame
 
 	assert(_event_executed_emitted == true, "La señal event_executed debió emitirse")
-	assert(nm.get_flag("test_flag_1") == true, "El flag en NarrativeManager debió cambiar a true por FlagAction")
+	assert(nm.get_var("flag.test_flag_1") == true, "El flag en GameVariables debió cambiar a true por VariableAction")
 	assert(dlg_event_1._has_triggered == true, "_has_triggered debió ser true tras la ejecución")
-	print("[PASS] Test 1 superado: DialogueEvent recibió el evento 'test_evt_1', ejecutó FlagAction y emitió event_executed.")
+	print("[PASS] Test 1 superado: DialogueEvent recibió el evento 'test_evt_1', ejecutó VariableAction y emitió event_executed.")
 
 	# -------------------------------------------------------------------------
 	# TEST 2: Match por nombre de nodo (Fallback si event_id está vacío o coincide)
@@ -102,8 +102,8 @@ func _init() -> void:
 	dlg_event_by_name.one_shot = true
 	dlg_event_by_name.persistence_id = "test_pers_by_name"
 
-	var flag_act_by_name: FlagAction = FlagAction.new()
-	flag_act_by_name.flag_id = "flag_node_name_matched"
+	var flag_act_by_name: VariableAction = VariableAction.new()
+	flag_act_by_name.var_path = "flag.flag_node_name_matched"
 	flag_act_by_name.value = "true"
 	dlg_event_by_name.actions.append(flag_act_by_name)
 
@@ -114,7 +114,7 @@ func _init() -> void:
 	gm.trigger_event("CustomNamedNode")
 	await process_frame
 
-	assert(nm.get_flag("flag_node_name_matched") == true, "DialogueEvent debe responder al name del nodo si coincide")
+	assert(nm.get_var("flag.flag_node_name_matched") == true, "DialogueEvent debe responder al name del nodo si coincide")
 	print("[PASS] Match por node.name verificado: El evento respondió al nombre del nodo cuando event_id estaba vacío.")
 
 	# Verificar que un evento ajeno no dispare el nodo
@@ -124,8 +124,8 @@ func _init() -> void:
 	dlg_event_isolated.one_shot = true
 	dlg_event_isolated.persistence_id = "test_pers_isolated"
 
-	var flag_act_isolated: FlagAction = FlagAction.new()
-	flag_act_isolated.flag_id = "flag_isolated_should_not_run"
+	var flag_act_isolated: VariableAction = VariableAction.new()
+	flag_act_isolated.var_path = "flag.flag_isolated_should_not_run"
 	flag_act_isolated.value = "true"
 	dlg_event_isolated.actions.append(flag_act_isolated)
 
@@ -135,7 +135,7 @@ func _init() -> void:
 	gm.trigger_event("completely_unrelated_event_xyz")
 	await process_frame
 
-	assert(nm.get_flag("flag_isolated_should_not_run") != true, "Un evento desconocido no debe activar DialogueEvent")
+	assert(nm.get_var("flag.flag_isolated_should_not_run") != true, "Un evento desconocido no debe activar DialogueEvent")
 	print("[PASS] Filtro de eventos verificado: Eventos que no coinciden con event_id ni name son ignorados.")
 
 	# -------------------------------------------------------------------------
@@ -145,12 +145,12 @@ func _init() -> void:
 
 	# Caso A: one_shot = true
 	_event_executed_emitted = false
-	nm.set_flag("test_flag_1", false) # Resetear flag para comprobar si vuelve a ejecutarse
+	nm.set_var("flag.test_flag_1", false) # Resetear flag para comprobar si vuelve a ejecutarse
 	gm.trigger_event("test_evt_1") # Segundo intento sobre dlg_event_1
 	await process_frame
 
 	assert(_event_executed_emitted == false, "Con one_shot=true, un segundo trigger no debe emitir event_executed")
-	assert(nm.get_flag("test_flag_1") == false, "Con one_shot=true, las acciones no deben ejecutarse una segunda vez")
+	assert(nm.get_var("flag.test_flag_1") == false, "Con one_shot=true, las acciones no deben ejecutarse una segunda vez")
 	print("[PASS] one_shot=true validado: Segundo trigger fue bloqueado correctamente.")
 
 	# Caso B: one_shot = false
@@ -240,17 +240,15 @@ func _init() -> void:
 	var game_trigger: GameTrigger = GameTrigger.new()
 	game_trigger.name = "TestGameTrigger"
 	game_trigger.one_shot = true
-	game_trigger.require_condition = true
-	game_trigger.condition_flag = "quest_unlocked"
-	game_trigger.condition_expected_value = "true"
+	game_trigger.conditions = _make_quest_conditions()
 
-	var action_true: FlagAction = FlagAction.new()
-	action_true.flag_id = "result_branch"
+	var action_true: VariableAction = VariableAction.new()
+	action_true.var_path = "flag.result_branch"
 	action_true.value = "TRUE_BRANCH"
 	game_trigger.actions_if_true.append(action_true)
 
-	var action_false: FlagAction = FlagAction.new()
-	action_false.flag_id = "result_branch"
+	var action_false: VariableAction = VariableAction.new()
+	action_false.var_path = "flag.result_branch"
 	action_false.value = "FALSE_BRANCH"
 	game_trigger.actions_if_false.append(action_false)
 
@@ -264,12 +262,12 @@ func _init() -> void:
 	await process_frame
 
 	# Subcaso A: Condición no cumplida ("quest_unlocked" es false)
-	nm.set_flag("quest_unlocked", false)
+	nm.set_var("flag.quest_unlocked", false)
 	gm.trigger_event("pipeline_dispatch")
 	await process_frame
 	await process_frame
 
-	assert(nm.get_flag("result_branch") == "FALSE_BRANCH", "Con quest_unlocked=false debió ejecutar la rama actions_if_false")
+	assert(nm.get_var("flag.result_branch") == "FALSE_BRANCH", "Con quest_unlocked=false debió ejecutar la rama actions_if_false")
 	print("[PASS] OnEventListener disparó GameTrigger y ejecutó actions_if_false debido a la condición.")
 
 	# Subcaso B: Nueva instancia con condición cumplida
@@ -279,9 +277,7 @@ func _init() -> void:
 	var game_trigger_2: GameTrigger = GameTrigger.new()
 	game_trigger_2.name = "TestGameTrigger2"
 	game_trigger_2.one_shot = true
-	game_trigger_2.require_condition = true
-	game_trigger_2.condition_flag = "quest_unlocked"
-	game_trigger_2.condition_expected_value = "true"
+	game_trigger_2.conditions = _make_quest_conditions()
 	game_trigger_2.actions_if_true.append(action_true)
 	game_trigger_2.actions_if_false.append(action_false)
 
@@ -292,12 +288,12 @@ func _init() -> void:
 	root.add_child(game_trigger_2)
 	await process_frame
 
-	nm.set_flag("quest_unlocked", true)
+	nm.set_var("flag.quest_unlocked", true)
 	gm.trigger_event("pipeline_dispatch")
 	await process_frame
 	await process_frame
 
-	assert(nm.get_flag("result_branch") == "TRUE_BRANCH", "Con quest_unlocked=true debió ejecutar la rama actions_if_true")
+	assert(nm.get_var("flag.result_branch") == "TRUE_BRANCH", "Con quest_unlocked=true debió ejecutar la rama actions_if_true")
 	print("[PASS] OnEventListener disparó GameTrigger y ejecutó actions_if_true correctamente.")
 
 	# -------------------------------------------------------------------------
@@ -349,3 +345,12 @@ func _init() -> void:
 	print("===================================================================\n")
 
 	quit(0)
+
+## ConditionSet: flag.quest_unlocked == true
+func _make_quest_conditions() -> ConditionSet:
+	var cond: Condition = Condition.new()
+	cond.var_path = "flag.quest_unlocked"
+	cond.value = "true"
+	var set_res: ConditionSet = ConditionSet.new()
+	set_res.conditions.append(cond)
+	return set_res

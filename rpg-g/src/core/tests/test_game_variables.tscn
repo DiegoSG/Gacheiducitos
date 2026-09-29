@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://src/overworld/interactables/switch_interactable.tscn" id="2_switch"]
+[ext_resource type="PackedScene" path="res://src/overworld/components/level_portal.tscn" id="3_portal"]
+[ext_resource type="Script" path="res://src/core/pipeline/game_trigger.gd" id="4_trigger"]
+[ext_resource type="Script" path="res://src/core/pipeline/actions/variable_action.gd" id="5_var_action"]
+[ext_resource type="Script" path="res://src/core/pipeline/actions/door_action.gd" id="6_door_action"]
+[ext_resource type="Script" path="res://src/core/variables/condition.gd" id="7_condition"]
+[ext_resource type="Script" path="res://src/core/variables/condition_set.gd" id="8_condition_set"]
+[ext_resource type="Script" path="res://src/core/variables/variable_watcher.gd" id="9_watcher"]
+[ext_resource type="Script" path="res://src/core/pipeline/action_resource.gd" id="10_ar"]
+
+[sub_resource type="Resource" id="Resource_set_switch"]
+script = ExtResource("5_var_action")
+var_path = "flag.test_switch"
+operation = 0
+value = "true"
+
+[sub_resource type="Resource" id="Resource_unlock"]
+script = ExtResource("6_door_action")
+target_door_path = NodePath("..")
+operation = 0
+
+[sub_resource type="Resource" id="Resource_condition"]
+script = ExtResource("7_condition")
+var_path = "flag.test_switch"
+operator = 0
+value = "true"
+
+[sub_resource type="Resource" id="Resource_condition_set"]
+script = ExtResource("8_condition_set")
+conditions = Array[ExtResource("7_condition")]([SubResource("Resource_condition")])
+mode = 0
+
+[node name="TestGameVariables" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(300, 540)
+
+[node name="Switch" parent="." instance=ExtResource("2_switch")]
+position = Vector2(500, 540)
+is_toggleable = false
+trigger_actions = Array[ExtResource("10_ar")]([SubResource("Resource_set_switch")])
+
+[node name="LockedPortal" parent="." instance=ExtResource("3_portal")]
+position = Vector2(900, 540)
+is_locked = true
+locked_text = "Cerrado: activa el interruptor."
+target_level_path = "res://src/overworld/levels/level_01.tscn"
+exit_id = "start"
+arrival_id = "test_game_variables"
+
+[node name="UnlockTrigger" type="Area2D" parent="LockedPortal"]
+collision_layer = 0
+collision_mask = 0
+script = ExtResource("4_trigger")
+actions_if_true = Array[ExtResource("10_ar")]([SubResource("Resource_unlock")])
+
+[node name="VariableWatcher" type="Node" parent="LockedPortal/UnlockTrigger"]
+script = ExtResource("9_watcher")
+conditions = SubResource("Resource_condition_set")
+
+[node name="Instructions" type="Label" parent="."]
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 1200.0
+offset_bottom = 120.0
+text = "Camina al portal de la derecha: esta cerrado (mensaje de puerta cerrada).
+Ve al interruptor (izquierda) y pulsa E/Espacio: flag.test_switch = true, el VariableWatcher desbloquea el portal.
+Vuelve al portal: ahora debe dejarte pasar (lleva a level_01)."

@@ -46,15 +46,16 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY }
 		stackable = new_value
 		emit_changed()
 
-@export_group("Consumable Effects")
-@export var heal_amount: int = 0:
+@export_group("Consumible")
+## Si es true, Inventory.use_item aplica los efectos y consume 1 unidad.
+@export var consumable: bool = false:
 	set(new_value):
-		heal_amount = new_value
+		consumable = new_value
 		emit_changed()
 
-@export var damage_amount: int = 0:
+@export var effects: Array[ItemEffect] = []:
 	set(new_value):
-		damage_amount = new_value
+		effects = new_value
 		emit_changed()
 
 @export_group("Visuals")

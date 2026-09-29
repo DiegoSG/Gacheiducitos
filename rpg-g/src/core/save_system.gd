@@ -32,7 +32,7 @@ func save_slot(slot_id: int) -> void:
 		},
 		"player_stats": PlayerStats.create_snapshot(),
 		"inventory": Inventory.create_snapshot(),
-		"narrative": NarrativeManager.create_snapshot(),
+		"narrative": GameVariables.create_snapshot(),
 		"world_state": WorldStateManager.create_snapshot()
 	}
 
@@ -68,7 +68,7 @@ func load_slot(slot_id: int) -> void:
 		WorldStateManager.restore_snapshot(data["world_state"])
 
 	if data.has("narrative"):
-		NarrativeManager.restore_snapshot(data["narrative"])
+		GameVariables.restore_snapshot(data["narrative"])
 
 	if data.has("inventory"):
 		Inventory.restore_snapshot(data["inventory"])

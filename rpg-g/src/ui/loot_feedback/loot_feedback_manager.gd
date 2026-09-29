@@ -13,6 +13,7 @@ const TOAST_SCENE: PackedScene = preload("res://src/ui/loot_feedback/loot_toast_
 @onready var quickbar_container: HBoxContainer = $QuickbarContainer
 @onready var toast_container: VBoxContainer = get_node_or_null("ToastContainer")
 @onready var health_bar_container: HBoxContainer = get_node_or_null("TopLeftContainer/VBoxContainer/HealthBarContainer")
+@onready var status_container: HBoxContainer = get_node_or_null("TopLeftContainer/VBoxContainer/StatusContainer")
 @onready var gold_label: Label = get_node_or_null("TopLeftContainer/VBoxContainer/GoldContainer/GoldLabel")
 
 const COLOR_HEALTH_ACTIVE: Color = Color(0.2, 0.9, 0.3, 1.0) # Verde activo
@@ -28,7 +29,14 @@ func _ready() -> void:
 		PlayerStats.health_changed.connect(_on_health_changed)
 	if not PlayerStats.gold_changed.is_connected(_on_gold_changed):
 		PlayerStats.gold_changed.connect(_on_gold_changed)
-	_update_health(PlayerStats.health, PlayerStats.max_health)
+	if not PlayerStats.status_applied.is_connected(_on_status_changed):
+		PlayerStats.status_applied.connect(_on_status_changed)
+	if not PlayerStats.status_removed.is_connected(_on_status_changed):
+		PlayerStats.status_removed.connect(_on_status_changed)
+	if not PlayerStats.stats_changed.is_connected(_refresh_status_ui):
+		PlayerStats.stats_changed.connect(_refresh_status_ui)
+	_update_health(PlayerStats.health, PlayerStats.get_max_health())
+	_rebuild_status_row()
 	_update_gold(PlayerStats.gold)
 
 func _exit_tree() -> void:
@@ -37,6 +45,27 @@ func _exit_tree() -> void:
 
 func _on_health_changed(current: int, max_val: int) -> void:
 	_update_health(current, max_val)
+
+func _on_status_changed(_arg: Variant) -> void:
+	_refresh_status_ui()
+
+func _refresh_status_ui() -> void:
+	_update_health(PlayerStats.health, PlayerStats.get_max_health())
+	_rebuild_status_row()
+
+## Fila con el nombre de cada estado activo, teñido con su color.
+func _rebuild_status_row() -> void:
+	if not status_container:
+		return
+	for child: Node in status_container.get_children():
+		status_container.remove_child(child)
+		child.queue_free()
+	for effect: StatusEffectData in PlayerStats.get_active_statuses():
+		var label: Label = Label.new()
+		label.text = effect.display_name if not effect.display_name.is_empty() else effect.id
+		label.add_theme_font_size_override("font_size", 14)
+		label.add_theme_color_override("font_color", effect.hud_color)
+		status_container.add_child(label)
 
 func _on_gold_changed(amount: int) -> void:
 	_update_gold(amount)
@@ -57,13 +86,19 @@ func _update_health(current: int, max_val: int) -> void:
 		var last_pip: Node = existing_pips.pop_back()
 		last_pip.queue_free()
 		
+	# Si hay un estado activo, los pips activos se tiñen con el color del ultimo aplicado
+	var active_color: Color = COLOR_HEALTH_ACTIVE
+	var last_status: StatusEffectData = PlayerStats.get_last_status()
+	if last_status != null:
+		active_color = last_status.hud_color
+
 	# Actualizar colores activos/apagados
 	for i in range(existing_pips.size()):
 		var pip: ColorRect = existing_pips[i] as ColorRect
 		if not pip:
 			continue
 		if i < current:
-			pip.color = COLOR_HEALTH_ACTIVE
+			pip.color = active_color
 		else:
 			pip.color = COLOR_HEALTH_EMPTY
 

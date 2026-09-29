@@ -27,7 +27,7 @@ TestRunner (Node2D o Control)
 ---
 
 ## 3. Principios de Mocks y Dependencias
-- Si el componente depende de un Autoload (`Inventory`, `NarrativeManager`, `GameManager`):
+- Si el componente depende de un Autoload (`Inventory`, `GameVariables`, `GameManager`):
   - Verificar que el Autoload esté registrado en `project.godot` para que esté disponible automáticamente en el runner de pruebas.
   - Si se requieren datos específicos, inicializarlos en el `_ready()` del script de prueba.
 - Añadir controles de teclado o botones debug en pantalla para simular inputs extremos (ej. spawn masivo, recibir daño, forzar victoria/derrota).

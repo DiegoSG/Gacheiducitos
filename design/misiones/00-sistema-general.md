@@ -66,7 +66,7 @@ El puente con el mundo principal:
 * **Grado de Obligatoriedad:**
   * *Main Quest (Obligatoria):* Bloquea el avance de la trama principal hasta completarse con al menos 1 estrella.
   * *Side Quest / Contrato de Hub (Repetible):* Opcional, accesible desde tablones o NPCs para farmear recursos, desbloquear lore o ganar cosméticos.
-* **Recompensas Narrativas y Materiales:** Transferencia a `Inventory` mediante `ItemDatabase`, banderas en `NarrativeManager` y entradas de códice/lore.
+* **Recompensas Narrativas y Materiales:** Transferencia a `Inventory` mediante `ItemDatabase`, banderas en `GameVariables` y entradas de códice/lore.
 
 ---
 
@@ -78,7 +78,7 @@ Este diseño se ancla 100% en las clases, singletons y escenas ya implementadas 
 | :--- | :--- | :--- | :--- |
 | **Controlador Global** | `GameManager` (Autoload) | `src/core/game_manager.gd` | Transición entre escenas, almacenamiento de `minigame_config`, retorno al Overworld y orquestación de recompensas. |
 | **Ciclo de Vida Minijuego**| `MinigameBase` | `src/minigames/minigame_base.gd` | Pausa en fin de partida, buffer local `session_rewards`, modal de resultados y señal `game_finished`. |
-| **Estado y Quests** | `NarrativeManager` (Autoload) | `src/core/narrative_manager.gd` | Gestión de `quests` ("active", "completed") y `flags` narrativos globales. |
+| **Estado y Quests** | `GameVariables` (Autoload) | `src/core/game_variables.gd` | Gestión de `quests` ("active", "completed") y `flags` narrativos globales. |
 | **Inventario** | `Inventory` (Autoload) | `src/core/inventory.gd` | Almacenamiento real de ítems obtenidos (`add_item()`). |
 | **Base de Datos de Ítems** | `ItemDatabase` (Autoload) | `src/core/item_database.gd` | Registro y validación de recursos `ItemData` desde `data/items/`. |
 | **Disparadores de Nivel** | `GameTrigger` + `MinigameAction` | `src/core/pipeline/game_trigger.gd` y `actions/minigame_action.gd` | Interacción en Overworld que inyecta parámetros y lanza el minijuego. |
@@ -183,7 +183,7 @@ Los modificadores rotan en las misiones repetibles del Hub en base a rangos de d
 * **Recursos Materiales:** Ítems reales del `ItemDatabase` (`iron_ore`, `wood_log`, `green_herb`, `red_potion`, `blue_gem`).
 * **Moneda de Oro:** Incremento en el contador de dinero del jugador.
 * **Fragmentos de Códice / Lore:** Textos que revelan trasfondo del mundo y debilidades de enemigos (leíbles en la biblioteca o menú de pausa).
-* **Desbloqueos de Acceso:** Banderas de `NarrativeManager` que abren puertas (`door_action`), habilitan nuevos diálogos con NPCs o bajan puentes levadizos.
+* **Desbloqueos de Acceso:** Banderas de `GameVariables` que abren puertas (`door_action`), habilitan nuevos diálogos con NPCs o bajan puentes levadizos.
 
 ---
 

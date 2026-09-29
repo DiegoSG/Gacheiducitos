@@ -1,7 +1,7 @@
 class_name QuestAction
 extends ActionResource
 
-## Modifies a quest state in the NarrativeManager.
+## Modifies a quest state in the GameVariables.
 
 enum QuestState { START, COMPLETE }
 
@@ -16,7 +16,7 @@ func get_action_name() -> String:
 
 func execute(_trigger_node: Node) -> void:
 	if state == QuestState.START:
-		NarrativeManager.start_quest(quest_id)
+		GameVariables.start_quest(quest_id)
 	else:
-		NarrativeManager.complete_quest(quest_id)
+		GameVariables.complete_quest(quest_id)
 	finished.emit()

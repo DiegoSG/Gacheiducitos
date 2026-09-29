@@ -1,6 +1,6 @@
 ---
 name: dialogue-app-bridge
-description: Flujo técnico entre DialogueApp (editor web), archivos .dialogue, NarrativeDefaults, NarrativeManager y GameManager.trigger_event en RPG-G. Usar al conectar diálogos con eventos/flags o modificar DialogueApp.
+description: Flujo técnico entre DialogueApp (editor web), archivos .dialogue, NarrativeDefaults, GameVariables y GameManager.trigger_event en RPG-G. Usar al conectar diálogos con eventos/flags o modificar DialogueApp.
 ---
 
 # Skill: Puente DialogueApp ↔ Godot (RPG-G)
@@ -15,7 +15,7 @@ La IA **no escribe líneas de diálogo, nombres ni lore**. Solo estructura: nodo
 
 ## 3. Lado Godot
 - Addon `Dialogue Manager` (`rpg-g/addons/dialogue_manager/`), autoload `DialogueManager`.
-- Flags: `NarrativeManager.get_flag("x")` / `set_flag("x", v)`; defaults cargados de `NarrativeDefaults.DEFAULTS`.
+- Flags: `GameVariables.get_var("flag.x")` / `GameVariables.set_var("flag.x", v)`; defaults cargados de `NarrativeDefaults.DEFAULTS`.
 - Eventos: nodos de evento generan `do GameManager.trigger_event("Nombre")` → señal `GameManager.game_event` → la escuchan `DialogueEvent` (por `name` o `event_id`) u `OnEventListener` (→ `GameTrigger.force_trigger()`).
 - Diálogos desde el pipeline: `DialogueAction`; NPC simple: `SimpleNPC.dialogue_resource` + `dialogue_start_title`.
 

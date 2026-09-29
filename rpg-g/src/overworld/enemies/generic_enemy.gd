@@ -11,6 +11,12 @@ extends CharacterBody2D
 ## Intervalo (segundos) entre golpes de daño continuo del hitbox
 @export var attack_rate: float = 0.6
 
+@export_group("Estado alterado")
+## Si es true, sus golpes pueden envenenar al jugador.
+@export var is_poisonous: bool = false
+@export_range(0, 100) var poison_chance: float = 100.0
+@export var poison_status: StatusEffectData = preload("res://data/status_effects/poison.tres")
+
 @export_group("Persistencia")
 ## Si tiene un valor asignado, su muerte se guarda en WorldStateManager y no vuelve a aparecer.
 ## Si está vacío (""), el estado solo dura mientras el jugador siga en este nivel (clave efímera).
@@ -68,6 +74,8 @@ func _ready() -> void:
 		hitbox_component.damage = attack_damage
 		hitbox_component.continuous_damage = true
 		hitbox_component.attack_rate = attack_rate
+		hitbox_component.status_effect = poison_status if is_poisonous else null
+		hitbox_component.status_chance = poison_chance if is_poisonous else 0.0
 		hitbox_component.set_active(true)
 
 func _physics_process(delta: float) -> void:

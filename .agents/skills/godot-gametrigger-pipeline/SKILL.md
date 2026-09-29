@@ -25,9 +25,8 @@ El sistema de eventos se basa en el nodo `GameTrigger` (`Area2D` con lógica ext
 ## 3. Parámetros de GameTrigger
 - `one_shot` (bool): Si es `true`, el trigger se deshabilita permanentemente tras ejecutarse una vez.
 - `persistence_id` (String): Clave única opcional para persistir `_has_triggered` en `WorldStateManager` al cambiar de nivel.
-- `require_condition` (bool): Habilita evaluación de banderas en `NarrativeManager`.
-- `condition_flag` (String): Nombre de la bandera a consultar.
-- `condition_expected_value` (Variant): Valor esperado (ej. `true`, `false`, número).
+- `conditions` (`ConditionSet`, `res://src/core/variables/`): lista de `Condition` (`var_path`, `operator`, `value`) combinadas con `mode` ALL/ANY. Sin ConditionSet la condición es verdadera.
+- `VariableWatcher` (`res://src/core/variables/variable_watcher.gd`): nodo que vigila un `ConditionSet` y llama `force_trigger()` en un `GameTrigger` en la transición falso->verdadero.
 - `actions_if_true` (Array[ActionResource]): Secuencia ejecutada si la condición se cumple (o por defecto).
 - `actions_if_false` (Array[ActionResource]): Secuencia ejecutada si la condición no se cumple.
 
@@ -46,7 +45,7 @@ Ubicadas en `res://src/core/pipeline/actions/`:
 - `DialogueAction`: Inicia un diálogo vía `DialogueManager`.
 - `DoorAction`: Bloquea, desbloquea, abre o cierra puertas/portales (`LevelPortal`).
 - `DestroyNodeAction`: Elimina o desvanece obstáculos y nodos del mapa.
-- `FlagAction`: Modifica banderas en `NarrativeManager`.
+- `VariableAction`: SET/ADD/TOGGLE sobre variables `flag.*` de `GameVariables`.
 - `GoldAction`: Añade o sustrae monedas de oro con cobro atómico y eventos de éxito/fallo (`on_success_event`, `on_fail_event`).
 - `HealthAction`: Modifica la salud del jugador en `PlayerStats` (curación completa `full_heal`, curación `+X`, o daño `-X`).
 - `ItemAction`: Añade o sustrae ítems del inventario mediante recurso `ItemData` con sustracción atómica y eventos de éxito/fallo.
@@ -89,7 +88,7 @@ Los interactables del mapa (`PressurePlate`, `Chest`, `SwitchInteractable`, `Dia
 
 ## 9. Ejecución y semántica (post-refactor)
 - Toda lista de acciones se ejecuta con `ActionRunner.run(actions, context)` (`res://src/core/pipeline/action_runner.gd`), que respeta `wait_to_finish`. GameTrigger, DialogueEvent, PressurePlate y SwitchInteractable lo usan; no escribir bucles propios.
-- Condición (`require_condition`): se evalúa en todos los modos. Verdadera o sin condición -> `actions_if_true`; falsa -> `actions_if_false`.
+- Condición (`conditions: ConditionSet` con rutas de GameVariables): se evalúa en todos los modos. Verdadera o sin condición -> `actions_if_true`; falsa -> `actions_if_false`.
 - `ON_ENTER_AND_EXIT`: al entrar `actions_if_true`, al salir `actions_if_false` (nunca repite las de entrada). Si la condición es falsa al entrar no se ejecuta nada. `one_shot` = un ciclo completo.
 - Helpers en `ActionResource`: `ActionResource.parse_value(texto)` (true/false/verdadero/falso/int/float) y `emit_game_event(nombre)`.
 - Autoloads se usan por nombre directo; no comprobar si existen.

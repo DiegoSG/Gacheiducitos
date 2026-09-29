@@ -40,27 +40,21 @@ func remove_item(item_id: String, amount: int = 1) -> bool:
 	inventory_changed.emit()
 	return true
 
+## Usa un consumible: aplica cada efecto y consume 1 unidad. Devuelve false si no es consumible o no tiene efectos.
 func use_item(item_id: String) -> bool:
 	if get_item_count(item_id) <= 0:
 		return false
 
 	var data: ItemData = ItemDatabase.get_item(item_id)
-	if not data or data.type != ItemData.ItemType.CONSUMABLE:
+	if not data or not data.consumable or data.effects.is_empty():
 		return false
 
-	var consumed: bool = false
-	if data.heal_amount > 0:
-		PlayerStats.heal(data.heal_amount)
-		consumed = true
-	if data.damage_amount > 0:
-		PlayerStats.take_damage(data.damage_amount)
-		consumed = true
+	for effect: ItemEffect in data.effects:
+		if effect:
+			effect.apply()
 
-	if consumed:
-		remove_item(item_id, 1)
-		return true
-
-	return false
+	remove_item(item_id, 1)
+	return true
 
 ## Copia de los objetos del inventario. Nunca contiene oro.
 func get_items() -> Dictionary:

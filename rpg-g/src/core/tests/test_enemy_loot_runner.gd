@@ -6,11 +6,11 @@ func _init() -> void:
 	print("\n--- TEST: SISTEMA DE LOOT Y DROPS DE ENEMIGOS + INVENTARIO TAB ---")
 	
 	# Inicializar Autoloads necesarios si no existen
-	var nm = root.get_node_or_null("NarrativeManager")
+	var nm = root.get_node_or_null("GameVariables")
 	if not nm:
-		var nm_script = load("res://src/core/narrative_manager.gd")
+		var nm_script = load("res://src/core/game_variables.gd")
 		nm = nm_script.new()
-		nm.name = "NarrativeManager"
+		nm.name = "GameVariables"
 		root.add_child(nm)
 		
 	var inv = root.get_node_or_null("Inventory")

@@ -12,6 +12,62 @@ const RPG_ROOT = path.resolve(__dirname, '../rpg-g');
 const CONFIG_FILE = path.resolve(__dirname, 'data/project_config.json');
 const LAYOUTS_DIR = path.resolve(__dirname, 'data/layouts');
 const PUBLIC_DIR = path.resolve(__dirname, 'public');
+// Solo lectura: catalogo de items / estados (nunca se escribe fuera de rpg-g/src)
+const DATA_DIR = path.resolve(__dirname, '../rpg-g/data');
+const VAR_NAME_RE = /^[a-z][a-z0-9_]*$/;
+
+/**
+ * Normaliza la config: una sola lista `variables` (elimina `flags`),
+ * descarta variables con nombre invalido o duplicado.
+ * @param {any} raw
+ * @returns {any}
+ */
+function normalizeConfig(raw) {
+  const cfg = (raw && typeof raw === 'object') ? { ...raw } : {};
+  const source = Array.isArray(cfg.variables) ? cfg.variables : (Array.isArray(cfg.flags) ? cfg.flags : []);
+  delete cfg.flags;
+  const seen = new Set();
+  cfg.variables = [];
+  for (const v of source) {
+    const name = v && typeof v.name === 'string' ? v.name : '';
+    if (!VAR_NAME_RE.test(name)) {
+      console.warn(`[config] Variable descartada (nombre invalido, debe cumplir ${VAR_NAME_RE}): ${JSON.stringify(v && v.name)}`);
+      continue;
+    }
+    if (seen.has(name)) {
+      console.warn(`[config] Variable duplicada descartada: "${name}"`);
+      continue;
+    }
+    seen.add(name);
+    cfg.variables.push(v);
+  }
+  return cfg;
+}
+
+/**
+ * Lee (solo lectura) los .tres de un subdirectorio de rpg-g/data y extrae id/name.
+ * @param {string} subdir
+ * @returns {Promise<{id: string, name: string}[]>}
+ */
+async function readResourceIds(subdir) {
+  const dir = path.resolve(DATA_DIR, subdir);
+  if (!dir.startsWith(DATA_DIR + path.sep)) return [];
+  const files = await scanDir(dir, '.tres');
+  /** @type {{id: string, name: string}[]} */
+  const out = [];
+  for (const f of files.sort()) {
+    try {
+      const content = await fs.promises.readFile(f, 'utf-8');
+      const idm = content.match(/^id\s*=\s*"([^"]+)"/m);
+      if (!idm) continue;
+      const nm = content.match(/^name\s*=\s*"([^"]*)"/m);
+      out.push({ id: idm[1], name: nm ? nm[1] : '' });
+    } catch (err) {
+      console.error(`[readResourceIds] ${f}:`, err);
+    }
+  }
+  return out;
+}
 
 /**
  * Validates that a target path is safely contained within BASE_SRC.
@@ -291,9 +347,9 @@ app.get('/api/config', async (req, res) => {
   try {
     try {
       const data = await fs.promises.readFile(CONFIG_FILE, 'utf-8');
-      return res.json(JSON.parse(data));
+      return res.json(normalizeConfig(JSON.parse(data)));
     } catch {
-      const initialConfig = { actors: [], flags: [], triggers: [] };
+      const initialConfig = { actors: [], variables: [], triggers: [] };
       await fs.promises.mkdir(path.dirname(CONFIG_FILE), { recursive: true });
       await fs.promises.writeFile(CONFIG_FILE, JSON.stringify(initialConfig, null, 2), 'utf-8');
       return res.json(initialConfig);
@@ -310,10 +366,10 @@ app.get('/api/config', async (req, res) => {
  */
 app.post('/api/config', async (req, res) => {
   try {
-    const configData = req.body;
-    if (!configData || typeof configData !== 'object') {
+    if (!req.body || typeof req.body !== 'object') {
       return res.status(400).json({ error: 'Invalid config body' });
     }
+    const configData = normalizeConfig(req.body);
 
     await fs.promises.mkdir(path.dirname(CONFIG_FILE), { recursive: true });
     await fs.promises.writeFile(CONFIG_FILE, JSON.stringify(configData, null, 2), 'utf-8');
@@ -325,7 +381,7 @@ app.post('/api/config', async (req, res) => {
     gdContent += 'class_name NarrativeDefaults\n\n';
     gdContent += 'const DEFAULTS: Dictionary = {\n';
     
-    const variables = configData.variables || configData.flags || [];
+    const variables = configData.variables;
     for (const v of variables) {
       let val = v.defaultValue;
       if (v.type === 'bool') {
@@ -354,6 +410,34 @@ app.post('/api/config', async (req, res) => {
   } catch (err) {
     console.error('[POST /api/config] Error:', err);
     res.status(500).json({ error: 'Failed to save config' });
+  }
+});
+
+/**
+ * GET /api/system-variables
+ * Variables de solo lectura del juego: player.*, item.<id>, status.<id>.
+ */
+app.get('/api/system-variables', async (req, res) => {
+  try {
+    /** @type {{path: string, type: string, readonly: boolean, description: string}[]} */
+    const list = [
+      { path: 'player.health', type: 'int', readonly: true, description: 'Vida actual del jugador' },
+      { path: 'player.max_health', type: 'int', readonly: true, description: 'Vida maxima del jugador' },
+      { path: 'player.gold', type: 'int', readonly: true, description: 'Oro del jugador' },
+      { path: 'player.speed', type: 'float', readonly: true, description: 'Velocidad del jugador' },
+      { path: 'player.strength', type: 'int', readonly: true, description: 'Fuerza del jugador' },
+      { path: 'player.resistance', type: 'int', readonly: true, description: 'Resistencia del jugador' },
+    ];
+    for (const it of await readResourceIds('items')) {
+      list.push({ path: `item.${it.id}`, type: 'int', readonly: true, description: `Cantidad en inventario${it.name ? ': ' + it.name : ''}` });
+    }
+    for (const st of await readResourceIds('status_effects')) {
+      list.push({ path: `status.${st.id}`, type: 'bool', readonly: true, description: `Estado activo${st.name ? ': ' + st.name : ''}` });
+    }
+    res.json(list);
+  } catch (err) {
+    console.error('[GET /api/system-variables] Error:', err);
+    res.status(500).json({ error: 'Failed to read system variables' });
   }
 });
 
@@ -475,4 +559,4 @@ const server = app.listen(PORT, () => {
   console.log(`DialogueApp server running at http://localhost:${PORT}`);
 });
 
-module.exports = { app, server, scanDir, extractTriggersFromTscn, isSafePath };
+module.exports = { normalizeConfig, app, server, scanDir, extractTriggersFromTscn, isSafePath };

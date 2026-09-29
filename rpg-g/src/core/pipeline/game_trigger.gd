@@ -22,9 +22,8 @@ enum TriggerMode {
 ## actions_if_true y falsa ejecuta actions_if_false.
 ## En ON_ENTER_AND_EXIT la condición se evalúa solo al entrar: si es falsa no se ejecuta nada
 ## (ni al entrar ni al salir).
-@export var require_condition: bool = false
-@export var condition_flag: String = ""
-@export var condition_expected_value: String = "true"
+## Sin ConditionSet la condición se considera verdadera.
+@export var conditions: ConditionSet
 
 @export_group("Acciones")
 ## Acciones ejecutadas si la condición es verdadera (o no hay condición).
@@ -97,13 +96,11 @@ func _can_trigger() -> bool:
 	if _is_running: return false
 	return true
 
-## Evalúa la condición configurada. Sin condición (o sin flag) devuelve true.
+## Evalúa la condición configurada. Sin ConditionSet devuelve true.
 func _evaluate_condition() -> bool:
-	if not require_condition or condition_flag.is_empty():
+	if conditions == null:
 		return true
-	var actual_val: Variant = NarrativeManager.get_flag(condition_flag)
-	var expected: Variant = ActionResource.parse_value(condition_expected_value)
-	return str(actual_val) == str(expected)
+	return conditions.evaluate()
 
 ## Disparo estándar (ON_ENTER, ON_EXIT, INTERACT, AUTO_START, force_trigger):
 ## condición verdadera o ausente -> actions_if_true, falsa -> actions_if_false.

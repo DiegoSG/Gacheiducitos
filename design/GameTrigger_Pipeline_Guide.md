@@ -26,11 +26,11 @@ Para asegurar que solo el Villano, o solo una Caja que estás empujando dispare 
 ## 2. Configurando Condiciones (Banderas/Flags)
 El sistema permite bifurcar eventos en base a tus variables del juego usando el módulo de `Condición`:
 
-1.  Habilita `Require Condition` a **True**.
-2.  **`Condition Flag`**: El nombre exacto de tu variable (ej. `has_key` o `boss_defeated`).
-3.  **`Condition Expected Value`**: El valor que esperas que tenga la bandera. Puedes usar `true`, `false` o números directos.
+1.  En **`Conditions`** crea un `ConditionSet` y elige su modo: `ALL` (todas) o `ANY` (cualquiera).
+2.  Añade una o más `Condition`: **`Var Path`** es la ruta de la variable (ej. `flag.boss_defeated`, `item.rusty_key`, `player.gold`, `status.poison`), **`Operator`** (`==`, `!=`, `>`, `>=`, `<`, `<=`) y **`Value`** (`true`, `false`, números o texto).
+3.  Si el conjunto se cumple se ejecuta `actions_if_true`; si no, `actions_if_false`.
 
-El Trigger tratará de comparar esto con tu `NarrativeManager`. Si resulta ser verdad, se reproduce el bloque `Actions If True`. Si resulta ser falso, reproduce el bloque de fallos `Actions If False` (ideal para poner un NPC diciendo *"¡No tienes la llave, lárgate!"*).
+El Trigger tratará de comparar esto con tu `GameVariables`. Si resulta ser verdad, se reproduce el bloque `Actions If True`. Si resulta ser falso, reproduce el bloque de fallos `Actions If False` (ideal para poner un NPC diciendo *"¡No tienes la llave, lárgate!"*).
 
 ---
 
@@ -87,7 +87,7 @@ Al añadir Elementos a tus arrays (If True o If False), selecciona y elige de es
 Si tienes que contar una historia que suceda: `"Antes de minijuego" -> Entra al Minijuego -> "Después de ganarlo"`, deberás conectarlos usando Flags inter-escenas, ya que el Trigger original no sobrevive a la transición de pantallas.
 
 1.  **Fase 1 (Acertijo Inicial):** Un trigger manda un `DialogueAction` seguido de un `MinigameAction`.
-2.  **Durante el minijuego:** Tras programar que gane el reto, tu lógica sube un flag: `NarrativeManager.set_flag("desafio_uno_completado", true)` poco antes de regresar a la pantalla principal.
+2.  **Durante el minijuego:** Tras programar que gane el reto, tu lógica sube un flag: `GameVariables.set_var("flag.desafio_uno_completado", true)` poco antes de regresar a la pantalla principal.
 3.  **Fase 2 (Recompensas Finales):** Ubica en el mapa original donde se supone que volverá el jugador un nuevo `GameTrigger`. Configúralo en **Trigger Mode: `AUTO_START`**. Pídele como Condición que la bandera `desafio_uno_completado` valga `true`. 
-    - Como acción `[0]` de este nuevo bloque agregas un `FlagAction` pasando la banderilla a `false` o `terminado` para evitar bucles infinitos en futuras visitas al nivel.
+    - Como acción `[0]` de este nuevo bloque agregas un `VariableAction` pasando la banderilla a `false` o `terminado` para evitar bucles infinitos en futuras visitas al nivel.
     - Como resto del bloque pones tus diálogos de aplausos, ítems recompensados y fanfarrias. Todo correrá de golpe y en flujo natural con protección anti caídas del sistema.

@@ -16,7 +16,7 @@ El objetivo de esta especificación es formalizar el rediseño del sistema de ch
 3. **Persistencia Dual (Memoria vs. Disco):**
    - **Snapshots en memoria:** Utilizados por `CheckpointManager` para respawns rápidos durante la sesión de juego.
    - **Archivo en disco:** Serialización completa de la partida para permitir cerrar el juego, cargar partida o guardar manualmente.
-4. **Desacoplamiento Estricto:** Cada subsistema (`PlayerStats`, `Inventory`, `NarrativeManager`, `WorldStateManager`) es responsable de su propio serializado (`create_snapshot()` y `restore_snapshot()`).
+4. **Desacoplamiento Estricto:** Cada subsistema (`PlayerStats`, `Inventory`, `GameVariables`, `WorldStateManager`) es responsable de su propio serializado (`create_snapshot()` y `restore_snapshot()`).
 
 ---
 
@@ -29,7 +29,7 @@ Tanto el snapshot de inicio de nivel como el guardado manual/automático deben c
 | **Jugador / Estadísticas** | `health`, `max_health`, `gold`, `energy`, `max_energy` | `PlayerStats` |
 | **Posición y Nivel** | `scene_path` del nivel actual, `spawn_id`, `global_position` del jugador | `GameManager` / `Player` |
 | **Inventario** | Diccionario de items con cantidades `{"item_id": amount}` | `Inventory` |
-| **Narrativa / Diálogos** | Diccionario de flags globales `flags` y misiones activas/completadas `quests` | `NarrativeManager` |
+| **Narrativa / Diálogos** | Diccionario de flags globales `flags` y misiones activas/completadas `quests` | `GameVariables` |
 | **Persistencia del Mundo** | Estados de interactuables (cofres abiertos, puertas, switches, drops recogidos) | `WorldStateManager` |
 | **Metadata de Guardado** | Timestamp, tiempo de juego, contador de checkpoints, tipo de guardado (`manual` o `auto`) | `SaveSystem` / `CheckpointManager` |
 
@@ -43,7 +43,7 @@ Tanto el snapshot de inicio de nivel como el guardado manual/automático deben c
    - Se captura el snapshot de inicio de nivel:
      - `PlayerStats` (HP, Oro, Energía).
      - `Inventory` (Items y cantidades).
-     - `NarrativeManager` (Flags narrativas y estado de misiones).
+     - `GameVariables` (Flags narrativas y estado de misiones).
      - `WorldStateManager` (Estado de interactuables del nivel).
      - Posición de aparición (`spawn_id` o coordenadas iniciales).
 2. **Configuración de Excepción (`LevelExceptionConfig`):**
@@ -64,7 +64,7 @@ Tanto el snapshot de inicio de nivel como el guardado manual/automático deben c
    - `WorldStateManager` al snapshot de entrada del nivel donde murió (reseteando cofres/drops recogidos antes de llegar al checkpoint).
    - Restaura `PlayerStats` (HP, Oro, Energía) al snapshot del checkpoint activo.
    - Restaura `Inventory` al snapshot del checkpoint activo.
-   - Restaura `NarrativeManager` a las flags vigentes en dicho checkpoint.
+   - Restaura `GameVariables` a las flags vigentes en dicho checkpoint.
 4. `GameManager.change_level()` transporta al jugador a la escena del checkpoint activo en el marcador `"RespawnPoint"` o posición guardada.
 
 ### 3.3 Guardado Manual por el Jugador (`save_game`)
@@ -74,7 +74,7 @@ Tanto el snapshot de inicio de nivel como el guardado manual/automático deben c
    - Coordenadas exactas del jugador (`player.global_position`).
    - HP, Oro y Energía actuales (`PlayerStats`).
    - Inventario actual (`Inventory`).
-   - Flags narrativas actuales (`NarrativeManager`).
+   - Flags narrativas actuales (`GameVariables`).
    - Estado de todos los interactuables persistidos (`WorldStateManager`).
 3. Serializa a archivo JSON en `user://savegame.json` (con backup de seguridad `user://savegame.bak`).
 
@@ -82,7 +82,7 @@ Tanto el snapshot de inicio de nivel como el guardado manual/automático deben c
 1. Lee y valida el archivo `user://savegame.json`.
 2. Restaura los subsistemas en orden:
    - `WorldStateManager.restore_snapshot(...)`
-   - `NarrativeManager.restore_snapshot(...)`
+   - `GameVariables.restore_snapshot(...)`
    - `Inventory.restore_snapshot(...)`
    - `PlayerStats.restore_snapshot(...)`
 3. `GameManager.change_level(saved_scene_path, "", saved_exact_pos, true)` posiciona al jugador en las coordenadas exactas donde guardó.
@@ -137,13 +137,13 @@ Tanto el snapshot de inicio de nivel como el guardado manual/automático deben c
   - [ ] Añadir variables de energía: `energy: int = 100`, `max_energy: int = 100`.
   - [ ] Señal `energy_changed(current: int, max_val: int)`.
   - [ ] Extender `create_snapshot()` y `restore_snapshot()` para incluir `energy` y `max_energy`.
-- [ ] **NarrativeManager:**
+- [ ] **GameVariables:**
   - [ ] Implementar `create_snapshot() -> Dictionary` (retorna copia de `flags` y `quests`).
   - [ ] Implementar `restore_snapshot(snapshot: Dictionary) -> void`.
 
 ### Fase B: Extensión de CheckpointManager
 - [ ] **Snapshot de Inicio de Nivel Extendido:**
-  - [ ] Incluir `NarrativeManager.create_snapshot()` en `level_entry_world_state_snapshot`.
+  - [ ] Incluir `GameVariables.create_snapshot()` en `level_entry_world_state_snapshot`.
   - [ ] Filtrar escenas de minijuegos para garantizar que `register_level_entry` solo procese Overworld.
 - [ ] **Contador y Frecuencia de Autoguardado:**
   - [ ] Exportar / configurar `checkpoints_until_autosave: int = 3`.

@@ -7,6 +7,11 @@ const HIT_EFFECT = preload("res://src/core/components/hit_effect.tscn")
 @export var knockback_force: float = 300.0
 @export var continuous_damage: bool = false
 @export var attack_rate: float = 0.6
+@export_group("Estado alterado")
+## Estado que este golpe puede infligir (opcional).
+@export var status_effect: StatusEffectData
+## Probabilidad (0-100) de infligir el estado en cada impacto.
+@export_range(0, 100) var status_chance: float = 0.0
 
 var _attack_timer: float = 0.0
 
@@ -46,7 +51,10 @@ func _apply_hit(area: HurtboxComponent) -> void:
 	# Calculamos la dirección simplificada desde el padre del hitbox al padre del hurtbox
 	# para que el knockback tenga sentido.
 	var attack_direction: Vector2 = (area.global_position - global_position).normalized()
-	area.take_hit(damage, attack_direction, knockback_force)
+	var inflicted: StatusEffectData = null
+	if status_effect != null and randf() * 100.0 < status_chance:
+		inflicted = status_effect
+	area.take_hit(damage, attack_direction, knockback_force, inflicted)
 
 	var scene_root: Node = get_tree().current_scene if get_tree() else null
 	if is_instance_valid(scene_root):

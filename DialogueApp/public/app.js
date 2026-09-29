@@ -36,7 +36,8 @@ const AppState = {
   tabs: [],
   activeTabIndex: -1,
   dialogueFiles: [],
-  variables: [], // [{ name, type, defaultValue }]
+  variables: [], // flags de historia: [{ name, type, defaultValue }] (ruta = flag.<name>)
+  systemVars: [], // solo lectura: [{ path, type, readonly, description }]
 };
 
 // Clipboard para copiar y pegar
@@ -96,6 +97,7 @@ async function apiPost(path, body) {
 function init() {
   loadDialogueFiles();
   loadProjectConfig();
+  loadSystemVariables();
 
   // Header & Sidebar
   document.getElementById('btn-new-dialogue')?.addEventListener('click', handleNewDialogue);
@@ -224,10 +226,53 @@ function initKeyboardShortcuts() {
 // 5. CONFIG & VARIABLES (SIDEBAR)
 // ============================================================
 
+const VAR_NAME_RE = /^[a-z][a-z0-9_]*$/;
+const FLAG_PREFIX = 'flag.';
+
+function escapeHtml(str) {
+  return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function validateVarName(name, exceptName) {
+  if (!name) return 'El nombre no puede estar vacío.';
+  if (!VAR_NAME_RE.test(name)) return 'Nombre inválido: usa minúsculas, números y guion bajo, empezando por letra (a-z0-9_).';
+  if (name !== exceptName && AppState.variables.some(v => v.name === name)) return 'Ya existe una variable con ese nombre.';
+  return '';
+}
+
+/** Convierte un nombre legacy ("x") en ruta ("flag.x"); las rutas con punto se dejan igual. */
+function toVarPath(name) {
+  if (!name) return '';
+  return name.includes('.') ? name : FLAG_PREFIX + name;
+}
+
+/** Busca el tipo declarado de una ruta (flag.* del proyecto o variable del sistema). */
+function getVarType(path) {
+  if (path.startsWith(FLAG_PREFIX)) {
+    const v = AppState.variables.find(f => f.name === path.slice(FLAG_PREFIX.length));
+    return v ? (v.type || 'bool') : '';
+  }
+  const sys = AppState.systemVars.find(sv => sv.path === path);
+  if (sys) return sys.type;
+  if (path.startsWith('quest.')) return 'string';
+  return '';
+}
+
+/** Formatea un valor para .dialogue: strings entre comillas; bool/número tal cual. */
+function formatVarValue(raw, path) {
+  let v = String(raw ?? '').trim();
+  if (v === '') return 'true';
+  if (/^(".*"|'.*')$/s.test(v)) return v;
+  const type = getVarType(path);
+  if (type === 'string') return `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+  if (v === 'true' || v === 'false' || /^-?\d+(\.\d+)?$/.test(v)) return v;
+  return `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+}
+
 async function loadProjectConfig() {
   try {
     const config = await apiGet('/api/config');
-    AppState.variables = config.variables || config.flags || [];
+    AppState.variables = config.variables || [];
     renderVariableList();
   } catch (err) {
     console.warn('No se pudo cargar config previa, inicializando vacía:', err);
@@ -236,12 +281,20 @@ async function loadProjectConfig() {
   }
 }
 
+async function loadSystemVariables() {
+  try {
+    AppState.systemVars = await apiGet('/api/system-variables');
+  } catch (err) {
+    console.warn('No se pudieron cargar las variables del sistema:', err);
+    AppState.systemVars = [];
+  }
+  renderSystemVariableList();
+  refreshAllVariableNodes();
+}
+
 async function saveProjectConfig() {
   try {
-    await apiPost('/api/config', {
-      variables: AppState.variables,
-      flags: AppState.variables
-    });
+    await apiPost('/api/config', { variables: AppState.variables });
   } catch (err) {
     console.error('Error guardando variables:', err);
   }
@@ -259,11 +312,20 @@ function renderVariableList() {
     const nameSpan = document.createElement('span');
     nameSpan.className = 'var-item-name';
     nameSpan.textContent = v.name;
-    nameSpan.title = `${v.name} (${v.type || 'bool'}) = ${v.defaultValue}`;
+    nameSpan.title = `${FLAG_PREFIX}${v.name} (${v.type || 'bool'}) = ${v.defaultValue}`;
 
     const badge = document.createElement('span');
     badge.className = 'var-item-badge type-' + (v.type || 'bool');
     badge.textContent = v.type || 'bool';
+
+    const renBtn = document.createElement('button');
+    renBtn.className = 'btn-small';
+    renBtn.textContent = '✎';
+    renBtn.title = 'Renombrar variable';
+    renBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleRenameVariable(v);
+    });
 
     const delBtn = document.createElement('button');
     delBtn.className = 'btn-small';
@@ -282,14 +344,75 @@ function renderVariableList() {
 
     li.appendChild(nameSpan);
     li.appendChild(badge);
+    li.appendChild(renBtn);
     li.appendChild(delBtn);
     list.appendChild(li);
   });
 }
 
+function renderSystemVariableList() {
+  const list = document.getElementById('system-variable-list');
+  if (!list) return;
+  list.innerHTML = '';
+  AppState.systemVars.forEach(sv => {
+    const li = document.createElement('li');
+    li.className = 'var-item';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'var-item-name';
+    nameSpan.textContent = sv.path;
+    nameSpan.title = `${sv.path} (${sv.type}, solo lectura) — ${sv.description || ''}`;
+    const badge = document.createElement('span');
+    badge.className = 'var-item-badge type-' + sv.type;
+    badge.textContent = sv.type;
+    li.appendChild(nameSpan);
+    li.appendChild(badge);
+    list.appendChild(li);
+  });
+}
+
+function handleRenameVariable(v) {
+  const bodyHTML = `
+    <label style="font-weight: 600; margin-bottom: 4px; display: block;">Nuevo nombre para "${escapeHtml(v.name)}":</label>
+    <input id="modal-var-name" type="text" value="${escapeHtml(v.name)}" autocomplete="off">
+    <div id="modal-var-error" style="color: var(--accent-danger); margin-top: 8px; font-size: 12px;"></div>
+  `;
+  showModal({
+    title: 'Renombrar Variable',
+    bodyHTML,
+    onConfirm: () => {
+      const name = document.getElementById('modal-var-name')?.value.trim() || '';
+      if (name === v.name) return true;
+      const err = validateVarName(name, v.name);
+      if (err) {
+        const errEl = document.getElementById('modal-var-error');
+        if (errEl) errEl.textContent = err;
+        return false;
+      }
+      const oldPath = FLAG_PREFIX + v.name;
+      const newPath = FLAG_PREFIX + name;
+      // Actualiza referencias en las pestañas abiertas (los archivos en disco no se tocan hasta guardarlos)
+      for (const tab of AppState.tabs) {
+        let touched = false;
+        for (const n of tab.nodes) {
+          if (n.varName === oldPath) { n.varName = newPath; touched = true; }
+          if (n.conditionVar === oldPath) { n.conditionVar = newPath; touched = true; }
+        }
+        if (touched) tab.isDirty = true;
+      }
+      v.name = name;
+      saveProjectConfig();
+      renderVariableList();
+      updateTabBar();
+      refreshAllVariableNodes();
+      setStatus(`Variable renombrada a "${name}"`, 'success');
+      return true;
+    }
+  });
+}
+
 function handleAddVariable() {
   const bodyHTML = `
-    <label style="font-weight: 600; margin-bottom: 4px; display: block;">Nombre de la Variable:</label>
+    <label style="font-weight: 600; margin-bottom: 4px; display: block;">Nombre de la Variable (flag.&lt;nombre&gt;):</label>
     <input id="modal-var-name" type="text" placeholder="ej. tiene_llave, oro_reclamado" autocomplete="off" style="margin-bottom: 12px;">
     
     <label style="font-weight: 600; margin-bottom: 4px; display: block;">Tipo:</label>
@@ -302,24 +425,25 @@ function handleAddVariable() {
     
     <label style="font-weight: 600; margin-bottom: 4px; display: block;">Valor Inicial / Por Defecto:</label>
     <input id="modal-var-default" type="text" placeholder="false (o 0 o texto)" autocomplete="off">
+    <div id="modal-var-error" style="color: var(--accent-danger); margin-top: 8px; font-size: 12px;"></div>
   `;
 
   showModal({
     title: 'Nueva Variable Narrativa',
     bodyHTML,
     onConfirm: () => {
-      const name = document.getElementById('modal-var-name')?.value.trim();
+      const name = document.getElementById('modal-var-name')?.value.trim() || '';
       const type = document.getElementById('modal-var-type')?.value || 'bool';
       let defVal = document.getElementById('modal-var-default')?.value.trim();
 
-      if (!name) return;
-      if (defVal === '') {
-        defVal = type === 'bool' ? 'false' : (type === 'int' ? '0' : (type === 'float' ? '0.0' : '""'));
+      const err = validateVarName(name);
+      if (err) {
+        const errEl = document.getElementById('modal-var-error');
+        if (errEl) errEl.textContent = err;
+        return false;
       }
-
-      if (AppState.variables.some(v => v.name === name)) {
-        alert('Ya existe una variable con ese nombre.');
-        return;
+      if (defVal === '') {
+        defVal = type === 'bool' ? 'false' : (type === 'int' ? '0' : (type === 'float' ? '0.0' : ''));
       }
 
       AppState.variables.push({ name, type, defaultValue: defVal });
@@ -327,6 +451,7 @@ function handleAddVariable() {
       renderVariableList();
       refreshAllVariableNodes();
       setStatus(`Variable "${name}" creada`, 'success');
+      return true;
     }
   });
 }
@@ -548,9 +673,9 @@ function parseDialogue(content, layoutData) {
         defaultY += 320;
       }
     } else if (line.startsWith('if ') && currentNode) {
-      pendingCondition = line.replace(/^if\s+/, '').replace(/:$/, '').trim();
+      pendingCondition = migrateLegacyCondition(line.replace(/^if\s+/, '').replace(/:$/, '').trim());
     } else if (line.startsWith('elif ') && currentNode) {
-      pendingCondition = line.replace(/^elif\s+/, '').replace(/:$/, '').trim();
+      pendingCondition = migrateLegacyCondition(line.replace(/^elif\s+/, '').replace(/:$/, '').trim());
     } else if (line.startsWith('- ') && currentNode) {
       const match = line.match(/^-\s+(.+?)\s+=>\s+(.+)$/);
       if (match) {
@@ -603,30 +728,24 @@ function finalizeParsedNode(node) {
     node.conditionOutputs = { default: node.goto || '' };
     node.switchCases = [];
     
-    const firstCond = node.conditionalGotos[0].condition;
-    const match = firstCond.match(/NarrativeManager\.get_flag\(['"](.+?)['"]\)\s*(==|!=|>|<|>=|<=)\s*(.+)/);
-    if (match) {
-      node.conditionVar = match[1];
-      node.conditionOperator = match[2];
-      const val = match[3];
-      
-      if (node.conditionalGotos.length === 1 && (val === 'true' || val === 'false')) {
+    const first = parseVarCondition(node.conditionalGotos[0].condition);
+    if (first) {
+      node.conditionVar = first.path;
+      node.conditionOperator = first.op;
+
+      if (node.conditionalGotos.length === 1) {
+        // Un solo if: modo comparación, conserva operador y valor tal cual
         node.conditionMode = 'compare';
-        node.conditionValue = 'true';
-        if (val === 'true' && node.conditionOperator === '==') {
-          node.conditionOutputs['true'] = node.conditionalGotos[0].goto;
-          node.conditionOutputs['false'] = node.goto || '';
-        } else {
-          node.conditionOutputs['false'] = node.conditionalGotos[0].goto;
-          node.conditionOutputs['true'] = node.goto || '';
-        }
+        node.conditionValue = first.value;
+        node.conditionOutputs['true'] = node.conditionalGotos[0].goto;
+        node.conditionOutputs['false'] = node.goto || '';
       } else {
         node.conditionMode = 'switch';
         for (const cg of node.conditionalGotos) {
-          const m = cg.condition.match(/NarrativeManager\.get_flag\(['"](.+?)['"]\)\s*==\s*(.+)/);
-          if (m) {
-            node.switchCases.push(m[2]);
-            node.conditionOutputs[m[2]] = cg.goto;
+          const m = parseVarCondition(cg.condition);
+          if (m && m.op === '==') {
+            node.switchCases.push(m.value);
+            node.conditionOutputs[m.value] = cg.goto;
           }
         }
       }
@@ -650,11 +769,31 @@ function finalizeParsedNode(node) {
   return node;
 }
 
+// Sintaxis nueva: GameVariables.get_var("ruta"). Antigua: NarrativeManager.get_flag("x") => ruta "flag.x".
+const GET_VAR_SRC = String.raw`(?:GameVariables\.get_var\(\s*['"]([^'"]+)['"]\s*\)|NarrativeManager\.get_flag\(\s*['"]([^'"]+)['"]\s*\))`;
+
+/** Parsea "<get_var/get_flag> <op> <valor>" → { path, op, value } o null. */
+function parseVarCondition(cond) {
+  const m = String(cond).trim().match(new RegExp('^' + GET_VAR_SRC + '\\s*(==|!=|>=|<=|>|<)\\s*(.+)$'));
+  if (!m) return null;
+  return { path: m[1] || toVarPath(m[2]), op: m[3], value: m[4].trim() };
+}
+
+/** Migra get_flag("x") → GameVariables.get_var("flag.x") dentro de un texto de condición. */
+function migrateLegacyCondition(text) {
+  return String(text).replace(/NarrativeManager\.get_flag\(\s*(['"])([^'"]+)\1\s*\)/g,
+    (_, q, name) => `GameVariables.get_var(${q}${toVarPath(name)}${q})`);
+}
+
 function parseMutation(line) {
-  // Detectar flag/variable: do NarrativeManager.set_flag("var", val)
-  const flagMatch = line.match(/do\s+NarrativeManager\.set_flag\(['"](.+?)['"],\s*(.+?)\)/);
+  // Asignación: do GameVariables.set_var("ruta", val) o (antigua) do NarrativeManager.set_flag("x", val)
+  const setMatch = line.match(/do\s+GameVariables\.set_var\(\s*['"]([^'"]+)['"]\s*,\s*(.+)\)\s*$/);
+  if (setMatch) {
+    return { type: 'variable', name: setMatch[1], value: setMatch[2].trim() };
+  }
+  const flagMatch = line.match(/do\s+NarrativeManager\.set_flag\(\s*['"]([^'"]+)['"]\s*,\s*(.+)\)\s*$/);
   if (flagMatch) {
-    return { type: 'variable', name: flagMatch[1], value: flagMatch[2] };
+    return { type: 'variable', name: toVarPath(flagMatch[1]), value: flagMatch[2].trim() };
   }
 
   // Detectar evento: do GameManager.trigger_event("actor") o ("evento", "param")
@@ -774,9 +913,9 @@ function serializeDialogue(tabData) {
     out += `~ ${safeTitle}\n\n`;
 
     if (node.nodeType === 'variable') {
-      const vName = node.varName || 'variable';
-      const vVal = node.varValue !== undefined && node.varValue !== '' ? node.varValue : 'true';
-      out += `do NarrativeManager.set_flag("${vName}", ${vVal})\n`;
+      const vPath = toVarPath(node.varName || 'variable');
+      const vVal = formatVarValue(node.varValue, vPath);
+      out += `do GameVariables.set_var("${vPath}", ${vVal})\n`;
       out += `=> ${cleanTarget(node.goto)}\n\n`;
       continue;
     }
@@ -789,22 +928,19 @@ function serializeDialogue(tabData) {
     }
 
     if (node.nodeType === 'condition') {
-      const vName = node.conditionVar || 'var';
+      const vName = toVarPath(node.conditionVar || 'var');
       if (node.conditionMode === 'compare') {
         const op = node.conditionOperator || '==';
-        const val = node.conditionValue || 'true';
-        out += `if NarrativeManager.get_flag("${vName}") ${op} ${val}\n`;
+        const val = formatVarValue(node.conditionValue, vName);
+        out += `if GameVariables.get_var("${vName}") ${op} ${val}\n`;
         out += `\t=> ${cleanTarget(node.conditionOutputs?.['true'])}\n`;
         out += `=> ${cleanTarget(node.conditionOutputs?.['false'])}\n\n`;
       } else {
         const cases = node.switchCases || [];
         for (let i = 0; i < cases.length; i++) {
           const cval = cases[i];
-          if (i === 0) {
-            out += `if NarrativeManager.get_flag("${vName}") == ${cval}\n`;
-          } else {
-            out += `elif NarrativeManager.get_flag("${vName}") == ${cval}\n`;
-          }
+          const cvalOut = formatVarValue(cval, vName);
+          out += `${i === 0 ? 'if' : 'elif'} GameVariables.get_var("${vName}") == ${cvalOut}\n`;
           out += `\t=> ${cleanTarget(node.conditionOutputs?.[cval])}\n`;
         }
         out += `=> ${cleanTarget(node.conditionOutputs?.['default'])}\n\n`;
@@ -1017,7 +1153,7 @@ function createNodeElement(node, tabData) {
 
     const selectVar = document.createElement('select');
     selectVar.addEventListener('mousedown', (e) => e.stopPropagation());
-    rebuildVariableSelectOptions(selectVar, node.conditionVar);
+    rebuildVariableSelectOptions(selectVar, node.conditionVar, 'get');
     selectVar.addEventListener('change', () => {
       node.conditionVar = selectVar.value;
       markDirty();
@@ -1095,7 +1231,7 @@ function createNodeElement(node, tabData) {
     
     const selectVar = document.createElement('select');
     selectVar.addEventListener('mousedown', (e) => e.stopPropagation());
-    rebuildVariableSelectOptions(selectVar, node.varName);
+    rebuildVariableSelectOptions(selectVar, node.varName, 'set');
     selectVar.addEventListener('change', () => {
       node.varName = selectVar.value;
       markDirty();
@@ -1319,27 +1455,89 @@ function attachSingleOutputFooter(div, node) {
   div.appendChild(footer);
 }
 
-function rebuildVariableSelectOptions(selectEl, selectedVal) {
+/**
+ * Rellena un <select> de variables.
+ * mode 'set': solo flag.* del proyecto (asignación).
+ * mode 'get': flag.* + variables del sistema agrupadas + quest.<id> libre (condición).
+ */
+function rebuildVariableSelectOptions(selectEl, selectedVal, mode = 'set') {
   selectEl.innerHTML = '';
-  const defaultOpt = document.createElement('option');
-  defaultOpt.value = '';
-  defaultOpt.textContent = '-- Seleccionar Variable --';
-  selectEl.appendChild(defaultOpt);
-
-  AppState.variables.forEach(v => {
+  const addOpt = (parent, value, text) => {
     const opt = document.createElement('option');
-    opt.value = v.name;
-    opt.textContent = `${v.name} (${v.type || 'bool'})`;
-    selectEl.appendChild(opt);
+    opt.value = value;
+    opt.textContent = text;
+    parent.appendChild(opt);
+    return opt;
+  };
+  const addGroup = (label) => {
+    const g = document.createElement('optgroup');
+    g.label = label;
+    selectEl.appendChild(g);
+    return g;
+  };
+
+  addOpt(selectEl, '', '-- Seleccionar Variable --');
+  selectedVal = selectedVal ? toVarPath(selectedVal) : '';
+  const known = new Set();
+
+  const gStory = addGroup('Historia');
+  AppState.variables.forEach(v => {
+    const path = FLAG_PREFIX + v.name;
+    known.add(path);
+    addOpt(gStory, path, `${path} (${v.type || 'bool'})`);
   });
 
-  if (selectedVal && !AppState.variables.some(v => v.name === selectedVal)) {
-    const customOpt = document.createElement('option');
-    customOpt.value = selectedVal;
-    customOpt.textContent = `${selectedVal} (externa)`;
-    selectEl.appendChild(customOpt);
+  if (mode === 'get') {
+    const groups = [
+      ['Jugador', 'player.'],
+      ['Ítems', 'item.'],
+      ['Estados', 'status.'],
+    ];
+    for (const [label, prefix] of groups) {
+      const items = AppState.systemVars.filter(sv => sv.path.startsWith(prefix));
+      if (items.length === 0) continue;
+      const g = addGroup(label);
+      items.forEach(sv => {
+        known.add(sv.path);
+        addOpt(g, sv.path, `${sv.path} (${sv.type})`);
+      });
+    }
+    addOpt(selectEl, '__quest__', 'quest.<id> (escribir misión)...');
   }
-  selectEl.value = selectedVal || '';
+
+  if (selectedVal && !known.has(selectedVal)) {
+    const isQuest = mode === 'get' && selectedVal.startsWith('quest.');
+    addOpt(selectEl, selectedVal, isQuest ? selectedVal : `${selectedVal} (externa)`);
+  }
+  selectEl.value = selectedVal;
+
+  if (mode === 'get') {
+    // Registrado antes que el listener del llamador: intercepta la opción de misión libre
+    let previous = selectedVal;
+    selectEl.addEventListener('change', (e) => {
+      if (selectEl.value !== '__quest__') {
+        previous = selectEl.value;
+        return;
+      }
+      e.stopImmediatePropagation();
+      const id = (prompt('Id de la misión (quest.<id>):', '') || '').trim();
+      if (!/^[A-Za-z0-9_]+$/.test(id)) {
+        if (id) alert('Id inválido: usa letras, números y guion bajo.');
+        selectEl.value = previous;
+        return;
+      }
+      const path = `quest.${id}`;
+      if (!Array.from(selectEl.options).some(o => o.value === path)) {
+        const opt = document.createElement('option');
+        opt.value = path;
+        opt.textContent = path;
+        selectEl.insertBefore(opt, selectEl.querySelector('option[value="__quest__"]'));
+      }
+      selectEl.value = path;
+      previous = path;
+      selectEl.dispatchEvent(new Event('change'));
+    });
+  }
 }
 
 function attachNodeEventListeners(div, node, tabData) {
@@ -1995,9 +2193,9 @@ function updateInspector() {
     // --- INSPECTOR VARIABLE ---
     const fieldVar = document.createElement('div');
     fieldVar.className = 'inspector-field';
-    fieldVar.innerHTML = '<label>Variable Narrativa:</label>';
+    fieldVar.innerHTML = '<label>Variable (flag.*):</label>';
     const selectVar = document.createElement('select');
-    rebuildVariableSelectOptions(selectVar, node.varName);
+    rebuildVariableSelectOptions(selectVar, node.varName, 'set');
     selectVar.addEventListener('change', () => {
       node.varName = selectVar.value;
       markDirty();
@@ -2033,7 +2231,7 @@ function updateInspector() {
     fieldVar.className = 'inspector-field';
     fieldVar.innerHTML = '<label>Variable Narrativa a Evaluar:</label>';
     const selectVar = document.createElement('select');
-    rebuildVariableSelectOptions(selectVar, node.conditionVar);
+    rebuildVariableSelectOptions(selectVar, node.conditionVar, 'get');
     selectVar.addEventListener('change', () => {
       node.conditionVar = selectVar.value;
       markDirty();
@@ -2394,11 +2592,11 @@ function handleAddGenericNode(type) {
     choices: [],
     mutations: [],
     goto: '',
-    varName: AppState.variables[0]?.name || '',
+    varName: AppState.variables[0] ? FLAG_PREFIX + AppState.variables[0].name : '',
     varValue: 'true',
     eventName: 'DialogueEvent',
     eventParam: 'DialogueEvent',
-    conditionVar: AppState.variables[0]?.name || '',
+    conditionVar: AppState.variables[0] ? FLAG_PREFIX + AppState.variables[0].name : '',
     conditionMode: 'compare',
     conditionOperator: '==',
     conditionValue: 'true',
@@ -2568,7 +2766,7 @@ function showModal({ title, bodyHTML, onConfirm }) {
 
   const confirmBtn = document.getElementById('modal-confirm');
   const cancelBtn = document.getElementById('modal-cancel');
-  if (confirmBtn) confirmBtn.onclick = () => { onConfirm(); closeModal(); };
+  if (confirmBtn) confirmBtn.onclick = () => { if (onConfirm() !== false) closeModal(); };
   if (cancelBtn) cancelBtn.onclick = closeModal;
 
   setTimeout(() => {

@@ -4,7 +4,7 @@
 
 ~ check_10
 
-if NarrativeManager.get_flag("respondio") == true
+if GameVariables.get_var("flag.respondio") == true
 	=> check_11
 => nudo_9
 
@@ -20,7 +20,7 @@ A: que bien toma una posion b:
 
 ~ var_6
 
-do NarrativeManager.set_flag("respondio", true)
+do GameVariables.set_var("flag.respondio", true)
 => END
 
 ~ nudo_3_copy
@@ -35,7 +35,7 @@ A: te sirvio la posion a?
 
 ~ var_10
 
-do NarrativeManager.set_flag("estado", true)
+do GameVariables.set_var("flag.estado", true)
 => evento_10
 
 ~ nudo_9
@@ -46,7 +46,7 @@ A: Como Estas
 
 ~ check_11
 
-if NarrativeManager.get_flag("estado") == true
+if GameVariables.get_var("flag.estado") == true
 	=> nudo_2_copy
 => nudo_3_copy
 

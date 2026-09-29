@@ -110,7 +110,7 @@ kbd {
   padding: 6px 12px; align-items: center;
 }
 
-#file-list, #variable-list {
+#file-list, #variable-list, #system-variable-list {
   list-style: none; margin: 0; padding: 0 0 8px 0;
 }
 

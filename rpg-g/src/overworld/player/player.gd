@@ -32,6 +32,7 @@ func _ready() -> void:
 	
 	if hurtbox_component:
 		hurtbox_component.hit_received.connect(_on_hit_received)
+		hurtbox_component.status_inflicted.connect(_on_status_inflicted)
 		
 	if not PlayerStats.player_died.is_connected(_on_player_died):
 		PlayerStats.player_died.connect(_on_player_died)
@@ -80,7 +81,7 @@ func _physics_process(delta: float) -> void:
 	var direction: Vector2 = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	
 	if direction != Vector2.ZERO:
-		velocity = direction * speed
+		velocity = direction * speed * PlayerStats.get_speed_multiplier()
 		last_direction = direction
 		# Rotate the interaction area and hitbox to face movement direction
 		actionable_finder.rotation = direction.angle() - PI/2
@@ -184,6 +185,11 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	else:
 		is_invulnerable = false
 
+## Un golpe inflige un estado alterado: se ignora si esta muerto o invulnerable (igual que el dano).
+func _on_status_inflicted(effect: StatusEffectData) -> void:
+	if is_dead or is_invulnerable:
+		return
+	PlayerStats.apply_status(effect)
 
 func _on_player_died() -> void:
 	if is_dead:
@@ -248,6 +254,8 @@ func attack() -> void:
 		lunge_tween.tween_property(sprite, "position", lunge_offset, 0.06)
 		lunge_tween.tween_property(sprite, "position", original_pos, 0.09)
 		
+	# El dano del ataque depende de la fuerza efectiva (base + estados)
+	hitbox_component.damage = PlayerStats.get_strength()
 	# Activar hitbox por un instante
 	hitbox_component.set_active(true)
 	var tree: SceneTree = get_tree()
