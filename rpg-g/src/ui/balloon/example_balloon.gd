@@ -72,6 +72,8 @@ var mutation_cooldown: Timer = Timer.new()
 
 
 func _ready() -> void:
+	# El juego se pausa durante los diálogos; el globo debe seguir funcionando
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	balloon.hide()
 	DialogueManager.mutated.connect(_on_mutated)
 

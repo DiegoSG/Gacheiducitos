@@ -44,8 +44,11 @@ enum Mode {
 ## Si consume la llave del inventario al abrirse
 @export var consume_key: bool = false
 
+## Texto que se muestra en el globo de diálogo al intentar pasar estando cerrada o inactiva.
+## Cada línea es un paso del diálogo. Si hay un locked_dialogue_resource asignado, este tiene prioridad.
+@export_multiline var locked_text: String = ""
 
-## Recurso de diálogo opcional para el bloqueo
+## Recurso de diálogo opcional para el bloqueo (tiene prioridad sobre locked_text)
 @export var locked_dialogue_resource: Resource
 @export var locked_dialogue_title: String = "locked"
 
@@ -99,6 +102,11 @@ enum Mode {
 
 var _is_triggered: bool = false
 var _persistence_key: String = ""
+## Diálogo generado a partir de locked_text (se crea la primera vez que se necesita)
+var _locked_text_resource: Resource = null
+
+## Palabras/prefijos que Dialogue Manager interpreta como sintaxis al inicio de una línea
+const _DIALOGUE_SYNTAX_PREFIXES: Array[String] = ["- ", "~", "=>", "=<", "#", "%", "if ", "elif ", "else", "do ", "do! ", "set ", "while ", "match ", "when ", "import ", "using "]
 
 func _ready() -> void:
 	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
@@ -216,6 +224,27 @@ func _show_locked_feedback() -> void:
 	locked.emit()
 	if locked_dialogue_resource:
 		DialogueManager.show_dialogue_balloon(locked_dialogue_resource, locked_dialogue_title)
+	elif not locked_text.strip_edges().is_empty():
+		if _locked_text_resource == null:
+			_locked_text_resource = DialogueManager.create_resource_from_text(_build_dialogue_from_text(locked_text))
+		DialogueManager.show_dialogue_balloon(_locked_text_resource, "start")
+
+## Convierte texto plano en un diálogo de un solo título ("start"), escapando la sintaxis
+## de Dialogue Manager para que el texto se muestre literal (sin personaje ni opciones).
+func _build_dialogue_from_text(text: String) -> String:
+	var out: String = "~ start\n"
+	for raw_line: String in text.split("\n", false):
+		var line: String = raw_line.strip_edges()
+		if line.is_empty():
+			continue
+		line = line.replace(":", "\\:")
+		for prefix: String in _DIALOGUE_SYNTAX_PREFIXES:
+			if line.begins_with(prefix):
+				# Espacio de ancho cero: evita que la línea se interprete como sintaxis
+				line = "\u200B" + line
+				break
+		out += line + "\n"
+	return out + "=> END\n"
 
 ## Métodos públicos para ser activados por eventos / interruptores
 func unlock() -> void:

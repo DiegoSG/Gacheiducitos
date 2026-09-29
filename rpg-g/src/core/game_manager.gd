@@ -21,14 +21,52 @@ var _minigame_lose_path: String = ""
 var _minigame_lose_spawn_id: String = ""
 var _is_changing_level: bool = false
 
+# Pausa compartida: cada sistema que necesita congelar el juego (inventario, diálogos...)
+# pide una pausa y la libera; el juego solo se reanuda cuando nadie la necesita.
+var _pause_requests: int = 0
+var _dialogue_pause_active: bool = false
+
 
 func _ready() -> void:
+	# Los diálogos pausan el mundo (enemigos, timers, veneno...); el gestor de diálogos
+	# debe seguir procesando mientras tanto.
+	DialogueManager.process_mode = Node.PROCESS_MODE_ALWAYS
+	DialogueManager.dialogue_started.connect(_on_dialogue_started)
+	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
+
 	var root: Window = get_tree().root
 	current_scene = root.get_child(root.get_child_count() - 1)
 	if is_instance_valid(current_scene):
 		# Permite ejecutar un minijuego suelto (F6) y que igualmente entregue recompensas
 		_connect_minigame_finished(current_scene)
 		CheckpointManager.register_level_entry(current_scene.scene_file_path, current_scene, false)
+
+## Congela el juego. Cada llamada debe tener su release_pause() correspondiente.
+func request_pause() -> void:
+	_pause_requests += 1
+	get_tree().paused = true
+
+## Libera una petición de pausa; el juego se reanuda cuando no queda ninguna.
+func release_pause() -> void:
+	_pause_requests = maxi(0, _pause_requests - 1)
+	if _pause_requests == 0:
+		get_tree().paused = false
+
+## Anula todas las pausas pendientes (al cambiar de escena, las UI que las pidieron desaparecen).
+func _reset_pause() -> void:
+	_pause_requests = 0
+	_dialogue_pause_active = false
+	get_tree().paused = false
+
+func _on_dialogue_started(_resource: DialogueResource) -> void:
+	if not _dialogue_pause_active:
+		_dialogue_pause_active = true
+		request_pause()
+
+func _on_dialogue_ended(_resource: DialogueResource) -> void:
+	if _dialogue_pause_active:
+		_dialogue_pause_active = false
+		release_pause()
 
 func trigger_event(event_name: String, event_data: Variant = null) -> void:
 	game_event.emit(event_name, event_data)
@@ -96,6 +134,7 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 		return
 
 	_is_changing_level = true
+	_reset_pause()
 	
 	if not is_save_load:
 		WorldStateManager.clear_ephemeral_states()

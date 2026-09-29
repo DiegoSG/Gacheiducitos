@@ -35,15 +35,21 @@ func toggle_inventory() -> void:
 func open_inventory() -> void:
 	if control:
 		control.visible = true
-		get_tree().paused = true
+		GameManager.request_pause()
 		refresh_ui()
 		if save_menu and save_menu.has_method("refresh"):
 			save_menu.refresh()
 
 func close_inventory() -> void:
-	if control:
+	if control and control.visible:
 		control.visible = false
-		get_tree().paused = false
+		GameManager.release_pause()
+
+func _exit_tree() -> void:
+	# Si la escena se descarga con el inventario abierto (p. ej. al cargar partida), liberar su pausa
+	if is_open():
+		control.visible = false
+		GameManager.release_pause()
 
 func is_open() -> bool:
 	return control.visible if control else false
