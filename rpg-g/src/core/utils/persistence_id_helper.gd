@@ -30,7 +30,7 @@ static func generate_id(node: Node, prefix: String = "") -> String:
 	if root and root != node:
 		rel_path = str(root.get_path_to(node))
 	else:
-		rel_path = str(node.get_path()) if node.is_inside_tree() else node.name
+		rel_path = str(node.get_path()) if node.is_inside_tree() else str(node.name)
 
 	# 3. Hash MD5 determinista de 8 caracteres (100% reproducible entre ejecuciones)
 	var full_signature: String = "%s:%s" % [scene_id, rel_path]

@@ -93,12 +93,12 @@ func _check_win_conditions() -> void:
 	match cond:
 		WinCondition.ALTURA:
 			if max_score >= target:
-				_win_game("¡Altura alcanzada!")
+				_win_game()
 		WinCondition.MONEDAS:
 			if coins_collected >= target:
-				_win_game("¡Monedas recolectadas!")
+				_win_game()
 
-func _win_game(reason: String) -> void:
+func _win_game() -> void:
 	if win_condition_met:
 		return
 	win_condition_met = true
@@ -106,7 +106,7 @@ func _win_game(reason: String) -> void:
 	finish(true)
 
 func _on_special_platform_reached() -> void:
-	_win_game("¡Trampolín especial encontrado!")
+	_win_game()
 
 func _on_coin_collected() -> void:
 	coins_collected += 1

@@ -209,7 +209,7 @@ func _update_placed_bombs(delta: float) -> void:
 			remaining.append(b)
 	active_placed_bombs = remaining
 
-func _explode_at(center_pos: Vector2i, reason: String = "EXPLOSIÓN") -> void:
+func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 	# Destruir área de 3x3
 	var player_caught = false
 	var chain_explosions: Array[Vector2i] = []
@@ -249,7 +249,7 @@ func _explode_at(center_pos: Vector2i, reason: String = "EXPLOSIÓN") -> void:
 		_explode_at(next_bomb, "EXPLOSIÓN EN CADENA")
 	
 	if player_caught:
-		_player_crushed(reason)
+		_player_crushed()
 
 func _interpolate_visuals(delta: float) -> void:
 	# Interpolar jugador
@@ -475,9 +475,7 @@ func _in_bounds(pos: Vector2i) -> bool:
 
 ## Procesa la recogida del contenido de un tile (bomba, ítem de inventario, moneda o ítem de misión).
 ## Devuelve true si el tile era recogible; el llamador vacía el tile y mueve al jugador.
-## from_dig indica que se recogió al excavar (solo afecta al texto del log).
-func _collect_tile(pos: Vector2i, tile: int, from_dig: bool = false) -> bool:
-	var suffix: String = " al excavar" if from_dig else ""
+func _collect_tile(pos: Vector2i, tile: int) -> bool:
 	match tile:
 		TileType.BOMB_PICKUP:
 			player_bombs_ammo += 1
@@ -590,7 +588,7 @@ func _try_dig_adjacent(direction: Vector2i) -> void:
 	if target_tile == TileType.TIERRA:
 		grid[target_pos.y][target_pos.x] = TileType.EMPTY
 		queue_redraw()
-	elif _collect_tile(target_pos, target_tile, true):
+	elif _collect_tile(target_pos, target_tile):
 		grid[target_pos.y][target_pos.x] = TileType.EMPTY
 		queue_redraw()
 
@@ -739,7 +737,7 @@ func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictio
 				result.moved = true
 				return result
 			else:
-				_player_crushed("CAÍDA DIRECTA")
+				_player_crushed()
 		
 		grid[dest.y][dest.x] = tile_type
 		grid[y][x] = TileType.EMPTY
@@ -780,7 +778,7 @@ func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictio
 			
 	return result
 
-func _player_crushed(reason: String = "") -> void:
+func _player_crushed() -> void:
 	if is_player_dead:
 		return
 	is_player_dead = true

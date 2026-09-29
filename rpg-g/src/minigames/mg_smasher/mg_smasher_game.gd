@@ -121,7 +121,7 @@ func spawn_insect() -> void:
 	for i in range(to_spawn):
 		var start_idx = available_starts[i]
 		# Ensure end hole is roughly on the opposite side
-		var end_idx = (start_idx + holes.size() / 2 + (randi() % 3 - 1)) % holes.size()
+		var end_idx = (start_idx + floori(holes.size() / 2.0) + (randi() % 3 - 1)) % holes.size()
 		# Make sure end != start
 		if start_idx == end_idx:
 			end_idx = (start_idx + 1) % holes.size()
