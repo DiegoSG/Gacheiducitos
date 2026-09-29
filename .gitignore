@@ -14,3 +14,6 @@ rpg-g/android/
 Thumbs.db
 node_modules/
 
+
+# Claude Code (configuración local por usuario)
+.claude/settings.local.json
