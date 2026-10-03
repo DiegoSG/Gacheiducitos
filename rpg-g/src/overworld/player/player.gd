@@ -20,6 +20,10 @@ const TEX_UP = preload("res://assets/sprites/player_up.png")               # Nor
 
 var is_dialogue_active: bool = false
 var is_attacking: bool = false
+var is_blocking: bool = false
+
+## Bloqueo PLACEHOLDER (sin reducción de daño ni animación): solo estado y señal.
+signal blocking_changed(is_blocking: bool)
 var last_direction: Vector2 = Vector2.DOWN
 
 func _ready() -> void:
@@ -69,6 +73,8 @@ func _on_dialogue_ended(_resource: DialogueResource) -> void:
 
 func _physics_process(delta: float) -> void:
 	if is_dialogue_active or is_dead:
+		if is_blocking:
+			set_blocking(false)
 		return
 		
 	if is_stunned:
@@ -78,7 +84,7 @@ func _physics_process(delta: float) -> void:
 		return
 		
 	# Get input direction
-	var direction: Vector2 = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	var direction: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	
 	if direction != Vector2.ZERO:
 		velocity = direction * speed * PlayerStats.get_speed_multiplier()
@@ -94,6 +100,7 @@ func _physics_process(delta: float) -> void:
 
 	if is_attacking:
 		velocity = Vector2.ZERO # Stop moving while attacking
+	_update_blocking()
 
 	move_and_slide()
 
@@ -220,6 +227,7 @@ func _on_player_died() -> void:
 
 func _on_player_respawned() -> void:
 	is_dead = false
+	is_blocking = false
 	is_invulnerable = false
 	is_stunned = false
 	velocity = Vector2.ZERO
@@ -231,8 +239,21 @@ func _on_player_respawned() -> void:
 		hurtbox_component.set_deferred("monitorable", true)
 
 
+func _update_blocking() -> void:
+	var wants_block: bool = Input.is_action_pressed("block") and not is_attacking
+	if wants_block != is_blocking:
+		set_blocking(wants_block)
+
+func set_blocking(value: bool) -> void:
+	if is_blocking == value:
+		return
+	is_blocking = value
+	if sprite and not is_dead:
+		sprite.modulate = Color(0.8, 0.85, 1.0, 1.0) if value else Color.WHITE
+	blocking_changed.emit(value)
+
 func attack() -> void:
-	if is_attacking:
+	if is_attacking or is_blocking:
 		return
 	is_attacking = true
 	
@@ -271,9 +292,11 @@ func attack() -> void:
 # Trasladamos la interacción a _unhandled_input para respetar los CanvasLayer (UI)
 func _unhandled_input(event: InputEvent) -> void:
 	if is_dialogue_active or is_dead:
+		if is_blocking:
+			set_blocking(false)
 		return
 		
-	if event.is_action_pressed("ui_accept"):
+	if event.is_action_pressed("interact"):
 		var actionables: Array[Area2D] = actionable_finder.get_overlapping_areas()
 		for area in actionables:
 			if area.has_method("action"):

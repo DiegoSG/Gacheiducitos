@@ -33,7 +33,8 @@ func save_slot(slot_id: int) -> void:
 		"player_stats": PlayerStats.create_snapshot(),
 		"inventory": Inventory.create_snapshot(),
 		"narrative": GameVariables.create_snapshot(),
-		"world_state": WorldStateManager.create_snapshot()
+		"world_state": WorldStateManager.create_snapshot(),
+		"quick_slots": QuickSlots.create_snapshot()
 	}
 
 	var file_path: String = get_slot_path(slot_id)
@@ -72,6 +73,9 @@ func load_slot(slot_id: int) -> void:
 
 	if data.has("inventory"):
 		Inventory.restore_snapshot(data["inventory"])
+
+	# Retrocompatible: los saves antiguos no traen "quick_slots"
+	QuickSlots.restore_snapshot(data.get("quick_slots", []) as Array)
 
 	if data.has("player_stats"):
 		PlayerStats.restore_snapshot(data["player_stats"])

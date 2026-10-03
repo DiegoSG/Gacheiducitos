@@ -19,6 +19,8 @@ const TOAST_SCENE: PackedScene = preload("res://src/ui/loot_feedback/loot_toast_
 const COLOR_HEALTH_ACTIVE: Color = Color(0.2, 0.9, 0.3, 1.0) # Verde activo
 const COLOR_HEALTH_EMPTY: Color = Color(0.25, 0.25, 0.25, 0.4) # Gris apagado
 
+var _slot_icons: Array[TextureRect] = []
+var _slot_counts: Array[Label] = []
 var _active_toasts: Dictionary = {} # item_id: String -> LootToastItem
 
 func _ready() -> void:
@@ -38,6 +40,7 @@ func _ready() -> void:
 	_update_health(PlayerStats.health, PlayerStats.get_max_health())
 	_rebuild_status_row()
 	_update_gold(PlayerStats.gold)
+	_build_quickbar()
 
 func _exit_tree() -> void:
 	if instance == self:
@@ -151,3 +154,46 @@ func _punch_inventory_anchor() -> void:
 	var tween: Tween = create_tween()
 	tween.tween_property(inventory_anchor, "scale", Vector2(1.2, 1.2), 0.08).set_trans(Tween.TRANS_QUAD)
 	tween.tween_property(inventory_anchor, "scale", Vector2(1.0, 1.0), 0.12).set_trans(Tween.TRANS_BOUNCE)
+
+## HUD mínimo de 4 casillas de slots rápidos (placeholder visual).
+func _build_quickbar() -> void:
+	if not quickbar_container:
+		return
+	for i: int in QuickSlots.SLOT_COUNT:
+		var cell: PanelContainer = PanelContainer.new()
+		cell.custom_minimum_size = Vector2(48, 48)
+		var icon: TextureRect = TextureRect.new()
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		cell.add_child(icon)
+		var key_label: Label = Label.new()
+		key_label.text = str(i + 1)
+		key_label.add_theme_font_size_override("font_size", 12)
+		cell.add_child(key_label)
+		var count_label: Label = Label.new()
+		count_label.add_theme_font_size_override("font_size", 12)
+		count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		count_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		cell.add_child(count_label)
+		quickbar_container.add_child(cell)
+		_slot_icons.append(icon)
+		_slot_counts.append(count_label)
+	_connect_quick_slots.call_deferred()
+
+func _connect_quick_slots() -> void:
+	var slots: QuickSlots = QuickSlots.instance
+	if slots == null:
+		return
+	if not slots.slot_changed.is_connected(_on_quick_slot_changed):
+		slots.slot_changed.connect(_on_quick_slot_changed)
+	for i: int in QuickSlots.SLOT_COUNT:
+		_on_quick_slot_changed(i, slots.get_slot(i))
+
+func _on_quick_slot_changed(index: int, item_id: String) -> void:
+	if index < 0 or index >= _slot_icons.size():
+		return
+	var data: ItemData = ItemDatabase.get_item(item_id) if not item_id.is_empty() else null
+	var count: int = Inventory.get_item_count(item_id) if data else 0
+	_slot_icons[index].texture = data.icon if data else null
+	_slot_icons[index].modulate.a = 1.0 if count > 0 else 0.35
+	_slot_counts[index].text = ("x%d" % count) if data and data.stackable else ""
