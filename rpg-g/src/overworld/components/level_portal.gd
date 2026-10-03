@@ -173,7 +173,7 @@ func _update_visuals() -> void:
 		if Engine.is_editor_hint():
 			$SpawnPoint/ArrivalIdLabel.visible = true
 
-## Invocado por ActionableFinder del Player al pulsar botón de interacción (E / ui_accept)
+## Invocado por ActionableFinder del Player al pulsar botón de interacción (acción interact)
 func action() -> void:
 	if mode != Mode.DOOR or _is_triggered:
 		return
