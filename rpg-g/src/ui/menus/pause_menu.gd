@@ -86,12 +86,8 @@ func _open_save() -> void:
 	wrapper.add_child(center)
 	center.add_child(save_ui)
 	_show_sub(wrapper)
-	var buttons: Array[Node] = save_ui.find_children("*", "Button", true, false)
-	for node: Node in buttons:
-		var button: Button = node as Button
-		if not button.disabled:
-			button.grab_focus()
-			break
+	# Primer botón visible y habilitado (el "Guardar" del autoguardado está oculto y no admite foco).
+	save_ui.call("focus_first")
 
 func _show_sub(sub: Control) -> void:
 	_sub = sub

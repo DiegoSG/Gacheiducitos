@@ -63,7 +63,10 @@ func _clamp_view() -> void:
 	_canvas.view_center = _canvas.view_center.clamp(Vector2.ZERO, _canvas.level_bounds)
 
 func _refresh() -> void:
-	_canvas.player_pos = _player.global_position if is_instance_valid(_player) else null
+	if is_instance_valid(_player):
+		_canvas.player_pos = _player.global_position
+	else:
+		_canvas.player_pos = null
 	_canvas.queue_redraw()
 
 func _set_zoom(factor: float) -> void:

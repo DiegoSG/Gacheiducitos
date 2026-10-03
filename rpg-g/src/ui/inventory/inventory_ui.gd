@@ -2,7 +2,6 @@ extends CanvasLayer
 
 @onready var control: Control = $Control
 @onready var item_list: ItemList = $Control/Panel/ItemList
-@onready var save_menu: Panel = $Control/SaveMenuUI
 
 var _notice_label: Label = null
 var _notice_tween: Tween = null
@@ -21,20 +20,32 @@ func _ready() -> void:
 	_create_notice_label()
 	refresh_ui()
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("toggle_inventory"):
-		toggle_inventory()
-		get_viewport().set_input_as_handled()
+## Con el inventario abierto se intercepta antes que la GUI: la ItemList con foco consumiría
+## la cruceta (ui_up/ui_down), Tab (ui_focus_next) y los dígitos (búsqueda incremental).
+## La navegación de la lista queda en flechas/WASD/stick; la cruceta y 1-4 asignan slots.
+func _input(event: InputEvent) -> void:
+	if not is_open():
 		return
-	if is_open():
-		for i: int in QuickSlots.SLOT_COUNT:
-			if event.is_action_pressed("slot_%d" % (i + 1)):
-				_assign_selected_to_slot(i)
-				get_viewport().set_input_as_handled()
-				return
-	elif is_open() and event.is_action_pressed("ui_cancel"):
+	if event.is_action_pressed("toggle_inventory") or event.is_action_pressed("ui_cancel"):
 		close_inventory()
 		get_viewport().set_input_as_handled()
+		return
+	for i: int in QuickSlots.SLOT_COUNT:
+		if _is_slot_assign_event(event, "slot_%d" % (i + 1)):
+			_assign_selected_to_slot(i)
+			get_viewport().set_input_as_handled()
+			return
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not is_open() and event.is_action_pressed("toggle_inventory"):
+		open_inventory()
+		get_viewport().set_input_as_handled()
+
+## Solo teclas y botones del mando: el stick (InputEventJoypadMotion) sigue navegando la lista.
+func _is_slot_assign_event(event: InputEvent, action: String) -> bool:
+	if not (event is InputEventKey or event is InputEventJoypadButton):
+		return false
+	return event.is_action_pressed(action)
 
 func toggle_inventory() -> void:
 	if not control:
@@ -50,11 +61,12 @@ func open_inventory() -> void:
 		control.visible = true
 		GameManager.request_pause()
 		refresh_ui()
-		if save_menu and save_menu.has_method("refresh"):
-			save_menu.refresh()
+		_focus_list()
 
 func close_inventory() -> void:
 	if control and control.visible:
+		if item_list:
+			item_list.release_focus()
 		control.visible = false
 		GameManager.release_pause()
 
@@ -74,8 +86,17 @@ func _on_inventory_changed() -> void:
 func refresh_ui() -> void:
 	if not item_list:
 		return
+	# Conserva la fila seleccionada al reconstruir (usar/asignar un ítem refresca la lista).
+	var selected: PackedInt32Array = item_list.get_selected_items()
+	var previous_index: int = selected[0] if not selected.is_empty() else 0
 	item_list.clear()
-	
+	_fill_list()
+	if item_list.item_count > 0:
+		var index: int = mini(previous_index, item_list.item_count - 1)
+		item_list.select(index)
+		item_list.ensure_current_is_visible()
+
+func _fill_list() -> void:
 	var items: Dictionary = Inventory.get_items()
 	if items.is_empty():
 		item_list.add_item("(Inventario vacío)")
@@ -96,6 +117,15 @@ func refresh_ui() -> void:
 			idx = item_list.add_item("%s (x%d)%s" % [item_id, amount, slot_tag])
 			
 		item_list.set_item_metadata(idx, item_id)
+
+## Foco en la lista con la primera fila activa: permite navegar sin hacer clic antes.
+func _focus_list() -> void:
+	if not item_list:
+		return
+	item_list.grab_focus()
+	if item_list.item_count > 0 and item_list.get_selected_items().is_empty():
+		item_list.select(0)
+		item_list.ensure_current_is_visible()
 
 func _on_item_activated(index: int) -> void:
 	if not item_list:

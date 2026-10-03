@@ -25,6 +25,13 @@ func _ready() -> void:
 		print("[TestRunner] UI instanciada correctamente: 5 slots totales, autosave detectado.")
 	else:
 		push_error("[TestRunner] Fallo en la instanciación de la UI. Slots encontrados: ", slot_count)
-	
+
+	# Al abrir, el primer botón visible y habilitado debe tener el foco (navegable sin clic).
+	var focused: Control = get_viewport().gui_get_focus_owner()
+	if focused is Button and save_menu.is_ancestor_of(focused) and focused.is_visible_in_tree() and not (focused as Button).disabled:
+		print("[TestRunner] Foco inicial OK en: ", focused.get_path())
+	else:
+		push_error("[TestRunner] Ningún botón visible/habilitado tiene el foco al abrir. Foco: ", focused)
+
 	print("[TestRunner] Test superado.")
 	get_tree().quit(0)
