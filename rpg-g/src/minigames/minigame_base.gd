@@ -14,6 +14,9 @@ signal game_finished(success: bool, results: Dictionary)
 var session_rewards: Dictionary = {}
 var _is_finishing: bool = false
 var _result_ui: CanvasLayer = null
+var _pause_menu: PauseMenu = null
+
+const PAUSE_MENU_SCENE: PackedScene = preload("res://src/ui/menus/pause_menu.tscn")
 
 ## Rutas de la textura de moneda (con fallback) y caché compartida entre minijuegos.
 const COIN_TEXTURE_PATH: String = "res://assets/items/icons/coin_v2.png"
@@ -124,6 +127,24 @@ func _show_result_screen(success: bool) -> void:
 	prompt_label.add_theme_font_size_override("font_size", 12)
 	prompt_label.modulate = Color(0.75, 0.75, 0.75)
 	vbox.add_child(prompt_label)
+
+## `pause` durante el minijuego abre el menú de pausa (Reanudar / Opciones / Abandonar).
+## No actúa si el juego ya está pausado por otro sistema ni si el minijuego ya terminó.
+func _unhandled_input(event: InputEvent) -> void:
+	if _is_finishing or _pause_menu != null or get_tree().paused:
+		return
+	if event.is_action_pressed("pause"):
+		get_viewport().set_input_as_handled()
+		_pause_menu = PAUSE_MENU_SCENE.instantiate() as PauseMenu
+		_pause_menu.mode = PauseMenu.Mode.MINIGAME
+		_pause_menu.closed.connect(func() -> void: _pause_menu = null)
+		_pause_menu.abandon_requested.connect(_on_abandon_requested)
+		add_child(_pause_menu)
+
+## Abandonar cuenta como perder: se descartan los ítems de la partida y se usa el camino de derrota.
+func _on_abandon_requested() -> void:
+	session_rewards.clear()
+	finish(false)
 
 func _exit_tree() -> void:
 	# Asegurar que el juego nunca quede congelado al salir de la escena
