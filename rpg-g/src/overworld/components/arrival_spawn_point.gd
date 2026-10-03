@@ -30,7 +30,7 @@ func _unhandled_input(event: InputEvent) -> void:
 static func handle_debug_input(node: Node, event: InputEvent) -> void:
 	if Engine.is_editor_hint():
 		return
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F3:
+	if event.is_action_pressed("debug_toggle"):
 		node.get_viewport().set_input_as_handled()
 		toggle_debug_visuals(node.get_tree())
 

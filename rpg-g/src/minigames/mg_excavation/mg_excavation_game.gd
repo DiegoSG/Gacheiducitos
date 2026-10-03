@@ -171,7 +171,7 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _handle_bomb_planting(delta: float) -> void:
-	if Input.is_action_pressed("ui_accept"):
+	if Input.is_action_pressed("plant_bomb"):
 		if current_direction == Vector2i.ZERO:
 			if space_held_timer >= 0.0:
 				space_held_timer += delta
@@ -286,7 +286,7 @@ func _handle_continuous_movement(delta: float) -> void:
 			_handle_player_action(current_direction)
 
 func _handle_player_action(direction: Vector2i) -> void:
-	if Input.is_action_pressed("ui_accept"):
+	if Input.is_action_pressed("plant_bomb"):
 		_try_dig_adjacent(direction)
 	else:
 		_try_move_player(direction)
@@ -451,16 +451,12 @@ func world_to_grid(world_pos: Vector2) -> Vector2i:
 	)
 
 func _input(event):
-	if event.is_action_pressed("ui_cancel"):
-		finish(false)
-		return
-
-	# Mapear acciones a direcciones
+	# Mapear acciones a direcciones (move_* o ui_* para compatibilidad con D-Pad)
 	var dir = Vector2i.ZERO
-	if event.is_action("ui_up"): dir = Vector2i(0, -1)
-	elif event.is_action("ui_down"): dir = Vector2i(0, 1)
-	elif event.is_action("ui_left"): dir = Vector2i(-1, 0)
-	elif event.is_action("ui_right"): dir = Vector2i(1, 0)
+	if event.is_action("move_up") or event.is_action("ui_up"): dir = Vector2i(0, -1)
+	elif event.is_action("move_down") or event.is_action("ui_down"): dir = Vector2i(0, 1)
+	elif event.is_action("move_left") or event.is_action("ui_left"): dir = Vector2i(-1, 0)
+	elif event.is_action("move_right") or event.is_action("ui_right"): dir = Vector2i(1, 0)
 	
 	if dir != Vector2i.ZERO:
 		if event.is_pressed():

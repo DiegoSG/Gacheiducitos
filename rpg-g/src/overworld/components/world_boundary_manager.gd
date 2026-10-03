@@ -62,10 +62,9 @@ func get_level_bounds() -> Vector2:
 func _unhandled_input(event: InputEvent) -> void:
 	if Engine.is_editor_hint():
 		return
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_F3:
-			debug_bounds_visible = not debug_bounds_visible
-			queue_redraw()
+	if event.is_action_pressed("debug_toggle"):
+		debug_bounds_visible = not debug_bounds_visible
+		queue_redraw()
 
 func _draw() -> void:
 	if not Engine.is_editor_hint() and not debug_bounds_visible:

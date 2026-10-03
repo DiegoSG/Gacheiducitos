@@ -43,7 +43,7 @@ func _ready() -> void:
 	_restore_state()
 
 func _restore_state() -> void:
-	if _persistence_key.is_empty():
+	if Engine.is_editor_hint() or _persistence_key.is_empty():
 		return
 	if WorldStateManager.has_state(_persistence_key):
 		is_on = WorldStateManager.load_state(_persistence_key).get("is_on", false)
@@ -72,6 +72,6 @@ func action() -> void:
 	_persist_state()
 
 func _persist_state() -> void:
-	if _persistence_key.is_empty():
+	if Engine.is_editor_hint() or _persistence_key.is_empty():
 		return
 	WorldStateManager.save_state(_persistence_key, {"is_on": is_on})

@@ -33,7 +33,9 @@ func save_slot(slot_id: int) -> void:
 		"player_stats": PlayerStats.create_snapshot(),
 		"inventory": Inventory.create_snapshot(),
 		"narrative": GameVariables.create_snapshot(),
-		"world_state": WorldStateManager.create_snapshot()
+		"world_state": WorldStateManager.create_snapshot(),
+		"quick_slots": QuickSlots.create_snapshot(),
+		"map_discovery": WorldStateManager.create_discovery_snapshot()
 	}
 
 	var file_path: String = get_slot_path(slot_id)
@@ -67,11 +69,18 @@ func load_slot(slot_id: int) -> void:
 	if data.has("world_state"):
 		WorldStateManager.restore_snapshot(data["world_state"])
 
+	# Retrocompatible: saves antiguos no traen "map_discovery".
+	var discovery: Variant = data.get("map_discovery", {})
+	WorldStateManager.restore_discovery_snapshot(discovery if discovery is Dictionary else {})
+
 	if data.has("narrative"):
 		GameVariables.restore_snapshot(data["narrative"])
 
 	if data.has("inventory"):
 		Inventory.restore_snapshot(data["inventory"])
+
+	# Retrocompatible: los saves antiguos no traen "quick_slots"
+	QuickSlots.restore_snapshot(data.get("quick_slots", []) as Array)
 
 	if data.has("player_stats"):
 		PlayerStats.restore_snapshot(data["player_stats"])

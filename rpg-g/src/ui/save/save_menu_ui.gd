@@ -49,6 +49,24 @@ func refresh() -> void:
 			var slot_id: int = child.slot_id
 			if slot_id >= 0 and slot_id < metadatas.size():
 				child.update_view(metadatas[slot_id])
+	_restore_focus_if_lost()
+
+## Al borrar un slot su botón se oculta y el foco se pierde: lo devuelve al primer botón disponible.
+func _restore_focus_if_lost() -> void:
+	var owner_control: Control = get_viewport().gui_get_focus_owner()
+	if owner_control != null and is_ancestor_of(owner_control) and owner_control.is_visible_in_tree():
+		return
+	if owner_control != null and not is_ancestor_of(owner_control):
+		return # El foco está en otro menú; no se lo quitamos.
+	focus_first()
+
+## Da el foco al primer botón visible y habilitado de los slots.
+func focus_first() -> void:
+	for node: Node in slots_container.find_children("*", "Button", true, false):
+		var button: Button = node as Button
+		if not button.disabled and button.is_visible_in_tree():
+			button.grab_focus()
+			return
 
 func _on_slot_save_requested(slot_id: int) -> void:
 	SaveSystem.save_slot(slot_id)
