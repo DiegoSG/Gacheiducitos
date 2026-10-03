@@ -1,0 +1,14 @@
+{
+  "variables": [
+    {
+      "name": "estado",
+      "type": "bool",
+      "defaultValue": "false"
+    },
+    {
+      "name": "respondio",
+      "type": "bool",
+      "defaultValue": "false"
+    }
+  ]
+}

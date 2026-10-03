@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://data/resource_types/item_data.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_icon"]
+
+[resource]
+script = ExtResource("1_item")
+id = "rusty_key"
+name = "Llave Oxidada"
+description = "Una llave de hierro gastada pero funcional."
+value = 1
+is_stackable = false
+max_stack_size = 1
+icon = ExtResource("2_icon")
+item_scale = Vector2(0.4, 0.4)
+collision_type = 0
+circle_radius = 20.0
+rectangle_size = Vector2(32, 32)
+capsule_radius = 10.0
+capsule_height = 30.0
+collision_offset = Vector2(0, 0)

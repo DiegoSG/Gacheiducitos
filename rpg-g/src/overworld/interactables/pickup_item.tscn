@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://ckyt3sc6keqdu"]
+
+[ext_resource type="Script" uid="uid://7fdq2rlwgeia" path="res://src/overworld/interactables/pickup_item.gd" id="1_script"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_amhjo"]
+radius = 16.0
+
+[node name="PickupItem" type="Area2D" unique_id=171384609]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=2067958205]
+scale = Vector2(0.3, 0.3)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1171309177]
+shape = SubResource("CircleShape2D_amhjo")

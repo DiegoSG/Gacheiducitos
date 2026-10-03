@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://rwhqbbd0deoj"
+path="res://.godot/imported/barnaby.dialogue-aa07c6de1b6e668d2484cd38326c3bce.tres"
+
+[deps]
+
+source_file="res://src/overworld/npcs/barnaby.dialogue"
+dest_files=["res://.godot/imported/barnaby.dialogue-aa07c6de1b6e668d2484cd38326c3bce.tres"]
+
+[params]
+
+defaults=true

@@ -22,12 +22,15 @@ Este documento explica cómo funcionan técnicamente los sistemas implementados 
     *   `InteractionArea`: Grande, para detectar el "Espacio".
     *   `PhysicsCollision`: Pequeña (base), para chocar físicamente.
 
-## 4. GameManager y Transiciones
-*   **Singleton:** `GameManager.gd` (Autoload).
-*   **Función:** Gestiona el cambio entre Overworld y Minijuegos.
-*   **Persistencia:**
-    1.  Al entrar a un minijuego: Guarda `previous_scene_path` y `player_return_position`.
-    2.  Al salir: Carga la escena guardada y reposiciona al jugador.
+## 4. Arquitectura de Managers y Transiciones
+*   **Singletons Globales (Autoloads):**
+    *   `GameManager.gd`: Transiciones de escena con `ScreenFader`, persistencia de retornos de minijuegos (`previous_scene_path`), y bus de eventos global.
+    *   `AlertSystem.gd`: Registro y limpieza de enemigos perseguidores (`_active_pursuers`), y cálculo del estado global de alerta (`PEACE` vs `ALERT`).
+    *   `CheckpointManager.gd`: Registro de puntos de control de nivel, captura de snapshots de inventario/estadísticas y gestión de la secuencia de `respawn_player()`.
+    *   `WorldStateManager.gd`: Persistencia de variables y estados de interactuables del mapa.
+    *   `PlayerStats.gd`: Control de salud (`health`, `max_health`) y oro.
+    *   `Inventory.gd`: Almacenamiento de ítems y emisión de señales de inventario.
+*   **Acceso a Singletons:** Acceso directo tipado por inferencia en GDScript (ej. `var gm := GameManager`), sin redeclarar `class_name` para evitar colisiones de tipo en Godot 4.x.
 
 ## 5. Overworld y TileMap
 *   **Estructura:**

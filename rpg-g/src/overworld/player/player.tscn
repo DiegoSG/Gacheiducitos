@@ -1,0 +1,75 @@
+[gd_scene format=3 uid="uid://be3dgr8tc2bii"]
+
+[ext_resource type="Script" uid="uid://i7ip702opd4y" path="res://src/overworld/player/player.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://ynff83veo5de" path="res://assets/sprites/player_down.png" id="2_player_down"]
+[ext_resource type="PackedScene" path="res://src/core/components/hitbox_component.tscn" id="3_hitbox"]
+[ext_resource type="Texture2D" uid="uid://c1vwx2p48l2ln" path="res://assets/sprites/slash_effect.png" id="3_slash"]
+[ext_resource type="PackedScene" path="res://src/core/components/hurtbox_component.tscn" id="4_hurtbox"]
+[ext_resource type="PackedScene" uid="uid://buh6h4w8o8fef" path="res://src/ui/loot_feedback/player_hud.tscn" id="5_hud"]
+[ext_resource type="Script" uid="uid://63w406wwqc28" path="res://src/overworld/components/bounded_camera.gd" id="6_camera"]
+
+[ext_resource type="Script" path="res://src/overworld/player/components/quick_slots.gd" id="7_quick_slots"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(24.5, 53.75)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+size = Vector2(60, 60)
+
+[node name="Player" type="CharacterBody2D" unique_id=1441524907]
+collision_layer = 2
+collision_mask = 9
+motion_mode = 1
+platform_on_leave = 2
+script = ExtResource("1_script")
+
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1173199192]
+scale = Vector2(0.22, 0.22)
+texture = ExtResource("2_player_down")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=40233913]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="QuickSlots" type="Node" parent="." unique_id=1900000001]
+script = ExtResource("7_quick_slots")
+
+[node name="ActionableFinder" type="Area2D" parent="." unique_id=1271571305]
+collision_layer = 0
+collision_mask = 16
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ActionableFinder" unique_id=833290299]
+position = Vector2(0, 0.125)
+shape = SubResource("RectangleShape2D_1")
+
+[node name="HitboxComponent" parent="." unique_id=673697191 instance=ExtResource("3_hitbox")]
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitboxComponent" unique_id=2134926983]
+visible = false
+position = Vector2(0, 60)
+shape = SubResource("RectangleShape2D_hitbox")
+
+[node name="SlashSprite" type="Sprite2D" parent="HitboxComponent" unique_id=1849201934]
+visible = false
+position = Vector2(0, 60)
+scale = Vector2(0.1, 0.1)
+texture = ExtResource("3_slash")
+
+[node name="HurtboxComponent" parent="." unique_id=1563591684 instance=ExtResource("4_hurtbox")]
+collision_layer = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtboxComponent" unique_id=1725608150]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="PlayerHUD" parent="." unique_id=1052720314 instance=ExtResource("5_hud")]
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1761105898 node_paths=PackedStringArray("target_node")]
+limit_left = 0
+limit_top = 0
+limit_right = 1920
+limit_bottom = 1080
+position_smoothing_enabled = true
+script = ExtResource("6_camera")
+level_bounds = Vector2(1920, 1080)
+target_node = NodePath("..")
