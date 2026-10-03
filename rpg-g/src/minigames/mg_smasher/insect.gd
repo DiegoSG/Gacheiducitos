@@ -1,3 +1,4 @@
+class_name Insect
 extends Area2D
 
 signal smashed
@@ -74,6 +75,12 @@ func _process(delta: float) -> void:
 
 func _input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		smashed.emit()
-		is_active = false
-		queue_free()
+		smash()
+
+## Golpea al bicho (click de mouse o cursor de input). Ignora golpes repetidos.
+func smash() -> void:
+	if not is_active:
+		return
+	is_active = false
+	smashed.emit()
+	queue_free()
