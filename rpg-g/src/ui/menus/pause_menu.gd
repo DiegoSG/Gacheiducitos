@@ -90,7 +90,7 @@ func _open_save() -> void:
 	for node: Node in buttons:
 		var button: Button = node as Button
 		if button.is_visible_in_tree() and not button.disabled:
-			button.grab_focus()
+			button.grab_focus.call_deferred()
 			break
 
 func _show_sub(sub: Control) -> void:

@@ -58,7 +58,13 @@ func open_inventory() -> void:
 		GameManager.request_pause()
 		refresh_ui()
 		if item_list:
-			item_list.grab_focus()
+			_focus_list.call_deferred()
+
+func _focus_list() -> void:
+	if item_list and is_open():
+		item_list.grab_focus()
+		if item_list.item_count > 0 and item_list.get_selected_items().is_empty():
+			item_list.select(0)
 
 func close_inventory() -> void:
 	if control and control.visible:

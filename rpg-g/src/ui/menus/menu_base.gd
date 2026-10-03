@@ -44,7 +44,7 @@ func focus_first() -> void:
 	for child: Node in _button_list.get_children():
 		var button: Button = child as Button
 		if button != null and not button.disabled:
-			button.grab_focus()
+			button.grab_focus.call_deferred()
 			return
 
 func _unhandled_input(event: InputEvent) -> void:
