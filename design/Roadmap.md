@@ -36,12 +36,13 @@ Mapa completo por contexto y hardware en la hoja "Gacheiducitos - Mapa de Contro
 Esquema de botones: abajo = Acción, izquierda = Secundario (atacar, disparar, avance rápido de diálogo), arriba = Inventario, derecha = Comodín (reservado; hace de Atrás en menús, por confirmar). Pausa = Start.
 
 - [ ] **Separar acciones de gameplay de las `ui_*`:** `move_*`, `interact`, `attack`, `block`, `pause`, `inventory`, `slot_1..4`. Las `ui_*` quedan solo para menús.
-- [ ] **Limpiar mapeos extra:** quitar Back (inventario) y LB (ataque) del InputMap; el D-Pad deja de mover en gameplay (queda para slots) y Agacharse en Runner pasa solo al stick.
+- [ ] **Limpiar mapeos extra:** quitar Back (inventario) y LB (ataque) del InputMap; el D-Pad deja de mover en Overworld (sus 4 flechas son los slots) y el stick izquierdo queda como único movimiento. En minijuegos no hay slots y el D-Pad queda libre.
 - [ ] **Teclado nuevo:** K ataca/dispara/avance rápido, L bloquea, Tab/I inventario, P pausa, Esc atrás, E/Espacio/Enter acción.
 - [ ] **Bloqueo (`block`):** acción y comportamiento del jugador (LB/L1/L en mando).
 - [ ] **4 slots de equipado rápido:** teclas 1-4 y D-Pad (↑ → ↓ ←). Sirven para cambiar arma, consumir poción y cambiar escudo.
 - [ ] **Asignación de slots desde el inventario:** con el inventario abierto, las teclas 1-4 (D-Pad) asignan el ítem seleccionado. Solo armas, escudos y consumibles; no llaves ni ítems de quest.
-- [ ] **Menús unificados (inicio, pausa y opciones):** mismo esquema de navegación en los tres; Start abre y cierra la pausa. Salir de un minijuego se hace desde la pausa.
+- [ ] **Menús unificados (inicio, pausa y opciones):** mismo esquema de navegación en los tres; Start abre y cierra la pausa. La pausa de un minijuego incluye "Abandonar minijuego", que cuenta como perder.
+- [ ] **Runner con mando:** A salta, X dispara, D-Pad abajo agacha. Evaluando desplazamiento lateral con D-Pad izquierda/derecha.
 - [ ] **Pausa en minijuegos:** conectar `pause` en Runner, Catcher, Trampolín, Smasher y Excavación.
 - [ ] **Diálogos:** el texto se escribe solo; Acción lo completa de golpe; Acción de nuevo pasa al siguiente; Avance rápido salta al final del diálogo o al próximo nodo de decisión.
 - [ ] **Smasher con mando:** cursor movido con el stick izquierdo y Acción para golpear (hoy solo responde a click de mouse).
