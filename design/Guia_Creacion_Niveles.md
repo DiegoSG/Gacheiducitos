@@ -1,5 +1,7 @@
 # Guía Práctica: Creación de Niveles Overworld desde Cero (Vertical Slice)
 
+> Para diseñar la planta (layout, tamaños, zonas, puntos de interés) ver `Guia_Plantas_de_Nivel.md`.
+
 Esta guía paso a paso está diseñada para que cualquier desarrollador o diseñador de niveles pueda construir un nivel completamente funcional y conectado desde cero en **RPG-G (Godot 4.6)**.
 
 ---
@@ -19,7 +21,7 @@ Cada nivel de Overworld está compuesto por:
 
 ### Paso 1: Duplicar la Plantilla Base
 1. En el panel **FileSystem** (Archivos) de Godot, navega a `res://src/overworld/levels/`.
-2. Haz clic derecho sobre `prototype_template.tscn` ➔ **Duplicate...** (o abre la escena y haz *Scene ➔ Save Scene As...*).
+2. Haz clic derecho sobre `level_template.tscn` ➔ **Duplicate...** (o abre la escena y haz *Scene ➔ Save Scene As...*).
 3. Nómbrala con la nomenclatura estándar en `snake_case`, por ejemplo: `level_forest_entrance.tscn` o `level_dungeon_room1.tscn`.
 4. Abre tu nueva escena. En el árbol de nodos, cambia el nombre del nodo raíz al nombre de tu nivel.
 
