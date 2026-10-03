@@ -49,5 +49,5 @@ Esquema de botones: abajo = Acción, izquierda = Secundario (atacar, disparar, a
 - [ ] **Debug F3:** pasar `KEY_F3` hardcodeado a una acción del InputMap.
 - [ ] **Mapa del mundo (descubrimiento progresivo):** el mapa se va revelando a medida que el jugador avanza; guardar lo descubierto en el sistema de guardado.
 - [ ] **Controles del mapa:** M / View-Create-Select abre y cierra; mover con WASD o stick; zoom in/out con +/− o rueda y gatillos RT/LT (R2/L2, ZR/ZL); Secundario (K/X/□/Y) centra en el jugador.
-- [ ] **Puntos de interés de las Quest en el mapa:** marcadores de los objetivos de las misiones activas, visibles al abrir el mapa (solo en zonas ya descubiertas, o con marcador aproximado si no; por definir).
+- [ ] **Puntos de interés de las Quest en el mapa:** marcadores de los objetivos de las misiones activas, visibles al abrir el mapa. Aparecen siempre, incluso sobre zonas aún no descubiertas.
 - [ ] **Controles táctiles (Android):** joystick virtual y botones Acción, Secundario, Bloqueo, Mochila, Pausa y slots 1-4 (reemplaza el ítem de Backlog "Controles de Minijuegos en Móviles").
