@@ -33,7 +33,7 @@
 
 ## Controles y Joystick (esquema unificado)
 Mapa completo por contexto y hardware en la hoja "Gacheiducitos - Mapa de Controles" (Drive). Principio: los inputs no cambian entre contextos, para que aprender a jugar sea simple.
-Esquema de botones: abajo = Acción, izquierda = Secundario (atacar, disparar, avance rápido de diálogo), arriba = Inventario, derecha = Comodín (reservado; hace de Atrás en menús, por confirmar). Pausa = Start.
+Esquema de botones: abajo = Acción, izquierda = Secundario (atacar, disparar, avance rápido de diálogo), arriba = Inventario, derecha = Comodín (reservado; hace de Atrás en menús, por confirmar). Pausa = Start. Stick derecho libre: solo se usaría para los slots si el mando elegido no tiene flechas.
 
 - [ ] **Separar acciones de gameplay de las `ui_*`:** `move_*`, `interact`, `attack`, `block`, `pause`, `inventory`, `slot_1..4`. Las `ui_*` quedan solo para menús.
 - [ ] **Limpiar mapeos extra:** quitar Back (inventario) y LB (ataque) del InputMap; el D-Pad deja de mover en Overworld (sus 4 flechas son los slots) y el stick izquierdo queda como único movimiento. En minijuegos no hay slots y el D-Pad queda libre.
@@ -41,7 +41,7 @@ Esquema de botones: abajo = Acción, izquierda = Secundario (atacar, disparar, a
 - [ ] **Bloqueo (`block`):** acción y comportamiento del jugador (LB/L1/L en mando).
 - [ ] **4 slots de equipado rápido:** teclas 1-4 y D-Pad (↑ → ↓ ←). Sirven para cambiar arma, consumir poción y cambiar escudo.
 - [ ] **Asignación de slots desde el inventario:** con el inventario abierto, las teclas 1-4 (D-Pad) asignan el ítem seleccionado. Solo armas, escudos y consumibles; no llaves ni ítems de quest.
-- [ ] **Menús unificados (inicio, pausa y opciones):** mismo esquema de navegación en los tres; Start abre y cierra la pausa. La pausa de un minijuego incluye "Abandonar minijuego", que cuenta como perder.
+- [ ] **Menús unificados (inicio, pausa y opciones):** mismo esquema de navegación en los tres; Start abre y cierra la pausa. La pausa de un minijuego incluye "Abandonar minijuego", que cuenta como perder (se pierden los ítems recogidos en esa partida).
 - [ ] **Runner con mando:** A salta, X dispara, D-Pad abajo agacha. Evaluando desplazamiento lateral con D-Pad izquierda/derecha.
 - [ ] **Pausa en minijuegos:** conectar `pause` en Runner, Catcher, Trampolín, Smasher y Excavación.
 - [ ] **Diálogos:** el texto se escribe solo; Acción lo completa de golpe; Acción de nuevo pasa al siguiente; Avance rápido salta al final del diálogo o al próximo nodo de decisión.
