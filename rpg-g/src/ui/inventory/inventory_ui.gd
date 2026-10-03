@@ -2,7 +2,6 @@ extends CanvasLayer
 
 @onready var control: Control = $Control
 @onready var item_list: ItemList = $Control/Panel/ItemList
-@onready var save_menu: Panel = $Control/SaveMenuUI
 
 var _notice_label: Label = null
 var _notice_tween: Tween = null
@@ -21,20 +20,28 @@ func _ready() -> void:
 	_create_notice_label()
 	refresh_ui()
 
-func _unhandled_input(event: InputEvent) -> void:
+## Se procesa en _input (antes que la GUI) para que Tab, los slots y ui_cancel
+## no sean consumidos por el foco de la lista (Tab es también ui_focus_next).
+## Con el inventario abierto, las flechas del D-Pad asignan slots; para navegar
+## la lista se usan el stick izquierdo o las flechas/WASD del teclado.
+func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_inventory"):
+		if not is_open() and get_tree().paused:
+			return
 		toggle_inventory()
 		get_viewport().set_input_as_handled()
 		return
-	if is_open():
-		for i: int in QuickSlots.SLOT_COUNT:
-			if event.is_action_pressed("slot_%d" % (i + 1)):
-				_assign_selected_to_slot(i)
-				get_viewport().set_input_as_handled()
-				return
-	elif is_open() and event.is_action_pressed("ui_cancel"):
+	if not is_open():
+		return
+	if event.is_action_pressed("ui_cancel"):
 		close_inventory()
 		get_viewport().set_input_as_handled()
+		return
+	for i: int in QuickSlots.SLOT_COUNT:
+		if event.is_action_pressed("slot_%d" % (i + 1)):
+			_assign_selected_to_slot(i)
+			get_viewport().set_input_as_handled()
+			return
 
 func toggle_inventory() -> void:
 	if not control:
@@ -50,12 +57,14 @@ func open_inventory() -> void:
 		control.visible = true
 		GameManager.request_pause()
 		refresh_ui()
-		if save_menu and save_menu.has_method("refresh"):
-			save_menu.refresh()
+		if item_list:
+			item_list.grab_focus()
 
 func close_inventory() -> void:
 	if control and control.visible:
 		control.visible = false
+		if item_list:
+			item_list.release_focus()
 		GameManager.release_pause()
 
 func _exit_tree() -> void:
@@ -74,6 +83,7 @@ func _on_inventory_changed() -> void:
 func refresh_ui() -> void:
 	if not item_list:
 		return
+	var previous: PackedInt32Array = item_list.get_selected_items()
 	item_list.clear()
 	
 	var items: Dictionary = Inventory.get_items()
@@ -96,6 +106,10 @@ func refresh_ui() -> void:
 			idx = item_list.add_item("%s (x%d)%s" % [item_id, amount, slot_tag])
 			
 		item_list.set_item_metadata(idx, item_id)
+
+	# Conserva la selección (o selecciona el primero) para poder navegar con mando/teclado.
+	var keep: int = previous[0] if not previous.is_empty() else 0
+	item_list.select(clampi(keep, 0, item_list.item_count - 1))
 
 func _on_item_activated(index: int) -> void:
 	if not item_list:

@@ -19,27 +19,20 @@ func _ready() -> void:
 	_menu.focus_first()
 
 func _build_items() -> void:
-	var continue_slot: int = _get_latest_slot()
-	if continue_slot >= 0:
-		_menu.add_item("Continuar", _on_continue_pressed.bind(continue_slot))
+	if _has_autosave():
+		_menu.add_item("Continuar", _on_continue_pressed)
 	_menu.add_item("Jugar", _on_play_pressed)
 	_menu.add_item("Opciones", _on_options_pressed)
 	_menu.add_item("Salir", _on_quit_pressed)
 
-## Devuelve el slot con partida más reciente (incluye autoguardado) o -1 si no hay ninguno.
-func _get_latest_slot() -> int:
-	var best_slot: int = -1
-	var best_time: float = -1.0
+## Continuar solo existe si hay autoguardado; las partidas manuales se cargan desde Pausa > Guardar.
+func _has_autosave() -> bool:
 	var metadatas: Array[Dictionary] = SaveSystem.get_all_slots_metadata()
-	for slot_id: int in metadatas.size():
-		var meta: Dictionary = metadatas[slot_id]
-		if meta.get("exists", false) and float(meta.get("timestamp", 0.0)) > best_time:
-			best_time = float(meta.get("timestamp", 0.0))
-			best_slot = slot_id
-	return best_slot
+	var id: int = SaveSystem.AUTOSAVE_SLOT_ID
+	return id >= 0 and id < metadatas.size() and bool(metadatas[id].get("exists", false))
 
-func _on_continue_pressed(slot_id: int) -> void:
-	SaveSystem.load_slot(slot_id)
+func _on_continue_pressed() -> void:
+	SaveSystem.load_slot(SaveSystem.AUTOSAVE_SLOT_ID)
 
 func _on_play_pressed() -> void:
 	GameManager.change_level(NEW_GAME_LEVEL)

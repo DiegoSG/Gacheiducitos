@@ -89,7 +89,7 @@ func _open_save() -> void:
 	var buttons: Array[Node] = save_ui.find_children("*", "Button", true, false)
 	for node: Node in buttons:
 		var button: Button = node as Button
-		if not button.disabled:
+		if button.is_visible_in_tree() and not button.disabled:
 			button.grab_focus()
 			break
 

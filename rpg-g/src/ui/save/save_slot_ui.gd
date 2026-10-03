@@ -59,3 +59,11 @@ func update_view(metadata: Dictionary) -> void:
 		details_label.text = "[Ranura Vacía]"
 		if load_btn: load_btn.disabled = true
 		if delete_btn and not is_autosave: delete_btn.visible = false
+		_update_focus_modes()
+
+## Los botones deshabilitados u ocultos no deben ser parada del foco (teclado/mando).
+func _update_focus_modes() -> void:
+	for button: Button in [save_btn, load_btn, delete_btn]:
+		if button:
+			var usable: bool = button.visible and not button.disabled
+			button.focus_mode = Control.FOCUS_ALL if usable else Control.FOCUS_NONE
