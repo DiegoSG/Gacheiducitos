@@ -89,7 +89,7 @@ func _on_body_exited(body: Node2D) -> void:
 		ActionRunner.run(on_exit_actions, self)
 
 func _restore_state() -> void:
-	if _persistence_key.is_empty():
+	if Engine.is_editor_hint() or _persistence_key.is_empty():
 		return
 	if WorldStateManager.has_state(_persistence_key):
 		var data: Dictionary = WorldStateManager.load_state(_persistence_key)
@@ -97,7 +97,7 @@ func _restore_state() -> void:
 		is_pressed = data.get("is_pressed", false)
 
 func _persist_state() -> void:
-	if _persistence_key.is_empty():
+	if Engine.is_editor_hint() or _persistence_key.is_empty():
 		return
 	WorldStateManager.save_state(_persistence_key, {
 		"has_triggered": _has_triggered,
