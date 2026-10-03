@@ -326,6 +326,3 @@ func _win_game() -> void:
 	_stop_world()
 	finish(true)
 
-func _unhandled_input(event: InputEvent) -> void:
-	if is_playing and event.is_action_pressed("ui_cancel"):
-		finish(false)
