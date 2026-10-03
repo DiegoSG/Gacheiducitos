@@ -47,4 +47,6 @@ Esquema de botones: abajo = Acción, izquierda = Secundario (atacar, disparar, a
 - [ ] **Diálogos:** el texto se escribe solo; Acción lo completa de golpe; Acción de nuevo pasa al siguiente; Avance rápido salta al final del diálogo o al próximo nodo de decisión.
 - [ ] **Smasher con mando:** cursor movido con el stick izquierdo y Acción para golpear (hoy solo responde a click de mouse).
 - [ ] **Debug F3:** pasar `KEY_F3` hardcodeado a una acción del InputMap.
+- [ ] **Mapa del mundo (descubrimiento progresivo):** el mapa se va revelando a medida que el jugador avanza; guardar lo descubierto en el sistema de guardado.
+- [ ] **Controles del mapa:** M / View-Create-Select abre y cierra; mover con WASD o stick; zoom in/out con +/− o rueda y gatillos RT/LT (R2/L2, ZR/ZL); Secundario (K/X/□/Y) centra en el jugador.
 - [ ] **Controles táctiles (Android):** joystick virtual y botones Acción, Secundario, Bloqueo, Mochila, Pausa y slots 1-4 (reemplaza el ítem de Backlog "Controles de Minijuegos en Móviles").
