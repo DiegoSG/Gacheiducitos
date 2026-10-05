@@ -15,6 +15,7 @@ assert(a.includes('name="at_P03" parent="SpawnPoints"'), "llegada de P03 vive en
 assert(b.includes('arrival_id = "at_P03_local"'), "P03 conserva un id propio distinto");
 assert(b.includes("win_spawn_id = \"at_M01_win\"") && b.includes("minigame_type = 2"));
 assert(a.includes('persistence_id = "level_01_E01"') && a.includes('name="SceneMusic"'));
+assert(Object.values(out).some(t => t.includes('path="res://src/overworld/npcs/npc_barnaby.tscn"')) && !Object.values(out).some(t => t.includes("dummy_npc")), "NPCs usan npc_barnaby.tscn");
 assert(ctx.genPromptsDoc(spec).includes("PROMPT: agregar un arbol grande"));
 const dir = process.argv[2]; if (dir) { fs.mkdirSync(dir, { recursive: true }); for (const k in out) fs.writeFileSync(path.join(dir, k), out[k]); }
 console.log("OK");

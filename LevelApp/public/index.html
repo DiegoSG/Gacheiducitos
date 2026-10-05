@@ -491,8 +491,8 @@ function genScene(sp, L){
   const ent=(e,scene,extra)=>N(gname(e.id),null,"Entities",["position = "+gvec(e.px.x,e.px.y),...extra,"metadata/levelapp_id = "+gq(e.id)],scene);
   const enemy=R("enemy","PackedScene",SC+"enemies/generic_enemy.tscn");
   for(const e of L.enemies) ent(e,enemy,["persistence_id = "+gq(key+"_"+e.id),"metadata/levelapp_enemy_type = "+gq(e.enemy_type||"")]);
-  const npc=R("npc","PackedScene",SC+"npcs/dummy_npc.tscn");
-  for(const e of L.npcs) ent(e,npc,["metadata/levelapp_npc = "+gq(e.npc_name||"")]);
+  const npc=R("npc","PackedScene",SC+"npcs/npc_barnaby.tscn");
+  for(const e of L.npcs) ent(e,npc,[...(e.npc_name?["npc_name = "+gq(e.npc_name)]:[]),"metadata/levelapp_npc = "+gq(e.npc_name||"")]);
   const chest=R("chest","PackedScene",SC+"interactables/chest.tscn");
   for(const e of L.chests) ent(e,chest,["persistence_id = "+gq(key+"_"+e.id),"metadata/levelapp_contents = "+gq(e.contents||"")]);
   const mgs=R("mg","PackedScene",SC+"interactables/minigame_interactable.tscn");
