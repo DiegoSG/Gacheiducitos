@@ -32,6 +32,13 @@ var config: Dictionary = {}
 var gravity_timer: float = 0.0
 const GRAVITY_TICK: float = 0.12 # Mismo delay que el movimiento del jugador
 
+# Intervalo mínimo entre sonidos de paso
+const STEP_SOUND_INTERVAL: float = 0.25
+var _step_sound_cooldown: float = 0.0
+
+# Motivo con el que _explode_at encadena la explosión de otras bombas
+const CHAIN_EXPLOSION_REASON: String = "EXPLOSIÓN EN CADENA"
+
 # Sistema de movimiento continuo
 var move_timer: float = 0.0
 const MOVE_DELAY: float = 0.12
@@ -103,6 +110,7 @@ func _ready() -> void:
 	# Configurar cámara
 	_setup_camera()
 	
+	AudioManager.play_sfx(&"sfx_exc_start")
 	queue_redraw()
 
 func _setup_camera() -> void:
@@ -197,6 +205,8 @@ func _try_plant_bomb() -> void:
 		"pos": player_grid_pos,
 		"timer": 4.0
 	})
+	AudioManager.play_sfx(&"sfx_exc_bomb_plant")
+	AudioManager.play_sfx(&"sfx_exc_bomb_fuse")
 	queue_redraw()
 
 func _update_placed_bombs(delta: float) -> void:
@@ -210,6 +220,7 @@ func _update_placed_bombs(delta: float) -> void:
 	active_placed_bombs = remaining
 
 func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
+	AudioManager.play_sfx(&"sfx_exc_chain_explosion" if _reason == CHAIN_EXPLOSION_REASON else &"sfx_exc_explosion")
 	# Destruir área de 3x3
 	var player_caught = false
 	var chain_explosions: Array[Vector2i] = []
@@ -246,7 +257,7 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 	
 	# Ejecutar explosiones en cadena
 	for next_bomb in chain_explosions:
-		_explode_at(next_bomb, "EXPLOSIÓN EN CADENA")
+		_explode_at(next_bomb, CHAIN_EXPLOSION_REASON)
 	
 	if player_caught:
 		_player_crushed()
@@ -264,6 +275,7 @@ func _interpolate_visuals(delta: float) -> void:
 		data.visual_pos = data.visual_pos.lerp(target_world, interp_speed * delta)
 
 func _handle_continuous_movement(delta: float) -> void:
+	_step_sound_cooldown = maxf(0.0, _step_sound_cooldown - delta)
 	var direction: Vector2i = Vector2i.ZERO
 	
 	if input_stack.size() > 0:
@@ -475,12 +487,15 @@ func _collect_tile(pos: Vector2i, tile: int) -> bool:
 	match tile:
 		TileType.BOMB_PICKUP:
 			player_bombs_ammo += 1
+			AudioManager.play_sfx(&"sfx_exc_bomb_pickup")
 		TileType.ITEM_INVENTARIO:
 			var item_id: String = Inventory.GOLD_ITEM_ID
 			if item_pool.size() > 0:
 				item_id = str(item_pool[randi() % item_pool.size()])
+			AudioManager.play_sfx(&"sfx_exc_item")
 			add_reward(item_id, 1)
 		TileType.ITEM_RECOMPENSA:
+			AudioManager.play_sfx(&"sfx_exc_coin")
 			add_reward(Inventory.GOLD_ITEM_ID, 1)
 			coins_collected += 1
 			var key: String = str(pos.x) + "," + str(pos.y)
@@ -488,6 +503,7 @@ func _collect_tile(pos: Vector2i, tile: int) -> bool:
 				falling_visuals.erase(key)
 		TileType.ITEM_MISION:
 			mission_item_collected = true
+			AudioManager.play_sfx(&"sfx_exc_quest_item")
 		_:
 			return false
 	return true
@@ -505,9 +521,11 @@ func _try_move_player(direction: Vector2i) -> void:
 		if _try_push_rock(new_pos, direction):
 			player_grid_pos = new_pos
 			is_pushing_rock = true
+			AudioManager.play_sfx(&"sfx_exc_push")
 			queue_redraw()
 		else:
 			is_pushing_rock = false
+			AudioManager.play_sfx(&"sfx_exc_push_blocked")
 		return
 	
 	# Movimiento normal
@@ -516,9 +534,13 @@ func _try_move_player(direction: Vector2i) -> void:
 	match target_tile:
 		TileType.EMPTY:
 			player_grid_pos = new_pos
+			if _step_sound_cooldown <= 0.0:
+				_step_sound_cooldown = STEP_SOUND_INTERVAL
+				AudioManager.play_sfx(&"sfx_exc_step")
 			queue_redraw()
 		
 		TileType.TIERRA:
+			AudioManager.play_sfx(&"sfx_exc_dig")
 			grid[new_pos.y][new_pos.x] = TileType.EMPTY
 			player_grid_pos = new_pos
 			queue_redraw()
@@ -533,7 +555,10 @@ func _try_move_player(direction: Vector2i) -> void:
 			if _is_win_condition_met():
 				player_grid_pos = new_pos
 				queue_redraw()
+				AudioManager.play_ui(&"sfx_exc_exit_open")
 				finish(true)
+			else:
+				AudioManager.play_sfx(&"sfx_exc_exit_blocked")
 
 func _try_push_rock(rock_pos: Vector2i, direction: Vector2i) -> bool:
 	# Solo se pueden empujar horizontalmente
@@ -582,6 +607,7 @@ func _try_dig_adjacent(direction: Vector2i) -> void:
 	var target_tile = grid[target_pos.y][target_pos.x]
 
 	if target_tile == TileType.TIERRA:
+		AudioManager.play_sfx(&"sfx_exc_dig")
 		grid[target_pos.y][target_pos.x] = TileType.EMPTY
 		queue_redraw()
 	elif _collect_tile(target_pos, target_tile):
@@ -640,6 +666,8 @@ func _update_gravity():
 							continue
 				
 				var res = _try_fall_rock(x, y, was_falling, tile)
+				if was_falling and not res.moved and tile == TileType.PIEDRA:
+					AudioManager.play_sfx(&"sfx_exc_rock_land")
 				
 				if res.moved:
 					moved = true
@@ -656,6 +684,8 @@ func _update_gravity():
 							"type": tile
 						})
 						if res.rotated:
+							if tile == TileType.PIEDRA:
+								AudioManager.play_sfx(&"sfx_exc_rock_slide")
 							visual_data.rotation += PI/2
 						falling_visuals[new_key] = visual_data
 						if new_key != key:
@@ -709,6 +739,7 @@ func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictio
 			var key = str(x) + "," + str(y)
 			if falling_visuals.has(key):
 				falling_visuals.erase(key)
+			AudioManager.play_sfx(&"sfx_exc_bomb_impact")
 			_explode_at(Vector2i(x, y), "BOMBA AMBIENTAL IMPACTO")
 			result.moved = true
 			return result
@@ -729,12 +760,15 @@ func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictio
 				var key = str(x) + "," + str(y)
 				if falling_visuals.has(key):
 					falling_visuals.erase(key)
+				AudioManager.play_sfx(&"sfx_exc_bomb_impact")
 				_explode_at(dest, "BOMBA AMBIENTAL IMPACTO DIRECTO")
 				result.moved = true
 				return result
 			else:
 				_player_crushed()
 		
+		if not was_falling and tile_type == TileType.PIEDRA:
+			AudioManager.play_sfx(&"sfx_exc_rock_fall")
 		grid[dest.y][dest.x] = tile_type
 		grid[y][x] = TileType.EMPTY
 		result.moved = true
@@ -778,10 +812,12 @@ func _player_crushed() -> void:
 	if is_player_dead:
 		return
 	is_player_dead = true
+	AudioManager.play_ui(&"sfx_exc_crushed")
 
 	# Feedback visual inmediato
 	queue_redraw()
 	
 	# Terminar inmediatamente (o con un frame de delay para ver el impacto)
 	await get_tree().process_frame
+	AudioManager.play_ui(&"sfx_exc_lose")
 	finish(false)

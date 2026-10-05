@@ -57,11 +57,13 @@ func _update_visuals() -> void:
 
 func action() -> void:
 	if not is_toggleable and is_on:
+		AudioManager.play_sfx(&"sfx_switch_used")
 		return
 
 	is_on = not is_on
 	state_changed.emit(is_on)
 
+	AudioManager.play_sfx(&"sfx_switch_on" if is_on else &"sfx_switch_off")
 	if is_on:
 		turned_on.emit()
 		ActionRunner.run(trigger_actions, self)

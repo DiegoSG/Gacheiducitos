@@ -26,6 +26,9 @@ extends CanvasLayer
 ## Máximo de líneas que el avance rápido recorre de una vez (evita bucles infinitos)
 @export var fast_forward_max_lines: int = 256
 
+## Segundos mínimos entre dos sonidos de letra del texto escribiéndose
+const TYPE_SOUND_INTERVAL: float = 0.05
+
 ## Frames de gracia tras abrir el diálogo en los que se ignora el input (evita que la pulsación que lo abrió avance la primera línea)
 @export var open_input_grace_frames: int = 2
 
@@ -49,6 +52,9 @@ var _input_unlock_frame: int = 0
 
 ## Evita reentradas mientras corre el avance rápido
 var _is_fast_forwarding: bool = false
+
+## Segundos que faltan para permitir el siguiente sonido de letra
+var _type_sound_cooldown: float = 0.0
 
 var _locale: String = TranslationServer.get_locale()
 
@@ -91,6 +97,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	balloon.hide()
 	DialogueManager.mutated.connect(_on_mutated)
+	dialogue_label.spoke.connect(_on_dialogue_label_spoke)
+	responses_menu.response_focused.connect(_on_responses_menu_response_focused)
 
 	# If the responses menu doesn't have a next action set, use this one
 	if responses_menu.next_action.is_empty():
@@ -106,7 +114,8 @@ func _ready() -> void:
 		start()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_type_sound_cooldown = maxf(0.0, _type_sound_cooldown - delta)
 	if is_instance_valid(dialogue_line):
 		progress.visible = not dialogue_label.is_typing and dialogue_line.responses.size() == 0 and not dialogue_line.has_tag("voice")
 
@@ -138,6 +147,7 @@ func start(with_dialogue_resource: DialogueResource = null, title: String = "", 
 		start_from_title = title
 	dialogue_line = await dialogue_resource.get_next_dialogue_line(start_from_title, temporary_game_states)
 	show()
+	AudioManager.play_ui(&"sfx_dialogue_open")
 
 
 ## Apply any changes to the balloon given a new [DialogueLine].
@@ -171,9 +181,11 @@ func apply_dialogue_line() -> void:
 		await dialogue_label.finished_typing
 		# Si mientras tanto se cambió de línea (p. ej. avance rápido), no seguir con esta
 		if dialogue_line != current_line: return
+		AudioManager.play_ui(&"sfx_dialogue_line_done")
 
 	# Wait for next line
 	if dialogue_line.has_tag("voice"):
+		AudioManager.play_ui(&"sfx_dialogue_voice")
 		audio_stream_player.stream = load(dialogue_line.get_tag_value("voice"))
 		audio_stream_player.play()
 		await audio_stream_player.finished
@@ -182,6 +194,7 @@ func apply_dialogue_line() -> void:
 	elif dialogue_line.responses.size() > 0:
 		balloon.focus_mode = Control.FOCUS_NONE
 		responses_menu.show()
+		AudioManager.play_ui(&"sfx_dialogue_responses_shown")
 	elif dialogue_line.time != "":
 		var time: float = dialogue_line.text.length() * 0.02 if dialogue_line.time == "auto" else dialogue_line.time.to_float()
 		await get_tree().create_timer(time).timeout
@@ -191,6 +204,7 @@ func apply_dialogue_line() -> void:
 		is_waiting_for_input = true
 		balloon.focus_mode = Control.FOCUS_ALL
 		balloon.grab_focus()
+		AudioManager.play_ui(&"sfx_dialogue_continue_shown")
 
 
 ## Go to the next line
@@ -204,6 +218,7 @@ func fast_forward() -> void:
 	if _is_fast_forwarding or not is_instance_valid(dialogue_line): return
 	_is_fast_forwarding = true
 	is_waiting_for_input = false
+	AudioManager.play_ui(&"sfx_dialogue_fast_forward")
 	var line: DialogueLine = dialogue_line
 	var iterations: int = 0
 	# La línea actual ya pide decisión: solo completar su texto
@@ -254,6 +269,7 @@ func _on_balloon_gui_input(event: InputEvent) -> void:
 		var skip_button_was_pressed: bool = event.is_action_pressed(skip_action) or event.is_action_pressed(next_action)
 		if mouse_was_clicked or skip_button_was_pressed:
 			get_viewport().set_input_as_handled()
+			AudioManager.play_ui(&"sfx_dialogue_skip")
 			dialogue_label.skip_typing()
 			return
 
@@ -264,12 +280,26 @@ func _on_balloon_gui_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 	if event is InputEventMouseButton and event.is_pressed() and event.button_index == MOUSE_BUTTON_LEFT:
+		AudioManager.play_ui(&"sfx_dialogue_next")
 		next(dialogue_line.next_id)
 	elif event.is_action_pressed(next_action) and get_viewport().gui_get_focus_owner() == balloon:
+		AudioManager.play_ui(&"sfx_dialogue_next")
 		next(dialogue_line.next_id)
+
+
+func _on_dialogue_label_spoke(letter: String, _letter_index: int, _speed: float) -> void:
+	if _type_sound_cooldown > 0.0 or letter.strip_edges().is_empty():
+		return
+	_type_sound_cooldown = TYPE_SOUND_INTERVAL
+	AudioManager.play_ui(&"sfx_dialogue_type")
+
+
+func _on_responses_menu_response_focused(_response: Control) -> void:
+	AudioManager.play_ui(&"sfx_dialogue_response_focus")
 
 
 func _on_responses_menu_response_selected(response: DialogueResponse) -> void:
+	AudioManager.play_ui(&"sfx_dialogue_response_select")
 	next(response.next_id)
 
 

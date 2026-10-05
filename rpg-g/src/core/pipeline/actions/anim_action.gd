@@ -28,6 +28,7 @@ func execute(trigger_node: Node) -> void:
 		return
 		
 	var handled: bool = false
+	AudioManager.play_sfx(&"sfx_anim_action")
 	
 	# Caso 1: AnimationPlayer
 	var ap: AnimationPlayer = null

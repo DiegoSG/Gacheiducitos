@@ -2,6 +2,8 @@ extends CharacterBody2D
 class_name CatcherPlayer
 
 var speed: float = 600.0
+const MOVE_SOUND_INTERVAL: float = 0.25
+var _move_sound_timer: float = 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 
@@ -13,7 +15,7 @@ func _ready() -> void:
 	if sprite:
 		sprite.texture = TEX_DOWN
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	var input_dir: float = Input.get_axis("move_left", "move_right")
 	velocity.x = input_dir * speed
 	velocity.y = 0
@@ -30,6 +32,14 @@ func _physics_process(_delta: float) -> void:
 			sprite.flip_h = false
 
 	move_and_slide()
+
+	if input_dir != 0.0:
+		_move_sound_timer -= delta
+		if _move_sound_timer <= 0.0:
+			_move_sound_timer = MOVE_SOUND_INTERVAL
+			AudioManager.play_sfx(&"sfx_catch_move")
+	else:
+		_move_sound_timer = 0.0
 
 	var screen_size: Vector2 = get_viewport_rect().size
 	var margin: float = 20.0

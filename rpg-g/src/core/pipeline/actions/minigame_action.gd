@@ -457,6 +457,7 @@ func execute(_trigger_node: Node) -> void:
 	final_config["lose_level_path"] = lose_level_path
 	final_config["lose_spawn_id"] = lose_spawn_id
 
+	AudioManager.play_ui(&"sfx_minigame_interact")
 	GameManager.minigame_config = final_config
 	GameManager.load_minigame(target_scene)
 	finished.emit()

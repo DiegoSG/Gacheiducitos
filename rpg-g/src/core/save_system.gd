@@ -43,8 +43,12 @@ func save_slot(slot_id: int) -> void:
 	if file:
 		file.store_string(JSON.stringify(data, "\t"))
 		file.close()
+		# El autoguardado suena con sfx_save_autosave (CheckpointManager)
+		if slot_id != AUTOSAVE_SLOT_ID:
+			AudioManager.play_ui(&"sfx_save_done")
 		game_saved.emit(slot_id)
 	else:
+		AudioManager.play_ui(&"sfx_save_error")
 		push_error("[SaveSystem] Error guardando archivo: ", file_path)
 
 func load_slot(slot_id: int) -> void:
@@ -94,6 +98,7 @@ func load_slot(slot_id: int) -> void:
 		get_tree().paused = false
 		await GameManager.change_level(path, "", pos, true, true)
 
+	AudioManager.play_ui(&"sfx_save_loaded")
 	game_loaded.emit(slot_id)
 
 func get_slot_metadata(slot_id: int) -> Dictionary:
@@ -150,6 +155,7 @@ func delete_slot(slot_id: int) -> void:
 	if FileAccess.file_exists(file_path):
 		var err: Error = DirAccess.remove_absolute(file_path)
 		if err == OK:
+			AudioManager.play_ui(&"sfx_save_deleted")
 			game_deleted.emit(slot_id)
 		else:
 			push_error("[SaveSystem] Error al borrar el archivo: ", file_path)

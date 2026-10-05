@@ -22,6 +22,9 @@ const COLOR_HEALTH_EMPTY: Color = Color(0.25, 0.25, 0.25, 0.4) # Gris apagado
 var _slot_icons: Array[TextureRect] = []
 var _slot_counts: Array[Label] = []
 var _active_toasts: Dictionary = {} # item_id: String -> LootToastItem
+## Último ítem mostrado por slot: el sonido solo suena cuando cambia la asignación, no la cantidad.
+var _slot_item_ids: Array[String] = []
+var _quick_slots_synced: bool = false
 
 func _ready() -> void:
 	instance = self
@@ -50,6 +53,7 @@ func _on_health_changed(current: int, max_val: int) -> void:
 	_update_health(current, max_val)
 
 func _on_status_changed(_arg: Variant) -> void:
+	AudioManager.play_ui(&"sfx_hud_status_row_changed")
 	_refresh_status_ui()
 
 func _refresh_status_ui() -> void:
@@ -140,6 +144,7 @@ func show_toast(item_data: ItemData, amount: int = 1) -> void:
 	var toast: LootToastItem = TOAST_SCENE.instantiate() as LootToastItem
 	toast_container.add_child(toast)
 	_active_toasts[item_id] = toast
+	AudioManager.play_ui(&"sfx_loot_toast_new")
 	
 	toast.tree_exited.connect(func() -> void:
 		if _active_toasts.get(item_id) == toast:
@@ -151,6 +156,7 @@ func show_toast(item_data: ItemData, amount: int = 1) -> void:
 func _punch_inventory_anchor() -> void:
 	if not inventory_anchor:
 		return
+	AudioManager.play_ui(&"sfx_loot_inventory_bounce")
 	var tween: Tween = create_tween()
 	tween.tween_property(inventory_anchor, "scale", Vector2(1.2, 1.2), 0.08).set_trans(Tween.TRANS_QUAD)
 	tween.tween_property(inventory_anchor, "scale", Vector2(1.0, 1.0), 0.12).set_trans(Tween.TRANS_BOUNCE)
@@ -188,10 +194,16 @@ func _connect_quick_slots() -> void:
 		slots.slot_changed.connect(_on_quick_slot_changed)
 	for i: int in QuickSlots.SLOT_COUNT:
 		_on_quick_slot_changed(i, slots.get_slot(i))
+	_quick_slots_synced = true
 
 func _on_quick_slot_changed(index: int, item_id: String) -> void:
 	if index < 0 or index >= _slot_icons.size():
 		return
+	while _slot_item_ids.size() < _slot_icons.size():
+		_slot_item_ids.append("")
+	if _quick_slots_synced and not QuickSlots.is_restoring and _slot_item_ids[index] != item_id:
+		AudioManager.play_ui(&"sfx_hud_slot_changed")
+	_slot_item_ids[index] = item_id
 	var data: ItemData = ItemDatabase.get_item(item_id) if not item_id.is_empty() else null
 	var count: int = Inventory.get_item_count(item_id) if data else 0
 	_slot_icons[index].texture = data.icon if data else null

@@ -52,6 +52,7 @@ func execute(trigger_node: Node) -> void:
 	if parent_node:
 		var instance: Node = scene_to_spawn.instantiate()
 		parent_node.add_child(instance)
+		AudioManager.play_sfx(&"sfx_spawn")
 		
 		if instance is Node2D:
 			(instance as Node2D).global_position = spawn_pos

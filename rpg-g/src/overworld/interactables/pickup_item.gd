@@ -135,6 +135,7 @@ func _on_body_entered(body: Node2D) -> void:
 		var default_amount: int = item_data.value if item_data.id == Inventory.GOLD_ITEM_ID else 1
 		var qty: int = custom_amount if custom_amount > 0 else default_amount
 		Inventory.add_item(item_data.id, qty)
+		AudioManager.play_sfx(&"sfx_pickup_gold" if item_data.id == Inventory.GOLD_ITEM_ID else &"sfx_pickup_item")
 		LootFeedbackManager.trigger_toast(item_data, qty)
 		
 		_persist_collected()
@@ -189,6 +190,7 @@ func _start_drop_tween(start_pos: Vector2, target_pos: Vector2, duration: float)
 
 func _on_drop_animation_finished() -> void:
 	can_be_collected = true
+	AudioManager.play_sfx(&"sfx_loot_land")
 	var sprite: Sprite2D = get_node_or_null("Sprite2D")
 	if sprite:
 		sprite.scale = _item_scale

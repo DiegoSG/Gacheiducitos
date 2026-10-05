@@ -36,6 +36,7 @@ func _on_game_event(event_name: String, _event_data: Variant = null) -> void:
 	if one_shot and _has_triggered:
 		return
 	_has_triggered = true
+	AudioManager.play_sfx(&"sfx_dialogue_event")
 	_persist_state()
 	ActionRunner.run(actions, self)
 	event_executed.emit()

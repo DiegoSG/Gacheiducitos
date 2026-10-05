@@ -25,6 +25,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 
 	is_knocked_back = true
 	health -= damage
+	AudioManager.play_sfx(&"sfx_dummy_hit")
 
 	# Efecto visual de daño
 	sprite.modulate = Color.RED
@@ -45,4 +46,5 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 
 	# Si su salud llega a cero, muere
 	if health <= 0:
+		AudioManager.play_sfx(&"sfx_dummy_destroyed")
 		queue_free()

@@ -19,4 +19,5 @@ func _process(delta: float) -> void:
 		queue_free()
 
 func die() -> void:
+	AudioManager.play_sfx(&"sfx_run_enemy_killed")
 	queue_free()

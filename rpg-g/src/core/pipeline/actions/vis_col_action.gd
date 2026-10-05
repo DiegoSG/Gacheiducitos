@@ -26,6 +26,7 @@ func execute(trigger_node: Node) -> void:
 		finished.emit()
 		return
 		
+	AudioManager.play_sfx(&"sfx_vis_col_action")
 	# Toggle Visibilidad
 	if "visible" in t_node:
 		t_node.visible = is_visible

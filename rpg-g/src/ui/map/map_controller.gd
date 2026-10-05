@@ -24,11 +24,13 @@ func _unhandled_input(event: InputEvent) -> void:
 func open_map() -> void:
 	if is_instance_valid(_menu):
 		return
+	AudioManager.play_ui(&"sfx_map_open")
 	_menu = MAP_MENU_SCENE.instantiate() as MapMenu
 	_menu.close_requested.connect(close_map)
 	add_child(_menu)
 
 func close_map() -> void:
 	if is_instance_valid(_menu):
+		AudioManager.play_ui(&"sfx_map_close")
 		_menu.queue_free()
 	_menu = null

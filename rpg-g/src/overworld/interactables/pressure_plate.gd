@@ -69,6 +69,7 @@ func _on_body_entered(body: Node2D) -> void:
 			return
 		_has_triggered = true
 		is_pressed = true
+		AudioManager.play_sfx(&"sfx_plate_pressed")
 		_persist_state()
 		pressed.emit()
 		state_changed.emit(true)
@@ -83,6 +84,7 @@ func _on_body_exited(body: Node2D) -> void:
 		if one_shot:
 			return
 		is_pressed = false
+		AudioManager.play_sfx(&"sfx_plate_released")
 		_persist_state()
 		released.emit()
 		state_changed.emit(false)

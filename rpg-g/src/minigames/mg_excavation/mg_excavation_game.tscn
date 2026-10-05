@@ -1,6 +1,11 @@
 [gd_scene format=3 uid="uid://bqw7y8dnqifu"]
 
 [ext_resource type="Script" uid="uid://bdko6rxexgm35" path="res://src/minigames/mg_excavation/mg_excavation_game.gd" id="1"]
+[ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="scene_music"]
 
 [node name="MG_ExcavationGame" type="Node2D"]
 script = ExtResource("1")
+
+[node name="SceneMusic" type="Node" parent="."]
+script = ExtResource("scene_music")
+music_id = &"music_mg_excavation"

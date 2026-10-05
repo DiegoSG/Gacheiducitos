@@ -70,6 +70,7 @@ func _process(delta: float) -> void:
 		time_left -= delta
 		if time_left <= 0 and lives > 0:
 			time_left = 0
+			AudioManager.play_ui(&"sfx_catch_time_up")
 			win()
 			
 	_update_ui()
@@ -121,6 +122,7 @@ func _on_spawn_timeout() -> void:
 			custom_texture = get_item_icon(chosen_item_id)
 
 	add_child(item)
+	AudioManager.play_sfx(&"sfx_catch_spawn")
 	item.setup(base_fall_speed, Vector2(spawn_x, -50), is_crit, chosen_item_id, custom_texture)
 	item.hit_floor.connect(func(_type): pass)
 	item.expired.connect(_on_item_expired)
@@ -142,24 +144,32 @@ func _is_pool_entry_critical(entry_id: String) -> bool:
 func _on_item_expired(is_crit: bool) -> void:
 	if is_crit:
 		# Si era un item crítico obligatorio y expiró en el suelo, se pierde vida
-		lives -= 1
+		AudioManager.play_sfx(&"sfx_catch_miss")
+		_lose_life()
 		_update_ui()
 		check_lives()
 
 func _on_item_caught(item_type: int, item: FallingItemBase) -> void:
 	if item_type == FallingItemBase.ItemType.POINT:
 		score += 1
+		AudioManager.play_sfx(&"sfx_catch_item")
 		if not item.item_id.is_empty():
 			add_reward(item.item_id, 1)
 		else:
 			add_reward(Inventory.GOLD_ITEM_ID, 1)
 
 		if game_mode == "COUNT" and score >= target_value:
+			AudioManager.play_ui(&"sfx_catch_win")
 			win()
 	elif item_type == FallingItemBase.ItemType.BOMB:
-		lives -= 1
+		AudioManager.play_sfx(&"sfx_catch_bomb")
+		_lose_life()
 		check_lives()
 	_update_ui()
+
+func _lose_life() -> void:
+	lives -= 1
+	AudioManager.play_sfx(&"sfx_catch_life_lost")
 
 func check_lives() -> void:
 	if lives <= 0:
@@ -173,4 +183,5 @@ func win() -> void:
 func lose() -> void:
 	if game_over: return
 	game_over = true
+	AudioManager.play_ui(&"sfx_catch_lose")
 	finish(false)

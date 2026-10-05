@@ -127,6 +127,7 @@ func _process(delta: float) -> void:
 	if current_distance >= next_speed_increase_dist:
 		run_speed += speed_increase_amount
 		next_speed_increase_dist += speed_increase_interval
+		AudioManager.play_sfx(&"sfx_run_speed_up")
 		time_between_spawns = 1.7 * (350.0 / run_speed)
 		# Actualizar velocidad de los objetos ya existentes en pantalla
 		for c in world_objects.get_children():
@@ -166,12 +167,14 @@ func _update_ui() -> void:
 
 func _check_win_by_distance() -> void:
 	if win_condition == WinCondition.DISTANCE and current_distance >= target_value:
+		AudioManager.play_ui(&"sfx_run_win")
 		_win_game()
 
 func _check_spawn_target_object() -> void:
 	if win_condition == WinCondition.OBJECT and not target_object_spawned:
 		if current_distance >= target_spawn_distance:
 			target_object_spawned = true
+			AudioManager.play_sfx(&"sfx_run_target_spawn")
 			_spawn_target_pickup()
 
 func _spawn_target_pickup() -> void:
@@ -185,6 +188,7 @@ func _spawn_target_pickup() -> void:
 	world_objects.add_child(pickup)
 
 func _on_target_pickup_collected(p: MG_RunnerPickup) -> void:
+	AudioManager.play_ui(&"sfx_run_target")
 	add_reward(p.item_id, 1)
 	_win_game()
 
@@ -195,6 +199,7 @@ func _spawn_ammo_pickup() -> void:
 	# Se coloca flotando a altura media/baja
 	pickup.position = Vector2(SPAWN_X + 150.0, GROUND_Y - 55.0)
 	pickup.collected.connect(func(_p) -> void:
+		AudioManager.play_sfx(&"sfx_run_ammo")
 		player.add_ammo(1)
 	)
 	world_objects.add_child(pickup)
@@ -236,6 +241,7 @@ func _spawn_enemy() -> void:
 	var enemy = ENEMY_SCENE.instantiate() as MG_RunnerEnemy
 	enemy.speed = run_speed + 40.0
 	enemy.position = Vector2(SPAWN_X, GROUND_Y - 30.0)
+	AudioManager.play_sfx(&"sfx_run_enemy_spawn")
 	world_objects.add_child(enemy)
 
 func _can_spawn_more_coins() -> bool:
@@ -306,9 +312,11 @@ func _spawn_random_item() -> void:
 
 func _on_coin_collected(_p: MG_RunnerPickup) -> void:
 	coins_collected += 1
+	AudioManager.play_sfx(&"sfx_run_coin")
 	add_reward(Inventory.GOLD_ITEM_ID, 1)
 
 func _on_random_item_collected(p: MG_RunnerPickup) -> void:
+	AudioManager.play_sfx(&"sfx_run_item")
 	add_reward(p.item_id, p.amount)
 
 func _stop_world() -> void:
@@ -319,10 +327,11 @@ func _stop_world() -> void:
 func _on_player_died() -> void:
 	is_playing = false
 	_stop_world()
+	AudioManager.play_ui(&"sfx_run_world_stop")
+	AudioManager.play_ui(&"sfx_run_lose")
 	finish(false)
 
 func _win_game() -> void:
 	is_playing = false
 	_stop_world()
 	finish(true)
-

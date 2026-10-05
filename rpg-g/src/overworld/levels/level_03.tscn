@@ -13,6 +13,7 @@
 [ext_resource type="Resource" uid="uid://c1q8p5u1m7x3b" path="res://data/items/blue_potion.tres" id="8_qt222"]
 [ext_resource type="Resource" uid="uid://dsuuhs1xicxgg" path="res://data/items/green_herb.tres" id="9_e50kj"]
 [ext_resource type="Resource" uid="uid://dj7er1hirrpj1" path="res://data/items/wooden_sword.tres" id="10_aksaa"]
+[ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="scene_music"]
 
 [node name="TemplateLevel2" type="Node2D" unique_id=187744379]
 y_sort_enabled = true
@@ -76,3 +77,8 @@ script = ExtResource("1_gctn1")
 respawn_level_path = "uid://peos64ed3b6n"
 respawn_spawn_id = "1"
 metadata/_custom_type_script = "uid://jqce8qh5dwj3"
+
+[node name="SceneMusic" type="Node" parent="."]
+script = ExtResource("scene_music")
+music_id = &"music_level_03"
+alert_music_id = &"music_alert"

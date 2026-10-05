@@ -84,6 +84,7 @@ func _process(delta: float) -> void:
 		time_left -= delta
 		if time_left <= 0 and lives > 0:
 			time_left = 0
+			AudioManager.play_ui(&"sfx_smash_time_up")
 			win()
 	
 	# Gradually increase speed
@@ -130,6 +131,7 @@ func spawn_insect() -> void:
 		var insect = insect_scene.instantiate()
 		add_child(insect)
 		insect.setup(holes[start_idx], holes[end_idx], current_speed)
+		AudioManager.play_sfx(&"sfx_smash_spawn")
 		insect.smashed.connect(_on_insect_smashed)
 		insect.escaped.connect(_on_insect_escaped)
 
@@ -145,8 +147,10 @@ func _on_insect_escaped() -> void:
 
 func win() -> void:
 	game_over = true
+	AudioManager.play_ui(&"sfx_smash_win")
 	finish(true)
 
 func lose() -> void:
 	game_over = true
+	AudioManager.play_ui(&"sfx_smash_lose")
 	finish(false)

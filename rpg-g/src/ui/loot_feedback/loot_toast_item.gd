@@ -63,6 +63,7 @@ func add_amount(amount: int) -> void:
 	current_amount += amount
 	remaining_time = DISPLAY_DURATION
 	_update_count_label()
+	AudioManager.play_ui(&"sfx_loot_toast_add")
 	
 	# Cancelar desvanecimiento si estaba en proceso
 	if _is_fading:

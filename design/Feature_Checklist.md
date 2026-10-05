@@ -276,6 +276,7 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
   - [ ] Equipamiento: 2 slots de arma (una activa; atacar con arrojadiza = lanzar) + escudo, asignados desde el inventario (`Sistema_Armas_y_Escudo.md`). Las armas no se mejoran, solo se cambian.
   - [ ] Mapa de controles estándar y joystick (`Controles_y_Input.md`).
   - [ ] Más adelante: cambio rápido de armas, hotbar de ítems, menú de remapeo.
-- [ ] **Flujo de juego (después):** menú principal, menú de pausa, Game Over, audio básico.
+- [ ] **Flujo de juego (después):** menú principal, menú de pausa, Game Over.
+- [x] **Sistema de audio:** `AudioManager`, catálogo, `SceneMusic`, `PlaySoundAction`, volumen en Opciones (`design/Sistema_Audio.md`). Falta asignar los archivos de audio.
 - [ ] **Contenido del usuario:** efectos del ítem Antídoto; borrar ítems `test_*` cuando no se necesiten.
 

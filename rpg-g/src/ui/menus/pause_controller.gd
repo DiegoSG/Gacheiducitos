@@ -14,6 +14,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("pause"):
 		get_viewport().set_input_as_handled()
+		AudioManager.play_ui(&"sfx_ui_pause_open")
 		_menu = PAUSE_MENU_SCENE.instantiate() as PauseMenu
 		_menu.closed.connect(_on_menu_closed)
 		add_child(_menu)

@@ -62,6 +62,7 @@ func _on_area_entered(area: Area2D) -> void:
 	if is_on_floor or not is_active:
 		return
 	if area.is_in_group("catcher_floor"):
+		AudioManager.play_sfx(&"sfx_catch_floor_hit")
 		# Bombas desaparecen o explotan sin esperar en el suelo
 		if item_type == ItemType.BOMB:
 			hit_floor.emit(item_type)

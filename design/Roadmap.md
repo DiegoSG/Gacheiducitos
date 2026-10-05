@@ -26,7 +26,8 @@
 - [ ] Menú principal y menú de pausa
 - [ ] Flujo de Game Over
 - [ ] Plantilla de nivel (`template_level.tscn`) y 2 niveles interconectados del Vertical Slice
-- [ ] Audio básico (música y efectos)
+- [x] Sistema de audio: `AudioManager`, catálogo de IDs, música por escena, volumen en Opciones y 229 sonidos conectados — `design/Sistema_Audio.md`
+- [ ] Archivos de audio (música y efectos) asignados en `data/audio/audio_catalog.tres`
 - [ ] Animación de salida de portal
 
 ## Fase 3: Expansión de Contenido

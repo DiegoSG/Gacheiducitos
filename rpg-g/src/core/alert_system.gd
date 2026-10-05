@@ -40,4 +40,5 @@ func _update_alert_state() -> void:
 	var new_state: WorldAlertState = WorldAlertState.ALERT if _active_pursuers.size() > 0 else WorldAlertState.PEACE
 	if new_state != alert_state:
 		alert_state = new_state
+		AudioManager.play_sfx(&"sfx_alert_on" if new_state == WorldAlertState.ALERT else &"sfx_alert_off")
 		alert_state_changed.emit(alert_state)

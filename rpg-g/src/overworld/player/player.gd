@@ -26,6 +26,9 @@ var is_blocking: bool = false
 signal blocking_changed(is_blocking: bool)
 var last_direction: Vector2 = Vector2.DOWN
 
+const STEP_SOUND_INTERVAL: float = 0.3
+var _step_timer: float = 0.0
+
 func _ready() -> void:
 	add_to_group("player")
 	
@@ -95,8 +98,13 @@ func _physics_process(delta: float) -> void:
 		
 		# Actualizar las 8 orientaciones visuales del jugador
 		_update_sprite_facing(direction)
+		_step_timer -= delta
+		if _step_timer <= 0.0 and not is_attacking:
+			_step_timer = STEP_SOUND_INTERVAL
+			AudioManager.play_sfx(&"sfx_player_step")
 	else:
 		velocity = Vector2.ZERO
+		_step_timer = 0.0
 
 	if is_attacking:
 		velocity = Vector2.ZERO # Stop moving while attacking
@@ -158,6 +166,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	if knockback_force > 0:
 		is_stunned = true
 		knockback_velocity = attack_direction * knockback_force
+		AudioManager.play_sfx(&"sfx_player_knockback")
 		if tree:
 			tree.create_timer(0.3).timeout.connect(func() -> void:
 				if is_inside_tree() and not is_dead:
@@ -177,6 +186,8 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 		return
 		
 	is_invulnerable = true
+	AudioManager.play_sfx(&"sfx_player_hurt")
+	AudioManager.play_sfx(&"sfx_player_invulnerable")
 	
 	# Efecto de I-frames visuales (parpadeo de 1 segundo)
 	var tween: Tween = create_tween()
@@ -202,6 +213,8 @@ func _on_player_died() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	AudioManager.play_sfx(&"sfx_player_death")
+	AudioManager.play_music(&"music_death")
 	is_stunned = false
 	is_invulnerable = true
 	velocity = Vector2.ZERO
@@ -226,6 +239,7 @@ func _on_player_died() -> void:
 	CheckpointManager.respawn_player()
 
 func _on_player_respawned() -> void:
+	AudioManager.play_sfx(&"sfx_player_respawn")
 	is_dead = false
 	is_blocking = false
 	is_invulnerable = false
@@ -248,6 +262,7 @@ func set_blocking(value: bool) -> void:
 	if is_blocking == value:
 		return
 	is_blocking = value
+	AudioManager.play_sfx(&"sfx_player_block_on" if value else &"sfx_player_block_off")
 	if sprite and not is_dead:
 		sprite.modulate = Color(0.8, 0.85, 1.0, 1.0) if value else Color.WHITE
 	blocking_changed.emit(value)
@@ -256,6 +271,7 @@ func attack() -> void:
 	if is_attacking or is_blocking:
 		return
 	is_attacking = true
+	AudioManager.play_sfx(&"sfx_player_attack")
 	
 	# Visual sword slash animation & feedback
 	if slash_sprite:
@@ -298,11 +314,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		
 	if event.is_action_pressed("interact"):
 		var actionables: Array[Area2D] = actionable_finder.get_overlapping_areas()
+		var interacted: bool = false
 		for area in actionables:
 			if area.has_method("action"):
+				interacted = true
+				AudioManager.play_ui(&"sfx_player_interact")
 				get_viewport().set_input_as_handled()
 				area.action()
 				break
+		if not interacted:
+			AudioManager.play_sfx(&"sfx_player_interact_none")
 
 	if event.is_action_pressed("attack"):
 		attack()

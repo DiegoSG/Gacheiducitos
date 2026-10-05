@@ -1,10 +1,10 @@
 class_name OptionsMenu
 extends Control
 
-## Menú de opciones (PLACEHOLDER, sin lógica). Se abre desde inicio y pausa.
+## Menú de opciones. Se abre desde inicio y pausa.
 ## Uso: var m: OptionsMenu = preload("res://src/ui/menus/options_menu.tscn").instantiate()
 ## parent.add_child(m); m.closed.connect(...). Se cierra con Volver o ui_cancel (emite closed;
-## quien lo abrió lo libera con queue_free()).
+## quien lo abrió lo libera con queue_free()). El volumen se guarda al cerrar.
 
 signal closed
 
@@ -12,11 +12,20 @@ signal closed
 
 func _ready() -> void:
 	_menu.set_title("Opciones")
-	_menu.add_item("Volumen", Callable(), true)
+	_menu.add_slider("Música", AudioManager.get_bus_volume(AudioManager.MUSIC_BUS), _on_music_volume_changed)
+	_menu.add_slider("Efectos", AudioManager.get_bus_volume(AudioManager.SFX_BUS), _on_sfx_volume_changed)
 	_menu.add_item("Controles", Callable(), true)
 	_menu.add_item("Volver", _on_back)
 	_menu.back_requested.connect(_on_back)
 	_menu.focus_first()
 
+func _on_music_volume_changed(value: float) -> void:
+	AudioManager.set_bus_volume(AudioManager.MUSIC_BUS, value)
+
+func _on_sfx_volume_changed(value: float) -> void:
+	AudioManager.set_bus_volume(AudioManager.SFX_BUS, value)
+
 func _on_back() -> void:
+	AudioManager.save_settings()
+	AudioManager.play_ui(&"sfx_ui_options_close")
 	closed.emit()

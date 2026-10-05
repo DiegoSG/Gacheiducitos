@@ -44,19 +44,25 @@ func _ready() -> void:
 ## Congela el juego. Cada llamada debe tener su release_pause() correspondiente.
 func request_pause() -> void:
 	_pause_requests += 1
-	get_tree().paused = true
+	_set_paused(true)
 
 ## Libera una petición de pausa; el juego se reanuda cuando no queda ninguna.
 func release_pause() -> void:
 	_pause_requests = maxi(0, _pause_requests - 1)
 	if _pause_requests == 0:
-		get_tree().paused = false
+		_set_paused(false)
 
 ## Anula todas las pausas pendientes (al cambiar de escena, las UI que las pidieron desaparecen).
 func _reset_pause() -> void:
 	_pause_requests = 0
 	_dialogue_pause_active = false
-	get_tree().paused = false
+	_set_paused(false)
+
+func _set_paused(paused: bool) -> void:
+	if get_tree().paused == paused:
+		return
+	get_tree().paused = paused
+	AudioManager.play_ui(&"sfx_game_paused" if paused else &"sfx_game_resumed")
 
 func _on_dialogue_started(_resource: DialogueResource) -> void:
 	if not _dialogue_pause_active:
@@ -64,6 +70,7 @@ func _on_dialogue_started(_resource: DialogueResource) -> void:
 		request_pause()
 
 func _on_dialogue_ended(_resource: DialogueResource) -> void:
+	AudioManager.play_ui(&"sfx_dialogue_close")
 	if _dialogue_pause_active:
 		_dialogue_pause_active = false
 		release_pause()
@@ -89,6 +96,7 @@ func load_minigame(minigame_path: String) -> void:
 	_minigame_lose_path = minigame_config.get("lose_level_path", previous_scene_path)
 	_minigame_lose_spawn_id = minigame_config.get("lose_spawn_id", "")
 
+	AudioManager.play_ui(&"sfx_minigame_enter")
 	change_level(minigame_path)
 
 func complete_minigame(success: bool, results: Dictionary = {}) -> void:
@@ -107,10 +115,13 @@ func complete_minigame(success: bool, results: Dictionary = {}) -> void:
 	if target_scene.is_empty():
 		target_scene = previous_scene_path if not previous_scene_path.is_empty() else DEFAULT_LEVEL_PATH
 		
+	AudioManager.play_ui(&"sfx_minigame_return")
 	# Usar el sistema de transiciones con fader
 	await change_level(target_scene, target_spawn_id)
 	
 	# Si obtuvimos items del minijuego, mostrar su llegada
+	if not pending_items.is_empty():
+		AudioManager.play_ui(&"sfx_minigame_rewards")
 	for item_id: String in pending_items:
 		var data: ItemData = ItemDatabase.get_item(item_id)
 		if data:
@@ -134,6 +145,7 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 		return
 
 	_is_changing_level = true
+	AudioManager.play_ui(&"sfx_level_change")
 	_reset_pause()
 	
 	if not is_save_load:
@@ -203,6 +215,7 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 	fader.queue_free()
 	_is_changing_level = false
 	CheckpointManager.register_level_entry(target_level_path, current_scene, not is_save_load)
+	AudioManager.play_ui(&"sfx_level_loaded")
 	level_changed.emit(target_level_path, spawn_id)
 
 func _snap_scene_cameras(node: Node) -> void:

@@ -70,6 +70,7 @@ func try_jump() -> void:
 		position.y -= 4.0 # Despegar del suelo para iniciar ascenso
 		state = State.JUMPING
 		_jump_buffer = 0.0
+		AudioManager.play_sfx(&"sfx_run_jump")
 		_set_standing_state()
 	else:
 		# En el aire -> Guardar en buffer para saltar tan pronto aterrice
@@ -98,9 +99,11 @@ func _physics_process(delta: float) -> void:
 		position.y = GROUND_Y
 		if wants_duck:
 			if state != State.DUCKING:
+				AudioManager.play_sfx(&"sfx_run_duck")
 				_set_ducking_state()
 		else:
 			if state == State.DUCKING:
+				AudioManager.play_sfx(&"sfx_run_stand")
 				_set_standing_state()
 
 	# Físicas en el aire o durante el salto
@@ -114,6 +117,7 @@ func _physics_process(delta: float) -> void:
 			position.y = GROUND_Y
 			velocity_y = 0.0
 			state = State.RUNNING
+			AudioManager.play_sfx(&"sfx_run_land")
 			if _jump_buffer > 0.0 and not wants_duck:
 				try_jump()
 			elif wants_duck:
@@ -151,11 +155,14 @@ func _set_ducking_state() -> void:
 func _shoot() -> void:
 	if ammo > 0:
 		ammo -= 1
+		AudioManager.play_sfx(&"sfx_run_shoot")
 		var bullet: MG_RunnerBullet = BULLET_SCENE.instantiate() as MG_RunnerBullet
 		bullet.player = self
 		get_parent().add_child(bullet)
 		var spawn_y = position.y - (duck_height * 0.5 if state == State.DUCKING else stand_height * 0.5)
 		bullet.global_position = Vector2(global_position.x + (duck_width * 0.6 if state == State.DUCKING else stand_width * 0.6), spawn_y)
+	else:
+		AudioManager.play_sfx(&"sfx_run_shoot_empty")
 
 func add_ammo(amount: int) -> void:
 	ammo = mini(3, ammo + amount)
@@ -169,5 +176,6 @@ func _on_area_entered(area: Area2D) -> void:
 
 func _die() -> void:
 	is_dead = true
+	AudioManager.play_ui(&"sfx_run_death")
 	sprite.modulate = Color(1.0, 0.2, 0.2)
 	died.emit()

@@ -133,12 +133,14 @@ func _is_writable(path: String, caller: String) -> bool:
 func start_quest(quest_id: String) -> void:
 	if not quests.has(quest_id):
 		quests[quest_id] = "active"
+		AudioManager.play_ui(&"sfx_quest_started")
 		quest_started.emit(quest_id)
 		variable_changed.emit("quest." + quest_id, "active")
 
 func complete_quest(quest_id: String) -> void:
 	if quests.get(quest_id) == "active":
 		quests[quest_id] = "completed"
+		AudioManager.play_ui(&"sfx_quest_completed")
 		quest_completed.emit(quest_id)
 		variable_changed.emit("quest." + quest_id, "completed")
 

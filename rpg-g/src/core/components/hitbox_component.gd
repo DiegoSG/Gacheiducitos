@@ -55,6 +55,9 @@ func _apply_hit(area: HurtboxComponent) -> void:
 	if status_effect != null and randf() * 100.0 < status_chance:
 		inflicted = status_effect
 	area.take_hit(damage, attack_direction, knockback_force, inflicted)
+	AudioManager.play_sfx(&"sfx_player_attack_hit" if get_parent().is_in_group("player") else &"sfx_enemy_attack")
+	if inflicted != null:
+		AudioManager.play_sfx(&"sfx_status_inflicted")
 
 	var scene_root: Node = get_tree().current_scene if get_tree() else null
 	if is_instance_valid(scene_root):

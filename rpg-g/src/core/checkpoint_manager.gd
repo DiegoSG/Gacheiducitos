@@ -40,6 +40,8 @@ func register_level_entry(scene_path: String, scene_node: Node, is_organic: bool
 		active_checkpoint_spawn_id = ""
 
 	_capture_checkpoint_player_snapshot()
+	if is_organic:
+		AudioManager.play_ui(&"sfx_checkpoint")
 	
 	# Si no hay excepción (o disable_autosave es false) y es transición orgánica (not is_same_scene), ejecuta autoguardado
 	var should_autosave: bool = is_organic and not is_same_scene
@@ -47,6 +49,7 @@ func register_level_entry(scene_path: String, scene_node: Node, is_organic: bool
 		should_autosave = false
 		
 	if should_autosave:
+		AudioManager.play_ui(&"sfx_save_autosave")
 		SaveSystem.save_slot(SaveSystem.AUTOSAVE_SLOT_ID)
 
 func _capture_checkpoint_player_snapshot() -> void:

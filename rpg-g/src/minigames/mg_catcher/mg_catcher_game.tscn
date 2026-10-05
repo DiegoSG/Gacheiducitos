@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://src/minigames/mg_catcher/mg_catcher_game.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/minigames/mg_catcher/catcher_player.tscn" id="2"]
+[ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="scene_music"]
 
 [node name="MgCatcherGame" type="Node2D"]
 script = ExtResource("1")
@@ -89,3 +90,7 @@ theme_override_font_sizes/font_size = 64
 text = "VICTORIA"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="SceneMusic" type="Node" parent="."]
+script = ExtResource("scene_music")
+music_id = &"music_mg_catcher"

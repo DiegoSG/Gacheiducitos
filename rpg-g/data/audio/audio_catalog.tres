@@ -1,0 +1,924 @@
+[gd_resource type="Resource" script_class="AudioCatalog" load_steps=232 format=3]
+
+[ext_resource type="Script" path="res://data/resource_types/audio_catalog.gd" id="1_catalog"]
+[ext_resource type="Script" path="res://data/resource_types/audio_entry.gd" id="2_entry"]
+
+[sub_resource type="Resource" id="Entry_music_alert"]
+script = ExtResource("2_entry")
+id = &"music_alert"
+
+[sub_resource type="Resource" id="Entry_music_death"]
+script = ExtResource("2_entry")
+id = &"music_death"
+
+[sub_resource type="Resource" id="Entry_music_level_01"]
+script = ExtResource("2_entry")
+id = &"music_level_01"
+
+[sub_resource type="Resource" id="Entry_music_level_02"]
+script = ExtResource("2_entry")
+id = &"music_level_02"
+
+[sub_resource type="Resource" id="Entry_music_level_03"]
+script = ExtResource("2_entry")
+id = &"music_level_03"
+
+[sub_resource type="Resource" id="Entry_music_mg_catcher"]
+script = ExtResource("2_entry")
+id = &"music_mg_catcher"
+
+[sub_resource type="Resource" id="Entry_music_mg_excavation"]
+script = ExtResource("2_entry")
+id = &"music_mg_excavation"
+
+[sub_resource type="Resource" id="Entry_music_mg_result"]
+script = ExtResource("2_entry")
+id = &"music_mg_result"
+
+[sub_resource type="Resource" id="Entry_music_mg_runner"]
+script = ExtResource("2_entry")
+id = &"music_mg_runner"
+
+[sub_resource type="Resource" id="Entry_music_mg_smasher"]
+script = ExtResource("2_entry")
+id = &"music_mg_smasher"
+
+[sub_resource type="Resource" id="Entry_music_mg_trampolin"]
+script = ExtResource("2_entry")
+id = &"music_mg_trampolin"
+
+[sub_resource type="Resource" id="Entry_music_start_menu"]
+script = ExtResource("2_entry")
+id = &"music_start_menu"
+
+[sub_resource type="Resource" id="Entry_sfx_player_step"]
+script = ExtResource("2_entry")
+id = &"sfx_player_step"
+
+[sub_resource type="Resource" id="Entry_sfx_player_attack"]
+script = ExtResource("2_entry")
+id = &"sfx_player_attack"
+
+[sub_resource type="Resource" id="Entry_sfx_player_attack_hit"]
+script = ExtResource("2_entry")
+id = &"sfx_player_attack_hit"
+
+[sub_resource type="Resource" id="Entry_sfx_player_block_on"]
+script = ExtResource("2_entry")
+id = &"sfx_player_block_on"
+
+[sub_resource type="Resource" id="Entry_sfx_player_block_off"]
+script = ExtResource("2_entry")
+id = &"sfx_player_block_off"
+
+[sub_resource type="Resource" id="Entry_sfx_player_hurt"]
+script = ExtResource("2_entry")
+id = &"sfx_player_hurt"
+
+[sub_resource type="Resource" id="Entry_sfx_player_knockback"]
+script = ExtResource("2_entry")
+id = &"sfx_player_knockback"
+
+[sub_resource type="Resource" id="Entry_sfx_player_invulnerable"]
+script = ExtResource("2_entry")
+id = &"sfx_player_invulnerable"
+
+[sub_resource type="Resource" id="Entry_sfx_player_death"]
+script = ExtResource("2_entry")
+id = &"sfx_player_death"
+
+[sub_resource type="Resource" id="Entry_sfx_player_respawn"]
+script = ExtResource("2_entry")
+id = &"sfx_player_respawn"
+
+[sub_resource type="Resource" id="Entry_sfx_player_heal"]
+script = ExtResource("2_entry")
+id = &"sfx_player_heal"
+
+[sub_resource type="Resource" id="Entry_sfx_player_interact"]
+script = ExtResource("2_entry")
+id = &"sfx_player_interact"
+
+[sub_resource type="Resource" id="Entry_sfx_player_interact_none"]
+script = ExtResource("2_entry")
+id = &"sfx_player_interact_none"
+
+[sub_resource type="Resource" id="Entry_sfx_status_applied"]
+script = ExtResource("2_entry")
+id = &"sfx_status_applied"
+
+[sub_resource type="Resource" id="Entry_sfx_status_removed"]
+script = ExtResource("2_entry")
+id = &"sfx_status_removed"
+
+[sub_resource type="Resource" id="Entry_sfx_status_tick"]
+script = ExtResource("2_entry")
+id = &"sfx_status_tick"
+
+[sub_resource type="Resource" id="Entry_sfx_status_inflicted"]
+script = ExtResource("2_entry")
+id = &"sfx_status_inflicted"
+
+[sub_resource type="Resource" id="Entry_sfx_hud_health_changed"]
+script = ExtResource("2_entry")
+id = &"sfx_hud_health_changed"
+
+[sub_resource type="Resource" id="Entry_sfx_hud_gold_changed"]
+script = ExtResource("2_entry")
+id = &"sfx_hud_gold_changed"
+
+[sub_resource type="Resource" id="Entry_sfx_hud_status_row_changed"]
+script = ExtResource("2_entry")
+id = &"sfx_hud_status_row_changed"
+
+[sub_resource type="Resource" id="Entry_sfx_hud_slot_changed"]
+script = ExtResource("2_entry")
+id = &"sfx_hud_slot_changed"
+
+[sub_resource type="Resource" id="Entry_sfx_hud_max_health_changed"]
+script = ExtResource("2_entry")
+id = &"sfx_hud_max_health_changed"
+
+[sub_resource type="Resource" id="Entry_sfx_loot_toast_new"]
+script = ExtResource("2_entry")
+id = &"sfx_loot_toast_new"
+
+[sub_resource type="Resource" id="Entry_sfx_loot_toast_add"]
+script = ExtResource("2_entry")
+id = &"sfx_loot_toast_add"
+
+[sub_resource type="Resource" id="Entry_sfx_loot_inventory_bounce"]
+script = ExtResource("2_entry")
+id = &"sfx_loot_inventory_bounce"
+
+[sub_resource type="Resource" id="Entry_sfx_enemy_detect"]
+script = ExtResource("2_entry")
+id = &"sfx_enemy_detect"
+
+[sub_resource type="Resource" id="Entry_sfx_enemy_reacquire"]
+script = ExtResource("2_entry")
+id = &"sfx_enemy_reacquire"
+
+[sub_resource type="Resource" id="Entry_sfx_enemy_lose_target"]
+script = ExtResource("2_entry")
+id = &"sfx_enemy_lose_target"
+
+[sub_resource type="Resource" id="Entry_sfx_enemy_chase"]
+script = ExtResource("2_entry")
+id = &"sfx_enemy_chase"
+
+[sub_resource type="Resource" id="Entry_sfx_enemy_attack"]
+script = ExtResource("2_entry")
+id = &"sfx_enemy_attack"
+
+[sub_resource type="Resource" id="Entry_sfx_enemy_hurt"]
+script = ExtResource("2_entry")
+id = &"sfx_enemy_hurt"
+
+[sub_resource type="Resource" id="Entry_sfx_enemy_stunned"]
+script = ExtResource("2_entry")
+id = &"sfx_enemy_stunned"
+
+[sub_resource type="Resource" id="Entry_sfx_enemy_invulnerable"]
+script = ExtResource("2_entry")
+id = &"sfx_enemy_invulnerable"
+
+[sub_resource type="Resource" id="Entry_sfx_enemy_death"]
+script = ExtResource("2_entry")
+id = &"sfx_enemy_death"
+
+[sub_resource type="Resource" id="Entry_sfx_enemy_loot_drop"]
+script = ExtResource("2_entry")
+id = &"sfx_enemy_loot_drop"
+
+[sub_resource type="Resource" id="Entry_sfx_loot_land"]
+script = ExtResource("2_entry")
+id = &"sfx_loot_land"
+
+[sub_resource type="Resource" id="Entry_sfx_dummy_hit"]
+script = ExtResource("2_entry")
+id = &"sfx_dummy_hit"
+
+[sub_resource type="Resource" id="Entry_sfx_dummy_destroyed"]
+script = ExtResource("2_entry")
+id = &"sfx_dummy_destroyed"
+
+[sub_resource type="Resource" id="Entry_sfx_alert_on"]
+script = ExtResource("2_entry")
+id = &"sfx_alert_on"
+
+[sub_resource type="Resource" id="Entry_sfx_alert_off"]
+script = ExtResource("2_entry")
+id = &"sfx_alert_off"
+
+[sub_resource type="Resource" id="Entry_sfx_npc_busy_alert"]
+script = ExtResource("2_entry")
+id = &"sfx_npc_busy_alert"
+
+[sub_resource type="Resource" id="Entry_sfx_chest_open"]
+script = ExtResource("2_entry")
+id = &"sfx_chest_open"
+
+[sub_resource type="Resource" id="Entry_sfx_chest_close"]
+script = ExtResource("2_entry")
+id = &"sfx_chest_close"
+
+[sub_resource type="Resource" id="Entry_sfx_chest_loot"]
+script = ExtResource("2_entry")
+id = &"sfx_chest_loot"
+
+[sub_resource type="Resource" id="Entry_sfx_chest_empty"]
+script = ExtResource("2_entry")
+id = &"sfx_chest_empty"
+
+[sub_resource type="Resource" id="Entry_sfx_pickup_item"]
+script = ExtResource("2_entry")
+id = &"sfx_pickup_item"
+
+[sub_resource type="Resource" id="Entry_sfx_pickup_gold"]
+script = ExtResource("2_entry")
+id = &"sfx_pickup_gold"
+
+[sub_resource type="Resource" id="Entry_sfx_switch_on"]
+script = ExtResource("2_entry")
+id = &"sfx_switch_on"
+
+[sub_resource type="Resource" id="Entry_sfx_switch_off"]
+script = ExtResource("2_entry")
+id = &"sfx_switch_off"
+
+[sub_resource type="Resource" id="Entry_sfx_switch_used"]
+script = ExtResource("2_entry")
+id = &"sfx_switch_used"
+
+[sub_resource type="Resource" id="Entry_sfx_plate_pressed"]
+script = ExtResource("2_entry")
+id = &"sfx_plate_pressed"
+
+[sub_resource type="Resource" id="Entry_sfx_plate_released"]
+script = ExtResource("2_entry")
+id = &"sfx_plate_released"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_event"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_event"
+
+[sub_resource type="Resource" id="Entry_sfx_portal_enter"]
+script = ExtResource("2_entry")
+id = &"sfx_portal_enter"
+
+[sub_resource type="Resource" id="Entry_sfx_door_locked"]
+script = ExtResource("2_entry")
+id = &"sfx_door_locked"
+
+[sub_resource type="Resource" id="Entry_sfx_door_unlock_key"]
+script = ExtResource("2_entry")
+id = &"sfx_door_unlock_key"
+
+[sub_resource type="Resource" id="Entry_sfx_key_used"]
+script = ExtResource("2_entry")
+id = &"sfx_key_used"
+
+[sub_resource type="Resource" id="Entry_sfx_door_lock"]
+script = ExtResource("2_entry")
+id = &"sfx_door_lock"
+
+[sub_resource type="Resource" id="Entry_sfx_door_unlock"]
+script = ExtResource("2_entry")
+id = &"sfx_door_unlock"
+
+[sub_resource type="Resource" id="Entry_sfx_door_toggle"]
+script = ExtResource("2_entry")
+id = &"sfx_door_toggle"
+
+[sub_resource type="Resource" id="Entry_sfx_portal_inactive"]
+script = ExtResource("2_entry")
+id = &"sfx_portal_inactive"
+
+[sub_resource type="Resource" id="Entry_sfx_portal_hum"]
+script = ExtResource("2_entry")
+id = &"sfx_portal_hum"
+
+[sub_resource type="Resource" id="Entry_sfx_destroy_node"]
+script = ExtResource("2_entry")
+id = &"sfx_destroy_node"
+
+[sub_resource type="Resource" id="Entry_sfx_spawn"]
+script = ExtResource("2_entry")
+id = &"sfx_spawn"
+
+[sub_resource type="Resource" id="Entry_sfx_anim_action"]
+script = ExtResource("2_entry")
+id = &"sfx_anim_action"
+
+[sub_resource type="Resource" id="Entry_sfx_vis_col_action"]
+script = ExtResource("2_entry")
+id = &"sfx_vis_col_action"
+
+[sub_resource type="Resource" id="Entry_sfx_minigame_interact"]
+script = ExtResource("2_entry")
+id = &"sfx_minigame_interact"
+
+[sub_resource type="Resource" id="Entry_sfx_npc_talk"]
+script = ExtResource("2_entry")
+id = &"sfx_npc_talk"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_open"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_open"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_type"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_type"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_line_done"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_line_done"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_skip"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_skip"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_fast_forward"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_fast_forward"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_next"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_next"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_continue_shown"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_continue_shown"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_responses_shown"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_responses_shown"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_response_focus"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_response_focus"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_response_select"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_response_select"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_voice"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_voice"
+
+[sub_resource type="Resource" id="Entry_sfx_dialogue_close"]
+script = ExtResource("2_entry")
+id = &"sfx_dialogue_close"
+
+[sub_resource type="Resource" id="Entry_sfx_quest_started"]
+script = ExtResource("2_entry")
+id = &"sfx_quest_started"
+
+[sub_resource type="Resource" id="Entry_sfx_quest_completed"]
+script = ExtResource("2_entry")
+id = &"sfx_quest_completed"
+
+[sub_resource type="Resource" id="Entry_sfx_inventory_open"]
+script = ExtResource("2_entry")
+id = &"sfx_inventory_open"
+
+[sub_resource type="Resource" id="Entry_sfx_inventory_close"]
+script = ExtResource("2_entry")
+id = &"sfx_inventory_close"
+
+[sub_resource type="Resource" id="Entry_sfx_inventory_move"]
+script = ExtResource("2_entry")
+id = &"sfx_inventory_move"
+
+[sub_resource type="Resource" id="Entry_sfx_inventory_use"]
+script = ExtResource("2_entry")
+id = &"sfx_inventory_use"
+
+[sub_resource type="Resource" id="Entry_sfx_item_heal"]
+script = ExtResource("2_entry")
+id = &"sfx_item_heal"
+
+[sub_resource type="Resource" id="Entry_sfx_item_damage"]
+script = ExtResource("2_entry")
+id = &"sfx_item_damage"
+
+[sub_resource type="Resource" id="Entry_sfx_item_apply_status"]
+script = ExtResource("2_entry")
+id = &"sfx_item_apply_status"
+
+[sub_resource type="Resource" id="Entry_sfx_item_cure_status"]
+script = ExtResource("2_entry")
+id = &"sfx_item_cure_status"
+
+[sub_resource type="Resource" id="Entry_sfx_inventory_use_fail"]
+script = ExtResource("2_entry")
+id = &"sfx_inventory_use_fail"
+
+[sub_resource type="Resource" id="Entry_sfx_inventory_assign"]
+script = ExtResource("2_entry")
+id = &"sfx_inventory_assign"
+
+[sub_resource type="Resource" id="Entry_sfx_inventory_assign_fail"]
+script = ExtResource("2_entry")
+id = &"sfx_inventory_assign_fail"
+
+[sub_resource type="Resource" id="Entry_sfx_inventory_notice"]
+script = ExtResource("2_entry")
+id = &"sfx_inventory_notice"
+
+[sub_resource type="Resource" id="Entry_sfx_inventory_changed"]
+script = ExtResource("2_entry")
+id = &"sfx_inventory_changed"
+
+[sub_resource type="Resource" id="Entry_sfx_inventory_gold"]
+script = ExtResource("2_entry")
+id = &"sfx_inventory_gold"
+
+[sub_resource type="Resource" id="Entry_sfx_slot_use"]
+script = ExtResource("2_entry")
+id = &"sfx_slot_use"
+
+[sub_resource type="Resource" id="Entry_sfx_slot_equip"]
+script = ExtResource("2_entry")
+id = &"sfx_slot_equip"
+
+[sub_resource type="Resource" id="Entry_sfx_slot_empty"]
+script = ExtResource("2_entry")
+id = &"sfx_slot_empty"
+
+[sub_resource type="Resource" id="Entry_sfx_slot_clear"]
+script = ExtResource("2_entry")
+id = &"sfx_slot_clear"
+
+[sub_resource type="Resource" id="Entry_sfx_slot_reassign"]
+script = ExtResource("2_entry")
+id = &"sfx_slot_reassign"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_focus"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_focus"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_confirm"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_confirm"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_cancel"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_cancel"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_disabled"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_disabled"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_new_game"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_new_game"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_continue"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_continue"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_options_open"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_options_open"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_options_close"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_options_close"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_quit"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_quit"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_pause_open"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_pause_open"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_pause_close"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_pause_close"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_exit_to_start"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_exit_to_start"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_abandon"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_abandon"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_submenu_open"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_submenu_open"
+
+[sub_resource type="Resource" id="Entry_sfx_ui_submenu_close"]
+script = ExtResource("2_entry")
+id = &"sfx_ui_submenu_close"
+
+[sub_resource type="Resource" id="Entry_sfx_map_open"]
+script = ExtResource("2_entry")
+id = &"sfx_map_open"
+
+[sub_resource type="Resource" id="Entry_sfx_map_close"]
+script = ExtResource("2_entry")
+id = &"sfx_map_close"
+
+[sub_resource type="Resource" id="Entry_sfx_map_zoom"]
+script = ExtResource("2_entry")
+id = &"sfx_map_zoom"
+
+[sub_resource type="Resource" id="Entry_sfx_map_center"]
+script = ExtResource("2_entry")
+id = &"sfx_map_center"
+
+[sub_resource type="Resource" id="Entry_sfx_map_discover"]
+script = ExtResource("2_entry")
+id = &"sfx_map_discover"
+
+[sub_resource type="Resource" id="Entry_sfx_save_autosave"]
+script = ExtResource("2_entry")
+id = &"sfx_save_autosave"
+
+[sub_resource type="Resource" id="Entry_sfx_save_done"]
+script = ExtResource("2_entry")
+id = &"sfx_save_done"
+
+[sub_resource type="Resource" id="Entry_sfx_save_error"]
+script = ExtResource("2_entry")
+id = &"sfx_save_error"
+
+[sub_resource type="Resource" id="Entry_sfx_save_loaded"]
+script = ExtResource("2_entry")
+id = &"sfx_save_loaded"
+
+[sub_resource type="Resource" id="Entry_sfx_save_deleted"]
+script = ExtResource("2_entry")
+id = &"sfx_save_deleted"
+
+[sub_resource type="Resource" id="Entry_sfx_save_slot_save"]
+script = ExtResource("2_entry")
+id = &"sfx_save_slot_save"
+
+[sub_resource type="Resource" id="Entry_sfx_save_slot_load"]
+script = ExtResource("2_entry")
+id = &"sfx_save_slot_load"
+
+[sub_resource type="Resource" id="Entry_sfx_save_slot_delete"]
+script = ExtResource("2_entry")
+id = &"sfx_save_slot_delete"
+
+[sub_resource type="Resource" id="Entry_sfx_save_slot_focus"]
+script = ExtResource("2_entry")
+id = &"sfx_save_slot_focus"
+
+[sub_resource type="Resource" id="Entry_sfx_checkpoint"]
+script = ExtResource("2_entry")
+id = &"sfx_checkpoint"
+
+[sub_resource type="Resource" id="Entry_sfx_fade_out"]
+script = ExtResource("2_entry")
+id = &"sfx_fade_out"
+
+[sub_resource type="Resource" id="Entry_sfx_fade_in"]
+script = ExtResource("2_entry")
+id = &"sfx_fade_in"
+
+[sub_resource type="Resource" id="Entry_sfx_level_change"]
+script = ExtResource("2_entry")
+id = &"sfx_level_change"
+
+[sub_resource type="Resource" id="Entry_sfx_level_loaded"]
+script = ExtResource("2_entry")
+id = &"sfx_level_loaded"
+
+[sub_resource type="Resource" id="Entry_sfx_minigame_enter"]
+script = ExtResource("2_entry")
+id = &"sfx_minigame_enter"
+
+[sub_resource type="Resource" id="Entry_sfx_minigame_return"]
+script = ExtResource("2_entry")
+id = &"sfx_minigame_return"
+
+[sub_resource type="Resource" id="Entry_sfx_minigame_rewards"]
+script = ExtResource("2_entry")
+id = &"sfx_minigame_rewards"
+
+[sub_resource type="Resource" id="Entry_sfx_game_paused"]
+script = ExtResource("2_entry")
+id = &"sfx_game_paused"
+
+[sub_resource type="Resource" id="Entry_sfx_game_resumed"]
+script = ExtResource("2_entry")
+id = &"sfx_game_resumed"
+
+[sub_resource type="Resource" id="Entry_sfx_mg_start"]
+script = ExtResource("2_entry")
+id = &"sfx_mg_start"
+
+[sub_resource type="Resource" id="Entry_sfx_mg_win"]
+script = ExtResource("2_entry")
+id = &"sfx_mg_win"
+
+[sub_resource type="Resource" id="Entry_sfx_mg_lose"]
+script = ExtResource("2_entry")
+id = &"sfx_mg_lose"
+
+[sub_resource type="Resource" id="Entry_sfx_mg_result_shown"]
+script = ExtResource("2_entry")
+id = &"sfx_mg_result_shown"
+
+[sub_resource type="Resource" id="Entry_sfx_mg_result_continue"]
+script = ExtResource("2_entry")
+id = &"sfx_mg_result_continue"
+
+[sub_resource type="Resource" id="Entry_sfx_mg_reward_added"]
+script = ExtResource("2_entry")
+id = &"sfx_mg_reward_added"
+
+[sub_resource type="Resource" id="Entry_sfx_mg_pause"]
+script = ExtResource("2_entry")
+id = &"sfx_mg_pause"
+
+[sub_resource type="Resource" id="Entry_sfx_mg_abandon"]
+script = ExtResource("2_entry")
+id = &"sfx_mg_abandon"
+
+[sub_resource type="Resource" id="Entry_sfx_mg_finished"]
+script = ExtResource("2_entry")
+id = &"sfx_mg_finished"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_start"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_start"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_step"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_step"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_dig"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_dig"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_push"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_push"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_push_blocked"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_push_blocked"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_rock_fall"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_rock_fall"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_rock_slide"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_rock_slide"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_rock_land"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_rock_land"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_coin"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_coin"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_item"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_item"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_quest_item"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_quest_item"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_bomb_pickup"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_bomb_pickup"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_bomb_plant"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_bomb_plant"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_bomb_fuse"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_bomb_fuse"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_explosion"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_explosion"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_chain_explosion"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_chain_explosion"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_bomb_impact"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_bomb_impact"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_crushed"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_crushed"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_exit_blocked"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_exit_blocked"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_exit_open"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_exit_open"
+
+[sub_resource type="Resource" id="Entry_sfx_exc_lose"]
+script = ExtResource("2_entry")
+id = &"sfx_exc_lose"
+
+[sub_resource type="Resource" id="Entry_sfx_catch_spawn"]
+script = ExtResource("2_entry")
+id = &"sfx_catch_spawn"
+
+[sub_resource type="Resource" id="Entry_sfx_catch_item"]
+script = ExtResource("2_entry")
+id = &"sfx_catch_item"
+
+[sub_resource type="Resource" id="Entry_sfx_catch_bomb"]
+script = ExtResource("2_entry")
+id = &"sfx_catch_bomb"
+
+[sub_resource type="Resource" id="Entry_sfx_catch_miss"]
+script = ExtResource("2_entry")
+id = &"sfx_catch_miss"
+
+[sub_resource type="Resource" id="Entry_sfx_catch_floor_hit"]
+script = ExtResource("2_entry")
+id = &"sfx_catch_floor_hit"
+
+[sub_resource type="Resource" id="Entry_sfx_catch_life_lost"]
+script = ExtResource("2_entry")
+id = &"sfx_catch_life_lost"
+
+[sub_resource type="Resource" id="Entry_sfx_catch_move"]
+script = ExtResource("2_entry")
+id = &"sfx_catch_move"
+
+[sub_resource type="Resource" id="Entry_sfx_catch_time_up"]
+script = ExtResource("2_entry")
+id = &"sfx_catch_time_up"
+
+[sub_resource type="Resource" id="Entry_sfx_catch_win"]
+script = ExtResource("2_entry")
+id = &"sfx_catch_win"
+
+[sub_resource type="Resource" id="Entry_sfx_catch_lose"]
+script = ExtResource("2_entry")
+id = &"sfx_catch_lose"
+
+[sub_resource type="Resource" id="Entry_sfx_run_jump"]
+script = ExtResource("2_entry")
+id = &"sfx_run_jump"
+
+[sub_resource type="Resource" id="Entry_sfx_run_land"]
+script = ExtResource("2_entry")
+id = &"sfx_run_land"
+
+[sub_resource type="Resource" id="Entry_sfx_run_duck"]
+script = ExtResource("2_entry")
+id = &"sfx_run_duck"
+
+[sub_resource type="Resource" id="Entry_sfx_run_stand"]
+script = ExtResource("2_entry")
+id = &"sfx_run_stand"
+
+[sub_resource type="Resource" id="Entry_sfx_run_shoot"]
+script = ExtResource("2_entry")
+id = &"sfx_run_shoot"
+
+[sub_resource type="Resource" id="Entry_sfx_run_shoot_empty"]
+script = ExtResource("2_entry")
+id = &"sfx_run_shoot_empty"
+
+[sub_resource type="Resource" id="Entry_sfx_run_ammo"]
+script = ExtResource("2_entry")
+id = &"sfx_run_ammo"
+
+[sub_resource type="Resource" id="Entry_sfx_run_enemy_killed"]
+script = ExtResource("2_entry")
+id = &"sfx_run_enemy_killed"
+
+[sub_resource type="Resource" id="Entry_sfx_run_obstacle_destroyed"]
+script = ExtResource("2_entry")
+id = &"sfx_run_obstacle_destroyed"
+
+[sub_resource type="Resource" id="Entry_sfx_run_coin"]
+script = ExtResource("2_entry")
+id = &"sfx_run_coin"
+
+[sub_resource type="Resource" id="Entry_sfx_run_item"]
+script = ExtResource("2_entry")
+id = &"sfx_run_item"
+
+[sub_resource type="Resource" id="Entry_sfx_run_target"]
+script = ExtResource("2_entry")
+id = &"sfx_run_target"
+
+[sub_resource type="Resource" id="Entry_sfx_run_target_spawn"]
+script = ExtResource("2_entry")
+id = &"sfx_run_target_spawn"
+
+[sub_resource type="Resource" id="Entry_sfx_run_enemy_spawn"]
+script = ExtResource("2_entry")
+id = &"sfx_run_enemy_spawn"
+
+[sub_resource type="Resource" id="Entry_sfx_run_death"]
+script = ExtResource("2_entry")
+id = &"sfx_run_death"
+
+[sub_resource type="Resource" id="Entry_sfx_run_world_stop"]
+script = ExtResource("2_entry")
+id = &"sfx_run_world_stop"
+
+[sub_resource type="Resource" id="Entry_sfx_run_speed_up"]
+script = ExtResource("2_entry")
+id = &"sfx_run_speed_up"
+
+[sub_resource type="Resource" id="Entry_sfx_run_win"]
+script = ExtResource("2_entry")
+id = &"sfx_run_win"
+
+[sub_resource type="Resource" id="Entry_sfx_run_lose"]
+script = ExtResource("2_entry")
+id = &"sfx_run_lose"
+
+[sub_resource type="Resource" id="Entry_sfx_smash_spawn"]
+script = ExtResource("2_entry")
+id = &"sfx_smash_spawn"
+
+[sub_resource type="Resource" id="Entry_sfx_smash_insect_loop"]
+script = ExtResource("2_entry")
+id = &"sfx_smash_insect_loop"
+
+[sub_resource type="Resource" id="Entry_sfx_smash_hit"]
+script = ExtResource("2_entry")
+id = &"sfx_smash_hit"
+
+[sub_resource type="Resource" id="Entry_sfx_smash_miss"]
+script = ExtResource("2_entry")
+id = &"sfx_smash_miss"
+
+[sub_resource type="Resource" id="Entry_sfx_smash_escape"]
+script = ExtResource("2_entry")
+id = &"sfx_smash_escape"
+
+[sub_resource type="Resource" id="Entry_sfx_smash_win"]
+script = ExtResource("2_entry")
+id = &"sfx_smash_win"
+
+[sub_resource type="Resource" id="Entry_sfx_smash_lose"]
+script = ExtResource("2_entry")
+id = &"sfx_smash_lose"
+
+[sub_resource type="Resource" id="Entry_sfx_smash_time_up"]
+script = ExtResource("2_entry")
+id = &"sfx_smash_time_up"
+
+[sub_resource type="Resource" id="Entry_sfx_tramp_bounce"]
+script = ExtResource("2_entry")
+id = &"sfx_tramp_bounce"
+
+[sub_resource type="Resource" id="Entry_sfx_tramp_special_bounce"]
+script = ExtResource("2_entry")
+id = &"sfx_tramp_special_bounce"
+
+[sub_resource type="Resource" id="Entry_sfx_tramp_side"]
+script = ExtResource("2_entry")
+id = &"sfx_tramp_side"
+
+[sub_resource type="Resource" id="Entry_sfx_tramp_coin"]
+script = ExtResource("2_entry")
+id = &"sfx_tramp_coin"
+
+[sub_resource type="Resource" id="Entry_sfx_tramp_item"]
+script = ExtResource("2_entry")
+id = &"sfx_tramp_item"
+
+[sub_resource type="Resource" id="Entry_sfx_tramp_special_spawn"]
+script = ExtResource("2_entry")
+id = &"sfx_tramp_special_spawn"
+
+[sub_resource type="Resource" id="Entry_sfx_tramp_height"]
+script = ExtResource("2_entry")
+id = &"sfx_tramp_height"
+
+[sub_resource type="Resource" id="Entry_sfx_tramp_win"]
+script = ExtResource("2_entry")
+id = &"sfx_tramp_win"
+
+[sub_resource type="Resource" id="Entry_sfx_tramp_fall"]
+script = ExtResource("2_entry")
+id = &"sfx_tramp_fall"
+
+[sub_resource type="Resource" id="Entry_sfx_tramp_lose"]
+script = ExtResource("2_entry")
+id = &"sfx_tramp_lose"
+
+[resource]
+script = ExtResource("1_catalog")
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_music_alert"), SubResource("Entry_music_death"), SubResource("Entry_music_level_01"), SubResource("Entry_music_level_02"), SubResource("Entry_music_level_03"), SubResource("Entry_music_mg_catcher"), SubResource("Entry_music_mg_excavation"), SubResource("Entry_music_mg_result"), SubResource("Entry_music_mg_runner"), SubResource("Entry_music_mg_smasher"), SubResource("Entry_music_mg_trampolin"), SubResource("Entry_music_start_menu"), SubResource("Entry_sfx_player_step"), SubResource("Entry_sfx_player_attack"), SubResource("Entry_sfx_player_attack_hit"), SubResource("Entry_sfx_player_block_on"), SubResource("Entry_sfx_player_block_off"), SubResource("Entry_sfx_player_hurt"), SubResource("Entry_sfx_player_knockback"), SubResource("Entry_sfx_player_invulnerable"), SubResource("Entry_sfx_player_death"), SubResource("Entry_sfx_player_respawn"), SubResource("Entry_sfx_player_heal"), SubResource("Entry_sfx_player_interact"), SubResource("Entry_sfx_player_interact_none"), SubResource("Entry_sfx_status_applied"), SubResource("Entry_sfx_status_removed"), SubResource("Entry_sfx_status_tick"), SubResource("Entry_sfx_status_inflicted"), SubResource("Entry_sfx_hud_health_changed"), SubResource("Entry_sfx_hud_gold_changed"), SubResource("Entry_sfx_hud_status_row_changed"), SubResource("Entry_sfx_hud_slot_changed"), SubResource("Entry_sfx_hud_max_health_changed"), SubResource("Entry_sfx_loot_toast_new"), SubResource("Entry_sfx_loot_toast_add"), SubResource("Entry_sfx_loot_inventory_bounce"), SubResource("Entry_sfx_enemy_detect"), SubResource("Entry_sfx_enemy_reacquire"), SubResource("Entry_sfx_enemy_lose_target"), SubResource("Entry_sfx_enemy_chase"), SubResource("Entry_sfx_enemy_attack"), SubResource("Entry_sfx_enemy_hurt"), SubResource("Entry_sfx_enemy_stunned"), SubResource("Entry_sfx_enemy_invulnerable"), SubResource("Entry_sfx_enemy_death"), SubResource("Entry_sfx_enemy_loot_drop"), SubResource("Entry_sfx_loot_land"), SubResource("Entry_sfx_dummy_hit"), SubResource("Entry_sfx_dummy_destroyed"), SubResource("Entry_sfx_alert_on"), SubResource("Entry_sfx_alert_off"), SubResource("Entry_sfx_npc_busy_alert"), SubResource("Entry_sfx_chest_open"), SubResource("Entry_sfx_chest_close"), SubResource("Entry_sfx_chest_loot"), SubResource("Entry_sfx_chest_empty"), SubResource("Entry_sfx_pickup_item"), SubResource("Entry_sfx_pickup_gold"), SubResource("Entry_sfx_switch_on"), SubResource("Entry_sfx_switch_off"), SubResource("Entry_sfx_switch_used"), SubResource("Entry_sfx_plate_pressed"), SubResource("Entry_sfx_plate_released"), SubResource("Entry_sfx_dialogue_event"), SubResource("Entry_sfx_portal_enter"), SubResource("Entry_sfx_door_locked"), SubResource("Entry_sfx_door_unlock_key"), SubResource("Entry_sfx_key_used"), SubResource("Entry_sfx_door_lock"), SubResource("Entry_sfx_door_unlock"), SubResource("Entry_sfx_door_toggle"), SubResource("Entry_sfx_portal_inactive"), SubResource("Entry_sfx_portal_hum"), SubResource("Entry_sfx_destroy_node"), SubResource("Entry_sfx_spawn"), SubResource("Entry_sfx_anim_action"), SubResource("Entry_sfx_vis_col_action"), SubResource("Entry_sfx_minigame_interact"), SubResource("Entry_sfx_npc_talk"), SubResource("Entry_sfx_dialogue_open"), SubResource("Entry_sfx_dialogue_type"), SubResource("Entry_sfx_dialogue_line_done"), SubResource("Entry_sfx_dialogue_skip"), SubResource("Entry_sfx_dialogue_fast_forward"), SubResource("Entry_sfx_dialogue_next"), SubResource("Entry_sfx_dialogue_continue_shown"), SubResource("Entry_sfx_dialogue_responses_shown"), SubResource("Entry_sfx_dialogue_response_focus"), SubResource("Entry_sfx_dialogue_response_select"), SubResource("Entry_sfx_dialogue_voice"), SubResource("Entry_sfx_dialogue_close"), SubResource("Entry_sfx_quest_started"), SubResource("Entry_sfx_quest_completed"), SubResource("Entry_sfx_inventory_open"), SubResource("Entry_sfx_inventory_close"), SubResource("Entry_sfx_inventory_move"), SubResource("Entry_sfx_inventory_use"), SubResource("Entry_sfx_item_heal"), SubResource("Entry_sfx_item_damage"), SubResource("Entry_sfx_item_apply_status"), SubResource("Entry_sfx_item_cure_status"), SubResource("Entry_sfx_inventory_use_fail"), SubResource("Entry_sfx_inventory_assign"), SubResource("Entry_sfx_inventory_assign_fail"), SubResource("Entry_sfx_inventory_notice"), SubResource("Entry_sfx_inventory_changed"), SubResource("Entry_sfx_inventory_gold"), SubResource("Entry_sfx_slot_use"), SubResource("Entry_sfx_slot_equip"), SubResource("Entry_sfx_slot_empty"), SubResource("Entry_sfx_slot_clear"), SubResource("Entry_sfx_slot_reassign"), SubResource("Entry_sfx_ui_focus"), SubResource("Entry_sfx_ui_confirm"), SubResource("Entry_sfx_ui_cancel"), SubResource("Entry_sfx_ui_disabled"), SubResource("Entry_sfx_ui_new_game"), SubResource("Entry_sfx_ui_continue"), SubResource("Entry_sfx_ui_options_open"), SubResource("Entry_sfx_ui_options_close"), SubResource("Entry_sfx_ui_quit"), SubResource("Entry_sfx_ui_pause_open"), SubResource("Entry_sfx_ui_pause_close"), SubResource("Entry_sfx_ui_exit_to_start"), SubResource("Entry_sfx_ui_abandon"), SubResource("Entry_sfx_ui_submenu_open"), SubResource("Entry_sfx_ui_submenu_close"), SubResource("Entry_sfx_map_open"), SubResource("Entry_sfx_map_close"), SubResource("Entry_sfx_map_zoom"), SubResource("Entry_sfx_map_center"), SubResource("Entry_sfx_map_discover"), SubResource("Entry_sfx_save_autosave"), SubResource("Entry_sfx_save_done"), SubResource("Entry_sfx_save_error"), SubResource("Entry_sfx_save_loaded"), SubResource("Entry_sfx_save_deleted"), SubResource("Entry_sfx_save_slot_save"), SubResource("Entry_sfx_save_slot_load"), SubResource("Entry_sfx_save_slot_delete"), SubResource("Entry_sfx_save_slot_focus"), SubResource("Entry_sfx_checkpoint"), SubResource("Entry_sfx_fade_out"), SubResource("Entry_sfx_fade_in"), SubResource("Entry_sfx_level_change"), SubResource("Entry_sfx_level_loaded"), SubResource("Entry_sfx_minigame_enter"), SubResource("Entry_sfx_minigame_return"), SubResource("Entry_sfx_minigame_rewards"), SubResource("Entry_sfx_game_paused"), SubResource("Entry_sfx_game_resumed"), SubResource("Entry_sfx_mg_start"), SubResource("Entry_sfx_mg_win"), SubResource("Entry_sfx_mg_lose"), SubResource("Entry_sfx_mg_result_shown"), SubResource("Entry_sfx_mg_result_continue"), SubResource("Entry_sfx_mg_reward_added"), SubResource("Entry_sfx_mg_pause"), SubResource("Entry_sfx_mg_abandon"), SubResource("Entry_sfx_mg_finished"), SubResource("Entry_sfx_exc_start"), SubResource("Entry_sfx_exc_step"), SubResource("Entry_sfx_exc_dig"), SubResource("Entry_sfx_exc_push"), SubResource("Entry_sfx_exc_push_blocked"), SubResource("Entry_sfx_exc_rock_fall"), SubResource("Entry_sfx_exc_rock_slide"), SubResource("Entry_sfx_exc_rock_land"), SubResource("Entry_sfx_exc_coin"), SubResource("Entry_sfx_exc_item"), SubResource("Entry_sfx_exc_quest_item"), SubResource("Entry_sfx_exc_bomb_pickup"), SubResource("Entry_sfx_exc_bomb_plant"), SubResource("Entry_sfx_exc_bomb_fuse"), SubResource("Entry_sfx_exc_explosion"), SubResource("Entry_sfx_exc_chain_explosion"), SubResource("Entry_sfx_exc_bomb_impact"), SubResource("Entry_sfx_exc_crushed"), SubResource("Entry_sfx_exc_exit_blocked"), SubResource("Entry_sfx_exc_exit_open"), SubResource("Entry_sfx_exc_lose"), SubResource("Entry_sfx_catch_spawn"), SubResource("Entry_sfx_catch_item"), SubResource("Entry_sfx_catch_bomb"), SubResource("Entry_sfx_catch_miss"), SubResource("Entry_sfx_catch_floor_hit"), SubResource("Entry_sfx_catch_life_lost"), SubResource("Entry_sfx_catch_move"), SubResource("Entry_sfx_catch_time_up"), SubResource("Entry_sfx_catch_win"), SubResource("Entry_sfx_catch_lose"), SubResource("Entry_sfx_run_jump"), SubResource("Entry_sfx_run_land"), SubResource("Entry_sfx_run_duck"), SubResource("Entry_sfx_run_stand"), SubResource("Entry_sfx_run_shoot"), SubResource("Entry_sfx_run_shoot_empty"), SubResource("Entry_sfx_run_ammo"), SubResource("Entry_sfx_run_enemy_killed"), SubResource("Entry_sfx_run_obstacle_destroyed"), SubResource("Entry_sfx_run_coin"), SubResource("Entry_sfx_run_item"), SubResource("Entry_sfx_run_target"), SubResource("Entry_sfx_run_target_spawn"), SubResource("Entry_sfx_run_enemy_spawn"), SubResource("Entry_sfx_run_death"), SubResource("Entry_sfx_run_world_stop"), SubResource("Entry_sfx_run_speed_up"), SubResource("Entry_sfx_run_win"), SubResource("Entry_sfx_run_lose"), SubResource("Entry_sfx_smash_spawn"), SubResource("Entry_sfx_smash_insect_loop"), SubResource("Entry_sfx_smash_hit"), SubResource("Entry_sfx_smash_miss"), SubResource("Entry_sfx_smash_escape"), SubResource("Entry_sfx_smash_win"), SubResource("Entry_sfx_smash_lose"), SubResource("Entry_sfx_smash_time_up"), SubResource("Entry_sfx_tramp_bounce"), SubResource("Entry_sfx_tramp_special_bounce"), SubResource("Entry_sfx_tramp_side"), SubResource("Entry_sfx_tramp_coin"), SubResource("Entry_sfx_tramp_item"), SubResource("Entry_sfx_tramp_special_spawn"), SubResource("Entry_sfx_tramp_height"), SubResource("Entry_sfx_tramp_win"), SubResource("Entry_sfx_tramp_fall"), SubResource("Entry_sfx_tramp_lose")])

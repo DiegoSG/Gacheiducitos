@@ -15,6 +15,8 @@ const SLOT_COUNT: int = 4
 static var instance: QuickSlots = null
 ## Los datos viven fuera del nodo para sobrevivir al cambio de nivel (el Player se reinstancia).
 static var _slots: Array[String] = ["", "", "", ""]
+## true mientras restore_snapshot reemite slot_changed (al cargar partida), para no sonar.
+static var is_restoring: bool = false
 
 func _ready() -> void:
 	instance = self
@@ -61,6 +63,7 @@ func assign(index: int, item_id: String) -> bool:
 		return false
 	var previous: int = _slots.find(item_id)
 	if previous != -1 and previous != index:
+		AudioManager.play_ui(&"sfx_slot_reassign")
 		_slots[previous] = ""
 		slot_changed.emit(previous, "")
 	_slots[index] = item_id
@@ -71,19 +74,21 @@ func clear_slot(index: int) -> void:
 	if index < 0 or index >= SLOT_COUNT or _slots[index].is_empty():
 		return
 	_slots[index] = ""
+	AudioManager.play_ui(&"sfx_slot_clear")
 	slot_changed.emit(index, "")
 
 func use_slot(index: int) -> bool:
 	var item_id: String = get_slot(index)
-	if item_id.is_empty():
-		return false
-	var data: ItemData = ItemDatabase.get_item(item_id)
+	var data: ItemData = null if item_id.is_empty() else ItemDatabase.get_item(item_id)
 	if data == null or Inventory.get_item_count(item_id) <= 0:
+		AudioManager.play_sfx(&"sfx_slot_empty")
 		return false
 	if data.type == ItemData.ItemType.CONSUMABLE:
 		if not Inventory.use_item(item_id):
 			return false
+		AudioManager.play_sfx(&"sfx_slot_use")
 	elif data.type == ItemData.ItemType.EQUIPMENT:
+		AudioManager.play_sfx(&"sfx_slot_equip")
 		print("[QuickSlots] Equipar solicitado (placeholder): slot %d -> %s" % [index + 1, item_id])
 		equip_requested.emit(index, item_id)
 	else:
@@ -105,5 +110,7 @@ static func restore_snapshot(snapshot: Array) -> void:
 	for i: int in SLOT_COUNT:
 		_slots[i] = str(snapshot[i]) if i < snapshot.size() else ""
 	if instance != null:
+		is_restoring = true
 		for i: int in SLOT_COUNT:
 			instance.slot_changed.emit(i, _slots[i])
+		is_restoring = false

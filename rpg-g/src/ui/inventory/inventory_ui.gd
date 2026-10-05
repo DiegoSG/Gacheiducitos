@@ -16,6 +16,7 @@ func _ready() -> void:
 
 	if item_list:
 		item_list.item_activated.connect(_on_item_activated)
+		item_list.item_selected.connect(_on_item_selected)
 	
 	_create_notice_label()
 	refresh_ui()
@@ -59,6 +60,7 @@ func open_inventory() -> void:
 	if control:
 		_connect_quick_slots()
 		control.visible = true
+		AudioManager.play_ui(&"sfx_inventory_open")
 		GameManager.request_pause()
 		refresh_ui()
 		_focus_list()
@@ -68,6 +70,7 @@ func close_inventory() -> void:
 		if item_list:
 			item_list.release_focus()
 		control.visible = false
+		AudioManager.play_ui(&"sfx_inventory_close")
 		GameManager.release_pause()
 
 func _exit_tree() -> void:
@@ -127,6 +130,9 @@ func _focus_list() -> void:
 		item_list.select(0)
 		item_list.ensure_current_is_visible()
 
+func _on_item_selected(_index: int) -> void:
+	AudioManager.play_ui(&"sfx_inventory_move")
+
 func _on_item_activated(index: int) -> void:
 	if not item_list:
 		return
@@ -147,9 +153,11 @@ func _assign_selected_to_slot(slot_index: int) -> void:
 	if not item_id is String or (item_id as String).is_empty():
 		return
 	if not QuickSlots.can_assign(item_id as String):
+		AudioManager.play_ui(&"sfx_inventory_assign_fail")
 		_show_notice("Este ítem no se puede asignar a un slot")
 		return
 	if slots.assign(slot_index, item_id as String):
+		AudioManager.play_ui(&"sfx_inventory_assign")
 		_show_notice("Asignado al slot %d" % (slot_index + 1))
 		refresh_ui()
 
@@ -181,6 +189,7 @@ func _show_notice(text: String) -> void:
 	if _notice_label == null:
 		return
 	_notice_label.text = text
+	AudioManager.play_ui(&"sfx_inventory_notice")
 	_notice_label.modulate.a = 1.0
 	if _notice_tween:
 		_notice_tween.kill()

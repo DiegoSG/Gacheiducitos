@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://src/ui/menus/start_menu.gd" id="1_start"]
 [ext_resource type="PackedScene" path="res://src/ui/menus/menu_base.tscn" id="2_base"]
+[ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="scene_music"]
 
 [node name="StartMenu" type="Control"]
 layout_mode = 3
@@ -23,3 +24,7 @@ color = Color(0.08, 0.08, 0.12, 1)
 
 [node name="MenuBase" parent="." instance=ExtResource("2_base")]
 layout_mode = 1
+
+[node name="SceneMusic" type="Node" parent="."]
+script = ExtResource("scene_music")
+music_id = &"music_start_menu"

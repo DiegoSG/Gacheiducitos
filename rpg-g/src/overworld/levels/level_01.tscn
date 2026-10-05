@@ -23,6 +23,7 @@
 [ext_resource type="Script" uid="uid://f73vy602pjfk" path="res://src/core/pipeline/action_resource.gd" id="13_s44nc"]
 [ext_resource type="PackedScene" uid="uid://ckyt3sc6keqdu" path="res://src/overworld/interactables/pickup_item.tscn" id="14_3bam5"]
 [ext_resource type="Resource" uid="uid://bxps63a4a2vpn" path="res://data/items/red_potion.tres" id="15_fvo0o"]
+[ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="scene_music"]
 
 [sub_resource type="Resource" id="Resource_edlbh"]
 script = ExtResource("8_cet0f")
@@ -164,3 +165,8 @@ persistence_id = "lvl_01_item_8f81566c"
 [editable path="Entities/GenericEnemy2"]
 [editable path="Entities/GenericEnemy"]
 [editable path="LevelPortal"]
+
+[node name="SceneMusic" type="Node" parent="."]
+script = ExtResource("scene_music")
+music_id = &"music_level_01"
+alert_music_id = &"music_alert"

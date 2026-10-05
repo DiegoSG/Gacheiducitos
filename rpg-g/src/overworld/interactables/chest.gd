@@ -43,6 +43,7 @@ func action() -> void:
 
 func open_chest() -> void:
 	is_open = true
+	AudioManager.play_sfx(&"sfx_chest_open")
 	if sprite:
 		sprite.texture = texture_open
 		sprite.modulate = Color.WHITE
@@ -50,6 +51,7 @@ func open_chest() -> void:
 	if not has_been_looted:
 		give_loot()
 	else:
+		AudioManager.play_ui(&"sfx_chest_empty")
 		show_message("empty")
 
 	if is_storage_enabled:
@@ -58,6 +60,7 @@ func open_chest() -> void:
 
 func close_chest() -> void:
 	is_open = false
+	AudioManager.play_sfx(&"sfx_chest_close")
 	if sprite:
 		sprite.texture = texture_closed
 		sprite.modulate = Color.WHITE
@@ -66,6 +69,7 @@ func close_chest() -> void:
 
 func give_loot() -> void:
 	if loot_items.is_empty():
+		AudioManager.play_ui(&"sfx_chest_empty")
 		show_message("empty")
 		has_been_looted = true
 		_persist_state()
@@ -79,6 +83,7 @@ func give_loot() -> void:
 			Inventory.add_item(item.id, amount)
 			LootFeedbackManager.trigger_toast(item, amount)
 
+	AudioManager.play_sfx(&"sfx_chest_loot")
 	has_been_looted = true
 	_persist_state()
 

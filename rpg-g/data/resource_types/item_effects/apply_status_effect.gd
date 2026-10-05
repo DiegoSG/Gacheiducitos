@@ -5,6 +5,7 @@ class_name ApplyStatusEffect
 
 func apply() -> void:
 	if status:
+		AudioManager.play_ui(&"sfx_item_apply_status")
 		PlayerStats.apply_status(status)
 
 func describe() -> String:

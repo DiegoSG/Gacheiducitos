@@ -57,17 +57,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			_close_sub()
 
 func _close() -> void:
+	AudioManager.play_ui(&"sfx_ui_pause_close")
 	_release_pause()
 	closed.emit()
 	queue_free()
 
 func _abandon() -> void:
+	AudioManager.play_ui(&"sfx_ui_abandon")
 	_release_pause()
 	abandon_requested.emit()
 	closed.emit()
 	queue_free()
 
 func _exit_to_start() -> void:
+	AudioManager.play_ui(&"sfx_ui_exit_to_start")
 	_menu.hide()
 	_pause_held = false # change_level reinicia el conteo de pausas
 	GameManager.change_level(START_MENU_PATH)
@@ -91,6 +94,7 @@ func _open_save() -> void:
 
 func _show_sub(sub: Control) -> void:
 	_sub = sub
+	AudioManager.play_ui(&"sfx_ui_submenu_open")
 	_menu.hide()
 	_overlay.add_child(sub)
 
@@ -99,6 +103,7 @@ func _close_sub() -> void:
 		return
 	_sub.queue_free()
 	_sub = null
+	AudioManager.play_ui(&"sfx_ui_submenu_close")
 	_menu.show()
 	_menu.focus_first()
 

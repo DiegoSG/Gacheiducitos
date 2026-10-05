@@ -47,6 +47,9 @@ var is_invulnerable: bool = false
 var _start_position: Vector2 = Vector2.ZERO
 var _cooldown_timer: float = 0.0
 
+const CHASE_SOUND_INTERVAL: float = 0.4
+var _chase_sound_timer: float = 0.0
+
 func _ready() -> void:
 	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
 	if _restore_state():
@@ -89,6 +92,10 @@ func _physics_process(delta: float) -> void:
 			if player != null:
 				var direction: Vector2 = global_position.direction_to(player.global_position)
 				velocity = direction * speed
+				_chase_sound_timer -= delta
+				if _chase_sound_timer <= 0.0:
+					_chase_sound_timer = CHASE_SOUND_INTERVAL
+					AudioManager.play_sfx(&"sfx_enemy_chase")
 			else:
 				velocity = velocity.move_toward(Vector2.ZERO, speed * 4 * delta)
 		State.COOLDOWN:
@@ -126,6 +133,8 @@ func _check_overlap_for_reaggro() -> void:
 
 func _on_vision_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
+		if current_state != State.CHASE:
+			AudioManager.play_sfx(&"sfx_enemy_detect")
 		player = body as CharacterBody2D
 		current_state = State.CHASE
 		_cooldown_timer = 0.0
@@ -133,6 +142,7 @@ func _on_vision_entered(body: Node2D) -> void:
 
 func _on_lose_target_entered(body: Node2D) -> void:
 	if body.is_in_group("player") and (current_state == State.COOLDOWN or current_state == State.RETURNING):
+		AudioManager.play_sfx(&"sfx_enemy_reacquire")
 		player = body as CharacterBody2D
 		current_state = State.CHASE
 		_cooldown_timer = 0.0
@@ -140,6 +150,7 @@ func _on_lose_target_entered(body: Node2D) -> void:
 
 func _on_lose_target_exited(body: Node2D) -> void:
 	if body == player:
+		AudioManager.play_sfx(&"sfx_enemy_lose_target")
 		player = null
 		AlertSystem.unregister_pursuer(self)
 			
@@ -161,17 +172,21 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	velocity = attack_direction * knockback_force
 	
 	if current_health <= 0:
+		AudioManager.play_sfx(&"sfx_enemy_death")
 		_persist_death()
 		if loot_drop_component:
 			loot_drop_component.drop_loot()
 		call_deferred("queue_free")
 		return
 		
+	AudioManager.play_sfx(&"sfx_enemy_hurt")
+	AudioManager.play_sfx(&"sfx_enemy_stunned")
 	is_stunned = true
 	get_tree().create_timer(0.3).timeout.connect(func() -> void: if is_inside_tree(): is_stunned = false)
 	
 	if has_iframes and iframe_duration > 0.0:
 		is_invulnerable = true
+		AudioManager.play_sfx(&"sfx_enemy_invulnerable")
 		
 		# Efecto visual de parpadeo temporal (0.2s por loop completo)
 		var blink_time: float = 0.1

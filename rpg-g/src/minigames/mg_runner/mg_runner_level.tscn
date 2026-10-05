@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ppfnyfioegw1" path="res://src/minigames/mg_runner/mg_runner_level.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://src/minigames/mg_runner/mg_runner_player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="scene_music"]
 
 [node name="RunnerLevel" type="Node2D" unique_id=2031860998]
 script = ExtResource("1_script")
@@ -204,3 +205,7 @@ theme_override_font_sizes/font_size = 20
 modulate = Color(0.7, 0.8, 0.9, 0.8)
 text = "ARRIBA / ESPACIO: Saltar   |   ABAJO: Agacharse / Slide   |   Z: Disparar"
 horizontal_alignment = 1
+
+[node name="SceneMusic" type="Node" parent="."]
+script = ExtResource("scene_music")
+music_id = &"music_mg_runner"

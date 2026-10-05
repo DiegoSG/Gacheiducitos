@@ -42,6 +42,7 @@ func _smash_at(point: Vector2) -> void:
 		if collider is Insect:
 			(collider as Insect).smash()
 			return
+	AudioManager.play_sfx(&"sfx_smash_miss")
 
 
 func _draw() -> void:

@@ -15,9 +15,19 @@ var wave_amplitude: float = 0.0
 var wave_frequency: float = 0.0
 var time_passed: float = 0.0
 
+var _loop_player: AudioStreamPlayer2D = null
+
 func _ready() -> void:
 	# Enable input picking for clicking
 	input_pickable = true
+	var loop_entry: AudioEntry = AudioManager.get_playable_entry(&"sfx_smash_insect_loop")
+	if loop_entry != null:
+		_loop_player = AudioStreamPlayer2D.new()
+		_loop_player.bus = &"SFX"
+		_loop_player.volume_db = loop_entry.volume_db
+		_loop_player.stream = loop_entry.stream
+		add_child(_loop_player)
+		_loop_player.play()
 
 func setup(p_start: Vector2, p_end: Vector2, p_speed: float) -> void:
 	global_position = p_start
@@ -55,6 +65,8 @@ func _process(delta: float) -> void:
 	path_offset += speed * delta
 	
 	if path_offset >= path_length:
+		_stop_loop()
+		AudioManager.play_sfx(&"sfx_smash_escape")
 		escaped.emit()
 		is_active = false
 		queue_free()
@@ -82,5 +94,12 @@ func smash() -> void:
 	if not is_active:
 		return
 	is_active = false
+	_stop_loop()
+	AudioManager.play_sfx(&"sfx_smash_hit")
 	smashed.emit()
 	queue_free()
+
+
+func _stop_loop() -> void:
+	if _loop_player != null:
+		_loop_player.stop()

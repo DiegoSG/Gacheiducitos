@@ -64,4 +64,5 @@ func _process(delta: float) -> void:
 		queue_free()
 
 func hit_by_bullet() -> void:
+	AudioManager.play_sfx(&"sfx_run_obstacle_destroyed")
 	queue_free()

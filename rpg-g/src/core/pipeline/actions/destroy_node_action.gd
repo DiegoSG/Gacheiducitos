@@ -52,6 +52,7 @@ func execute(trigger_node: Node) -> void:
 func _finalize_destroy(target: Node) -> void:
 	if not is_instance_valid(target):
 		return
+	AudioManager.play_sfx(&"sfx_destroy_node")
 		
 	if mode == DestroyMode.QUEUE_FREE:
 		target.queue_free()

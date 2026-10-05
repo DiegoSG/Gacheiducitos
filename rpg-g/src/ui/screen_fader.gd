@@ -12,6 +12,7 @@ func _ready() -> void:
 	color_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func fade_out(duration: float = 0.4) -> void:
+	AudioManager.play_ui(&"sfx_fade_out")
 	color_rect.mouse_filter = Control.MOUSE_FILTER_STOP
 	if _active_tween and _active_tween.is_running():
 		_active_tween.kill()
@@ -21,6 +22,7 @@ func fade_out(duration: float = 0.4) -> void:
 	fade_out_completed.emit()
 
 func fade_in(duration: float = 0.4) -> void:
+	AudioManager.play_ui(&"sfx_fade_in")
 	if _active_tween and _active_tween.is_running():
 		_active_tween.kill()
 	_active_tween = create_tween()

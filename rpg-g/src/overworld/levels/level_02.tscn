@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="3_0pt0e"]
 [ext_resource type="Script" uid="uid://b24wrgfyi41x2" path="res://src/overworld/components/arrival_spawn_point.gd" id="3_1hs2r"]
 [ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="4_yhaya"]
+[ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="scene_music"]
 
 [node name="TemplateLevel" type="Node2D" unique_id=187744379]
 y_sort_enabled = true
@@ -48,3 +49,8 @@ arrival_id = "1"
 
 [node name="Player" parent="." unique_id=1441524907 instance=ExtResource("4_yhaya")]
 position = Vector2(122, 130)
+
+[node name="SceneMusic" type="Node" parent="."]
+script = ExtResource("scene_music")
+music_id = &"music_level_02"
+alert_music_id = &"music_alert"

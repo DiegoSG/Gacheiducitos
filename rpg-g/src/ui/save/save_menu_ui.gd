@@ -4,6 +4,9 @@ const SaveSlotUI: PackedScene = preload("res://src/ui/save/save_slot_ui.tscn")
 
 @onready var slots_container: VBoxContainer = $MarginContainer/VBoxContainer/SlotsContainer
 
+## Evita el sonido de foco cuando el foco lo pone focus_first()
+var _silence_focus_sound: bool = false
+
 func _ready() -> void:
 	if not SaveSystem.game_saved.is_connected(_on_game_saved):
 		SaveSystem.game_saved.connect(_on_game_saved)
@@ -26,6 +29,7 @@ func _build_slots() -> void:
 	autosave_slot.save_requested.connect(_on_slot_save_requested)
 	autosave_slot.load_requested.connect(_on_slot_load_requested)
 	autosave_slot.delete_requested.connect(_on_slot_delete_requested)
+	_connect_focus_sound(autosave_slot)
 
 	var separator: HSeparator = HSeparator.new()
 	slots_container.add_child(separator)
@@ -38,6 +42,7 @@ func _build_slots() -> void:
 		slot.save_requested.connect(_on_slot_save_requested)
 		slot.load_requested.connect(_on_slot_load_requested)
 		slot.delete_requested.connect(_on_slot_delete_requested)
+		_connect_focus_sound(slot)
 
 func refresh() -> void:
 	if not is_instance_valid(self) or not is_inside_tree():
@@ -65,16 +70,29 @@ func focus_first() -> void:
 	for node: Node in slots_container.find_children("*", "Button", true, false):
 		var button: Button = node as Button
 		if not button.disabled and button.is_visible_in_tree():
+			_silence_focus_sound = true
 			button.grab_focus()
+			_silence_focus_sound = false
 			return
 
+func _connect_focus_sound(slot: Control) -> void:
+	for node: Node in slot.find_children("*", "Button", true, false):
+		node.focus_entered.connect(_on_slot_button_focused)
+
+func _on_slot_button_focused() -> void:
+	if not _silence_focus_sound:
+		AudioManager.play_ui(&"sfx_save_slot_focus")
+
 func _on_slot_save_requested(slot_id: int) -> void:
+	AudioManager.play_ui(&"sfx_save_slot_save")
 	SaveSystem.save_slot(slot_id)
 
 func _on_slot_load_requested(slot_id: int) -> void:
+	AudioManager.play_ui(&"sfx_save_slot_load")
 	SaveSystem.load_slot(slot_id)
 
 func _on_slot_delete_requested(slot_id: int) -> void:
+	AudioManager.play_ui(&"sfx_save_slot_delete")
 	SaveSystem.delete_slot(slot_id)
 
 func _on_game_saved(_slot_id: int) -> void:

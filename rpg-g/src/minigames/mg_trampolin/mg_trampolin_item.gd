@@ -18,5 +18,6 @@ func setup(p_item_id: String, texture: Texture2D) -> void:
 
 func _on_body_entered(body: Node2D) -> void:
 	if body is MG_TrampolinPlayer or body.name == "TrampolinPlayer":
+		AudioManager.play_sfx(&"sfx_tramp_item")
 		collected.emit(item_id)
 		queue_free()

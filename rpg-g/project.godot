@@ -27,6 +27,7 @@ WorldStateManager="*res://src/core/world_state_manager.gd"
 AlertSystem="*res://src/core/alert_system.gd"
 CheckpointManager="*res://src/core/checkpoint_manager.gd"
 SaveSystem="*res://src/core/save_system.gd"
+AudioManager="*res://src/core/audio_manager.gd"
 
 [dialogue_manager]
 

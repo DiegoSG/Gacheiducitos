@@ -70,6 +70,7 @@ func _refresh() -> void:
 	_canvas.queue_redraw()
 
 func _set_zoom(factor: float) -> void:
+	AudioManager.play_ui(&"sfx_map_zoom")
 	_canvas.zoom = clampf(_canvas.zoom * factor, _fit_zoom * min_zoom_factor, _fit_zoom * max_zoom_factor)
 	_refresh()
 
@@ -86,6 +87,7 @@ func _input(event: InputEvent) -> void:
 	elif event.is_action_pressed("map_zoom_out"):
 		_set_zoom(1.0 / zoom_step)
 	elif event.is_action_pressed("map_center"):
+		AudioManager.play_ui(&"sfx_map_center")
 		_center_on_player()
 	elif event.is_action_pressed("ui_cancel"):
 		close_requested.emit()

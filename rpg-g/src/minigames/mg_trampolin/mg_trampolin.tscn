@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cw8wabxufuqtt"]
 
 [ext_resource type="Script" uid="uid://bwjswfc0h26ew" path="res://src/minigames/mg_trampolin/mg_trampolin.gd" id="1_script"]
+[ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="scene_music"]
 
 [node name="MgTrampolin" type="Node2D" unique_id=1029057841]
 script = ExtResource("1_script")
@@ -49,3 +50,7 @@ offset_right = 160.0
 offset_bottom = 73.0
 theme_override_font_sizes/font_size = 24
 text = "Score: 0"
+
+[node name="SceneMusic" type="Node" parent="."]
+script = ExtResource("scene_music")
+music_id = &"music_mg_trampolin"

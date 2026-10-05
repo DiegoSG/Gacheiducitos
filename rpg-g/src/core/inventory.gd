@@ -15,9 +15,11 @@ func add_item(item_id: String, amount: int = 1) -> void:
 
 	if item_id == GOLD_ITEM_ID:
 		PlayerStats.add_gold(amount)
+		AudioManager.play_ui(&"sfx_inventory_gold")
 		return
 
 	items[item_id] = int(items.get(item_id, 0)) + amount
+	AudioManager.play_ui(&"sfx_inventory_changed")
 	inventory_changed.emit()
 
 ## Atómico: si no hay cantidad suficiente devuelve false y no quita nada.
@@ -37,6 +39,7 @@ func remove_item(item_id: String, amount: int = 1) -> bool:
 	else:
 		items[item_id] = remaining
 
+	AudioManager.play_ui(&"sfx_inventory_changed")
 	inventory_changed.emit()
 	return true
 
@@ -47,12 +50,14 @@ func use_item(item_id: String) -> bool:
 
 	var data: ItemData = ItemDatabase.get_item(item_id)
 	if not data or not data.consumable or data.effects.is_empty():
+		AudioManager.play_ui(&"sfx_inventory_use_fail")
 		return false
 
 	for effect: ItemEffect in data.effects:
 		if effect:
 			effect.apply()
 
+	AudioManager.play_ui(&"sfx_inventory_use")
 	remove_item(item_id, 1)
 	return true
 

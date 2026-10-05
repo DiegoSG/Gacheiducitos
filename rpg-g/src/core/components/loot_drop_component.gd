@@ -93,6 +93,8 @@ func drop_loot(spawn_pos: Vector2 = global_position) -> Array[PickupItem]:
 				spawned_pickups.append(coin_pickup)
 				drop_index += 1
 				
+	if not spawned_pickups.is_empty():
+		AudioManager.play_sfx(&"sfx_enemy_loot_drop")
 	loot_dropped.emit(spawned_pickups)
 	return spawned_pickups
 

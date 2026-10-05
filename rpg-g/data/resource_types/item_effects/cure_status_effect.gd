@@ -6,6 +6,7 @@ class_name CureStatusEffect
 @export var cure_all: bool = true
 
 func apply() -> void:
+	AudioManager.play_ui(&"sfx_item_cure_status")
 	if cure_all:
 		PlayerStats.cure_all_statuses()
 	else:

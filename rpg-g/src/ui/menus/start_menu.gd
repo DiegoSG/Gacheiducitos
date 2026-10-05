@@ -28,12 +28,15 @@ func _build_items() -> void:
 	_menu.add_item("Salir", _on_quit_pressed)
 
 func _on_continue_pressed() -> void:
+	AudioManager.play_ui(&"sfx_ui_continue")
 	SaveSystem.load_slot(SaveSystem.AUTOSAVE_SLOT_ID)
 
 func _on_play_pressed() -> void:
+	AudioManager.play_ui(&"sfx_ui_new_game")
 	GameManager.change_level(NEW_GAME_LEVEL)
 
 func _on_options_pressed() -> void:
+	AudioManager.play_ui(&"sfx_ui_options_open")
 	_options = OPTIONS_SCENE.instantiate() as OptionsMenu
 	add_child(_options)
 	_options.closed.connect(_on_options_closed)
@@ -46,4 +49,5 @@ func _on_options_closed() -> void:
 	_menu.focus_first()
 
 func _on_quit_pressed() -> void:
+	AudioManager.play_ui(&"sfx_ui_quit")
 	get_tree().quit()

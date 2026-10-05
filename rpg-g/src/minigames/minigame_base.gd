@@ -23,6 +23,11 @@ const COIN_TEXTURE_PATH: String = "res://assets/items/icons/coin_v2.png"
 const COIN_TEXTURE_FALLBACK_PATH: String = "res://assets/items/icons/gold_coins.png"
 static var _coin_texture_cache: Texture2D = null
 
+# _notification se ejecuta en toda la jerarquía de scripts; _ready no, porque los minijuegos lo sobrescriben sin super().
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_READY:
+		AudioManager.play_sfx(&"sfx_mg_start")
+
 ## Añade un ítem al buffer local de la sesión.
 ## No se añade al inventario real hasta que se llama a finish().
 func add_reward(item_id: String, amount: int = 1) -> void:
@@ -30,6 +35,7 @@ func add_reward(item_id: String, amount: int = 1) -> void:
 		session_rewards[item_id] += amount
 	else:
 		session_rewards[item_id] = amount
+	AudioManager.play_sfx(&"sfx_mg_reward_added")
 
 ## Llamar a esta función cuando el minijuego termina (ganar o perder).
 func finish(success: bool, skip_screen: bool = false) -> void:
@@ -42,12 +48,17 @@ func finish(success: bool, skip_screen: bool = false) -> void:
 		_emit_finished(success)
 		return
 		
+	# Se pausa justo después: usa el bus de interfaz para que no se corte
+	AudioManager.play_ui(&"sfx_mg_win" if success else &"sfx_mg_lose")
+
 	# Congelar completamente el juego (físicas, proyectiles, timers, entidades)
 	get_tree().paused = true
 	
 	_show_result_screen(success)
 
 func _show_result_screen(success: bool) -> void:
+	AudioManager.play_music(&"music_mg_result")
+	AudioManager.play_ui(&"sfx_mg_result_shown")
 	_result_ui = CanvasLayer.new()
 	_result_ui.layer = 120 # Por encima de cualquier UI o HUD de minijuego
 	_result_ui.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -135,6 +146,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("pause"):
 		get_viewport().set_input_as_handled()
+		AudioManager.play_ui(&"sfx_mg_pause")
 		_pause_menu = PAUSE_MENU_SCENE.instantiate() as PauseMenu
 		_pause_menu.mode = PauseMenu.Mode.MINIGAME
 		_pause_menu.closed.connect(func() -> void: _pause_menu = null)
@@ -144,6 +156,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Abandonar cuenta como perder: se descartan los ítems de la partida y se usa el camino de derrota.
 func _on_abandon_requested() -> void:
 	session_rewards.clear()
+	AudioManager.play_ui(&"sfx_mg_abandon")
 	finish(false)
 
 func _exit_tree() -> void:
@@ -152,6 +165,7 @@ func _exit_tree() -> void:
 		get_tree().paused = false
 
 func _on_continue_pressed(success: bool) -> void:
+	AudioManager.play_ui(&"sfx_mg_result_continue")
 	if get_tree() and get_tree().paused:
 		get_tree().paused = false
 	if _result_ui:
@@ -160,6 +174,7 @@ func _on_continue_pressed(success: bool) -> void:
 	_emit_finished(success)
 
 func _emit_finished(success: bool) -> void:
+	AudioManager.play_ui(&"sfx_mg_finished")
 	game_finished.emit(success, {"items": session_rewards})
 
 ## Elige un id de ítem de un pool. Acepta Array de String (elección uniforme)

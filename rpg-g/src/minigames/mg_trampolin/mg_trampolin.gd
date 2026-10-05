@@ -13,6 +13,9 @@ var last_platform_y: float = 0.0
 var spawn_distance: float = 120.0
 var game_width: float = 600.0
 var max_score: float = 0.0
+var _last_height_sound_score: float = 0.0
+
+const HEIGHT_SOUND_SCORE_STEP: float = 50.0
 
 @export var cleanup_threshold: float = 300.0
 
@@ -67,6 +70,9 @@ func _process(_delta: float) -> void:
 	if current_score > max_score:
 		max_score = current_score
 		$UI/ScoreLabel.text = "Score: " + str(max_score)
+		if max_score - _last_height_sound_score >= HEIGHT_SOUND_SCORE_STEP:
+			_last_height_sound_score = max_score
+			AudioManager.play_sfx(&"sfx_tramp_height")
 	
 	# Verificar condiciones de victoria
 	_check_win_conditions()
@@ -103,6 +109,7 @@ func _win_game() -> void:
 		return
 	win_condition_met = true
 	set_process(false)
+	AudioManager.play_ui(&"sfx_tramp_win")
 	finish(true)
 
 func _on_special_platform_reached() -> void:
@@ -143,6 +150,7 @@ func spawn_platform() -> void:
 			new_plat.modulate = Color.GOLD
 			new_plat.add_to_group("special_platform")
 			special_platform_spawned = true
+			AudioManager.play_sfx(&"sfx_tramp_special_spawn")
 
 func _spawn_platform_item(p_id: String, pos: Vector2) -> void:
 	var item_node = ITEM_SCENE.instantiate() as MG_TrampolinItem
@@ -157,6 +165,8 @@ func _on_platform_item_collected(p_id: String) -> void:
 
 func _game_over() -> void:
 	set_process(false)
+	AudioManager.play_ui(&"sfx_tramp_fall")
+	AudioManager.play_ui(&"sfx_tramp_lose")
 	finish(win_condition_met)
 
 func spawn_base_floor() -> void:
