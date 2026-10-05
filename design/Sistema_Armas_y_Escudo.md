@@ -3,6 +3,7 @@
 **Fecha:** 29 de Septiembre, 2026
 **Proyecto:** RPG-G (Godot 4.6)
 **Estado:** Diseño aprobado — pendiente de implementación (sin código)
+**Avance:** Escudo PROXY implementado (`src/overworld/player/components/shield_component.gd`, prueba `src/overworld/player/tests/test_shield.tscn`): bloqueo total en 360° (daño, knockback y estados), sin movimiento mientras se bloquea, arco placeholder. Pendiente: `ShieldData`, `coverage_angle`, `block_percent` y requerir escudo equipado.
 
 ---
 

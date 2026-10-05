@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://src/overworld/enemies/generic_enemy.tscn" id="2_enemy"]
+
+[node name="TestShield" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(500, 540)
+
+[node name="GenericEnemy" parent="." instance=ExtResource("2_enemy")]
+position = Vector2(760, 540)
+
+[node name="Instructions" type="Label" parent="."]
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 1400.0
+offset_bottom = 160.0
+text = "Escudo PROXY (bloqueo total en 360°).
+Mantén K / clic der. / LT: aparece el arco azul, el jugador no se desplaza (solo gira) y no puede atacar.
+Deja que la araña te golpee con el escudo arriba: no baja la vida, no hay knockback y el arco destella.
+Suelta el escudo: los golpes vuelven a hacer daño y knockback."

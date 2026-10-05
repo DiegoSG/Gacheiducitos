@@ -10,6 +10,8 @@ var is_dead: bool = false
 @onready var hurtbox_component: HurtboxComponent = $HurtboxComponent
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var slash_sprite: Sprite2D = get_node_or_null("HitboxComponent/SlashSprite")
+## Escudo PROXY: bloqueo total en 360° mientras se mantiene "block" (ver shield_component.gd).
+@onready var shield_component: ShieldComponent = $ShieldComponent
 
 # Texturas canónicas para las 8 orientaciones (usando simetría horizontal flip_h)
 const TEX_DOWN = preload("res://assets/sprites/player_down.png")           # Sur (Frente)
@@ -20,10 +22,6 @@ const TEX_UP = preload("res://assets/sprites/player_up.png")               # Nor
 
 var is_dialogue_active: bool = false
 var is_attacking: bool = false
-var is_blocking: bool = false
-
-## Bloqueo PLACEHOLDER (sin reducción de daño ni animación): solo estado y señal.
-signal blocking_changed(is_blocking: bool)
 var last_direction: Vector2 = Vector2.DOWN
 
 const STEP_SOUND_INTERVAL: float = 0.3
@@ -36,6 +34,7 @@ func _ready() -> void:
 		slash_sprite.visible = false
 	
 	_update_sprite_facing(last_direction)
+	shield_component.set_facing(last_direction)
 	
 	if hurtbox_component:
 		hurtbox_component.hit_received.connect(_on_hit_received)
@@ -76,8 +75,7 @@ func _on_dialogue_ended(_resource: DialogueResource) -> void:
 
 func _physics_process(delta: float) -> void:
 	if is_dialogue_active or is_dead:
-		if is_blocking:
-			set_blocking(false)
+		shield_component.set_blocking(false)
 		return
 		
 	if is_stunned:
@@ -88,9 +86,9 @@ func _physics_process(delta: float) -> void:
 		
 	# Get input direction
 	var direction: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	_update_blocking()
 	
 	if direction != Vector2.ZERO:
-		velocity = direction * speed * PlayerStats.get_speed_multiplier()
 		last_direction = direction
 		# Rotate the interaction area and hitbox to face movement direction
 		actionable_finder.rotation = direction.angle() - PI/2
@@ -98,17 +96,23 @@ func _physics_process(delta: float) -> void:
 		
 		# Actualizar las 8 orientaciones visuales del jugador
 		_update_sprite_facing(direction)
-		_step_timer -= delta
-		if _step_timer <= 0.0 and not is_attacking:
-			_step_timer = STEP_SOUND_INTERVAL
-			AudioManager.play_sfx(&"sfx_player_step")
+		shield_component.set_facing(direction)
+		if shield_component.is_blocking:
+			# Con el escudo arriba solo se puede girar, no desplazarse
+			velocity = Vector2.ZERO
+			_step_timer = 0.0
+		else:
+			velocity = direction * speed * PlayerStats.get_speed_multiplier()
+			_step_timer -= delta
+			if _step_timer <= 0.0 and not is_attacking:
+				_step_timer = STEP_SOUND_INTERVAL
+				AudioManager.play_sfx(&"sfx_player_step")
 	else:
 		velocity = Vector2.ZERO
 		_step_timer = 0.0
 
 	if is_attacking:
 		velocity = Vector2.ZERO # Stop moving while attacking
-	_update_blocking()
 
 	move_and_slide()
 
@@ -159,6 +163,9 @@ func _update_sprite_facing(dir: Vector2) -> void:
 func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: float) -> void:
 	if is_dead:
 		return
+	# Escudo PROXY: un golpe bloqueado no hace daño, ni knockback, ni activa i-frames
+	if shield_component.try_block(damage, attack_direction):
+		return
 	
 	var tree: SceneTree = get_tree()
 	
@@ -203,9 +210,9 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	else:
 		is_invulnerable = false
 
-## Un golpe inflige un estado alterado: se ignora si esta muerto o invulnerable (igual que el dano).
+## Un golpe inflige un estado alterado: se ignora si esta muerto, invulnerable o bloqueando (igual que el dano).
 func _on_status_inflicted(effect: StatusEffectData) -> void:
-	if is_dead or is_invulnerable:
+	if is_dead or is_invulnerable or shield_component.is_blocking:
 		return
 	PlayerStats.apply_status(effect)
 
@@ -241,7 +248,7 @@ func _on_player_died() -> void:
 func _on_player_respawned() -> void:
 	AudioManager.play_sfx(&"sfx_player_respawn")
 	is_dead = false
-	is_blocking = false
+	shield_component.reset()
 	is_invulnerable = false
 	is_stunned = false
 	velocity = Vector2.ZERO
@@ -254,21 +261,10 @@ func _on_player_respawned() -> void:
 
 
 func _update_blocking() -> void:
-	var wants_block: bool = Input.is_action_pressed("block") and not is_attacking
-	if wants_block != is_blocking:
-		set_blocking(wants_block)
-
-func set_blocking(value: bool) -> void:
-	if is_blocking == value:
-		return
-	is_blocking = value
-	AudioManager.play_sfx(&"sfx_player_block_on" if value else &"sfx_player_block_off")
-	if sprite and not is_dead:
-		sprite.modulate = Color(0.8, 0.85, 1.0, 1.0) if value else Color.WHITE
-	blocking_changed.emit(value)
+	shield_component.set_blocking(Input.is_action_pressed("block") and not is_attacking)
 
 func attack() -> void:
-	if is_attacking or is_blocking:
+	if is_attacking or shield_component.is_blocking:
 		return
 	is_attacking = true
 	AudioManager.play_sfx(&"sfx_player_attack")
@@ -308,8 +304,7 @@ func attack() -> void:
 # Trasladamos la interacción a _unhandled_input para respetar los CanvasLayer (UI)
 func _unhandled_input(event: InputEvent) -> void:
 	if is_dialogue_active or is_dead:
-		if is_blocking:
-			set_blocking(false)
+		shield_component.set_blocking(false)
 		return
 		
 	if event.is_action_pressed("interact"):
