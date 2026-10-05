@@ -8,7 +8,7 @@ description: Checklist técnico para crear o modificar niveles del Overworld en 
 Guías fuente: `design/Guia_Creacion_Niveles.md` y `design/Level_Design_Items_Guide.md`.
 
 ## 1. Base
-- Hoy no existe plantilla en el repo (`template_level.tscn`/`prototype_template.tscn` fueron eliminadas): duplicar un `level_XX.tscn` existente y limpiarlo, o pedir al usuario que cree la plantilla. Archivo `snake_case` (`level_forest_entrance.tscn`), nodo raíz `PascalCase`.
+- Plantilla vacía: `src/overworld/levels/level_template.tscn` (duplicarla; layout en `design/Guia_Plantas_de_Nivel.md`). Archivo `snake_case` (`level_forest_entrance.tscn`), nodo raíz `PascalCase`.
 - Grilla oficial **60x60 px**, tileset `core_tileset.tres`. Capas: `GroundLayer`, `DetailLayer`, `PropsLayer` (`y_sort_enabled`).
 - `WorldBoundaryManager`: `width`/`height` en px cubriendo toda el área jugable.
 
