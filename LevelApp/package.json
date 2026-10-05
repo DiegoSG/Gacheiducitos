@@ -1,0 +1,10 @@
+{
+  "name": "level-app",
+  "version": "1.0.0",
+  "description": "Editor visual de niveles del overworld de RPG-G (genera escenas .tscn)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/test_generate_scene.js"
+  }
+}

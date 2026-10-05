@@ -1,0 +1,231 @@
+{
+ "format": "gacheiducitos-levelapp",
+ "version": 1,
+ "cell_px": 60,
+ "levels": [
+  {
+   "name": "Level_01",
+   "scene_file": "level_01.tscn",
+   "scene_path": "res://src/overworld/levels/level_01.tscn",
+   "root_node": "Level01",
+   "world_boundary": {
+    "width": 720,
+    "height": 540
+   },
+   "arrival_spawns": [
+    {
+     "arrival_id": "start",
+     "kind": "start",
+     "px": {
+      "x": 90,
+      "y": 450
+     }
+    },
+    {
+     "arrival_id": "at_P01",
+     "kind": "portal_arrival",
+     "px": {
+      "x": 330,
+      "y": 210
+     },
+     "owner": "P01"
+    },
+    {
+     "arrival_id": "A01",
+     "kind": "arrival",
+     "px": {
+      "x": 570,
+      "y": 450
+     }
+    },
+    {
+     "arrival_id": "at_P03",
+     "kind": "portal_arrival",
+     "px": {
+      "x": 150,
+      "y": 150
+     },
+     "owner": "P03"
+    }
+   ],
+   "portals": [
+    {
+     "id": "P01",
+     "px": {
+      "x": 330,
+      "y": 150
+     },
+     "arrival_spawn": {
+      "arrival_id": "at_P01",
+      "level": "Level_01",
+      "px": {
+       "x": 330,
+       "y": 210
+      }
+     },
+     "target_scene_path": "res://src/overworld/levels/level_02.tscn",
+     "target_arrival_id": "at_P02"
+    }
+   ],
+   "enemies": [
+    {
+     "id": "E01",
+     "px": {
+      "x": 210,
+      "y": 330
+     },
+     "enemy_type": "slime"
+    }
+   ],
+   "npcs": [
+    {
+     "id": "N01",
+     "px": {
+      "x": 450,
+      "y": 330
+     },
+     "npc_name": "Barnaby"
+    }
+   ],
+   "chests": [
+    {
+     "id": "C01",
+     "px": {
+      "x": 630,
+      "y": 210
+     },
+     "contents": ""
+    }
+   ],
+   "minigames": [],
+   "notes": [
+    {
+     "id": "Nota_01",
+     "cell": {
+      "x": 2,
+      "y": 3
+     },
+     "info": "Zona inicial",
+     "prompts": [
+      "agregar un arbol grande"
+     ]
+    }
+   ],
+   "description": ""
+  },
+  {
+   "name": "Level_02",
+   "scene_file": "level_02.tscn",
+   "scene_path": "res://src/overworld/levels/level_02.tscn",
+   "root_node": "Level02",
+   "world_boundary": {
+    "width": 720,
+    "height": 540
+   },
+   "arrival_spawns": [
+    {
+     "arrival_id": "start",
+     "kind": "start",
+     "px": {
+      "x": 90,
+      "y": 450
+     }
+    },
+    {
+     "arrival_id": "at_P02",
+     "kind": "portal_arrival",
+     "px": {
+      "x": 270,
+      "y": 210
+     },
+     "owner": "P02"
+    },
+    {
+     "arrival_id": "at_M01_win",
+     "kind": "minigame_win",
+     "px": {
+      "x": 450,
+      "y": 390
+     },
+     "owner": "M01"
+    },
+    {
+     "arrival_id": "at_M01_lose",
+     "kind": "minigame_lose",
+     "px": {
+      "x": 330,
+      "y": 390
+     },
+     "owner": "M01"
+    }
+   ],
+   "portals": [
+    {
+     "id": "P02",
+     "px": {
+      "x": 270,
+      "y": 150
+     },
+     "arrival_spawn": {
+      "arrival_id": "at_P02",
+      "level": "Level_02",
+      "px": {
+       "x": 270,
+       "y": 210
+      }
+     },
+     "target_scene_path": "res://src/overworld/levels/level_01.tscn",
+     "target_arrival_id": "A01"
+    },
+    {
+     "id": "P03",
+     "px": {
+      "x": 600,
+      "y": 150
+     },
+     "arrival_spawn": {
+      "arrival_id": "at_P03",
+      "level": "Level_01",
+      "px": {
+       "x": 150,
+       "y": 150
+      }
+     },
+     "target_scene_path": "res://src/overworld/levels/level_01.tscn",
+     "target_arrival_id": "start"
+    }
+   ],
+   "enemies": [],
+   "npcs": [],
+   "chests": [],
+   "minigames": [
+    {
+     "id": "M01",
+     "px": {
+      "x": 390,
+      "y": 330
+     },
+     "minigame": "catcher",
+     "win_spawn": {
+      "arrival_id": "at_M01_win",
+      "level": "Level_02",
+      "px": {
+       "x": 450,
+       "y": 390
+      }
+     },
+     "lose_spawn": {
+      "arrival_id": "at_M01_lose",
+      "level": "Level_02",
+      "px": {
+       "x": 330,
+       "y": 390
+      }
+     }
+    }
+   ],
+   "notes": [],
+   "description": ""
+  }
+ ]
+}

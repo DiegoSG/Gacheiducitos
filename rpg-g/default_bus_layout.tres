@@ -1,4 +1,4 @@
-[gd_resource type="AudioBusLayout" load_steps=2 format=3]
+[gd_resource type="AudioBusLayout" format=3 uid="uid://dcx8e4xxfab02"]
 
 [sub_resource type="AudioEffectAmplify" id="AudioEffectAmplify_pause_duck"]
 resource_name = "PauseDuck"

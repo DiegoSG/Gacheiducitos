@@ -12,18 +12,17 @@
 [ext_resource type="Script" uid="uid://f73vy602pjfk" path="res://src/core/pipeline/action_resource.gd" id="10_ar"]
 [ext_resource type="Resource" uid="uid://g3aow6onnlpw" path="res://data/items/ancient_map.tres" id="11_6vw8n"]
 [ext_resource type="Script" path="res://src/core/pipeline/actions/variable_action.gd" id="11_var_action"]
-[ext_resource type="Script" path="res://src/core/pipeline/actions/dialogue_action.gd" id="12_dialogue_action"]
-[ext_resource type="Resource" path="res://src/core/tests/test_map_check.dialogue" id="13_map_dialogue"]
-[ext_resource type="Texture2D" path="res://assets/sprites/npc_kawaii_cat.png" id="14_npc_tex"]
-
-[sub_resource type="Resource" id="Resource_aoc1l"]
-script = ExtResource("8_condition_set")
-metadata/_custom_type_script = "uid://bkhbymhr7ilo4"
+[ext_resource type="Script" uid="uid://ctgku8kfqwvw" path="res://src/core/pipeline/actions/dialogue_action.gd" id="12_dialogue_action"]
+[ext_resource type="Resource" uid="uid://ipr8hdi666g" path="res://src/core/tests/test_map_check.dialogue" id="13_map_dialogue"]
+[ext_resource type="Texture2D" uid="uid://brk2hgukdmxeu" path="res://assets/sprites/npc_kawaii_cat.png" id="14_npc_tex"]
 
 [sub_resource type="Resource" id="Resource_set_flag"]
 script = ExtResource("11_var_action")
 var_path = "flag.test_switch"
-value = "true"
+
+[sub_resource type="Resource" id="Resource_aoc1l"]
+script = ExtResource("8_condition_set")
+metadata/_custom_type_script = "uid://bkhbymhr7ilo4"
 
 [sub_resource type="Resource" id="Resource_unlock"]
 script = ExtResource("6_door_action")
@@ -32,16 +31,10 @@ target_door_path = NodePath("..")
 [sub_resource type="Resource" id="Resource_condition"]
 script = ExtResource("7_condition")
 var_path = "flag.test_switch"
-value = "true"
 
 [sub_resource type="Resource" id="Resource_condition_set"]
 script = ExtResource("8_condition_set")
 conditions = Array[ExtResource("7_condition")]([SubResource("Resource_condition")])
-
-[sub_resource type="Resource" id="Resource_map_dialogue"]
-script = ExtResource("12_dialogue_action")
-dialogue_resource = ExtResource("13_map_dialogue")
-dialogue_title = "start"
 
 [sub_resource type="Resource" id="Resource_has_map"]
 script = ExtResource("7_condition")
@@ -53,13 +46,17 @@ value = "1"
 script = ExtResource("8_condition_set")
 conditions = Array[ExtResource("7_condition")]([SubResource("Resource_has_map")])
 
+[sub_resource type="Resource" id="Resource_map_dialogue"]
+script = ExtResource("12_dialogue_action")
+dialogue_resource = ExtResource("13_map_dialogue")
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_npc"]
 radius = 40.0
 
 [node name="TestGameVariables" type="Node2D" unique_id=494635230]
 
 [node name="Player" parent="." unique_id=193638612 instance=ExtResource("1_player")]
-position = Vector2(311, 532)
+position = Vector2(561, 606)
 
 [node name="Switch" parent="." unique_id=1263000966 instance=ExtResource("2_switch")]
 position = Vector2(500, 540)

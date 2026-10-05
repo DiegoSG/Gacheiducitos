@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gacheiducitos - Editor de niveles</title>
+<style>
+:root{--bg:#1b1d23;--panel:#23262e;--line:#343842;--text:#e6e8ec;--dim:#9aa0ab;--accent:#5aa9ff;--warn:#ffb454;--err:#ff6b6b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px/1.4 system-ui,sans-serif}
+#app{display:grid;grid-template-columns:1fr 320px;grid-template-rows:auto 1fr;height:100%}
+#toolbar{grid-column:1/3;display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px 8px;background:var(--panel);border-bottom:1px solid var(--line)}
+#toolbar .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+button,select,input,textarea{font:inherit;color:var(--text);background:#2d313b;border:1px solid var(--line);border-radius:4px;padding:3px 7px}
+button{cursor:pointer}button:hover{border-color:var(--accent)}
+button.on{background:var(--accent);color:#08121f;border-color:var(--accent)}
+button.danger:hover{border-color:var(--err);color:var(--err)}
+#wrap{position:relative;overflow:hidden;min-width:0}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
+#side{background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:8px}
+#side h3{margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
+#side h3:first-child{margin-top:0}
+.row{display:flex;gap:6px;align-items:center;margin:4px 0}
+.row label{width:84px;color:var(--dim);flex:none}
+.row input,.row select,.row textarea{flex:1;min-width:0}
+.row textarea{resize:vertical;min-height:48px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.grid4 input{width:100%}
+.issue{padding:3px 6px;border-left:3px solid var(--warn);margin:3px 0;cursor:pointer;background:#2a2e37}
+.issue.err{border-color:var(--err)}.issue:hover{background:#333844}
+.dim{color:var(--dim)}
+input[type=color]{width:44px;height:24px;padding:0;flex:none}
+#status{position:absolute;left:8px;bottom:6px;color:var(--dim);background:#0008;padding:2px 6px;border-radius:4px;pointer-events:none}
+#modal{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:10}
+#modal>div{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;max-width:520px;width:90%;max-height:80vh;overflow:auto}
+#modal h2{margin:0 0 8px;font-size:15px}
+#modal .btns{display:flex;gap:6px;justify-content:flex-end;margin-top:10px}
+#modal .err{color:var(--err);font-size:12px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="toolbar"></div>
+  <div id="wrap"><canvas id="cv"></canvas><div id="status"></div></div>
+  <div id="side"></div>
+</div>
+<input type="file" id="fileIn" accept=".json" hidden>
+<script>
+"use strict";
+/* ===== Modelo ===== */
+const TYPES = {
+  portal:   {label:"Portal",        key:"p", color:"#a070ff", letter:"P", prefix:"P"},
+  spawn:    {label:"Spawn llegada", key:"s", color:"#4cd07d", letter:"S", prefix:"A"},
+  start:    {label:"Start",         key:"t", color:"#2fe0a0", letter:"★", prefix:"start"},
+  enemy:    {label:"Enemigo",       key:"e", color:"#ff6b6b", letter:"E", prefix:"E"},
+  npc:      {label:"NPC",           key:"n", color:"#5aa9ff", letter:"N", prefix:"N"},
+  chest:    {label:"Cofre",         key:"c", color:"#f0c040", letter:"C", prefix:"C"},
+  minigame: {label:"Minijuego",     key:"m", color:"#ff9a45", letter:"M", prefix:"M"},
+  note:     {label:"Nota",          key:"o", color:"#e8e070", letter:"T", prefix:"Nota_"}
+};
+const CHILD_DEFAULTS = {
+  portal:   [{slot:"arrival", dx:0, dy:1}],
+  minigame: [{slot:"win", dx:1, dy:1}, {slot:"lose", dx:-1, dy:1}]
+};
+const PALETTE = ["#5aa9ff","#4cd07d","#ff9a45","#e06bd0","#e8e070","#35c8d8","#ff6b6b","#a070ff"];
+const LS_KEY = "gacheiducitos_levelapp_v1";
+function fresh(){
+  return {levels:[], ents:[], counters:{}, uid:0, cellPx:60, bidir:true, view:{ox:40,oy:40,z:24}};
+}
+let S = fresh();
+let sel = null;          // {kind:"level"|"ent", id}
+let tool = "select";
+let hist = [], histPos = -1;
+
+function nextNum(k){ S.counters[k] = (S.counters[k]||0)+1; return S.counters[k]; }
+const pad = n => String(n).padStart(2,"0");
+const levelById = id => S.levels.find(l=>l.id===id);
+const entById = id => S.ents.find(e=>e.id===id);
+function slug(n){ return n.toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"") || "level"; }
+function pascal(n){ return n.split(/[^A-Za-z0-9]+/).filter(Boolean).map(s=>s[0].toUpperCase()+s.slice(1)).join("") || "Level"; }
+
+function addLevel(x,y,w,h){
+  const n = nextNum("L");
+  const l = {id:++S.uid, name:"Level_"+pad(n), x,y,w,h, color:PALETTE[(n-1)%PALETTE.length], text:""};
+  S.levels.push(l); return l;
+}
+function addEnt(type, lv, lx, ly){
+  const t = TYPES[type];
+  const e = {id:++S.uid, type, levelId:lv.id, lx, ly, text:"", props:{}, children:[], target:null};
+  if(type==="start") e.name = "start";
+  else if(type==="note") e.name = "Nota_"+pad(nextNum("T"));
+  else e.name = t.prefix+pad(nextNum(t.prefix));
+  (CHILD_DEFAULTS[type]||[]).forEach(c=>e.children.push({...c}));
+  S.ents.push(e); return e;
+}
+function entPos(e){ const l=levelById(e.levelId); return {x:l.x+e.lx, y:l.y+e.ly}; }
+function childId(e,c){
+  if(e.type==="portal") return "at_"+e.name;
+  if(e.type==="minigame") return "at_"+e.name+"_"+c.slot;
+  return e.name;
+}
+/* puntos de llegada: referencia clave "uid:slot" */
+function spawnPoints(all=false){
+  const out=[];
+  for(const e of S.ents){
+    const p = entPos(e);
+    if(e.type==="spawn"||e.type==="start") out.push({key:e.id+":self", ent:e, x:p.x, y:p.y, arrival:e.type==="start"?"start":e.name, levelId:e.levelId});
+    for(const c of e.children){
+      if(e.type==="minigame"&&!all) continue; // salidas de minijuego: solo exportan, no son destino de portales
+      const x=p.x+c.dx, y=p.y+c.dy, lv=levelAt(x,y);
+      out.push({key:e.id+":"+c.slot, ent:e, child:c, x, y, arrival:childId(e,c), levelId:lv?lv.id:e.levelId, orphan:!lv});
+    }
+  }
+  return out;
+}
+function spawnByKey(k){ return spawnPoints().find(s=>s.key===k); }
+function levelAt(cx,cy){
+  for(let i=S.levels.length-1;i>=0;i--){const l=S.levels[i]; if(cx>=l.x&&cx<l.x+l.w&&cy>=l.y&&cy<l.y+l.h) return l;}
+  return null;
+}
+function overlapsAny(skip,x,y,w,h){ return S.levels.some(o=>o!==skip&&x<o.x+o.w&&o.x<x+w&&y<o.y+o.h&&o.y<y+h); }
+function delEnt(e){
+  S.ents = S.ents.filter(x=>x!==e);
+  for(const o of S.ents) if(o.target && o.target.startsWith(e.id+":")) o.target=null;
+}
+function delLevel(l){
+  for(const e of S.ents.filter(e=>e.levelId===l.id)) delEnt(e);
+  S.levels = S.levels.filter(x=>x!==l);
+}
+function sceneFile(l){ return slug(l.name)+".tscn"; }
+
+/* ===== Historial / guardado ===== */
+function migrate(){
+  delete S.zones;
+  S.ents=S.ents.filter(e=>e.type!=="respawn");
+  S.levels.forEach((l,i)=>{ delete l.zone; if(!/^#[0-9a-f]{6}$/i.test(l.color||"")) l.color=PALETTE[i%PALETTE.length]; });
+}
+function snapshot(){ return JSON.stringify(S); }
+function commit(){
+  hist = hist.slice(0, histPos+1); hist.push(snapshot()); if(hist.length>200) hist.shift(); histPos = hist.length-1;
+  try{ localStorage.setItem(LS_KEY, snapshot()); }catch(e){}
+  saveToServer();
+  refreshUI();
+}
+function restore(json){
+  const v = S.view; S = Object.assign(fresh(), JSON.parse(json)); migrate(); if(!S.view) S.view=v;
+  if(sel && ((sel.kind==="level"&&!levelById(sel.id))||(sel.kind==="ent"&&!entById(sel.id)))) sel=null;
+  refreshUI();
+}
+function undo(){ if(histPos>0){ histPos--; restore(hist[histPos]); } }
+function redo(){ if(histPos<hist.length-1){ histPos++; restore(hist[histPos]); } }
+
+/* ===== Canvas ===== */
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const statusEl = document.getElementById("status");
+let W=0,H=0,dpr=1;
+function resize(){
+  const r = cv.parentElement.getBoundingClientRect(); dpr = window.devicePixelRatio||1;
+  W=r.width; H=r.height; cv.width=W*dpr; cv.height=H*dpr; draw();
+}
+window.addEventListener("resize", resize);
+const toWorld = (sx,sy)=>({x:(sx-S.view.ox)/S.view.z, y:(sy-S.view.oy)/S.view.z});
+const toScreen = (wx,wy,v=S.view)=>({x:wx*v.z+v.ox, y:wy*v.z+v.oy});
+
+function levelColor(l){ return /^#[0-9a-f]{6}$/i.test(l.color||"")?l.color:PALETTE[0]; }
+function iconSize(v){ return Math.max(14, Math.min(30, v.z*0.8)); }
+
+function drawIcon(c, type, x, y, s, selected){
+  const t = TYPES[type]; c.save(); c.translate(x,y); c.fillStyle=t.color; c.strokeStyle=selected?"#fff":"#000a"; c.lineWidth=selected?2.5:1.2;
+  c.beginPath(); const r=s/2;
+  if(type==="enemy"){c.moveTo(0,-r);c.lineTo(r,r*.8);c.lineTo(-r,r*.8);c.closePath();}
+  else if(type==="npc"||type==="spawn"||type==="start"){c.arc(0,0,r,0,7);}
+  else if(type==="minigame"){for(let i=0;i<6;i++){const a=i*Math.PI/3;c.lineTo(Math.cos(a)*r,Math.sin(a)*r);}c.closePath();}
+  else if(type==="note"){c.rect(-r,-r*.7,s,s*.8);}
+  else {c.roundRect?c.roundRect(-r,-r,s,s,3):c.rect(-r,-r,s,s);}
+  c.fill(); c.stroke();
+  c.fillStyle="#000"; c.font="bold "+Math.round(s*.5)+"px system-ui"; c.textAlign="center"; c.textBaseline="middle";
+  c.fillText(t.letter,0,1); c.restore();
+}
+/* notas: //texto// = prompt a interpretar; el resto es información de diseño */
+function parseNote(text){
+  const parts=String(text||"").split("//"), closed=parts.length%2===1, lines=[[]], info=[], prompts=[];
+  parts.forEach((t,i)=>{
+    const p=i%2===1&&(i<parts.length-1||closed);
+    if(p) prompts.push(t.trim()); else info.push(t);
+    t.split("\n").forEach((ln,j)=>{ if(j>0) lines.push([]); if(ln) lines[lines.length-1].push({t:ln,p}); });
+  });
+  return {lines, info:info.join("").replace(/\n{3,}/g,"\n\n").trim(), prompts:prompts.filter(Boolean)};
+}
+function noteLayout(c,e,v){
+  const fs=Math.max(10,Math.min(18,v.z*.5)), pad=4, p=entPos(e), O=toScreen(p.x,p.y,v);
+  let lines=parseNote(e.text).lines; if(!lines.some(l=>l.length)) lines=[[{t:"(nota vacía)",p:false,empty:true}]];
+  c.font=fs+"px system-ui"; let w=0;
+  const meas=lines.map(l=>{ const m=l.reduce((a,r)=>a+c.measureText(r.t).width,0); w=Math.max(w,m); return m; });
+  return {x:O.x,y:O.y,w:w+pad*2,h:lines.length*(fs+2)+pad*2,fs,pad,lines};
+}
+function drawNote(c,e,v,selected){
+  const L=noteLayout(c,e,v);
+  c.fillStyle="#000a"; c.fillRect(L.x,L.y,L.w,L.h);
+  c.strokeStyle=selected?"#fff":"#e8e07088"; c.lineWidth=selected?2.5:1; c.strokeRect(L.x,L.y,L.w,L.h);
+  c.font=L.fs+"px system-ui"; c.textAlign="left"; c.textBaseline="top";
+  L.lines.forEach((l,i)=>{ let x=L.x+L.pad; for(const r of l){ c.fillStyle=r.empty?"#888":(r.p?"#ffb060":"#dcdcdc"); c.fillText(r.t,x,L.y+L.pad+i*(L.fs+2)); x+=c.measureText(r.t).width; } });
+}
+function arrow(c,x1,y1,x2,y2,color,w,dash){
+  c.strokeStyle=color; c.fillStyle=color; c.lineWidth=w; c.setLineDash(dash||[]); c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke(); c.setLineDash([]);
+  const a=Math.atan2(y2-y1,x2-x1), h=9+w;
+  c.beginPath(); c.moveTo(x2,y2); c.lineTo(x2-h*Math.cos(a-.4),y2-h*Math.sin(a-.4)); c.lineTo(x2-h*Math.cos(a+.4),y2-h*Math.sin(a+.4)); c.closePath(); c.fill();
+}
+let drag=null, mouse={x:0,y:0};
+
+function draw(c=ctx, w=W, h=H, v=S.view, ex=false){
+  c.setTransform(ex?1:dpr,0,0,ex?1:dpr,0,0);
+  c.fillStyle="#14161b"; c.fillRect(0,0,w,h);
+  // grilla
+  c.lineWidth=1; const step=v.z>=10?1:(v.z>=5?5:10);
+  const x0=Math.floor(-v.ox/v.z), x1=Math.ceil((w-v.ox)/v.z), y0=Math.floor(-v.oy/v.z), y1=Math.ceil((h-v.oy)/v.z);
+  for(let x=x0;x<=x1;x++){ if(x%step) continue; c.strokeStyle=x%5===0?"#2c303a":"#1f222a"; const sx=Math.round(x*v.z+v.ox)+.5; c.beginPath(); c.moveTo(sx,0); c.lineTo(sx,h); c.stroke(); }
+  for(let y=y0;y<=y1;y++){ if(y%step) continue; c.strokeStyle=y%5===0?"#2c303a":"#1f222a"; const sy=Math.round(y*v.z+v.oy)+.5; c.beginPath(); c.moveTo(0,sy); c.lineTo(w,sy); c.stroke(); }
+  // niveles
+  for(const l of S.levels){
+    const p=toScreen(l.x,l.y,v), col=levelColor(l), isSel=sel&&sel.kind==="level"&&sel.id===l.id;
+    c.fillStyle=col+"33"; c.fillRect(p.x,p.y,l.w*v.z,l.h*v.z);
+    c.strokeStyle=isSel&&!ex?"#fff":col; c.lineWidth=isSel&&!ex?3:2; c.strokeRect(p.x,p.y,l.w*v.z,l.h*v.z);
+    c.fillStyle=col; c.font="bold 13px system-ui"; c.textAlign="left"; c.textBaseline="top";
+    c.fillText(l.name,p.x+5,p.y+4);
+    if(isSel&&!ex){ c.fillStyle="#fff"; c.fillRect(p.x+l.w*v.z-8,p.y+l.h*v.z-8,12,12); }
+  }
+  // conexiones
+  const sp = spawnPoints(); const spMap = new Map(sp.map(s=>[s.key,s]));
+  const selEnt = sel&&sel.kind==="ent"?entById(sel.id):null, selSlot = selEnt&&sel.slot||null;
+  for(const e of S.ents){
+    const tg=e.type==="portal"&&e.target&&spMap.get(e.target); if(!tg) continue;
+    const a=entPos(e), A=toScreen(a.x+.5,a.y+.5,v), B=toScreen(tg.x+.5,tg.y+.5,v);
+    const ang=Math.atan2(B.y-A.y,B.x-A.x), r=iconSize(v)/2+2;
+    arrow(c,A.x+Math.cos(ang)*r,A.y+Math.sin(ang)*r,B.x-Math.cos(ang)*r,B.y-Math.sin(ang)*r,"#a070ffcc",1.5,[3,3]);
+  }
+  // objetos
+  const s=iconSize(v);
+  for(const e of S.ents){
+    const p=entPos(e), P=toScreen(p.x+.5,p.y+.5,v), isSel=selEnt===e;
+    for(const ch of e.children){
+      const C=toScreen(p.x+ch.dx+.5,p.y+ch.dy+.5,v);
+      c.strokeStyle="#4cd07d99"; c.setLineDash([3,3]); c.lineWidth=1; c.beginPath(); c.moveTo(P.x,P.y); c.lineTo(C.x,C.y); c.stroke(); c.setLineDash([]);
+      drawIcon(c,"spawn",C.x,C.y,s*.75,selEnt===e&&selSlot===ch.slot);
+      if(v.z>=14){ c.fillStyle="#9fe7b8"; c.font="10px system-ui"; c.textAlign="center"; c.textBaseline="top"; c.fillText(childId(e,ch),C.x,C.y+s*.4+1); }
+    }
+    if(e.type==="note"){ drawNote(c,e,v,isSel&&!selSlot); continue; }
+    drawIcon(c,e.type,P.x,P.y,s,isSel&&!selSlot);
+    if(e.type==="portal"&&!ex){ c.fillStyle="#ffd24d"; c.beginPath(); c.arc(P.x+s/2+6,P.y,4,0,7); c.fill(); }
+    if(v.z>=14){ c.fillStyle="#ddd"; c.font="10px system-ui"; c.textAlign="center"; c.textBaseline="bottom"; c.fillText(e.name,P.x,P.y-s/2-1); }
+  }
+  // preview
+  if(!ex&&drag){
+    if(drag.type==="draw-level"){ const r=rectFrom(drag.c0,drag.c1), p=toScreen(r.x,r.y); c.strokeStyle=overlapsAny(null,r.x,r.y,r.w,r.h)?"#ff5050":"#fff"; c.setLineDash([5,4]); c.lineWidth=2; c.strokeRect(p.x,p.y,r.w*S.view.z,r.h*S.view.z); c.setLineDash([]); c.fillStyle="#fff"; c.font="12px system-ui"; c.textAlign="left"; c.textBaseline="bottom"; c.fillText(r.w+" x "+r.h, p.x, p.y-3); }
+    if(drag.type==="link"){ const a=entPos(drag.ent), A=toScreen(a.x+.5,a.y+.5); arrow(c,A.x,A.y,mouse.x,mouse.y,"#ffd24d",2.5); }
+  }
+}
+function rectFrom(a,b){ return {x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x)+1,h:Math.abs(a.y-b.y)+1}; }
+
+/* ===== Interacción ===== */
+function cellOf(sx,sy){ const w=toWorld(sx,sy); return {x:Math.floor(w.x),y:Math.floor(w.y)}; }
+function hit(sx,sy){
+  const s=iconSize(S.view);
+  for(const e of S.ents){ // handle de portal
+    if(e.type!=="portal") continue; const p=entPos(e), P=toScreen(p.x+.5,p.y+.5);
+    if(Math.hypot(sx-(P.x+s/2+6),sy-P.y)<=7) return {k:"link",ent:e};
+  }
+  for(const e of [...S.ents].reverse()){ // hijos
+    const p=entPos(e); for(const ch of e.children){ const C=toScreen(p.x+ch.dx+.5,p.y+ch.dy+.5); if(Math.abs(sx-C.x)<=s*.4&&Math.abs(sy-C.y)<=s*.4) return {k:"child",ent:e,child:ch}; }
+  }
+  for(const e of [...S.ents].reverse()){ if(e.type==="note"){ const L=noteLayout(ctx,e,S.view); if(sx>=L.x&&sx<=L.x+L.w&&sy>=L.y&&sy<=L.y+L.h) return {k:"ent",ent:e}; continue; } const p=entPos(e), P=toScreen(p.x+.5,p.y+.5); if(Math.abs(sx-P.x)<=s/2&&Math.abs(sy-P.y)<=s/2) return {k:"ent",ent:e}; }
+  if(sel&&sel.kind==="level"){ const l=levelById(sel.id), p=toScreen(l.x+l.w,l.y+l.h); if(Math.abs(sx-p.x)<=10&&Math.abs(sy-p.y)<=10) return {k:"resize",level:l}; }
+  const c=cellOf(sx,sy), l=levelAt(c.x,c.y); if(l) return {k:"level",level:l};
+  return null;
+}
+function mpos(ev){ const r=cv.getBoundingClientRect(); return {x:ev.clientX-r.left,y:ev.clientY-r.top}; }
+cv.addEventListener("contextmenu",e=>e.preventDefault());
+cv.addEventListener("mousedown",ev=>{
+  const m=mpos(ev), c=cellOf(m.x,m.y);
+  if(ev.button===1||ev.button===2||(ev.button===0&&spaceDown)){ drag={type:"pan",sx:m.x,sy:m.y,ox:S.view.ox,oy:S.view.oy}; return; }
+  if(ev.button!==0) return;
+  if(tool==="level"){ drag={type:"draw-level",c0:c,c1:c}; draw(); return; }
+  if(tool!=="select"){
+    const lv=levelAt(c.x,c.y); if(!lv){ flash("Coloca el objeto dentro de un nivel"); return; }
+    if(tool==="start"&&S.ents.some(e=>e.type==="start"&&e.levelId===lv.id)){ flash("Este nivel ya tiene Start"); return; }
+    const e=addEnt(tool,lv,c.x-lv.x,c.y-lv.y); sel={kind:"ent",id:e.id}; commit(); draw(); return;
+  }
+  const h=hit(m.x,m.y);
+  if(!h){ sel=null; refreshUI(); draw(); return; }
+  if(h.k==="link"){ sel={kind:"ent",id:h.ent.id}; drag={type:"link",ent:h.ent}; refreshUI(); }
+  else if(h.k==="child"){ sel={kind:"ent",id:h.ent.id,slot:h.child.slot}; drag={type:"move-child",ent:h.ent,child:h.child,moved:false}; refreshUI(); }
+  else if(h.k==="ent"){ sel={kind:"ent",id:h.ent.id}; drag={type:"move-ent",ent:h.ent,moved:false}; refreshUI(); }
+  else if(h.k==="resize"){ drag={type:"resize",level:h.level,moved:false}; }
+  else { sel={kind:"level",id:h.level.id}; drag={type:"move-level",level:h.level,c0:c,x0:h.level.x,y0:h.level.y,moved:false}; refreshUI(); }
+  draw();
+});
+window.addEventListener("mousemove",ev=>{
+  const m=mpos(ev); mouse=m; const c=cellOf(m.x,m.y);
+  statusEl.textContent="celda "+c.x+", "+c.y+"  ·  zoom "+S.view.z.toFixed(0);
+  if(!drag) return;
+  if(drag.type==="pan"){ S.view.ox=drag.ox+m.x-drag.sx; S.view.oy=drag.oy+m.y-drag.sy; }
+  else if(drag.type==="draw-level") drag.c1=c;
+  else if(drag.type==="move-level"){ const l=drag.level, nx=drag.x0+c.x-drag.c0.x, ny=drag.y0+c.y-drag.c0.y; if((nx!==l.x||ny!==l.y)&&!overlapsAny(l,nx,ny,l.w,l.h)){ l.x=nx; l.y=ny; drag.moved=true; } }
+  else if(drag.type==="resize"){ const l=drag.level; const nw=Math.max(1,c.x-l.x+1), nh=Math.max(1,c.y-l.y+1); if((nw!==l.w||nh!==l.h)&&!overlapsAny(l,l.x,l.y,nw,nh)){ l.w=nw; l.h=nh; drag.moved=true; } }
+  else if(drag.type==="move-ent"){ const lv=levelAt(c.x,c.y); if(lv){ const e=drag.ent; const nlx=c.x-lv.x, nly=c.y-lv.y; if(lv.id!==e.levelId||nlx!==e.lx||nly!==e.ly){ e.levelId=lv.id; e.lx=nlx; e.ly=nly; drag.moved=true; } } }
+  else if(drag.type==="move-child"){ const p=entPos(drag.ent); const dx=c.x-p.x, dy=c.y-p.y; if(levelAt(c.x,c.y)&&(dx!==drag.child.dx||dy!==drag.child.dy)){ drag.child.dx=dx; drag.child.dy=dy; drag.moved=true; } }
+  draw();
+});
+window.addEventListener("mouseup",ev=>{
+  if(!drag) return; const d=drag; drag=null; const m=mpos(ev);
+  if(d.type==="draw-level"){ const r=rectFrom(d.c0,d.c1); if(overlapsAny(null,r.x,r.y,r.w,r.h)){ flash("Los niveles no pueden superponerse"); setTool("select"); } else { const l=addLevel(r.x,r.y,r.w,r.h); sel={kind:"level",id:l.id}; setTool("select"); commit(); } }
+  else if(d.type==="link"){
+    const s=iconSize(S.view); let best=null;
+    for(const sp of spawnPoints()){ const P=toScreen(sp.x+.5,sp.y+.5); if(Math.abs(m.x-P.x)<=s*.6&&Math.abs(m.y-P.y)<=s*.6) best=sp; }
+    if(best&&best.ent!==d.ent){ linkPortal(d.ent,best); commit(); }
+    else if(best&&best.ent===d.ent){ flash("Un portal no puede apuntar a sí mismo"); }
+    else flash("Suelta la flecha sobre un spawn");
+  }
+  else if(d.moved) commit();
+  draw();
+});
+function linkPortal(p, sp){
+  p.target = sp.key;
+  if(S.bidir && sp.ent.type==="portal" && sp.ent!==p && !sp.ent.target){
+    const back = spawnPoints().find(s=>s.ent===p&&s.child&&s.child.slot==="arrival");
+    if(back) sp.ent.target = back.key;
+  }
+}
+cv.addEventListener("wheel",ev=>{
+  ev.preventDefault(); const m=mpos(ev), w=toWorld(m.x,m.y);
+  S.view.z=Math.max(3,Math.min(80,S.view.z*(ev.deltaY<0?1.15:1/1.15)));
+  S.view.ox=m.x-w.x*S.view.z; S.view.oy=m.y-w.y*S.view.z; draw();
+},{passive:false});
+let spaceDown=false;
+window.addEventListener("keydown",ev=>{
+  const tag=(ev.target.tagName||"").toLowerCase(); if(tag==="input"||tag==="textarea"||tag==="select") return;
+  if(ev.code==="Space"){ spaceDown=true; ev.preventDefault(); return; }
+  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==="z"){ ev.shiftKey?redo():undo(); ev.preventDefault(); return; }
+  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==="y"){ redo(); ev.preventDefault(); return; }
+  if(ev.key==="Delete"||ev.key==="Backspace"){ deleteSel(); return; }
+  if(ev.key==="Escape"){ setTool("select"); return; }
+  if(ev.key==="v"){ setTool("select"); return; }
+  if(ev.key==="l"){ setTool("level"); return; }
+  for(const k in TYPES) if(TYPES[k].key===ev.key){ setTool(k); return; }
+});
+window.addEventListener("keyup",ev=>{ if(ev.code==="Space") spaceDown=false; });
+function deleteSel(){
+  if(!sel) return;
+  if(sel.slot) return flash("Es un spawn: borra su objeto (selecciónalo desde el panel)");
+  if(sel.kind==="level") delLevel(levelById(sel.id)); else delEnt(entById(sel.id));
+  sel=null; commit(); draw();
+}
+let flashT=null;
+function flash(t){ statusEl.textContent=t; clearTimeout(flashT); flashT=setTimeout(()=>statusEl.textContent="",2500); }
+
+/* ===== Validación ===== */
+function validate(){
+  const out=[], add=(lvl,msg,ref)=>out.push({lvl,msg,ref});
+  const sp=spawnPoints(), spMap=new Map(sp.map(s=>[s.key,s]));
+  const names=new Map(); for(const l of S.levels){ const k=sceneFile(l); if(names.has(k)) add("err","Nombre de archivo repetido: "+k,{kind:"level",id:l.id}); names.set(k,1); }
+  for(const l of S.levels){
+    const R={kind:"level",id:l.id}, ents=S.ents.filter(e=>e.levelId===l.id);
+    if(!ents.some(e=>e.type==="start")) add("warn",l.name+": sin Start",R);
+    if(ents.filter(e=>e.type==="start").length>1) add("err",l.name+": más de un Start",R);
+    if(!ents.some(e=>e.type==="portal")) add("warn",l.name+": sin portales",R);
+    for(const o of S.levels) if(o.id>l.id&&l.x<o.x+o.w&&o.x<l.x+l.w&&l.y<o.y+o.h&&o.y<l.y+l.h) add("err","Niveles superpuestos: "+l.name+" y "+o.name,R);
+    for(const e of ents){
+      const inside=e.lx>=0&&e.ly>=0&&e.lx<l.w&&e.ly<l.h; if(!inside) add("err",e.name+" fuera de "+l.name,{kind:"ent",id:e.id});
+    }
+  }
+  for(const sp1 of sp) if(sp1.orphan) add("err","Spawn "+sp1.arrival+" fuera de todo nivel",{kind:"ent",id:sp1.ent.id,slot:sp1.child.slot});
+  const arr=new Map();
+  for(const s of sp){ const k=s.levelId+"|"+s.arrival; if(arr.has(k)&&s.arrival!=="start") add("err","arrival_id repetido en el nivel: "+s.arrival,{kind:"ent",id:s.ent.id}); arr.set(k,1); }
+  const used=new Set(S.ents.filter(e=>e.type==="portal"&&e.target).map(e=>e.target));
+  for(const q of sp) if((q.ent.type==="spawn"||(q.ent.type==="portal"&&q.child))&&!used.has(q.key)) add("warn","Spawn "+q.arrival+" sin usar (ningún portal apunta a él)",{kind:"ent",id:q.ent.id,slot:q.child?q.child.slot:undefined});
+  for(const e of S.ents) if(e.type==="minigame"&&!MG_TYPES.hasOwnProperty(e.props.mg||"")) add("warn","Minijuego "+e.name+" sin tipo",{kind:"ent",id:e.id});
+  const links=new Set();
+  for(const e of S.ents) if(e.type==="portal"){
+    const R={kind:"ent",id:e.id};
+    if(!e.target){ add("warn","Portal "+e.name+" sin destino",R); continue; }
+    const t=spMap.get(e.target); if(!t){ add("err","Portal "+e.name+" apunta a un spawn inexistente",R); continue; }
+    if(t.levelId===e.levelId) add("warn","Portal "+e.name+" apunta al mismo nivel",R);
+    links.add(e.levelId+">"+t.levelId);
+  }
+  for(const k of links){ const [a,b]=k.split(">").map(Number); if(a!==b&&!links.has(b+">"+a)) add("warn","Ida sin vuelta: "+levelById(a).name+" → "+levelById(b).name,{kind:"level",id:a}); }
+  return out;
+}
+
+/* ===== Exportación ===== */
+function buildSpec(){
+  const px=S.cellPx, sp=spawnPoints(), spMap=new Map(sp.map(s=>[s.key,s]));
+  const P=(e,dx=0,dy=0)=>({cell:{x:e.lx+dx,y:e.ly+dy}, px:{x:Math.round((e.lx+dx+.5)*px),y:Math.round((e.ly+dy+.5)*px)}});
+  const allSp=spawnPoints(true), byLevel=new Map();
+  const loc=sp=>{ const lv=levelById(sp.levelId), cx=sp.x-lv.x, cy=sp.y-lv.y; return {level:lv.name, cell:{x:cx,y:cy}, px:{x:Math.round((cx+.5)*px),y:Math.round((cy+.5)*px)}}; };
+  const spLoc=(e,slot)=>{ const sp=allSp.find(q=>q.key===e.id+":"+slot); return {arrival_id:sp.arrival, ...loc(sp)}; };
+  for(const sp of allSp){
+    const e=sp.ent, kind=sp.child?(e.type==="portal"?"portal_arrival":"minigame_"+sp.child.slot):(e.type==="start"?"start":"arrival");
+    const o={arrival_id:sp.arrival, kind, ...loc(sp)}; delete o.level; if(sp.child) o.owner=e.name; o.description=e.text||"";
+    if(!byLevel.has(sp.levelId)) byLevel.set(sp.levelId,[]); byLevel.get(sp.levelId).push(o);
+  }
+  const levels=S.levels.map(l=>{
+    const ents=S.ents.filter(e=>e.levelId===l.id);
+    const o={
+      name:l.name, scene_file:sceneFile(l), scene_path:"res://src/overworld/levels/"+sceneFile(l), root_node:pascal(l.name),
+      color:levelColor(l), description:l.text||"",
+      grid_rect:{x:l.x,y:l.y,w:l.w,h:l.h}, size_px:{w:l.w*px,h:l.h*px},
+      world_boundary:{width:l.w*px,height:l.h*px},
+      layers:["GroundLayer","DetailLayer","PropsLayer"],
+      arrival_spawns:byLevel.get(l.id)||[], portals:[], enemies:[], npcs:[], chests:[], minigames:[], notes:[]
+    };
+    for(const e of ents){
+      const base={id:e.name, ...P(e), description:e.text||""};
+      if(e.type==="start"||e.type==="spawn") continue;
+      else if(e.type==="enemy") o.enemies.push({...base,enemy_type:e.props.kind||""});
+      else if(e.type==="npc") o.npcs.push({...base,npc_name:e.props.npc||""});
+      else if(e.type==="chest") o.chests.push({...base,contents:e.props.contents||""});
+      else if(e.type==="note"){ const n=parseNote(e.text); o.notes.push({id:e.name,...P(e),kind:n.prompts.length?(n.info?"mixed":"prompt"):"info",info:n.info,prompts:n.prompts,text:e.text||""}); }
+      else if(e.type==="portal"){
+        const t=e.target&&spMap.get(e.target), tl=t&&levelById(t.levelId), arr=e.children[0];
+        o.portals.push({...base, arrival_spawn:spLoc(e,arr.slot),
+          target_level:tl?tl.name:null, target_scene_path:tl?"res://src/overworld/levels/"+sceneFile(tl)+"":null, target_arrival_id:t?t.arrival:null,
+          key:e.props.key||""});
+      } else if(e.type==="minigame"){
+        const w=e.children.find(c=>c.slot==="win"), lo=e.children.find(c=>c.slot==="lose");
+        o.minigames.push({...base, minigame:e.props.mg||"", win_spawn:spLoc(e,w.slot), lose_spawn:spLoc(e,lo.slot)});
+      }
+    }
+    return o;
+  });
+  return {
+    format:"gacheiducitos-levelapp", version:1,
+    instructions:"Para cada nivel de 'levels': crear la escena en scene_path con raiz root_node, capas GroundLayer/DetailLayer/PropsLayer (y_sort en PropsLayer), WorldBoundaryManager con world_boundary y un ArrivalSpawnPoint por cada entrada de arrival_spawns (ya incluye start, spawns sueltos, llegadas de portales y salidas de minijuegos, con el nivel donde estan posicionados; px = centro de la celda, relativo al nivel), LevelPortal con target_scene_path + target_arrival_id, enemigos/npcs/cofres como instancias placeholder con persistence_id unico. Notas: 'info' es solo contexto de diseño; cada texto de 'prompts' (escrito entre // //) es una instruccion que hay que interpretar y ejecutar sobre ese nivel. Revisar 'warnings' antes de generar. El layout y el arte los define el usuario.",
+    cell_px:px, levels,
+    warnings:validate().map(v=>v.lvl+": "+v.msg)
+  };
+}
+function download(name,blob){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); }
+function exportSpec(){
+  const w=validate().filter(v=>v.lvl==="err");
+  if(w.length&&!confirm(w.length+" error(es) en el validador. ¿Exportar de todos modos?")) return;
+  download("levels_spec.json",new Blob([JSON.stringify(buildSpec(),null,2)],{type:"application/json"}));
+}
+function exportPNG(){
+  if(!S.levels.length) return flash("No hay niveles");
+  let a=1e9,b=1e9,c=-1e9,d=-1e9; for(const l of S.levels){a=Math.min(a,l.x);b=Math.min(b,l.y);c=Math.max(c,l.x+l.w);d=Math.max(d,l.y+l.h);}
+  const z=32, m=2, v={ox:(m-a)*z,oy:(m-b)*z,z}, w=Math.ceil((c-a+2*m)*z), h=Math.ceil((d-b+2*m)*z);
+  const o=document.createElement("canvas"); o.width=w; o.height=h; draw(o.getContext("2d"),w,h,v,true);
+  o.toBlob(bl=>download("mapa_niveles.png",bl));
+  draw();
+}
+
+/*GEN-START*/
+const MG_TYPES = {runner:0, excavation:1, catcher:2, smasher:3, trampolin:4};
+const GEN_LEVELS_DIR = "rpg-g/src/overworld/levels";
+const gq = s => JSON.stringify(String(s));
+const gvec = (x,y) => "Vector2("+x+", "+y+")";
+const gname = s => String(s).replace(/[^A-Za-z0-9_]/g,"_") || "Nodo";
+
+/* Devuelve el texto .tscn de un nivel del spec (levels_spec.json). Función pura. */
+function genScene(sp, L){
+  const ext=[], subs=[], nodes=[], eid={}, SC="res://src/overworld/", key=L.scene_file.replace(/\.tscn$/,"");
+  const R=(k,type,path)=>{ if(!eid[k]){ eid[k]="r"+(ext.length+1)+"_"+k; ext.push('[ext_resource type="'+type+'" path="'+path+'" id="'+eid[k]+'"]'); } return 'ExtResource("'+eid[k]+'")'; };
+  const N=(name,type,parent,lines,inst)=>{ nodes.push("[node name="+gq(name)+(type?' type="'+type+'"':"")+(parent!=null?" parent="+gq(parent):"")+(inst?" instance="+inst:"")+"]"+(lines&&lines.length?"\n"+lines.join("\n"):"")); };
+  N(L.root_node,"Node2D",null,["y_sort_enabled = true","metadata/levelapp_level = "+gq(L.name)]);
+  N("WorldBoundaryManager","Node2D",".",["script = "+R("wbm","Script",SC+"components/world_boundary_manager.gd"),"width = "+L.world_boundary.width+".0","height = "+L.world_boundary.height+".0"]);
+  const ts=R("tileset","TileSet","res://assets/sprites/core_tileset.tres");
+  N("Environment","Node2D",".");
+  N("GroundLayer","TileMapLayer","Environment",["tile_set = "+ts]);
+  N("DetailLayer","TileMapLayer","Environment",["tile_set = "+ts]);
+  N("PropsLayer","TileMapLayer","Environment",["y_sort_enabled = true","tile_set = "+ts]);
+  N("SpawnPoints","Node2D",".");
+  N("Entities","Node2D",".",["y_sort_enabled = true"]);
+  N("Portals","Node2D",".");
+  // spawns (llegada) ubicados en este nivel; las llegadas de portal del mismo nivel viven en el propio portal
+  const own=new Map(L.portals.map(p=>[p.id,p]));
+  const inPortal=a=>{ const p=a.kind==="portal_arrival"&&own.get(a.owner); return p&&p.arrival_spawn.level===L.name; };
+  const asp=R("asp","PackedScene",SC+"components/arrival_spawn_point.tscn");
+  for(const a of L.arrival_spawns){
+    if(inPortal(a)) continue;
+    N(gname(a.arrival_id),null,"SpawnPoints",["position = "+gvec(a.px.x,a.px.y),"arrival_id = "+gq(a.arrival_id)],asp);
+  }
+  const portalScene=R("portal","PackedScene",SC+"components/level_portal.tscn");
+  for(const p of L.portals){
+    const nm=gname(p.id), same=p.arrival_spawn.level===L.name, lines=["position = "+gvec(p.px.x,p.px.y)];
+    if(p.target_scene_path) lines.push("target_level_path = "+gq(p.target_scene_path));
+    if(p.target_arrival_id) lines.push("exit_id = "+gq(p.target_arrival_id));
+    lines.push("arrival_id = "+gq(same?p.arrival_spawn.arrival_id:p.arrival_spawn.arrival_id+"_local"),"metadata/levelapp_id = "+gq(p.id));
+    N(nm,null,"Portals",lines,portalScene);
+    if(same) N("SpawnPoint",null,"Portals/"+nm,["position = "+gvec(p.arrival_spawn.px.x-p.px.x,p.arrival_spawn.px.y-p.px.y)]);
+  }
+  const ent=(e,scene,extra)=>N(gname(e.id),null,"Entities",["position = "+gvec(e.px.x,e.px.y),...extra,"metadata/levelapp_id = "+gq(e.id)],scene);
+  const enemy=R("enemy","PackedScene",SC+"enemies/generic_enemy.tscn");
+  for(const e of L.enemies) ent(e,enemy,["persistence_id = "+gq(key+"_"+e.id),"metadata/levelapp_enemy_type = "+gq(e.enemy_type||"")]);
+  const npc=R("npc","PackedScene",SC+"npcs/dummy_npc.tscn");
+  for(const e of L.npcs) ent(e,npc,["metadata/levelapp_npc = "+gq(e.npc_name||"")]);
+  const chest=R("chest","PackedScene",SC+"interactables/chest.tscn");
+  for(const e of L.chests) ent(e,chest,["persistence_id = "+gq(key+"_"+e.id),"metadata/levelapp_contents = "+gq(e.contents||"")]);
+  const mgs=R("mg","PackedScene",SC+"interactables/minigame_interactable.tscn");
+  L.minigames.forEach((e,i)=>{
+    const sid="mgaction"+(i+1), tl=n=>sp.levels.find(l=>l.name===n);
+    const act=R("mgaction","Script","res://src/core/pipeline/actions/minigame_action.gd"), base=R("action","Script","res://src/core/pipeline/action_resource.gd");
+    subs.push('[sub_resource type="Resource" id="'+sid+'"]\nscript = '+act+"\nminigame_type = "+(MG_TYPES[e.minigame]??0)+
+      "\nwin_level_path = "+gq(tl(e.win_spawn.level).scene_path)+"\nwin_spawn_id = "+gq(e.win_spawn.arrival_id)+
+      "\nlose_level_path = "+gq(tl(e.lose_spawn.level).scene_path)+"\nlose_spawn_id = "+gq(e.lose_spawn.arrival_id));
+    ent(e,mgs,['actions_if_true = Array['+base+']([SubResource("'+sid+'")])',"metadata/levelapp_minigame = "+gq(e.minigame||"")]);
+  });
+  const st=L.arrival_spawns.find(a=>a.kind==="start")||L.arrival_spawns[0], pp=st?st.px:{x:60,y:60};
+  N("Player",null,".",["position = "+gvec(pp.x,pp.y)],R("player","PackedScene",SC+"player/player.tscn"));
+  N("SceneMusic","Node",".",["script = "+R("music","Script","res://src/core/components/scene_music.gd")]);
+  return "[gd_scene format=3]\n\n"+ext.join("\n")+"\n\n"+(subs.length?subs.join("\n\n")+"\n\n":"")+nodes.join("\n\n")+"\n";
+}
+
+/* Notas de diseño y prompts por nivel, para el agente */
+function genPromptsDoc(sp){
+  let o="# Prompts y notas de nivel (generado por LevelApp)\n\nNo editar a mano: se regenera al generar niveles. `info` = contexto de diseño. `prompt` = instrucción a interpretar sobre ese nivel.\n";
+  for(const L of sp.levels){
+    if(!L.notes.length&&!L.description) continue;
+    o+="\n## "+L.name+" — `"+L.scene_path+"`\n";
+    if(L.description) o+="\nDescripción: "+L.description+"\n";
+    for(const n of L.notes){
+      o+="\n### "+n.id+" (celda "+n.cell.x+", "+n.cell.y+")\n";
+      if(n.info) o+="\nInfo:\n"+n.info.split("\n").map(x=>"> "+x).join("\n")+"\n";
+      for(const p of n.prompts) o+="\n- [ ] PROMPT: "+p+"\n";
+    }
+  }
+  return o;
+}
+/*GEN-END*/
+/* ===== Generación en disco (vía server.js; rutas fijas del proyecto) ===== */
+function modal(build){
+  return new Promise(res=>{
+    const m=document.createElement("div"); m.id="modal"; const box=document.createElement("div"); m.appendChild(box); document.body.appendChild(m);
+    build(box,v=>{ m.remove(); res(v); });
+  });
+}
+const mEl=(box,html)=>{ const d=document.createElement("div"); d.innerHTML=html; box.appendChild(d); return d; };
+function infoModal(title,html){ return modal((box,done)=>{ mEl(box,"<h2>"+title+"</h2>"+html+'<div class="btns"><button id="ok" class="on">Cerrar</button></div>'); box.querySelector("#ok").onclick=()=>done(true); }); }
+const hasServer = () => location.protocol==="http:"||location.protocol==="https:";
+async function api(path,opt){ const r=await fetch(path,opt); const j=await r.json().catch(()=>({})); if(!r.ok) throw Object.assign(new Error(j.error||r.statusText),{data:j}); return j; }
+/* pide nuevos nombres a los niveles cuyo .tscn ya existe; devuelve false si se cancela */
+async function resolveNameClashes(){
+  for(;;){
+    const existing=new Set((await api("/api/levels")).files);
+    const clashes=S.levels.filter(l=>existing.has(sceneFile(l)));
+    if(!clashes.length) return true;
+    const ok=await modal((box,done)=>{
+      mEl(box,"<h2>Estos niveles ya existen en el proyecto</h2><div class='dim'>No se sobrescribe nada. Elige un nombre nuevo para cada uno (cambia también el nombre del nivel en la app).</div>");
+      const rows=clashes.map(l=>{ const d=mEl(box,'<div class="row"><label style="width:120px">'+esc(l.name)+'</label><input value="'+esc(l.name+"_nuevo")+'"></div>'); return {l,i:d.querySelector("input")}; });
+      const err=mEl(box,'<div class="err"></div>').firstChild;
+      mEl(box,'<div class="btns"><button id="no">Cancelar</button><button id="go" class="on">Renombrar</button></div>');
+      box.querySelector("#no").onclick=()=>done(false);
+      box.querySelector("#go").onclick=()=>{
+        const names=rows.map(r=>r.i.value.trim()), files=names.map(n=>slug(n)+".tscn");
+        const others=new Set(S.levels.filter(l=>!clashes.includes(l)).map(sceneFile));
+        for(let k=0;k<rows.length;k++){
+          if(!names[k]) return err.textContent="Nombre vacío.";
+          if(others.has(files[k])||files.indexOf(files[k])!==k) return err.textContent="Nombre repetido: "+names[k];
+          if(existing.has(files[k])) return err.textContent="Ya existe un archivo para: "+names[k];
+        }
+        rows.forEach((r,k)=>r.l.name=names[k]); commit(); draw(); done(true);
+      };
+    });
+    if(!ok) return false;
+  }
+}
+async function generateWorld(){
+  if(!hasServer()) return infoModal("Abre LevelApp con su servidor","<p>Para generar en el proyecto, arranca <code>LevelApp/run.sh</code> (o <code>npm start</code> en LevelApp) y abre <b>http://localhost:3132</b>. El servidor ya conoce la ruta del proyecto.</p>");
+  if(!S.levels.length) return flash("No hay niveles");
+  const errs=validate().filter(v=>v.lvl==="err");
+  if(errs.length) return infoModal("Corrige estos errores antes de generar","<ul>"+errs.map(v=>"<li>"+esc(v.msg)+"</li>").join("")+"</ul>");
+  try{
+    if(!await resolveNameClashes()) return flash("Generación cancelada");
+    const spec=buildSpec();
+    const r=await api("/api/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({scenes:spec.levels.map(L=>({file:L.scene_file,content:genScene(spec,L)})),prompts:genPromptsDoc(spec)})});
+    const warns=spec.warnings.filter(w=>w.startsWith("warn"));
+    infoModal("Niveles generados","<p>"+r.written.length+" escena(s) en <code>"+esc(r.levelsDir)+"</code>:</p><ul>"+r.written.map(f=>"<li>"+esc(f)+"</li>").join("")+"</ul><p>Prompts y notas en <code>"+esc(r.promptsFile)+"</code>.</p>"+(warns.length?"<p class='dim'>Avisos del validador ("+warns.length+") sin resolver.</p>":""));
+  }catch(e){ infoModal("No se generó nada",'<p>'+esc(e.message)+'</p>'+(e.data&&e.data.conflicts?"<ul>"+e.data.conflicts.map(f=>"<li>"+esc(f)+"</li>").join("")+"</ul>":"")); }
+}
+/* proyecto guardado en LevelApp/data (además de localStorage) */
+let saveT=null;
+function saveToServer(){ if(!hasServer()) return; clearTimeout(saveT); saveT=setTimeout(()=>fetch("/api/project",{method:"POST",headers:{"Content-Type":"application/json"},body:snapshot()}).catch(()=>{}),400); }
+async function loadFromServer(){
+  if(!hasServer()) return;
+  try{ const j=await api("/api/project"); if(j&&j.levels&&j.levels.length){ restore(JSON.stringify(j)); hist=[snapshot()]; histPos=0; draw(); } }catch(e){}
+}
+
+/* ===== UI ===== */
+function setTool(t){ tool=t; cv.style.cursor=t==="select"?"default":"crosshair"; buildToolbar(); }
+function buildToolbar(){
+  const tb=document.getElementById("toolbar"); tb.innerHTML="";
+  const btn=(txt,fn,cls="",title="")=>{ const b=document.createElement("button"); b.textContent=txt; b.className=cls; b.title=title; b.onclick=fn; tb.appendChild(b); return b; };
+  const sep=()=>{ const s=document.createElement("span"); s.className="sep"; tb.appendChild(s); };
+  btn("Seleccionar (V)",()=>setTool("select"),tool==="select"?"on":"");
+  btn("Nivel (L)",()=>setTool("level"),tool==="level"?"on":"","Arrastra en la grilla");
+  sep();
+  for(const k in TYPES) btn(TYPES[k].label+" ("+TYPES[k].key.toUpperCase()+")",()=>setTool(k),tool===k?"on":"");
+  sep();
+  btn("↶",undo,"","Deshacer (Ctrl+Z)"); btn("↷",redo,"","Rehacer (Ctrl+Shift+Z)");
+  sep();
+  btn("Guardar proyecto",()=>download("levelapp_proyecto.json",new Blob([snapshot()],{type:"application/json"})));
+  btn("Abrir proyecto",()=>document.getElementById("fileIn").click());
+  btn("Exportar levels_spec.json",exportSpec,"on");
+  btn("PNG",exportPNG);
+  btn("Generar niveles",generateWorld,"on","Crea los .tscn en rpg-g/src/overworld/levels (no sobrescribe)");
+  btn("Nuevo",()=>{ if(confirm("¿Borrar todo el proyecto?")){ S=fresh(); sel=null; commit(); draw(); } },"danger");
+}
+document.getElementById("fileIn").onchange=ev=>{
+  const f=ev.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{ restore(r.result); commit(); draw(); }catch(e){ alert("Archivo inválido"); } }; r.readAsText(f); ev.target.value="";
+};
+
+const side=document.getElementById("side");
+function esc(s){ return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function refreshUI(){
+  let h="";
+  if(sel&&sel.kind==="level"){
+    const l=levelById(sel.id);
+    h+=`<h3>Nivel</h3>
+    <div class="row"><label>Nombre</label><input data-f="name" value="${esc(l.name)}"></div>
+    <div class="row"><label>Archivo</label><span class="dim">${esc(sceneFile(l))}</span></div>
+    <div class="row"><label>Color</label><input type="color" data-f="color" value="${levelColor(l)}"></div>
+    <div class="grid4"><input data-f="x" type="number" value="${l.x}" title="x"><input data-f="y" type="number" value="${l.y}" title="y"><input data-f="w" type="number" min="1" value="${l.w}" title="ancho"><input data-f="h" type="number" min="1" value="${l.h}" title="alto"></div>
+    <div class="dim">x, y, ancho, alto (celdas)</div>
+    <div class="row"><label>Notas</label><textarea data-f="text">${esc(l.text)}</textarea></div>
+    <div class="row"><button class="danger" data-act="del">Eliminar nivel</button></div>`;
+  } else if(sel&&sel.kind==="ent"&&sel.slot){
+    const e=entById(sel.id), sp=spawnPoints(true).find(q=>q.key===e.id+":"+sel.slot), lv=levelById(sp.levelId);
+    h+=`<h3>Spawn de ${e.type==="portal"?"llegada":"salida"}</h3>
+    <div class="row"><label>ID</label><span>${esc(sp.arrival)}</span></div>
+    <div class="row"><label>Nivel</label><span>${sp.orphan?'<span class="dim">fuera de todo nivel</span>':esc(lv.name)}</span></div>
+    <div class="row"><label>Celda</label><span class="dim">${sp.x-lv.x}, ${sp.y-lv.y} (relativa al nivel)</span></div>
+    <div class="row"><label>Objeto</label><button data-act="selparent">${esc(e.name)}</button></div>
+    <div class="dim">Arrástralo para moverlo; solo puede soltarse dentro de un nivel.</div>`;
+  } else if(sel&&sel.kind==="ent"){
+    const e=entById(sel.id), t=TYPES[e.type], lv=levelById(e.levelId);
+    h+=`<h3>${t.label} · ${esc(lv.name)}</h3>
+    <div class="row"><label>Nombre</label><input data-f="name" value="${esc(e.name)}" ${e.type==="start"?"disabled":""}></div>`;
+    if(e.type==="portal"){
+      const tg=e.target&&spawnByKey(e.target);
+      h+=`<div class="row"><label>Llega aquí</label><span class="dim">${esc(childId(e,e.children[0]))}</span></div>
+      <div class="row"><label>Destino</label><span>${tg?esc(levelById(tg.levelId).name+" › "+tg.arrival):'<span class="dim">sin destino (arrastra el punto amarillo)</span>'}</span></div>
+      ${tg?'<div class="row"><button data-act="unlink">Quitar conexión</button></div>':""}
+      <div class="row"><label>Llave</label><input data-p="key" value="${esc(e.props.key||"")}" placeholder="opcional"></div>`;
+    }
+    if(e.type==="enemy") h+=`<div class="row"><label>Tipo</label><input data-p="kind" value="${esc(e.props.kind||"")}"></div>`;
+    if(e.type==="npc") h+=`<div class="row"><label>NPC</label><input data-p="npc" value="${esc(e.props.npc||"")}"></div>`;
+    if(e.type==="chest") h+=`<div class="row"><label>Contenido</label><input data-p="contents" value="${esc(e.props.contents||"")}"></div>`;
+    if(e.type==="minigame") h+=`<div class="row"><label>Minijuego</label><select data-p="mg"><option value="">(sin definir)</option>${Object.keys(MG_TYPES).map(k=>`<option ${e.props.mg===k?"selected":""}>${k}</option>`).join("")}</select></div>
+      <div class="dim">Spawns de salida: ${e.children.map(c=>esc(childId(e,c))).join(", ")}</div>`;
+    h+=`<div class="row"><label>${e.type==="note"?"Texto":"Notas"}</label><textarea data-f="text">${esc(e.text)}</textarea></div>
+    ${e.type==="note"?'<div class="dim">Texto entre //barras// = prompt que se interpreta al generar el nivel; el resto es solo información de diseño.</div>':""}
+    <div class="row"><button class="danger" data-act="del">Eliminar</button></div>`;
+  } else h+=`<h3>Selección</h3><div class="dim">Nada seleccionado. Dibuja niveles con “Nivel (L)”; añade objetos con los botones o sus teclas.</div>`;
+
+  h+=`<h3>Proyecto</h3>
+  <div class="row"><label>Px por celda</label><input id="cellPx" type="number" min="1" value="${S.cellPx}"></div>
+  <div class="row"><label>Bidireccional</label><input id="bidir" type="checkbox" ${S.bidir?"checked":""} style="flex:none"><span class="dim">al conectar A→B, B→A si B no tiene destino</span></div>
+  <div class="dim">Niveles: ${S.levels.length} · Objetos: ${S.ents.length}</div>`;
+
+  const val=validate();
+  h+=`<h3>Validador (${val.length})</h3>`+(val.length?val.map((v,i)=>`<div class="issue ${v.lvl}" data-i="${i}">${esc(v.msg)}</div>`).join(""):`<div class="dim">Sin problemas.</div>`);
+  h+=`<h3>Atajos</h3><div class="dim">Rueda: zoom · Espacio+arrastrar o clic derecho: mover vista · Supr: borrar · Arrastra el punto amarillo de un portal hasta un spawn para conectar.</div>`;
+  side.innerHTML=h;
+
+  const target=()=>sel&&sel.kind==="level"?levelById(sel.id):entById(sel.id);
+  side.querySelectorAll("[data-f]").forEach(i=>i.onchange=()=>{ const o=target(), f=i.dataset.f, old=o[f]; o[f]=i.type==="number"?parseInt(i.value)||0:i.value; if((f==="w"||f==="h")&&o[f]<1) o[f]=1; if(sel.kind==="level"&&["x","y","w","h"].includes(f)&&overlapsAny(o,o.x,o.y,o.w,o.h)){ o[f]=old; flash("Los niveles no pueden superponerse"); refreshUI(); } commit(); draw(); });
+  side.querySelectorAll("[data-p]").forEach(i=>i.onchange=()=>{ target().props[i.dataset.p]=i.value; commit(); });
+  side.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{
+    const a=b.dataset.act;
+    if(a==="del") deleteSel();
+    else if(a==="selparent"){ delete sel.slot; refreshUI(); draw(); }
+    else if(a==="unlink"){ target().target=null; commit(); draw(); }
+  });
+  side.querySelectorAll(".issue").forEach(d=>d.onclick=()=>{ const r=val[+d.dataset.i].ref; if(r){ sel=r; focusSel(); refreshUI(); draw(); } });
+  const cp=document.getElementById("cellPx"); cp.onchange=()=>{ S.cellPx=Math.max(1,parseInt(cp.value)||60); commit(); };
+  document.getElementById("bidir").onchange=e=>{ S.bidir=e.target.checked; commit(); };
+}
+function focusSel(){
+  let p; if(sel.kind==="level"){ const l=levelById(sel.id); p={x:l.x+l.w/2,y:l.y+l.h/2}; } else { const q=entPos(entById(sel.id)), c0=sel.slot&&entById(sel.id).children.find(c=>c.slot===sel.slot); p={x:q.x+(c0?c0.dx:0)+.5,y:q.y+(c0?c0.dy:0)+.5}; }
+  S.view.ox=W/2-p.x*S.view.z; S.view.oy=H/2-p.y*S.view.z;
+}
+
+/* ===== Inicio ===== */
+try{ const saved=localStorage.getItem(LS_KEY); if(saved){ S=Object.assign(fresh(),JSON.parse(saved)); migrate(); } }catch(e){}
+hist=[snapshot()]; histPos=0;
+buildToolbar(); refreshUI(); resize(); loadFromServer();
+</script>
+</body>
+</html>
