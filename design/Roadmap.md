@@ -27,17 +27,21 @@
 - [x] NPCs funcionales con diálogo
 - [x] Sistema de eventos y scripts
 
-### 2.4 - Sistema de Combate (🚧 **CRÍTICO - EN PROGRESO**)
-- [ ] Sistema de armas básicas
-- [ ] Sistema de escudo
-- [ ] Daño y colisiones de combate
-- [ ] Animaciones de ataque/defensa
+### 2.4 - Escudo Simple (🚧 **CRÍTICO - EN PROGRESO**)
+- [ ] **Efecto visual de escudo** - mostrar zona protegida
+- [ ] **Protección sin daño** - no recibir daño cuando está activo
+- [ ] **Sin movimiento activo** - no poder moverse mientras usa escudo
 
-### 2.5 - Primer Test Jugable (🎯 **SIGUIENTE HITO - 3 TAREAS CRÍTICAS**)
-- [ ] **Plantilla de nivel funcional** (depende: ✓ level app)
-- [ ] **2 Niveles conectados en overworld** (depende: ✓ level app + plantilla)
-- [ ] **Sistema Game Over** (depende: combate 2.4)
-- [ ] Flujo completo: overworld → nivel → combate → Game Over o victoria
+### 2.5 - Primer Test Jugable (🎯 **SIGUIENTE HITO - 2 TAREAS CRÍTICAS**)
+- [ ] **Plantilla de nivel funcional** (depende: ✓ level app + fix Dummies → npc_barnaby.tscn)
+- [ ] **2 Niveles conectados en overworld** (depende: plantilla 2.4 + ✓ level app)
+- [ ] Flujo completo: overworld → nivel → interacción simple
+
+### 2.6 - Sistema de Armas y Equipamiento (📋 **Roadmap Futuro**)
+- [ ] Sistema de equipamiento (armas y escudos equipados)
+- [ ] Slots rápidos para armas
+- [ ] Switch entre armas/escudos
+- [ ] Game Over y victoria (como nivel especial)
 
 ---
 
@@ -56,17 +60,17 @@
 ## 📊 Dependencias Críticas para 2.5
 
 ```
-overworld (✓) + nivel app (✓) 
+level app (✓) + fix Dummies → npc_barnaby.tscn
     ↓
-plantilla de nivel (⚠️)
+plantilla de nivel + escudo simple (⚠️)
     ↓
 2 niveles conectados (⚠️)
     ↓
-+ sistema combate (armas/escudo) (⚠️)
-    ↓
-Game Over (⚠️)
+✓ Primer Test Jugable
 ```
 
 **Lo que desbloquea el audio:** Toda ambientación sonora ya está lista; sólo hace falta llenar niveles con efectos.
 
-**Lo que desbloquea el level app:** Construcción rápida de niveles; eliminó el cuello de botella manual.
+**Lo que desbloquea el level app:** Construcción rápida de niveles (solo falta fix del asset Dummies).
+
+**Escudo simple para 2.5:** Efecto visual + protección + sin movimiento. El sistema de armas completo (equipamiento, slots, switch) va en 2.6.
