@@ -163,13 +163,10 @@ func _update_sprite_facing(dir: Vector2) -> void:
 func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: float) -> void:
 	if is_dead:
 		return
-	# Escudo PROXY: un golpe bloqueado no hace daño, ni knockback, ni activa i-frames
-	if shield_component.try_block(damage, attack_direction):
-		return
 	
 	var tree: SceneTree = get_tree()
 	
-	# Aplicar siempre knockback físico hacia atrás
+	# Aplicar siempre knockback físico hacia atrás (también con escudo: el enemigo te empuja)
 	if knockback_force > 0:
 		is_stunned = true
 		knockback_velocity = attack_direction * knockback_force
@@ -182,6 +179,9 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 		else:
 			is_stunned = false
 
+	# Escudo PROXY: un golpe bloqueado no hace daño ni activa i-frames (el knockback ya se aplicó)
+	if shield_component.try_block(damage, attack_direction):
+		return
 
 	# Si ya está invencible, no resta vida ni reinicia el temporizador de i-frames
 	if is_invulnerable:
