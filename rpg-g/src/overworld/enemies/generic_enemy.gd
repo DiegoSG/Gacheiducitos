@@ -89,7 +89,10 @@ func _physics_process(delta: float) -> void:
 		
 	match current_state:
 		State.CHASE:
-			if player != null:
+			if player != null and _is_player_in_attack_range():
+				# Ya alcanza al jugador con su hitbox: se detiene ahí y sigue atacando
+				velocity = Vector2.ZERO
+			elif player != null:
 				var direction: Vector2 = global_position.direction_to(player.global_position)
 				velocity = direction * speed
 				_chase_sound_timer -= delta
@@ -123,6 +126,15 @@ func _physics_process(delta: float) -> void:
 
 func _exit_tree() -> void:
 	AlertSystem.unregister_pursuer(self)
+
+## true si el hitbox ya solapa el hurtbox del jugador (punto desde el que puede golpearlo).
+func _is_player_in_attack_range() -> bool:
+	if hitbox_component == null:
+		return false
+	for area: Area2D in hitbox_component.get_overlapping_areas():
+		if area is HurtboxComponent and area.get_parent() == player:
+			return true
+	return false
 
 func _check_overlap_for_reaggro() -> void:
 	if lose_target_zone:
