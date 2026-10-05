@@ -21,7 +21,7 @@ func _physics_process(delta: float):
 	velocity.y += GRAVITY * delta
 	
 	# Movimiento horizontal
-	var direction = Input.get_axis("ui_left", "ui_right")
+	var direction = Input.get_axis("move_left", "move_right")
 	velocity.x = direction * MOVE_SPEED
 	
 	if sprite:

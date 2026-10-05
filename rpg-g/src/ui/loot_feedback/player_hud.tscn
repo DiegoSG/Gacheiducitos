@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" uid="uid://o0m7o4iew46s" path="res://src/ui/loot_feedback/loot_feedback_manager.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://src/ui/inventory/inventory_ui.tscn" id="2_inv_ui"]
+[ext_resource type="PackedScene" path="res://src/ui/menus/pause_controller.tscn" id="3_pause"]
+[ext_resource type="PackedScene" path="res://src/ui/map/map_controller.tscn" id="4_map"]
+[ext_resource type="Script" path="res://src/ui/map/map_discoverer.gd" id="5_disc"]
 
 [node name="PlayerHUD" type="CanvasLayer" unique_id=1848668979]
 layer = 10
@@ -110,3 +113,10 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="InventoryUI" parent="." unique_id=474057248 instance=ExtResource("2_inv_ui")]
+
+[node name="PauseController" parent="." instance=ExtResource("3_pause")]
+
+[node name="MapController" parent="." instance=ExtResource("4_map")]
+
+[node name="MapDiscoverer" type="Node" parent="."]
+script = ExtResource("5_disc")

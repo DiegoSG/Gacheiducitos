@@ -8,6 +8,8 @@
 [ext_resource type="PackedScene" uid="uid://buh6h4w8o8fef" path="res://src/ui/loot_feedback/player_hud.tscn" id="5_hud"]
 [ext_resource type="Script" uid="uid://63w406wwqc28" path="res://src/overworld/components/bounded_camera.gd" id="6_camera"]
 
+[ext_resource type="Script" path="res://src/overworld/player/components/quick_slots.gd" id="7_quick_slots"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(24.5, 53.75)
 
@@ -28,6 +30,9 @@ texture = ExtResource("2_player_down")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=40233913]
 shape = SubResource("RectangleShape2D_1")
+
+[node name="QuickSlots" type="Node" parent="." unique_id=1900000001]
+script = ExtResource("7_quick_slots")
 
 [node name="ActionableFinder" type="Area2D" parent="." unique_id=1271571305]
 collision_layer = 0

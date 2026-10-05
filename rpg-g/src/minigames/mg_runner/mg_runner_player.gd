@@ -52,8 +52,8 @@ func _input(event: InputEvent) -> void:
 	if is_dead:
 		return
 
-	# Salto (Espacio, Flechas, WASD y Gamepad ya están mapeados en ui_accept / ui_up)
-	if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_up"):
+	# Salto (Espacio, Flechas, WASD y Gamepad ya están mapeados en jump)
+	if event.is_action_pressed("jump"):
 		try_jump()
 	elif event.is_action_pressed("attack"):
 		_shoot()
@@ -76,7 +76,7 @@ func try_jump() -> void:
 		_jump_buffer = 0.18
 
 func _is_duck_pressed() -> bool:
-	return Input.is_action_pressed("ui_down")
+	return Input.is_action_pressed("crouch")
 
 func _physics_process(delta: float) -> void:
 	if is_dead:

@@ -59,3 +59,7 @@ func update_view(metadata: Dictionary) -> void:
 		details_label.text = "[Ranura Vacía]"
 		if load_btn: load_btn.disabled = true
 		if delete_btn and not is_autosave: delete_btn.visible = false
+
+	# Un botón deshabilitado no debe ser parada del foco al navegar con mando/teclado.
+	if load_btn:
+		load_btn.focus_mode = Control.FOCUS_NONE if load_btn.disabled else Control.FOCUS_ALL

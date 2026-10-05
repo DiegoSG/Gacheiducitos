@@ -12,3 +12,4 @@ icon = ExtResource("2_icon")
 description = "Una espada roma tallada en roble. Ideal para entrenamiento."
 type = 1
 stackable = false
+equip_kind = 1

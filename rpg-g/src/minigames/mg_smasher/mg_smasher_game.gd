@@ -41,6 +41,7 @@ func _ready() -> void:
 	lives = config.get("lives", 3)
 	
 	setup_game()
+	add_child(SmashCursor.new())
 	_update_ui()
 
 func setup_game() -> void:

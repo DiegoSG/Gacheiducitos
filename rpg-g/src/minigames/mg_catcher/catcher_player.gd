@@ -14,7 +14,7 @@ func _ready() -> void:
 		sprite.texture = TEX_DOWN
 
 func _physics_process(_delta: float) -> void:
-	var input_dir: float = Input.get_axis("ui_left", "ui_right")
+	var input_dir: float = Input.get_axis("move_left", "move_right")
 	velocity.x = input_dir * speed
 	velocity.y = 0
 

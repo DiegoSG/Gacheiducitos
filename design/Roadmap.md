@@ -50,3 +50,24 @@
 - [ ] **Scripts de test headless:** los runners de `src/core/tests/` no corren con `--script` (decisión: QA manual).
 - [ ] **DialogueApp:** nodos que mezclan texto y `do` pierden la mutación; switch con operadores distintos de `==`.
 
+
+## Controles y Joystick (esquema unificado)
+Mapa completo por contexto y hardware en la hoja "Gacheiducitos - Mapa de Controles" (Drive). Principio: los inputs no cambian entre contextos, para que aprender a jugar sea simple.
+Esquema de botones: abajo = Acción, izquierda = Secundario (atacar, disparar, avance rápido de diálogo), arriba = Inventario, derecha = Comodín (reservado; hace de Atrás en menús, por confirmar). Pausa = Start. Stick derecho libre: solo se usaría para los slots si el mando elegido no tiene flechas.
+
+- [x] **Separar acciones de gameplay de las `ui_*`:** `move_*`, `interact`, `attack`, `block`, `pause`, `inventory`, `slot_1..4`. Las `ui_*` quedan solo para menús.
+- [x] **Limpiar mapeos extra:** quitar Back (inventario) y LB (ataque) del InputMap; el D-Pad deja de mover en Overworld (sus 4 flechas son los slots) y el stick izquierdo queda como único movimiento. En minijuegos no hay slots y el D-Pad queda libre.
+- [x] **Teclado nuevo:** K ataca/dispara/avance rápido, L bloquea, Tab/I inventario, P pausa, Esc atrás, E/Espacio/Enter acción.
+- [ ] **Bloqueo (`block`):** acción y comportamiento del jugador (LB/L1/L en mando). _Placeholder hecho: estado `is_blocking` y señal, sin daño ni animación._
+- [ ] **4 slots de equipado rápido:** teclas 1-4 y D-Pad (↑ → ↓ ←). Sirven para cambiar arma, consumir poción y cambiar escudo. _Placeholder hecho: componente, entrada y HUD; falta el efecto real de arma, escudo y poción._
+- [x] **Asignación de slots desde el inventario:** con el inventario abierto, las teclas 1-4 (D-Pad) asignan el ítem seleccionado. Solo armas, escudos y consumibles; no llaves ni ítems de quest.
+- [ ] **Menús unificados (inicio, pausa y opciones):** mismo esquema de navegación en los tres; Start abre y cierra la pausa. La pausa de un minijuego incluye "Abandonar minijuego", que cuenta como perder (se pierden los ítems recogidos en esa partida). _Hecho: pausa (con Abandonar en minijuegos) y menú de inicio como escena principal. Placeholder: opciones._
+- [x] **Runner con mando:** A salta, X dispara, D-Pad abajo agacha. Evaluando desplazamiento lateral con D-Pad izquierda/derecha.
+- [x] **Pausa en minijuegos:** conectar `pause` en Runner, Catcher, Trampolín, Smasher y Excavación.
+- [x] **Diálogos:** el texto se escribe solo; Acción lo completa de golpe; Acción de nuevo pasa al siguiente; Avance rápido salta al final del diálogo o al próximo nodo de decisión.
+- [x] **Smasher con mando:** cursor movido con el stick izquierdo y Acción para golpear (hoy solo responde a click de mouse).
+- [x] **Debug F3:** pasar `KEY_F3` hardcodeado a una acción del InputMap.
+- [ ] **Mapa del mundo (descubrimiento progresivo):** el mapa se va revelando a medida que el jugador avanza; guardar lo descubierto en el sistema de guardado. _Placeholder hecho: grilla por nivel y guardado de lo descubierto; falta el arte pintado (rama aparte)._
+- [x] **Controles del mapa:** M / View-Create-Select abre y cierra; mover con WASD o stick; zoom in/out con +/− o rueda y gatillos RT/LT (R2/L2, ZR/ZL); Secundario (K/X/□/Y) centra en el jugador.
+- [ ] **Puntos de interés de las Quest en el mapa:** marcadores de los objetivos de las misiones activas, visibles al abrir el mapa. Aparecen siempre, incluso sobre zonas aún no descubiertas. _Placeholder hecho: `register_poi` / `remove_poi`; falta conectarlo a las quests reales._
+- [ ] **Controles táctiles (Android):** joystick virtual y botones Acción, Secundario, Bloqueo, Mochila, Pausa y slots 1-4 (reemplaza el ítem de Backlog "Controles de Minijuegos en Móviles").
