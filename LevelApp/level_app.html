@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gacheiducitos - Editor de niveles</title>
+<style>
+:root{--bg:#1b1d23;--panel:#23262e;--line:#343842;--text:#e6e8ec;--dim:#9aa0ab;--accent:#5aa9ff;--warn:#ffb454;--err:#ff6b6b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px/1.4 system-ui,sans-serif}
+#app{display:grid;grid-template-columns:1fr 320px;grid-template-rows:auto 1fr;height:100%}
+#toolbar{grid-column:1/3;display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px 8px;background:var(--panel);border-bottom:1px solid var(--line)}
+#toolbar .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+button,select,input,textarea{font:inherit;color:var(--text);background:#2d313b;border:1px solid var(--line);border-radius:4px;padding:3px 7px}
+button{cursor:pointer}button:hover{border-color:var(--accent)}
+button.on{background:var(--accent);color:#08121f;border-color:var(--accent)}
+button.danger:hover{border-color:var(--err);color:var(--err)}
+#wrap{position:relative;overflow:hidden;min-width:0}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
+#side{background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:8px}
+#side h3{margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
+#side h3:first-child{margin-top:0}
+.row{display:flex;gap:6px;align-items:center;margin:4px 0}
+.row label{width:84px;color:var(--dim);flex:none}
+.row input,.row select,.row textarea{flex:1;min-width:0}
+.row textarea{resize:vertical;min-height:48px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.grid4 input{width:100%}
+.issue{padding:3px 6px;border-left:3px solid var(--warn);margin:3px 0;cursor:pointer;background:#2a2e37}
+.issue.err{border-color:var(--err)}.issue:hover{background:#333844}
+.dim{color:var(--dim)}
+.zone{display:flex;gap:4px;align-items:center;margin:3px 0}
+.zone input[type=color]{width:30px;padding:0;height:24px}
+.zone input[type=text]{flex:1;min-width:0}
+#status{position:absolute;left:8px;bottom:6px;color:var(--dim);background:#0008;padding:2px 6px;border-radius:4px;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="toolbar"></div>
+  <div id="wrap"><canvas id="cv"></canvas><div id="status"></div></div>
+  <div id="side"></div>
+</div>
+<input type="file" id="fileIn" accept=".json" hidden>
+<script>
+"use strict";
+/* ===== Modelo ===== */
+const TYPES = {
+  portal:   {label:"Portal",        key:"p", color:"#a070ff", letter:"P", prefix:"P"},
+  spawn:    {label:"Spawn llegada", key:"s", color:"#4cd07d", letter:"S", prefix:"A"},
+  start:    {label:"Start",         key:"t", color:"#2fe0a0", letter:"★", prefix:"start"},
+  respawn:  {label:"Respawn",       key:"r", color:"#35c8d8", letter:"R", prefix:"R"},
+  enemy:    {label:"Enemigo",       key:"e", color:"#ff6b6b", letter:"E", prefix:"E"},
+  npc:      {label:"NPC",           key:"n", color:"#5aa9ff", letter:"N", prefix:"N"},
+  chest:    {label:"Cofre",         key:"c", color:"#f0c040", letter:"C", prefix:"C"},
+  minigame: {label:"Minijuego",     key:"m", color:"#ff9a45", letter:"M", prefix:"M"},
+  note:     {label:"Nota",          key:"o", color:"#e8e070", letter:"T", prefix:"Nota_"}
+};
+const CHILD_DEFAULTS = {
+  portal:   [{slot:"arrival", dx:0, dy:1}],
+  minigame: [{slot:"win", dx:1, dy:1}, {slot:"lose", dx:-1, dy:1}]
+};
+const LS_KEY = "gacheiducitos_levelapp_v1";
+function fresh(){
+  return {levels:[], zones:[], ents:[], counters:{}, uid:0, cellPx:60, bidir:true, view:{ox:40,oy:40,z:24}};
+}
+let S = fresh();
+let sel = null;          // {kind:"level"|"ent", id}
+let tool = "select";
+let showAll = false;
+let hist = [], histPos = -1;
+
+function nextNum(k){ S.counters[k] = (S.counters[k]||0)+1; return S.counters[k]; }
+const pad = n => String(n).padStart(2,"0");
+const levelById = id => S.levels.find(l=>l.id===id);
+const entById = id => S.ents.find(e=>e.id===id);
+function slug(n){ return n.toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"") || "level"; }
+function pascal(n){ return n.split(/[^A-Za-z0-9]+/).filter(Boolean).map(s=>s[0].toUpperCase()+s.slice(1)).join("") || "Level"; }
+
+function addLevel(x,y,w,h){
+  const n = nextNum("L");
+  const l = {id:++S.uid, name:"Level_"+pad(n), x,y,w,h, zone:null, text:""};
+  S.levels.push(l); return l;
+}
+function addEnt(type, lv, lx, ly){
+  const t = TYPES[type];
+  const e = {id:++S.uid, type, levelId:lv.id, lx, ly, text:"", props:{}, children:[], target:null};
+  if(type==="start") e.name = "start";
+  else if(type==="note") e.name = "Nota_"+pad(nextNum("T"));
+  else e.name = t.prefix+pad(nextNum(t.prefix));
+  (CHILD_DEFAULTS[type]||[]).forEach(c=>e.children.push({...c}));
+  S.ents.push(e); return e;
+}
+function entPos(e){ const l=levelById(e.levelId); return {x:l.x+e.lx, y:l.y+e.ly}; }
+function childId(e,c){
+  if(e.type==="portal") return "at_"+e.name;
+  if(e.type==="minigame") return "at_"+e.name+"_"+c.slot;
+  return e.name;
+}
+/* puntos de llegada: referencia clave "uid:slot" */
+function spawnPoints(){
+  const out=[];
+  for(const e of S.ents){
+    const p = entPos(e);
+    if(e.type==="spawn"||e.type==="start") out.push({key:e.id+":self", ent:e, x:p.x, y:p.y, arrival:e.type==="start"?"start":e.name, levelId:e.levelId});
+    for(const c of e.children){
+      if(e.type==="minigame") continue; // salidas de minijuego: solo exportan, no son destino de portales
+      out.push({key:e.id+":"+c.slot, ent:e, child:c, x:p.x+c.dx, y:p.y+c.dy, arrival:childId(e,c), levelId:e.levelId});
+    }
+  }
+  return out;
+}
+function spawnByKey(k){ return spawnPoints().find(s=>s.key===k); }
+function levelAt(cx,cy){
+  for(let i=S.levels.length-1;i>=0;i--){const l=S.levels[i]; if(cx>=l.x&&cx<l.x+l.w&&cy>=l.y&&cy<l.y+l.h) return l;}
+  return null;
+}
+function delEnt(e){
+  S.ents = S.ents.filter(x=>x!==e);
+  for(const o of S.ents) if(o.target && o.target.startsWith(e.id+":")) o.target=null;
+}
+function delLevel(l){
+  for(const e of S.ents.filter(e=>e.levelId===l.id)) delEnt(e);
+  S.levels = S.levels.filter(x=>x!==l);
+}
+function sceneFile(l){ return slug(l.name)+".tscn"; }
+
+/* ===== Historial / guardado ===== */
+function snapshot(){ return JSON.stringify(S); }
+function commit(){
+  hist = hist.slice(0, histPos+1); hist.push(snapshot()); if(hist.length>200) hist.shift(); histPos = hist.length-1;
+  try{ localStorage.setItem(LS_KEY, snapshot()); }catch(e){}
+  refreshUI();
+}
+function restore(json){
+  const v = S.view; S = Object.assign(fresh(), JSON.parse(json)); if(!S.view) S.view=v;
+  if(sel && ((sel.kind==="level"&&!levelById(sel.id))||(sel.kind==="ent"&&!entById(sel.id)))) sel=null;
+  refreshUI();
+}
+function undo(){ if(histPos>0){ histPos--; restore(hist[histPos]); } }
+function redo(){ if(histPos<hist.length-1){ histPos++; restore(hist[histPos]); } }
+
+/* ===== Canvas ===== */
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const statusEl = document.getElementById("status");
+let W=0,H=0,dpr=1;
+function resize(){
+  const r = cv.parentElement.getBoundingClientRect(); dpr = window.devicePixelRatio||1;
+  W=r.width; H=r.height; cv.width=W*dpr; cv.height=H*dpr; draw();
+}
+window.addEventListener("resize", resize);
+const toWorld = (sx,sy)=>({x:(sx-S.view.ox)/S.view.z, y:(sy-S.view.oy)/S.view.z});
+const toScreen = (wx,wy,v=S.view)=>({x:wx*v.z+v.ox, y:wy*v.z+v.oy});
+
+function levelColor(l){ const z=S.zones.find(z=>z.id===l.zone); return z?z.color:"#5aa9ff"; }
+function iconSize(v){ return Math.max(14, Math.min(30, v.z*0.8)); }
+
+function drawIcon(c, type, x, y, s, selected){
+  const t = TYPES[type]; c.save(); c.translate(x,y); c.fillStyle=t.color; c.strokeStyle=selected?"#fff":"#000a"; c.lineWidth=selected?2.5:1.2;
+  c.beginPath(); const r=s/2;
+  if(type==="enemy"){c.moveTo(0,-r);c.lineTo(r,r*.8);c.lineTo(-r,r*.8);c.closePath();}
+  else if(type==="respawn"){c.moveTo(0,-r);c.lineTo(r,0);c.lineTo(0,r);c.lineTo(-r,0);c.closePath();}
+  else if(type==="npc"||type==="spawn"||type==="start"){c.arc(0,0,r,0,7);}
+  else if(type==="minigame"){for(let i=0;i<6;i++){const a=i*Math.PI/3;c.lineTo(Math.cos(a)*r,Math.sin(a)*r);}c.closePath();}
+  else if(type==="note"){c.rect(-r,-r*.7,s,s*.8);}
+  else {c.roundRect?c.roundRect(-r,-r,s,s,3):c.rect(-r,-r,s,s);}
+  c.fill(); c.stroke();
+  c.fillStyle="#000"; c.font="bold "+Math.round(s*.5)+"px system-ui"; c.textAlign="center"; c.textBaseline="middle";
+  c.fillText(t.letter,0,1); c.restore();
+}
+function arrow(c,x1,y1,x2,y2,color,w){
+  c.strokeStyle=color; c.fillStyle=color; c.lineWidth=w; c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke();
+  const a=Math.atan2(y2-y1,x2-x1), h=9+w;
+  c.beginPath(); c.moveTo(x2,y2); c.lineTo(x2-h*Math.cos(a-.4),y2-h*Math.sin(a-.4)); c.lineTo(x2-h*Math.cos(a+.4),y2-h*Math.sin(a+.4)); c.closePath(); c.fill();
+}
+let drag=null, mouse={x:0,y:0};
+
+function draw(c=ctx, w=W, h=H, v=S.view, ex=false){
+  c.setTransform(ex?1:dpr,0,0,ex?1:dpr,0,0);
+  c.fillStyle="#14161b"; c.fillRect(0,0,w,h);
+  // grilla
+  c.lineWidth=1; const step=v.z>=10?1:(v.z>=5?5:10);
+  const x0=Math.floor(-v.ox/v.z), x1=Math.ceil((w-v.ox)/v.z), y0=Math.floor(-v.oy/v.z), y1=Math.ceil((h-v.oy)/v.z);
+  for(let x=x0;x<=x1;x++){ if(x%step) continue; c.strokeStyle=x%5===0?"#2c303a":"#1f222a"; const sx=Math.round(x*v.z+v.ox)+.5; c.beginPath(); c.moveTo(sx,0); c.lineTo(sx,h); c.stroke(); }
+  for(let y=y0;y<=y1;y++){ if(y%step) continue; c.strokeStyle=y%5===0?"#2c303a":"#1f222a"; const sy=Math.round(y*v.z+v.oy)+.5; c.beginPath(); c.moveTo(0,sy); c.lineTo(w,sy); c.stroke(); }
+  // niveles
+  for(const l of S.levels){
+    const p=toScreen(l.x,l.y,v), col=levelColor(l), isSel=sel&&sel.kind==="level"&&sel.id===l.id;
+    c.fillStyle=col+"33"; c.fillRect(p.x,p.y,l.w*v.z,l.h*v.z);
+    c.strokeStyle=isSel&&!ex?"#fff":col; c.lineWidth=isSel&&!ex?3:2; c.strokeRect(p.x,p.y,l.w*v.z,l.h*v.z);
+    c.fillStyle=col; c.font="bold 13px system-ui"; c.textAlign="left"; c.textBaseline="top";
+    c.fillText(l.name,p.x+5,p.y+4);
+    if(isSel&&!ex){ c.fillStyle="#fff"; c.fillRect(p.x+l.w*v.z-8,p.y+l.h*v.z-8,12,12); }
+  }
+  // conexiones
+  const sp = spawnPoints(); const spMap = new Map(sp.map(s=>[s.key,s]));
+  const selLevelId = sel&&sel.kind==="level"?sel.id:null, selEnt = sel&&sel.kind==="ent"?entById(sel.id):null;
+  const conns=[];
+  for(const e of S.ents) if(e.type==="portal"&&e.target&&spMap.has(e.target)) conns.push({e,s:spMap.get(e.target)});
+  const isLinkSel = (cn)=>{
+    if(selLevelId) return cn.e.levelId===selLevelId||cn.s.levelId===selLevelId;
+    if(selEnt) return cn.e===selEnt||cn.s.ent===selEnt||(selEnt.type==="portal"&&spMap.get(selEnt.target)&&cn.s===spMap.get(selEnt.target));
+    return false;
+  };
+  for(const cn of conns){
+    const on=isLinkSel(cn); if(!on&&!showAll&&!ex) continue;
+    const a=entPos(cn.e), A=toScreen(a.x+.5,a.y+.5,v), B=toScreen(cn.s.x+.5,cn.s.y+.5,v);
+    const ang=Math.atan2(B.y-A.y,B.x-A.x), r=iconSize(v)/2+2;
+    arrow(c,A.x+Math.cos(ang)*r,A.y+Math.sin(ang)*r,B.x-Math.cos(ang)*r,B.y-Math.sin(ang)*r,on?"#ffd24d":"#a070ff66",on?2.5:1.5);
+  }
+  // objetos
+  const s=iconSize(v);
+  for(const e of S.ents){
+    const p=entPos(e), P=toScreen(p.x+.5,p.y+.5,v), isSel=selEnt===e;
+    for(const ch of e.children){
+      const C=toScreen(p.x+ch.dx+.5,p.y+ch.dy+.5,v);
+      c.strokeStyle="#4cd07d99"; c.setLineDash([3,3]); c.lineWidth=1; c.beginPath(); c.moveTo(P.x,P.y); c.lineTo(C.x,C.y); c.stroke(); c.setLineDash([]);
+      drawIcon(c,"spawn",C.x,C.y,s*.75,false);
+      if(v.z>=14){ c.fillStyle="#9fe7b8"; c.font="10px system-ui"; c.textAlign="center"; c.textBaseline="top"; c.fillText(childId(e,ch),C.x,C.y+s*.4+1); }
+    }
+    drawIcon(c,e.type,P.x,P.y,s,isSel);
+    if(e.type==="portal"&&!ex){ c.fillStyle="#ffd24d"; c.beginPath(); c.arc(P.x+s/2+6,P.y,4,0,7); c.fill(); }
+    if(v.z>=14){ c.fillStyle="#ddd"; c.font="10px system-ui"; c.textAlign="center"; c.textBaseline="bottom"; c.fillText(e.name,P.x,P.y-s/2-1); }
+  }
+  // preview
+  if(!ex&&drag){
+    if(drag.type==="draw-level"){ const r=rectFrom(drag.c0,drag.c1), p=toScreen(r.x,r.y); c.strokeStyle="#fff"; c.setLineDash([5,4]); c.lineWidth=2; c.strokeRect(p.x,p.y,r.w*S.view.z,r.h*S.view.z); c.setLineDash([]); c.fillStyle="#fff"; c.font="12px system-ui"; c.textAlign="left"; c.textBaseline="bottom"; c.fillText(r.w+" x "+r.h, p.x, p.y-3); }
+    if(drag.type==="link"){ const a=entPos(drag.ent), A=toScreen(a.x+.5,a.y+.5); arrow(c,A.x,A.y,mouse.x,mouse.y,"#ffd24d",2.5); }
+  }
+}
+function rectFrom(a,b){ return {x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x)+1,h:Math.abs(a.y-b.y)+1}; }
+
+/* ===== Interacción ===== */
+function cellOf(sx,sy){ const w=toWorld(sx,sy); return {x:Math.floor(w.x),y:Math.floor(w.y)}; }
+function hit(sx,sy){
+  const s=iconSize(S.view);
+  for(const e of S.ents){ // handle de portal
+    if(e.type!=="portal") continue; const p=entPos(e), P=toScreen(p.x+.5,p.y+.5);
+    if(Math.hypot(sx-(P.x+s/2+6),sy-P.y)<=7) return {k:"link",ent:e};
+  }
+  for(const e of [...S.ents].reverse()){ // hijos
+    const p=entPos(e); for(const ch of e.children){ const C=toScreen(p.x+ch.dx+.5,p.y+ch.dy+.5); if(Math.abs(sx-C.x)<=s*.4&&Math.abs(sy-C.y)<=s*.4) return {k:"child",ent:e,child:ch}; }
+  }
+  for(const e of [...S.ents].reverse()){ const p=entPos(e), P=toScreen(p.x+.5,p.y+.5); if(Math.abs(sx-P.x)<=s/2&&Math.abs(sy-P.y)<=s/2) return {k:"ent",ent:e}; }
+  if(sel&&sel.kind==="level"){ const l=levelById(sel.id), p=toScreen(l.x+l.w,l.y+l.h); if(Math.abs(sx-p.x)<=10&&Math.abs(sy-p.y)<=10) return {k:"resize",level:l}; }
+  const c=cellOf(sx,sy), l=levelAt(c.x,c.y); if(l) return {k:"level",level:l};
+  return null;
+}
+function mpos(ev){ const r=cv.getBoundingClientRect(); return {x:ev.clientX-r.left,y:ev.clientY-r.top}; }
+cv.addEventListener("contextmenu",e=>e.preventDefault());
+cv.addEventListener("mousedown",ev=>{
+  const m=mpos(ev), c=cellOf(m.x,m.y);
+  if(ev.button===1||ev.button===2||(ev.button===0&&spaceDown)){ drag={type:"pan",sx:m.x,sy:m.y,ox:S.view.ox,oy:S.view.oy}; return; }
+  if(ev.button!==0) return;
+  if(tool==="level"){ drag={type:"draw-level",c0:c,c1:c}; draw(); return; }
+  if(tool!=="select"){
+    const lv=levelAt(c.x,c.y); if(!lv){ flash("Coloca el objeto dentro de un nivel"); return; }
+    if(tool==="start"&&S.ents.some(e=>e.type==="start"&&e.levelId===lv.id)){ flash("Este nivel ya tiene Start"); return; }
+    const e=addEnt(tool,lv,c.x-lv.x,c.y-lv.y); sel={kind:"ent",id:e.id}; commit(); draw(); return;
+  }
+  const h=hit(m.x,m.y);
+  if(!h){ sel=null; refreshUI(); draw(); return; }
+  if(h.k==="link"){ sel={kind:"ent",id:h.ent.id}; drag={type:"link",ent:h.ent}; refreshUI(); }
+  else if(h.k==="child"){ sel={kind:"ent",id:h.ent.id}; drag={type:"move-child",ent:h.ent,child:h.child,moved:false}; refreshUI(); }
+  else if(h.k==="ent"){ sel={kind:"ent",id:h.ent.id}; drag={type:"move-ent",ent:h.ent,moved:false}; refreshUI(); }
+  else if(h.k==="resize"){ drag={type:"resize",level:h.level,moved:false}; }
+  else { sel={kind:"level",id:h.level.id}; drag={type:"move-level",level:h.level,c0:c,x0:h.level.x,y0:h.level.y,moved:false}; refreshUI(); }
+  draw();
+});
+window.addEventListener("mousemove",ev=>{
+  const m=mpos(ev); mouse=m; const c=cellOf(m.x,m.y);
+  statusEl.textContent="celda "+c.x+", "+c.y+"  ·  zoom "+S.view.z.toFixed(0);
+  if(!drag) return;
+  if(drag.type==="pan"){ S.view.ox=drag.ox+m.x-drag.sx; S.view.oy=drag.oy+m.y-drag.sy; }
+  else if(drag.type==="draw-level") drag.c1=c;
+  else if(drag.type==="move-level"){ const l=drag.level, nx=drag.x0+c.x-drag.c0.x, ny=drag.y0+c.y-drag.c0.y; if(nx!==l.x||ny!==l.y){ l.x=nx; l.y=ny; drag.moved=true; } }
+  else if(drag.type==="resize"){ const l=drag.level; const nw=Math.max(1,c.x-l.x+1), nh=Math.max(1,c.y-l.y+1); if(nw!==l.w||nh!==l.h){ l.w=nw; l.h=nh; drag.moved=true; } }
+  else if(drag.type==="move-ent"){ const lv=levelAt(c.x,c.y); if(lv){ const e=drag.ent; const nlx=c.x-lv.x, nly=c.y-lv.y; if(lv.id!==e.levelId||nlx!==e.lx||nly!==e.ly){ e.levelId=lv.id; e.lx=nlx; e.ly=nly; drag.moved=true; } } }
+  else if(drag.type==="move-child"){ const p=entPos(drag.ent); const dx=c.x-p.x, dy=c.y-p.y; if(dx!==drag.child.dx||dy!==drag.child.dy){ drag.child.dx=dx; drag.child.dy=dy; drag.moved=true; } }
+  draw();
+});
+window.addEventListener("mouseup",ev=>{
+  if(!drag) return; const d=drag; drag=null; const m=mpos(ev);
+  if(d.type==="draw-level"){ const r=rectFrom(d.c0,d.c1); const l=addLevel(r.x,r.y,r.w,r.h); sel={kind:"level",id:l.id}; setTool("select"); commit(); }
+  else if(d.type==="link"){
+    const s=iconSize(S.view); let best=null;
+    for(const sp of spawnPoints()){ const P=toScreen(sp.x+.5,sp.y+.5); if(Math.abs(m.x-P.x)<=s*.6&&Math.abs(m.y-P.y)<=s*.6) best=sp; }
+    if(best&&best.ent!==d.ent){ linkPortal(d.ent,best); commit(); }
+    else if(best&&best.ent===d.ent){ flash("Un portal no puede apuntar a sí mismo"); }
+    else flash("Suelta la flecha sobre un spawn");
+  }
+  else if(d.moved) commit();
+  draw();
+});
+function linkPortal(p, sp){
+  p.target = sp.key;
+  if(S.bidir && sp.ent.type==="portal" && sp.ent!==p && !sp.ent.target){
+    const back = spawnPoints().find(s=>s.ent===p&&s.child&&s.child.slot==="arrival");
+    if(back) sp.ent.target = back.key;
+  }
+}
+cv.addEventListener("wheel",ev=>{
+  ev.preventDefault(); const m=mpos(ev), w=toWorld(m.x,m.y);
+  S.view.z=Math.max(3,Math.min(80,S.view.z*(ev.deltaY<0?1.15:1/1.15)));
+  S.view.ox=m.x-w.x*S.view.z; S.view.oy=m.y-w.y*S.view.z; draw();
+},{passive:false});
+let spaceDown=false;
+window.addEventListener("keydown",ev=>{
+  const tag=(ev.target.tagName||"").toLowerCase(); if(tag==="input"||tag==="textarea"||tag==="select") return;
+  if(ev.code==="Space"){ spaceDown=true; ev.preventDefault(); return; }
+  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==="z"){ ev.shiftKey?redo():undo(); ev.preventDefault(); return; }
+  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==="y"){ redo(); ev.preventDefault(); return; }
+  if(ev.key==="Delete"||ev.key==="Backspace"){ deleteSel(); return; }
+  if(ev.key==="Escape"){ setTool("select"); return; }
+  if(ev.key==="v"){ setTool("select"); return; }
+  if(ev.key==="l"){ setTool("level"); return; }
+  for(const k in TYPES) if(TYPES[k].key===ev.key){ setTool(k); return; }
+});
+window.addEventListener("keyup",ev=>{ if(ev.code==="Space") spaceDown=false; });
+function deleteSel(){
+  if(!sel) return;
+  if(sel.kind==="level") delLevel(levelById(sel.id)); else delEnt(entById(sel.id));
+  sel=null; commit(); draw();
+}
+let flashT=null;
+function flash(t){ statusEl.textContent=t; clearTimeout(flashT); flashT=setTimeout(()=>statusEl.textContent="",2500); }
+
+/* ===== Validación ===== */
+function validate(){
+  const out=[], add=(lvl,msg,ref)=>out.push({lvl,msg,ref});
+  const sp=spawnPoints(), spMap=new Map(sp.map(s=>[s.key,s]));
+  const names=new Map(); for(const l of S.levels){ const k=sceneFile(l); if(names.has(k)) add("err","Nombre de archivo repetido: "+k,{kind:"level",id:l.id}); names.set(k,1); }
+  for(const l of S.levels){
+    const R={kind:"level",id:l.id}, ents=S.ents.filter(e=>e.levelId===l.id);
+    if(!ents.some(e=>e.type==="start")) add("warn",l.name+": sin Start",R);
+    if(ents.filter(e=>e.type==="start").length>1) add("err",l.name+": más de un Start",R);
+    if(!ents.some(e=>e.type==="portal")) add("warn",l.name+": sin portales",R);
+    for(const o of S.levels) if(o.id>l.id&&l.x<o.x+o.w&&o.x<l.x+l.w&&l.y<o.y+o.h&&o.y<l.y+l.h) add("warn","Niveles superpuestos: "+l.name+" y "+o.name,R);
+    for(const e of ents){
+      const inside=e.lx>=0&&e.ly>=0&&e.lx<l.w&&e.ly<l.h; if(!inside) add("err",e.name+" fuera de "+l.name,{kind:"ent",id:e.id});
+      for(const c of e.children){ const cx=e.lx+c.dx, cy=e.ly+c.dy; if(cx<0||cy<0||cx>=l.w||cy>=l.h) add("warn","Spawn "+childId(e,c)+" fuera de "+l.name,{kind:"ent",id:e.id}); }
+    }
+  }
+  const arr=new Map();
+  for(const s of sp){ const k=s.levelId+"|"+s.arrival; if(arr.has(k)&&s.arrival!=="start") add("err","arrival_id repetido en el nivel: "+s.arrival,{kind:"ent",id:s.ent.id}); arr.set(k,1); }
+  const links=new Set();
+  for(const e of S.ents) if(e.type==="portal"){
+    const R={kind:"ent",id:e.id};
+    if(!e.target){ add("warn","Portal "+e.name+" sin destino",R); continue; }
+    const t=spMap.get(e.target); if(!t){ add("err","Portal "+e.name+" apunta a un spawn inexistente",R); continue; }
+    if(t.levelId===e.levelId) add("warn","Portal "+e.name+" apunta al mismo nivel",R);
+    links.add(e.levelId+">"+t.levelId);
+  }
+  for(const k of links){ const [a,b]=k.split(">").map(Number); if(a!==b&&!links.has(b+">"+a)) add("warn","Ida sin vuelta: "+levelById(a).name+" → "+levelById(b).name,{kind:"level",id:a}); }
+  return out;
+}
+
+/* ===== Exportación ===== */
+function buildSpec(){
+  const px=S.cellPx, sp=spawnPoints(), spMap=new Map(sp.map(s=>[s.key,s]));
+  const P=(e,dx=0,dy=0)=>({cell:{x:e.lx+dx,y:e.ly+dy}, px:{x:Math.round((e.lx+dx+.5)*px),y:Math.round((e.ly+dy+.5)*px)}});
+  const levels=S.levels.map(l=>{
+    const ents=S.ents.filter(e=>e.levelId===l.id), z=S.zones.find(z=>z.id===l.zone);
+    const o={
+      name:l.name, scene_file:sceneFile(l), scene_path:"res://src/overworld/levels/"+sceneFile(l), root_node:pascal(l.name),
+      zone:z?z.name:null, description:l.text||"",
+      grid_rect:{x:l.x,y:l.y,w:l.w,h:l.h}, size_px:{w:l.w*px,h:l.h*px},
+      world_boundary:{width:l.w*px,height:l.h*px},
+      layers:["GroundLayer","DetailLayer","PropsLayer"],
+      arrival_spawns:[], portals:[], respawns:[], enemies:[], npcs:[], chests:[], minigames:[], notes:[]
+    };
+    for(const e of ents){
+      const base={id:e.name, ...P(e), description:e.text||""};
+      if(e.type==="start") o.arrival_spawns.push({arrival_id:"start",kind:"start",...P(e),description:e.text||""});
+      else if(e.type==="spawn") o.arrival_spawns.push({arrival_id:e.name,kind:"arrival",...P(e),description:e.text||""});
+      else if(e.type==="respawn") o.respawns.push(base);
+      else if(e.type==="enemy") o.enemies.push({...base,enemy_type:e.props.kind||""});
+      else if(e.type==="npc") o.npcs.push({...base,npc_name:e.props.npc||""});
+      else if(e.type==="chest") o.chests.push({...base,contents:e.props.contents||""});
+      else if(e.type==="note") o.notes.push({id:e.name,...P(e),text:e.text||""});
+      else if(e.type==="portal"){
+        const t=e.target&&spMap.get(e.target), tl=t&&levelById(t.levelId), arr=e.children[0];
+        o.portals.push({...base, arrival_id:childId(e,arr), arrival_spawn:P(e,arr.dx,arr.dy),
+          target_level:tl?tl.name:null, target_scene_path:tl?"res://src/overworld/levels/"+sceneFile(tl)+"":null, target_arrival_id:t?t.arrival:null,
+          key:e.props.key||""});
+      } else if(e.type==="minigame"){
+        const w=e.children.find(c=>c.slot==="win"), lo=e.children.find(c=>c.slot==="lose");
+        o.minigames.push({...base, minigame:e.props.mg||"", win_arrival_id:childId(e,w), win_spawn:P(e,w.dx,w.dy), lose_arrival_id:childId(e,lo), lose_spawn:P(e,lo.dx,lo.dy)});
+      }
+    }
+    return o;
+  });
+  return {
+    format:"gacheiducitos-levelapp", version:1,
+    instructions:"Para cada nivel de 'levels': crear la escena en scene_path con raiz root_node, capas GroundLayer/DetailLayer/PropsLayer (y_sort en PropsLayer), WorldBoundaryManager con world_boundary, un ArrivalSpawnPoint por cada arrival_spawns y por cada arrival_id de portals/minigames en la posicion indicada (px = centro de la celda), LevelPortal con target_scene_path + target_arrival_id, respawns como checkpoints, enemigos/npcs/cofres como instancias placeholder con persistence_id unico. Las notas son solo referencia. Revisar 'warnings' antes de generar. El layout y el arte los define el usuario.",
+    cell_px:px, zones:S.zones.map(z=>({name:z.name,color:z.color})), levels,
+    warnings:validate().map(v=>v.lvl+": "+v.msg)
+  };
+}
+function download(name,blob){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); }
+function exportSpec(){
+  const w=validate().filter(v=>v.lvl==="err");
+  if(w.length&&!confirm(w.length+" error(es) en el validador. ¿Exportar de todos modos?")) return;
+  download("levels_spec.json",new Blob([JSON.stringify(buildSpec(),null,2)],{type:"application/json"}));
+}
+function exportPNG(){
+  if(!S.levels.length) return flash("No hay niveles");
+  let a=1e9,b=1e9,c=-1e9,d=-1e9; for(const l of S.levels){a=Math.min(a,l.x);b=Math.min(b,l.y);c=Math.max(c,l.x+l.w);d=Math.max(d,l.y+l.h);}
+  const z=32, m=2, v={ox:(m-a)*z,oy:(m-b)*z,z}, w=Math.ceil((c-a+2*m)*z), h=Math.ceil((d-b+2*m)*z);
+  const o=document.createElement("canvas"); o.width=w; o.height=h; draw(o.getContext("2d"),w,h,v,true);
+  o.toBlob(bl=>download("mapa_niveles.png",bl));
+  draw();
+}
+
+/* ===== UI ===== */
+function setTool(t){ tool=t; cv.style.cursor=t==="select"?"default":"crosshair"; buildToolbar(); }
+function buildToolbar(){
+  const tb=document.getElementById("toolbar"); tb.innerHTML="";
+  const btn=(txt,fn,cls="",title="")=>{ const b=document.createElement("button"); b.textContent=txt; b.className=cls; b.title=title; b.onclick=fn; tb.appendChild(b); return b; };
+  const sep=()=>{ const s=document.createElement("span"); s.className="sep"; tb.appendChild(s); };
+  btn("Seleccionar (V)",()=>setTool("select"),tool==="select"?"on":"");
+  btn("Nivel (L)",()=>setTool("level"),tool==="level"?"on":"","Arrastra en la grilla");
+  sep();
+  for(const k in TYPES) btn(TYPES[k].label+" ("+TYPES[k].key.toUpperCase()+")",()=>setTool(k),tool===k?"on":"");
+  sep();
+  btn("↶",undo,"","Deshacer (Ctrl+Z)"); btn("↷",redo,"","Rehacer (Ctrl+Shift+Z)");
+  btn("Todas las conexiones",()=>{showAll=!showAll;buildToolbar();draw();},showAll?"on":"");
+  sep();
+  btn("Guardar proyecto",()=>download("levelapp_proyecto.json",new Blob([snapshot()],{type:"application/json"})));
+  btn("Abrir proyecto",()=>document.getElementById("fileIn").click());
+  btn("Exportar levels_spec.json",exportSpec,"on");
+  btn("PNG",exportPNG);
+  btn("Nuevo",()=>{ if(confirm("¿Borrar todo el proyecto?")){ S=fresh(); sel=null; commit(); draw(); } },"danger");
+}
+document.getElementById("fileIn").onchange=ev=>{
+  const f=ev.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{ restore(r.result); commit(); draw(); }catch(e){ alert("Archivo inválido"); } }; r.readAsText(f); ev.target.value="";
+};
+
+const side=document.getElementById("side");
+function esc(s){ return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function refreshUI(){
+  let h="";
+  if(sel&&sel.kind==="level"){
+    const l=levelById(sel.id);
+    h+=`<h3>Nivel</h3>
+    <div class="row"><label>Nombre</label><input data-f="name" value="${esc(l.name)}"></div>
+    <div class="row"><label>Archivo</label><span class="dim">${esc(sceneFile(l))}</span></div>
+    <div class="row"><label>Zona</label><select data-f="zone"><option value="">(ninguna)</option>${S.zones.map(z=>`<option value="${z.id}" ${l.zone===z.id?"selected":""}>${esc(z.name)}</option>`).join("")}</select></div>
+    <div class="grid4"><input data-f="x" type="number" value="${l.x}" title="x"><input data-f="y" type="number" value="${l.y}" title="y"><input data-f="w" type="number" min="1" value="${l.w}" title="ancho"><input data-f="h" type="number" min="1" value="${l.h}" title="alto"></div>
+    <div class="dim">x, y, ancho, alto (celdas)</div>
+    <div class="row"><label>Notas</label><textarea data-f="text">${esc(l.text)}</textarea></div>
+    <div class="row"><button class="danger" data-act="del">Eliminar nivel</button></div>`;
+  } else if(sel&&sel.kind==="ent"){
+    const e=entById(sel.id), t=TYPES[e.type], lv=levelById(e.levelId);
+    h+=`<h3>${t.label} · ${esc(lv.name)}</h3>
+    <div class="row"><label>Nombre</label><input data-f="name" value="${esc(e.name)}" ${e.type==="start"?"disabled":""}></div>`;
+    if(e.type==="portal"){
+      const tg=e.target&&spawnByKey(e.target);
+      h+=`<div class="row"><label>Llega aquí</label><span class="dim">${esc(childId(e,e.children[0]))}</span></div>
+      <div class="row"><label>Destino</label><span>${tg?esc(levelById(tg.levelId).name+" › "+tg.arrival):'<span class="dim">sin destino (arrastra el punto amarillo)</span>'}</span></div>
+      ${tg?'<div class="row"><button data-act="unlink">Quitar conexión</button></div>':""}
+      <div class="row"><label>Llave</label><input data-p="key" value="${esc(e.props.key||"")}" placeholder="opcional"></div>`;
+    }
+    if(e.type==="enemy") h+=`<div class="row"><label>Tipo</label><input data-p="kind" value="${esc(e.props.kind||"")}"></div>`;
+    if(e.type==="npc") h+=`<div class="row"><label>NPC</label><input data-p="npc" value="${esc(e.props.npc||"")}"></div>`;
+    if(e.type==="chest") h+=`<div class="row"><label>Contenido</label><input data-p="contents" value="${esc(e.props.contents||"")}"></div>`;
+    if(e.type==="minigame") h+=`<div class="row"><label>Minijuego</label><input data-p="mg" value="${esc(e.props.mg||"")}"></div>
+      <div class="dim">Spawns de salida: ${e.children.map(c=>esc(childId(e,c))).join(", ")}</div>`;
+    h+=`<div class="row"><label>${e.type==="note"?"Texto":"Notas"}</label><textarea data-f="text">${esc(e.text)}</textarea></div>
+    <div class="row"><button class="danger" data-act="del">Eliminar</button></div>`;
+  } else h+=`<h3>Selección</h3><div class="dim">Nada seleccionado. Dibuja niveles con “Nivel (L)”; añade objetos con los botones o sus teclas.</div>`;
+
+  h+=`<h3>Zonas (solo visibilidad)</h3>`;
+  for(const z of S.zones) h+=`<div class="zone" data-z="${z.id}"><input type="color" data-zf="color" value="${z.color}"><input type="text" data-zf="name" value="${esc(z.name)}"><button data-zdel="${z.id}">×</button></div>`;
+  h+=`<div class="row"><button data-act="addzone">+ Zona</button></div>`;
+
+  h+=`<h3>Proyecto</h3>
+  <div class="row"><label>Px por celda</label><input id="cellPx" type="number" min="1" value="${S.cellPx}"></div>
+  <div class="row"><label>Bidireccional</label><input id="bidir" type="checkbox" ${S.bidir?"checked":""} style="flex:none"><span class="dim">al conectar A→B, B→A si B no tiene destino</span></div>
+  <div class="dim">Niveles: ${S.levels.length} · Objetos: ${S.ents.length}</div>`;
+
+  const val=validate();
+  h+=`<h3>Validador (${val.length})</h3>`+(val.length?val.map((v,i)=>`<div class="issue ${v.lvl}" data-i="${i}">${esc(v.msg)}</div>`).join(""):`<div class="dim">Sin problemas.</div>`);
+  h+=`<h3>Atajos</h3><div class="dim">Rueda: zoom · Espacio+arrastrar o clic derecho: mover vista · Supr: borrar · Arrastra el punto amarillo de un portal hasta un spawn para conectar.</div>`;
+  side.innerHTML=h;
+
+  const target=()=>sel&&sel.kind==="level"?levelById(sel.id):entById(sel.id);
+  side.querySelectorAll("[data-f]").forEach(i=>i.onchange=()=>{ const o=target(), f=i.dataset.f; o[f]=i.type==="number"?parseInt(i.value)||0:(f==="zone"?(i.value?+i.value:null):i.value); if((f==="w"||f==="h")&&o[f]<1) o[f]=1; commit(); draw(); });
+  side.querySelectorAll("[data-p]").forEach(i=>i.onchange=()=>{ target().props[i.dataset.p]=i.value; commit(); });
+  side.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{
+    const a=b.dataset.act;
+    if(a==="del") deleteSel();
+    else if(a==="unlink"){ target().target=null; commit(); draw(); }
+    else if(a==="addzone"){ S.zones.push({id:++S.uid,name:"Zona "+(S.zones.length+1),color:["#5aa9ff","#4cd07d","#ff9a45","#e06bd0","#e8e070","#35c8d8"][S.zones.length%6]}); commit(); }
+  });
+  side.querySelectorAll(".zone").forEach(d=>{ const z=S.zones.find(z=>z.id==d.dataset.z); d.querySelectorAll("[data-zf]").forEach(i=>i.onchange=()=>{ z[i.dataset.zf]=i.value; commit(); draw(); }); });
+  side.querySelectorAll("[data-zdel]").forEach(b=>b.onclick=()=>{ const id=+b.dataset.zdel; S.zones=S.zones.filter(z=>z.id!==id); S.levels.forEach(l=>{if(l.zone===id)l.zone=null;}); commit(); draw(); });
+  side.querySelectorAll(".issue").forEach(d=>d.onclick=()=>{ const r=val[+d.dataset.i].ref; if(r){ sel=r; focusSel(); refreshUI(); draw(); } });
+  const cp=document.getElementById("cellPx"); cp.onchange=()=>{ S.cellPx=Math.max(1,parseInt(cp.value)||60); commit(); };
+  document.getElementById("bidir").onchange=e=>{ S.bidir=e.target.checked; commit(); };
+}
+function focusSel(){
+  let p; if(sel.kind==="level"){ const l=levelById(sel.id); p={x:l.x+l.w/2,y:l.y+l.h/2}; } else { const q=entPos(entById(sel.id)); p={x:q.x+.5,y:q.y+.5}; }
+  S.view.ox=W/2-p.x*S.view.z; S.view.oy=H/2-p.y*S.view.z;
+}
+
+/* ===== Inicio ===== */
+try{ const saved=localStorage.getItem(LS_KEY); if(saved) S=Object.assign(fresh(),JSON.parse(saved)); }catch(e){}
+hist=[snapshot()]; histPos=0;
+buildToolbar(); refreshUI(); resize();
+</script>
+</body>
+</html>
