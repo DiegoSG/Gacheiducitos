@@ -1,0 +1,129 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/overworld/components/world_boundary_manager.gd" id="r1_wbm"]
+[ext_resource type="TileSet" path="res://assets/sprites/core_tileset.tres" id="r2_tileset"]
+[ext_resource type="PackedScene" path="res://src/overworld/components/arrival_spawn_point.tscn" id="r3_asp"]
+[ext_resource type="PackedScene" path="res://src/overworld/components/level_portal.tscn" id="r4_portal"]
+[ext_resource type="PackedScene" path="res://src/overworld/enemies/generic_enemy.tscn" id="r5_enemy"]
+[ext_resource type="PackedScene" path="res://src/overworld/npcs/dummy_npc.tscn" id="r6_npc"]
+[ext_resource type="PackedScene" path="res://src/overworld/interactables/chest.tscn" id="r7_chest"]
+[ext_resource type="PackedScene" path="res://src/overworld/interactables/minigame_interactable.tscn" id="r8_mg"]
+[ext_resource type="Script" path="res://src/core/pipeline/actions/minigame_action.gd" id="r9_mgaction"]
+[ext_resource type="Script" path="res://src/core/pipeline/action_resource.gd" id="r10_action"]
+[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="r11_player"]
+[ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="r12_music"]
+
+[sub_resource type="Resource" id="mgaction1"]
+script = ExtResource("r9_mgaction")
+minigame_type = 4
+win_level_path = "res://src/overworld/levels/test_03.tscn"
+win_spawn_id = "at_M02_win"
+lose_level_path = "res://src/overworld/levels/test_01.tscn"
+lose_spawn_id = "at_M02_lose"
+
+[node name="Test02" type="Node2D"]
+y_sort_enabled = true
+metadata/levelapp_level = "test_02"
+
+[node name="WorldBoundaryManager" type="Node2D" parent="."]
+script = ExtResource("r1_wbm")
+width = 1200.0
+height = 540.0
+
+[node name="Environment" type="Node2D" parent="."]
+
+[node name="GroundLayer" type="TileMapLayer" parent="Environment"]
+tile_set = ExtResource("r2_tileset")
+
+[node name="DetailLayer" type="TileMapLayer" parent="Environment"]
+tile_set = ExtResource("r2_tileset")
+
+[node name="PropsLayer" type="TileMapLayer" parent="Environment"]
+y_sort_enabled = true
+tile_set = ExtResource("r2_tileset")
+
+[node name="SpawnPoints" type="Node2D" parent="."]
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Portals" type="Node2D" parent="."]
+
+[node name="A01" parent="SpawnPoints" instance=ExtResource("r3_asp")]
+position = Vector2(30, 390)
+arrival_id = "A01"
+
+[node name="at_M03_win" parent="SpawnPoints" instance=ExtResource("r3_asp")]
+position = Vector2(990, 510)
+arrival_id = "at_M03_win"
+
+[node name="at_M04_win" parent="SpawnPoints" instance=ExtResource("r3_asp")]
+position = Vector2(30, 510)
+arrival_id = "at_M04_win"
+
+[node name="P02" parent="Portals" instance=ExtResource("r4_portal")]
+position = Vector2(30, 90)
+target_level_path = "res://src/overworld/levels/test_01.tscn"
+exit_id = "at_P01"
+arrival_id = "at_P02"
+metadata/levelapp_id = "P02"
+
+[node name="SpawnPoint" parent="Portals/P02"]
+position = Vector2(0, 60)
+
+[node name="P05" parent="Portals" instance=ExtResource("r4_portal")]
+position = Vector2(1170, 510)
+target_level_path = "res://src/overworld/levels/test_03.tscn"
+exit_id = "at_P06"
+arrival_id = "at_P05"
+metadata/levelapp_id = "P05"
+
+[node name="SpawnPoint" parent="Portals/P05"]
+position = Vector2(0, -60)
+
+[node name="E05" parent="Entities" instance=ExtResource("r5_enemy")]
+position = Vector2(390, 330)
+persistence_id = "test_02_E05"
+metadata/levelapp_enemy_type = ""
+metadata/levelapp_id = "E05"
+
+[node name="E06" parent="Entities" instance=ExtResource("r5_enemy")]
+position = Vector2(570, 510)
+persistence_id = "test_02_E06"
+metadata/levelapp_enemy_type = ""
+metadata/levelapp_id = "E06"
+
+[node name="E07" parent="Entities" instance=ExtResource("r5_enemy")]
+position = Vector2(690, 330)
+persistence_id = "test_02_E07"
+metadata/levelapp_enemy_type = ""
+metadata/levelapp_id = "E07"
+
+[node name="N04" parent="Entities" instance=ExtResource("r6_npc")]
+position = Vector2(810, 30)
+metadata/levelapp_npc = ""
+metadata/levelapp_id = "N04"
+
+[node name="C04" parent="Entities" instance=ExtResource("r7_chest")]
+position = Vector2(210, 450)
+persistence_id = "test_02_C04"
+metadata/levelapp_contents = ""
+metadata/levelapp_id = "C04"
+
+[node name="C06" parent="Entities" instance=ExtResource("r7_chest")]
+position = Vector2(930, 450)
+persistence_id = "test_02_C06"
+metadata/levelapp_contents = ""
+metadata/levelapp_id = "C06"
+
+[node name="M02" parent="Entities" instance=ExtResource("r8_mg")]
+position = Vector2(810, 90)
+actions_if_true = Array[ExtResource("r10_action")]([SubResource("mgaction1")])
+metadata/levelapp_minigame = "trampolin"
+metadata/levelapp_id = "M02"
+
+[node name="Player" parent="." instance=ExtResource("r11_player")]
+position = Vector2(30, 150)
+
+[node name="SceneMusic" type="Node" parent="."]
+script = ExtResource("r12_music")

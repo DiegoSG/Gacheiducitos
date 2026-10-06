@@ -1,0 +1,143 @@
+[gd_scene format=3 uid="uid://cb3obi88wuetk"]
+
+[ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="r1_wbm"]
+[ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="r2_tileset"]
+[ext_resource type="PackedScene" path="res://src/overworld/components/arrival_spawn_point.tscn" id="r3_asp"]
+[ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="r4_portal"]
+[ext_resource type="PackedScene" uid="uid://crllyay0snx0b" path="res://src/overworld/enemies/generic_enemy.tscn" id="r5_enemy"]
+[ext_resource type="PackedScene" uid="uid://de6b37r8ps5c0" path="res://src/overworld/npcs/dummy_npc.tscn" id="r6_npc"]
+[ext_resource type="PackedScene" uid="uid://tkrjy8dnqifu" path="res://src/overworld/interactables/chest.tscn" id="r7_chest"]
+[ext_resource type="PackedScene" path="res://src/overworld/interactables/minigame_interactable.tscn" id="r8_mg"]
+[ext_resource type="Script" uid="uid://83c224l2dccq" path="res://src/core/pipeline/actions/minigame_action.gd" id="r9_mgaction"]
+[ext_resource type="Script" uid="uid://f73vy602pjfk" path="res://src/core/pipeline/action_resource.gd" id="r10_action"]
+[ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="r11_player"]
+[ext_resource type="Script" uid="uid://pfhficls41pq" path="res://src/core/components/scene_music.gd" id="r12_music"]
+
+[sub_resource type="Resource" id="mgaction1"]
+script = ExtResource("r9_mgaction")
+minigame_type = 1
+win_level_path = "res://src/overworld/levels/test_02.tscn"
+win_spawn_id = "at_M04_win"
+lose_level_path = "res://src/overworld/levels/test_03.tscn"
+lose_spawn_id = "at_M04_lose"
+excavation_win_condition = 0
+excavation_target_amount = 5
+excavation_rocks = 10
+excavation_scale = 1.5
+excavation_deliver_items = false
+excavation_initial_bombs = 1
+excavation_item_pool = Array[String](["blue_potion", "red_potion", "green_herb"])
+
+[node name="Test01" type="Node2D" unique_id=542082350]
+y_sort_enabled = true
+metadata/levelapp_level = "test_01"
+
+[node name="WorldBoundaryManager" type="Node2D" parent="." unique_id=1354900865]
+script = ExtResource("r1_wbm")
+width = 600.0
+height = 1020.0
+
+[node name="Environment" type="Node2D" parent="." unique_id=1378606619]
+
+[node name="GroundLayer" type="TileMapLayer" parent="Environment" unique_id=888839216]
+tile_set = ExtResource("r2_tileset")
+
+[node name="DetailLayer" type="TileMapLayer" parent="Environment" unique_id=703305754]
+tile_set = ExtResource("r2_tileset")
+
+[node name="PropsLayer" type="TileMapLayer" parent="Environment" unique_id=1046388339]
+y_sort_enabled = true
+tile_set = ExtResource("r2_tileset")
+
+[node name="SpawnPoints" type="Node2D" parent="." unique_id=364508192]
+
+[node name="start" parent="SpawnPoints" unique_id=523645348 instance=ExtResource("r3_asp")]
+position = Vector2(90, 390)
+arrival_id = "start"
+
+[node name="at_M02_lose" parent="SpawnPoints" unique_id=1252274693 instance=ExtResource("r3_asp")]
+position = Vector2(150, 690)
+arrival_id = "at_M02_lose"
+
+[node name="at_M03_lose" parent="SpawnPoints" unique_id=1077051462 instance=ExtResource("r3_asp")]
+position = Vector2(270, 990)
+arrival_id = "at_M03_lose"
+
+[node name="Entities" type="Node2D" parent="." unique_id=696166829]
+y_sort_enabled = true
+
+[node name="E08" parent="Entities" unique_id=736857832 instance=ExtResource("r5_enemy")]
+position = Vector2(270, 270)
+persistence_id = "test_01_E08"
+metadata/levelapp_enemy_type = ""
+metadata/levelapp_id = "E08"
+
+[node name="E09" parent="Entities" unique_id=487550428 instance=ExtResource("r5_enemy")]
+position = Vector2(210, 510)
+persistence_id = "test_01_E09"
+metadata/levelapp_enemy_type = ""
+metadata/levelapp_id = "E09"
+
+[node name="N02" parent="Entities" unique_id=1184939569 instance=ExtResource("r6_npc")]
+position = Vector2(90, 90)
+metadata/levelapp_npc = ""
+metadata/levelapp_id = "N02"
+
+[node name="N03" parent="Entities" unique_id=1472405365 instance=ExtResource("r6_npc")]
+position = Vector2(90, 690)
+metadata/levelapp_npc = ""
+metadata/levelapp_id = "N03"
+
+[node name="C02" parent="Entities" unique_id=731623266 instance=ExtResource("r7_chest")]
+position = Vector2(270, 90)
+persistence_id = "test_01_C02"
+metadata/levelapp_contents = ""
+metadata/levelapp_id = "C02"
+
+[node name="C03" parent="Entities" unique_id=1292621429 instance=ExtResource("r7_chest")]
+position = Vector2(330, 750)
+persistence_id = "test_01_C03"
+metadata/levelapp_contents = ""
+metadata/levelapp_id = "C03"
+
+[node name="M04" parent="Entities" unique_id=1774471814 instance=ExtResource("r8_mg")]
+position = Vector2(30, 810)
+actions_if_true = Array[ExtResource("r10_action")]([SubResource("mgaction1")])
+metadata/levelapp_minigame = "excavation"
+metadata/levelapp_id = "M04"
+
+[node name="Portals" type="Node2D" parent="." unique_id=309169079]
+
+[node name="P01" parent="Portals" unique_id=2041389062 instance=ExtResource("r4_portal")]
+position = Vector2(570, 90)
+target_level_path = "res://src/overworld/levels/test_02.tscn"
+exit_id = "A01"
+arrival_id = "at_P01"
+metadata/levelapp_id = "P01"
+
+[node name="ExitIdLabel" parent="Portals/P01" index="1" unique_id=1179350555]
+text = "A01"
+
+[node name="SolidCollision" parent="Portals/P01/SolidBody" parent_id_path=PackedInt32Array(2041389062, 1849204123) index="0" unique_id=1948271032]
+disabled = true
+
+[node name="SpawnPoint" parent="Portals/P01" index="4" unique_id=705267981]
+position = Vector2(-60, 0)
+
+[node name="ArrivalIdLabel" parent="Portals/P01/SpawnPoint" index="0" unique_id=291326061]
+text = "at_P01"
+
+[node name="P03" parent="Portals" unique_id=1979890703 instance=ExtResource("r4_portal")]
+position = Vector2(570, 810)
+target_level_path = "res://src/overworld/levels/test_03.tscn"
+exit_id = "at_P04"
+arrival_id = "at_P03"
+metadata/levelapp_id = "P03"
+
+[node name="Player" parent="." unique_id=3154616 instance=ExtResource("r11_player")]
+position = Vector2(90, 390)
+
+[node name="SceneMusic" type="Node" parent="." unique_id=2066880953]
+script = ExtResource("r12_music")
+
+[editable path="Portals/P01"]
