@@ -793,3 +793,28 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:foc
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ---------- Nodos raw (sintaxis no modelable, solo lectura en canvas) ---------- */
+.dialogue-node.node-raw {
+  border-color: var(--text-muted, #888);
+  border-style: dashed;
+}
+.node-raw-body {
+  margin: 0; padding: 6px 8px; max-height: 150px; overflow: hidden;
+  font-family: var(--font-mono); font-size: 11px; line-height: 1.4;
+  white-space: pre; background: rgba(0, 0, 0, 0.25); border-radius: 4px;
+  color: var(--text-secondary, #aaa);
+}
+.node-raw-note {
+  margin-top: 6px; font-size: 10px; color: var(--text-muted, #888); font-style: italic;
+}
+.node-raw-target {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-muted, #888);
+}
+.port-out.port-readonly { cursor: default; opacity: 0.55; }
+.port-out.port-readonly:hover { transform: none; box-shadow: none; }
+path.connection.connection-raw { stroke-dasharray: 6 5; opacity: 0.6; }
+.inspector-note {
+  font-size: 11px; color: var(--text-muted, #888); margin: 4px 0 8px; line-height: 1.4;
+}
+.inspector-textarea.inspector-raw { font-family: var(--font-mono); font-size: 11px; white-space: pre; }
