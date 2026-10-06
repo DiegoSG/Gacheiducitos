@@ -863,6 +863,7 @@
    * destino de la línea no existe, se crea su nodo stub tras el nodo de origen.
    */
   function completeLine(lineIdx) {
+    if (typeof autoNodesEnabled === 'function' && !autoNodesEnabled()) return false;
     const t = ta.value;
     const lines = t.split('\n');
     const line = lines[lineIdx];

@@ -284,6 +284,93 @@ function nodeTargets(node) {
   return out.filter(Boolean);
 }
 
+/** Destino actual de una salida: choiceIdx -1 = goto, n = opción n, 'cond_<clave>' = rama de condición. */
+function getOutputTarget(node, choiceIdx) {
+  if (typeof choiceIdx === 'string' && choiceIdx.startsWith('cond_')) {
+    return (node.conditionOutputs || {})[choiceIdx.replace('cond_', '')] || '';
+  }
+  if (choiceIdx >= 0 && node.choices && node.choices[choiceIdx]) return node.choices[choiceIdx].targetTitle || '';
+  return node.goto || '';
+}
+
+/** Hijo de un nodo: su goto; con opciones/ramas, el destino de la primera; sin salida, 'END'. */
+function nodeChild(node) {
+  if (!node) return 'END';
+  let t = '';
+  if (node.nodeType === 'raw' || node.nodeType === 'condition') t = nodeTargets(node)[0] || '';
+  else if (node.choices && node.choices.length) t = (node.choices.find(c => c.targetTitle) || {}).targetTitle || '';
+  else t = node.goto || '';
+  if (!t && node.nodeType !== 'raw') t = nodeTargets(node)[0] || '';
+  return t || 'END';
+}
+
+/**
+ * Inserta `node` entre la salida (`prevTarget`) y su destino anterior: node.goto = prevTarget,
+ * o 'END' si no apuntaba a nada / a END / a un nodo inexistente.
+ */
+function linkInsertedNode(tab, node, prevTarget) {
+  const exists = prevTarget && prevTarget !== 'END' && prevTarget !== '__END__' &&
+    tab.nodes.some(n => n.title === prevTarget);
+  node.goto = exists ? prevTarget : 'END';
+}
+
+/**
+ * Borra los nodos `ids` sin cortar el flujo: toda salida que apuntaba a un borrado pasa a su hijo
+ * (en cadena si el hijo también se borra; ciclos → END). Incluye START, alias, opciones, ramas y raw.
+ * @returns {number} nodos borrados
+ */
+function deleteNodesReconnect(tab, ids) {
+  const set = new Set(ids);
+  const doomed = tab.nodes.filter(n => set.has(n.id) && !n.isSpecial);
+  if (!doomed.length) return 0;
+  const byTitle = new Map(doomed.map(n => [n.title, n]));
+  const resolve = (title) => {
+    const seen = new Set();
+    let cur = title;
+    while (byTitle.has(cur)) {
+      if (seen.has(cur)) return 'END';
+      seen.add(cur);
+      cur = nodeChild(byTitle.get(cur));
+    }
+    return cur;
+  };
+  const fix = (t) => (byTitle.has(t) ? resolve(t) : undefined);
+  tab.nodes = tab.nodes.filter(n => !doomed.includes(n));
+  const targets = [...tab.nodes];
+  if (tab.startAlias && !targets.includes(tab.startAlias.node)) targets.push(tab.startAlias.node);
+  for (const n of targets) {
+    forEachNodeRef(n, fix);
+    if (n.nodeType === 'raw') {
+      n.rawText = rewriteDestsInText(n.rawText, d => fix(d));
+      n.rawTargets = extractRawTargets(n.rawText);
+    }
+  }
+  return doomed.length;
+}
+
+/**
+ * Desconecta `node` del flujo sin borrarlo: toda salida que apuntaba a él pasa a su hijo.
+ * El nodo conserva sus opciones; su goto único se vacía para poder reinsertarlo.
+ * @returns {boolean} true si hubo cambios
+ */
+function detachNodeReconnect(tab, node) {
+  if (!node || node.isSpecial) return false;
+  let child = nodeChild(node);
+  if (child === node.title) child = 'END';
+  const fix = (t) => (t === node.title ? child : undefined);
+  const targets = tab.nodes.filter(n => n !== node);
+  if (tab.startAlias && !targets.includes(tab.startAlias.node)) targets.push(tab.startAlias.node);
+  for (const n of targets) {
+    forEachNodeRef(n, fix);
+    if (n.nodeType === 'raw') {
+      n.rawText = rewriteDestsInText(n.rawText, d => fix(d));
+      n.rawTargets = extractRawTargets(n.rawText);
+    }
+  }
+  if (node.nodeType === 'dialogue' && !(node.choices && node.choices.length)) node.goto = '';
+  return true;
+}
+
 /**
  * Orden de flujo de los nodos reales (ignora __START__/__END__): recorrido en profundidad desde
  * `start` (o el primer nodo) siguiendo los destinos en orden de aparición; un nodo va después de
@@ -887,6 +974,7 @@ const DialogueFormat = {
   analyzeBody, finalizeParsedNode, parseDialogueFile, parseDialogue, ensureSpecialNodes,
   cleanTarget, serializeNode, serializeDialogue,
   parseChoiceLine, nodeTargets, flowOrder, slugifyTitle, validTitle, isInvalidTitle, isPureStartAlias, rewriteDestsInText, uniqueTitle, insertNodeAfter, applyFlowOrder,
+  getOutputTarget, nodeChild, linkInsertedNode, deleteNodesReconnect, detachNodeReconnect,
 };
 
 if (typeof module !== 'undefined' && module.exports) {

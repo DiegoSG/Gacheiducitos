@@ -1,0 +1,27 @@
+~ start
+
+=> nudo_4
+
+~ nudo_4
+
+=> Bien_Venida
+
+~ Bien_Venida
+
+NPC 1: Hola, bien venido al mundo gacheiduzón
+NPC 1: Estás listo para una gran aventura?
+- SI => BienVenida_si
+- No => BienVenida_no
+- Opción => Bien_Venida_opcion_3
+
+~ BienVenida_si
+
+=> END
+
+~ BienVenida_no
+
+=> END
+
+~ Bien_Venida_opcion_3
+
+=> END

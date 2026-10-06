@@ -507,5 +507,42 @@ check('fixture raro con CRLF: round-trip exacto', roundtrip(WEIRD.replace(/\n/g,
   check('flowDirty sin cambio de flujo: idéntico', F.serializeDialogue(same) === src);
 }
 
+{
+  // Borrado sin cortar el flujo + inserción al soltar en vacío
+  const src = '~ start\nNPC: hola\n- A => a\n- B => b\n\n~ a\nNPC: a\n=> c\n\n~ b\nNPC: b\n=> c\n\n~ c\nNPC: c\n=> d\n\n~ d\nNPC: d\n=> END\n\n~ r\n=> a\n- X => a\n';
+  const tab = load(src);
+  const ids = ['a', 'c'].map(t => findNode(tab, t).id);
+  const n = F.deleteNodesReconnect(tab, ids);
+  check('delete: borra 2 nodos', n === 2 && !findNode(tab, 'a') && !findNode(tab, 'c'));
+  check('delete: opción A pasa al hijo en cadena (a→c→d)', findNode(tab, 'start').choices[0].targetTitle === 'd');
+  check('delete: goto de b pasa a d', findNode(tab, 'b').goto === 'd');
+  const r = findNode(tab, 'r');
+  check('delete: raw reescrito', r.rawText.includes('=> d') && !r.rawText.includes('=> a') && r.rawTargets.includes('d'), r.rawText);
+  // Nodo con opciones: usa la primera opción
+  const t2 = load('~ start\n=> q\n\n~ q\nNPC: q\n- Si => y\n- No => z\n\n~ y\nNPC: y\n=> END\n\n~ z\nNPC: z\n=> END\n');
+  F.deleteNodesReconnect(t2, [findNode(t2, 'q').id]);
+  check('delete: nodo con opciones → primera opción', t2.nodes.some(x => x.title === '__START__' ? x.goto === 'y' : false) || (t2.startAlias && t2.startAlias.node.goto === 'y'));
+  // Ciclo → END
+  const t3 = load('~ start\nNPC: s\n=> p\n\n~ p\nNPC: p\n=> q\n\n~ q\nNPC: q\n=> p\n');
+  F.deleteNodesReconnect(t3, [findNode(t3, 'p').id, findNode(t3, 'q').id]);
+  check('delete: ciclo → END', findNode(t3, 'start').goto === 'END');
+  // Inserción
+  const t4 = load('~ start\nNPC: s\n=> b\n\n~ b\nNPC: b\n=> END\n');
+  const nn = { goto: '' };
+  F.linkInsertedNode(t4, nn, F.getOutputTarget(findNode(t4, 'start'), -1));
+  check('insert: N → B', nn.goto === 'b');
+  F.linkInsertedNode(t4, nn, '');
+  check('insert: sin destino → END', nn.goto === 'END');
+  F.linkInsertedNode(t4, nn, 'END');
+  check('insert: END → END', nn.goto === 'END');
+}
+
+{
+  const tab = load('~ start\nNPC: s\n=> b\n\n~ b\nNPC: b\n=> c\n\n~ c\nNPC: c\n=> END\n');
+  F.detachNodeReconnect(tab, findNode(tab, 'b'));
+  check('detach: padre → hijo', findNode(tab, 'start').goto === 'c');
+  check('detach: nodo queda libre', findNode(tab, 'b').goto === '' && findNode(tab, 'b') !== undefined);
+}
+
 console.log(`${passed} comprobaciones correctas, ${failures} fallos`);
 process.exit(failures ? 1 : 0);

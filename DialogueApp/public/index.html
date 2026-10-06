@@ -11,33 +11,19 @@
   <div id="app">
     <!-- HEADER -->
     <header id="app-header">
-      <span class="logo">💬 DialogueApp</span>
+      <div class="header-left">
+        <span class="logo">💬 DialogueApp</span>
+        <button id="btn-save" class="btn-compact">💾 Save</button>
+        <button id="btn-save-all" class="btn-compact">💾 Save All</button>
+      </div>
       <div id="view-switch" class="segmented" role="tablist" aria-label="Vista">
-        <button id="btn-view-writing" role="tab" title="Vista Escritura (F1)">✍ Escritura <kbd>F1</kbd></button>
-        <button id="btn-view-nodes" role="tab" title="Vista Nodos (F2)">◫ Nodos <kbd>F2</kbd></button>
+        <button id="btn-view-writing" role="tab">Escritura <kbd>F1</kbd></button>
+        <button id="btn-view-nodes" role="tab">Nodos <kbd>F2</kbd></button>
       </div>
-      <div class="header-shortcuts-info">
-        <span class="shortcut-tip nodes-only"><kbd>+</kbd> +Diálogo</span>
-        <span class="shortcut-tip nodes-only"><kbd>V</kbd> +Variable</span>
-        <span class="shortcut-tip nodes-only"><kbd>E</kbd> +Evento</span>
-        <span class="shortcut-tip nodes-only"><kbd>C</kbd> +Condición</span>
-        <span class="shortcut-tip nodes-only"><kbd>F</kbd> Centrar</span>
-        <span class="shortcut-tip nodes-only"><kbd>Shift</kbd>+Arrastrar Selección</span>
-        <span class="shortcut-tip nodes-only"><kbd>Ctrl+C</kbd>/<kbd>V</kbd> Copiar/Pegar</span>
-        <span class="shortcut-tip nodes-only"><kbd>Supr</kbd> Borrar</span>
-        <span class="shortcut-tip writing-only"><kbd>Ctrl+P</kbd> Ir a nodo</span>
-        <span class="shortcut-tip writing-only"><kbd>F12</kbd> Ir a destino</span>
-        <span class="shortcut-tip writing-only"><kbd>Alt+←</kbd> Volver</span>
-        <span class="shortcut-tip writing-only"><kbd>Alt+M</kbd> Mapa</span>
-      </div>
-      <div class="header-actions">
-        <button id="btn-toggle-sidebar" title="Mostrar/ocultar la barra lateral (Ctrl+B)">☰ <kbd>Ctrl+B</kbd></button>
-        <button id="btn-save" title="Guardar cambios (Ctrl+S)">💾 Guardar</button>
-        <span id="status-badge" class="badge">Listo</span>
-      </div>
-    </header>
+</header>
 
     <div id="app-body">
+      <button id="btn-toggle-sidebar">Barra lateral <kbd>Ctrl+B</kbd></button>
       <!-- SIDEBAR IZQUIERDO -->
       <aside id="sidebar">
         <!-- Sección Archivos -->
@@ -96,12 +82,17 @@
 
           <!-- Controles flotantes del canvas -->
           <div id="canvas-controls">
-            <button id="btn-add-node" title="Añadir nodo de diálogo (+)">+ Diálogo</button>
-            <button id="btn-add-var-node" title="Añadir nodo que modifica una variable">+ Variable</button>
-            <button id="btn-add-event-node" title="Añadir nodo de evento del juego">+ Evento</button>
-            <button id="btn-add-condition-node" title="Añadir nodo de condición (C)">🔀 Condición</button>
-            <button id="btn-fit-view" title="Ajustar y centrar vista (F)">⊞ Fit (F)</button>
+            <button id="btn-add-node">Diálogo <kbd>+</kbd></button>
+            <button id="btn-add-var-node">Variable <kbd>V</kbd></button>
+            <button id="btn-add-event-node">Evento <kbd>E</kbd></button>
+            <button id="btn-add-condition-node">Condición <kbd>C</kbd></button>
+            <button id="btn-fit-view">Fit <kbd>F</kbd></button>
             <span id="zoom-label">100%</span>
+            <button id="btn-undo">Deshacer <kbd>Ctrl+Z</kbd></button>
+            <button id="btn-redo">Rehacer <kbd>Ctrl+Y</kbd></button>
+            <label id="auto-nodes-label">
+              <input type="checkbox" class="auto-nodes-toggle" checked> Auto-nodos
+            </label>
           </div>
         </div>
 
@@ -109,16 +100,17 @@
         <section id="writing-view" class="hidden">
           <div id="writing-main">
             <div id="insert-bar">
-              <button data-act="node" title="Nuevo nodo a continuación del actual (Ctrl+Enter)"><span class="ib-ico">＋</span> Nodo <kbd>Ctrl+↵</kbd></button>
-              <button data-act="option" title="Opción de respuesta (Ctrl+O)"><span class="ib-ico">▸</span> Opción <kbd>Ctrl+O</kbd></button>
-              <button data-act="condition" title="Condición sobre una variable (Ctrl+I)"><span class="ib-ico">?</span> Condición <kbd>Ctrl+I</kbd></button>
-              <button data-act="variable" title="Asignar una variable (Alt+V)"><span class="ib-ico">$</span> Variable <kbd>Alt+V</kbd></button>
-              <button data-act="event" title="Disparar un evento del juego (Alt+E)"><span class="ib-ico">⚡</span> Evento <kbd>Alt+E</kbd></button>
-              <button data-act="end" title="Terminar el diálogo (Ctrl+.)"><span class="ib-ico">⬛</span> END <kbd>Ctrl+.</kbd></button>
+              <button data-act="node">Nodo <kbd>Ctrl+↵</kbd></button>
+              <button data-act="option">Opción <kbd>Ctrl+O</kbd></button>
+              <button data-act="condition">Condición <kbd>Ctrl+I</kbd></button>
+              <button data-act="variable">Variable <kbd>Alt+V</kbd></button>
+              <button data-act="event">Evento <kbd>Alt+E</kbd></button>
+              <button data-act="end">END <kbd>Ctrl+.</kbd></button>
               <span class="ib-spacer"></span>
-              <button id="btn-flow-order" title="Reordena los nodos del texto siguiendo el flujo: cada pregunta antes de sus respuestas"><span class="ib-ico">⇅</span> Ordenar por flujo</button>
-              <button id="btn-palette" title="Ir a un nodo (Ctrl+P)">⌕ Ir a… <kbd>Ctrl+P</kbd></button>
-              <button id="btn-toggle-side" title="Mostrar/ocultar mapa y lista de nodos (Alt+M)">🗺 <kbd>Alt+M</kbd></button>
+              <label class="ib-check"><input type="checkbox" class="auto-nodes-toggle" checked> Auto-nodos</label>
+              <button id="btn-flow-order">Ordenar por flujo</button>
+              <button id="btn-palette">Ir a… <kbd>Ctrl+P</kbd></button>
+              <button id="btn-toggle-side">Mapa <kbd>Alt+M</kbd></button>
             </div>
             <div id="editor-stack">
               <div id="script-hl" aria-hidden="true"></div>
@@ -176,6 +168,15 @@
   </div>
 
   <!-- MENÚ CONTEXTUAL -->
+  <div id="node-type-menu" class="hidden">
+    <ul>
+      <li data-type="dialogue">💬 Diálogo</li>
+      <li data-type="variable">$ Variable</li>
+      <li data-type="event">⚡ Evento</li>
+      <li data-type="condition">🔀 Condición</li>
+    </ul>
+  </div>
+
   <div id="context-menu" class="hidden">
     <ul>
       <li data-action="duplicate">⧉ Duplicar</li>

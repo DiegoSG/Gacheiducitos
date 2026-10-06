@@ -39,6 +39,7 @@ let connectPreviewPath = null;
 
 // Arrastre de nodos (individual y múltiple)
 let isDraggingNode = false;
+let dragMoved = false;
 let draggingNodeId = null;
 let dragNodeOffsets = new Map(); // nodeId -> { x, y }
 
@@ -86,6 +87,7 @@ function init() {
   document.getElementById('btn-refresh-files')?.addEventListener('click', loadDialogueFiles);
   document.getElementById('btn-add-variable')?.addEventListener('click', handleAddVariable);
   document.getElementById('btn-save')?.addEventListener('click', saveActiveTab);
+  document.getElementById('btn-save-all')?.addEventListener('click', saveAllTabs);
   document.getElementById('btn-view-writing')?.addEventListener('click', () => setView('writing'));
   document.getElementById('btn-view-nodes')?.addEventListener('click', () => setView('nodes'));
   document.getElementById('btn-toggle-sidebar')?.addEventListener('click', toggleSidebar);
@@ -96,7 +98,16 @@ function init() {
   document.getElementById('btn-add-var-node')?.addEventListener('click', () => handleAddGenericNode('variable'));
   document.getElementById('btn-add-event-node')?.addEventListener('click', () => handleAddGenericNode('event'));
   document.getElementById('btn-add-condition-node')?.addEventListener('click', () => handleAddGenericNode('condition'));
+  document.getElementById('btn-undo')?.addEventListener('click', () => stepHistory(-1));
+  document.getElementById('btn-redo')?.addEventListener('click', () => stepHistory(1));
   document.getElementById('btn-fit-view')?.addEventListener('click', handleFitView);
+  document.querySelectorAll('.auto-nodes-toggle').forEach(cb => {
+    cb.checked = autoNodesEnabled();
+    cb.addEventListener('change', () => {
+      try { localStorage.setItem('dialogueapp.autoNodes', cb.checked ? '1' : '0'); } catch (_) { /* sin storage */ }
+      document.querySelectorAll('.auto-nodes-toggle').forEach(o => { o.checked = cb.checked; });
+    });
+  });
 
   // Modal
   document.getElementById('modal-overlay')?.addEventListener('click', (e) => {
@@ -132,7 +143,7 @@ function initKeyboardShortcuts() {
     // Ctrl+S: Guardar (en ambas vistas)
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
-      saveActiveTab();
+      if (e.shiftKey) saveAllTabs(); else saveActiveTab();
       return;
     }
 
@@ -170,6 +181,16 @@ function initKeyboardShortcuts() {
         clearSelection();
       }
       return;
+    }
+
+    // Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z: deshacer / rehacer (si se escribe en un campo, lo gestiona el campo)
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !isTyping) {
+      const k = e.key.toLowerCase();
+      if (k === 'z' || k === 'y') {
+        e.preventDefault();
+        stepHistory(k === 'y' || e.shiftKey ? 1 : -1);
+        return;
+      }
     }
 
     // Ctrl+C: Copiar
@@ -554,23 +575,41 @@ async function saveActiveTab() {
     setStatus('No hay archivo abierto', 'error');
     return;
   }
-
-  if (tab.saving) return; // ya hay un guardado en curso
-
   flushWritingSync(); // en vista Escritura, parsea lo último escrito antes de serializar
+  await saveTab(tab);
+}
+
+/** Guarda todas las pestañas abiertas con cambios. */
+async function saveAllTabs() {
+  flushWritingSync();
+  const dirty = AppState.tabs.filter(t => t.isDirty);
+  if (dirty.length === 0) {
+    setStatus('No hay cambios que guardar', 'info');
+    return;
+  }
+  let ok = 0;
+  for (const tab of dirty) if (await saveTab(tab, true)) ok++;
+  setStatus(`Guardadas ${ok} de ${dirty.length} pestañas`, ok === dirty.length ? 'success' : 'error');
+}
+
+/** Guarda una pestaña. `quiet`: sin mensajes de éxito. @returns {Promise<boolean>} */
+async function saveTab(tab, quiet) {
+  if (tab.saving) return false; // ya hay un guardado en curso
   tab.saving = true;
   const revAtStart = tab.rev || 0;
   try {
-    setStatus('Guardando…');
+    if (!quiet) setStatus('Guardando…');
     const content = serializeDialogue(tab, getVarType);
     await apiPost('/api/dialogues/save', { path: tab.relPath, content });
     await saveLayout(tab);
     // Si hubo ediciones mientras se guardaba, la pestaña sigue sucia
     if ((tab.rev || 0) === revAtStart) tab.isDirty = false;
     updateTabBar();
-    setStatus('Guardado: ' + tab.title, 'success');
+    if (!quiet) setStatus('Guardado: ' + tab.title, 'success');
+    return true;
   } catch (err) {
-    setStatus('Error guardando: ' + err.message, 'error');
+    setStatus('Error guardando ' + tab.title + ': ' + err.message, 'error');
+    return false;
   } finally {
     tab.saving = false;
   }
@@ -637,7 +676,7 @@ function updateTabBar() {
   updateEmptyState();
 }
 
-function markDirty() {
+function markDirty(structural) {
   const tab = getActiveTab();
   if (!tab) return;
   tab.rev = (tab.rev || 0) + 1;
@@ -645,13 +684,90 @@ function markDirty() {
     tab.isDirty = true;
     updateTabBar();
   }
+  recordHistory(tab, structural !== true);
+}
+
+// ============================================================
+// UNDO / REDO (vista Nodos): historial de instantáneas del modelo por pestaña
+// ============================================================
+
+const HISTORY_LIMIT = 100;
+const HISTORY_COALESCE_MS = 800;
+
+function snapshotTab(tab) {
+  const aliasNode = tab.startAlias ? tab.startAlias.node : null;
+  return JSON.stringify({
+    nodes: tab.nodes,
+    header: tab.header,
+    flowDirty: !!tab.flowDirty,
+    alias: tab.startAlias ? { index: tab.startAlias.index, inNodes: tab.nodes.indexOf(aliasNode), node: aliasNode } : null,
+  });
+}
+
+/** Crea el historial de la pestaña con su estado actual como base (si no existe y está en vista Nodos). */
+function ensureHistory(tab) {
+  if (tab.hist || tab.view === 'writing') return;
+  tab.hist = { stack: [snapshotTab(tab)], idx: 0, lastAt: 0, lastCoalescible: false };
+}
+
+/** Registra el estado actual tras un cambio. `coalesce`: ediciones de texto seguidas comparten un paso. */
+function recordHistory(tab, coalesce) {
+  if (tab.view === 'writing') { tab.hist = null; return; } // el textarea tiene su propio undo
+  if (!tab.hist) return;
+  const h = tab.hist;
+  const snap = snapshotTab(tab);
+  if (snap === h.stack[h.idx]) return;
+  const now = Date.now();
+  h.stack.length = h.idx + 1; // descarta el redo
+  if (coalesce && h.lastCoalescible && h.idx > 0 && now - h.lastAt < HISTORY_COALESCE_MS) {
+    h.stack[h.idx] = snap;
+  } else {
+    h.stack.push(snap);
+    if (h.stack.length > HISTORY_LIMIT) h.stack.shift();
+    h.idx = h.stack.length - 1;
+  }
+  h.lastAt = now;
+  h.lastCoalescible = !!coalesce;
+}
+
+function restoreSnapshot(tab, snap) {
+  const d = JSON.parse(snap);
+  tab.nodes = d.nodes;
+  tab.header = d.header;
+  tab.flowDirty = d.flowDirty;
+  tab.startAlias = d.alias
+    ? { index: d.alias.index, node: d.alias.inNodes >= 0 ? d.nodes[d.alias.inNodes] : d.alias.node }
+    : null;
+}
+
+function stepHistory(dir) {
+  const tab = getActiveTab();
+  if (!tab || tab.view === 'writing') return;
+  ensureHistory(tab);
+  const h = tab.hist;
+  const next = h.idx + dir;
+  if (!h || next < 0 || next >= h.stack.length) {
+    setStatus(dir < 0 ? 'Nada que deshacer' : 'Nada que rehacer', 'info');
+    return;
+  }
+  h.idx = next;
+  h.lastCoalescible = false;
+  restoreSnapshot(tab, h.stack[h.idx]);
+  tab.rev = (tab.rev || 0) + 1;
+  tab.isDirty = true;
+  const ids = new Set(tab.nodes.map(n => n.id));
+  for (const id of Array.from(selectedNodeIds)) if (!ids.has(id)) selectedNodeIds.delete(id);
+  renderCanvas(tab);
+  updateTabBar();
+  updateInspector();
+  setStatus(dir < 0 ? 'Deshacer' : 'Rehacer', 'info');
 }
 
 /** Cambio estructural (crear/borrar nodos, conectar/reconectar): el texto debe seguir el orden de flujo. */
 function markStructureChanged(tab) {
   const t = tab || getActiveTab();
   if (t) t.flowDirty = true;
-  markDirty();
+  markDirty(true);
 }
 
 function updateEmptyState() {
@@ -680,6 +796,7 @@ function clearCanvas() {
 // ============================================================
 
 function renderCanvas(tabData) {
+  if (tabData) ensureHistory(tabData);
   const nodesLayer = document.getElementById('nodes-layer');
   const svg = document.getElementById('connections-svg');
   if (!nodesLayer || !svg) return;
@@ -1477,6 +1594,50 @@ function renderConnections(tabData) {
   }
 }
 
+/** Línea (path.connection editable) más cercana al punto de pantalla, dentro de ~8 px. */
+function findConnectionAt(clientX, clientY, tab) {
+  const vp = document.getElementById('canvas-viewport')?.getBoundingClientRect();
+  if (!vp) return null;
+  const zoom = tab.canvas.zoom;
+  const px = (clientX - vp.left) / zoom;
+  const py = (clientY - vp.top) / zoom;
+  const maxD = 8 / zoom;
+  let best = null, bestD = maxD;
+  for (const path of document.querySelectorAll('#connections-svg path.connection:not(.connection-raw)')) {
+    if (!path.dataset.fromId) continue;
+    const len = path.getTotalLength();
+    for (let d = 0; d <= len; d += 4) {
+      const pt = path.getPointAtLength(d);
+      const dist = Math.hypot(pt.x - px, pt.y - py);
+      if (dist < bestD) { bestD = dist; best = path; }
+    }
+  }
+  return best;
+}
+
+/** Deja sin destino la salida que dibuja `path`. @returns {boolean} */
+function cutConnection(tab, path) {
+  const source = tab.nodes.find(n => n.id === path.dataset.fromId);
+  if (!source) return false;
+  const idx = path.dataset.choiceIdx;
+  if (idx.startsWith('cond_')) {
+    source.conditionOutputs[idx.replace('cond_', '')] = '';
+  } else if (parseInt(idx, 10) >= 0 && source.choices[parseInt(idx, 10)]) {
+    const ch = source.choices[parseInt(idx, 10)];
+    ch.targetTitle = '';
+    ch.bare = true;
+  } else if (source.title === '__START__') {
+    const realStart = tab.nodes.find(n => n.title === 'start');
+    const isAlias = realStart && realStart.nodeType === 'dialogue' && realStart.lines.length === 0 && realStart.choices.length === 0;
+    if (isAlias) realStart.goto = '';
+    source.goto = '';
+    source.startTouched = true;
+  } else {
+    source.goto = '';
+  }
+  return true;
+}
+
 function drawConnection(svg, fromEl, toEl, extraClass) {
   const tab = getActiveTab();
   const zoom = tab ? tab.canvas.zoom : 1;
@@ -1496,6 +1657,11 @@ function drawConnection(svg, fromEl, toEl, extraClass) {
   path.setAttribute('class', 'connection' + (extraClass ? ' ' + extraClass : ''));
   path.setAttribute('d', `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`);
   path.setAttribute('fill', 'none');
+  if (!extraClass) {
+    path.dataset.fromId = fromEl.closest('.dialogue-node')?.dataset.id || '';
+    path.dataset.toId = toEl.closest('.dialogue-node')?.dataset.id || '';
+    path.dataset.choiceIdx = fromEl.dataset.choiceIdx ?? '-1';
+  }
   svg.appendChild(path);
 }
 
@@ -1598,6 +1764,55 @@ function applyConnection(tab, sourceNode, choiceIdx, targetNode) {
   return true;
 }
 
+/** Crea un nodo del tipo dado en (x, y), lo conecta a la salida de origen y conserva el flujo anterior. */
+function createConnectedNode(tab, sourceNode, choiceIdx, type, x, y) {
+  if (!getActiveTab() || getActiveTab() !== tab || !tab.nodes.includes(sourceNode)) return;
+  const node = createNodeData(tab, type, Math.max(20, x), Math.max(20, y));
+  const prevTarget = getOutputTarget(sourceNode, choiceIdx);
+  if (!applyConnection(tab, sourceNode, choiceIdx, node)) return;
+  if (type === 'condition') {
+    const exists = prevTarget && prevTarget !== '__END__' && (prevTarget === 'END' || tab.nodes.some(n => n.title === prevTarget));
+    if (exists) node.conditionOutputs[node.conditionMode === 'compare' ? 'true' : 'default'] = prevTarget;
+  } else {
+    linkInsertedNode(tab, node, prevTarget);
+  }
+  insertNodeData(tab, node, sourceNode);
+  clearSelection();
+  selectedNodeIds.add(node.id);
+  markStructureChanged(tab);
+  renderCanvas(tab);
+  updateInspector();
+  if (type === 'dialogue') focusNodeInput(node.id, '.node-text-input', 0);
+}
+
+/** Menú flotante con los tipos de nodo; `onPick(type)` al elegir. Se cierra al hacer clic fuera o con Esc. */
+function showNodeTypeMenu(x, y, onPick) {
+  const menu = document.getElementById('node-type-menu');
+  if (!menu) return;
+  const close = () => {
+    menu.classList.add('hidden');
+    menu.onclick = null;
+    document.removeEventListener('mousedown', outside, true);
+    document.removeEventListener('keydown', onKey, true);
+  };
+  const outside = (ev) => { if (!menu.contains(ev.target)) close(); };
+  const onKey = (ev) => { if (ev.key === 'Escape') close(); };
+  menu.onclick = (ev) => {
+    const type = ev.target.closest('[data-type]')?.dataset.type;
+    if (!type) return;
+    close();
+    onPick(type);
+  };
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+  menu.classList.remove('hidden');
+  // el mouseup que cierra el arrastre no debe contar como clic fuera
+  setTimeout(() => {
+    document.addEventListener('mousedown', outside, true);
+    document.addEventListener('keydown', onKey, true);
+  }, 0);
+}
+
 function endConnection(e) {
   if (!isConnecting) return;
 
@@ -1609,6 +1824,7 @@ function endConnection(e) {
   const target = document.elementFromPoint(e.clientX, e.clientY);
   const targetNodeEl = target?.closest('.dialogue-node');
   const tab = getActiveTab();
+  const connectFromChoiceIdxAtDrop = connectFromChoiceIdx;
 
   if (targetNodeEl) {
     const targetNodeId = targetNodeEl.dataset.id;
@@ -1625,22 +1841,15 @@ function endConnection(e) {
     }
   } else if (tab && target && canvasContainer && canvasContainer.contains(target)
       && !target.closest('#canvas-controls')) {
-    // Soltado en espacio vacío del canvas: crea un nodo de diálogo ahí, ya conectado
+    // Soltado en espacio vacío del canvas: menú para elegir el tipo de nodo nuevo, ya conectado
     const sourceNode = tab.nodes.find(n => n.id === connectFromNodeId);
     const vpRect = document.getElementById('canvas-viewport')?.getBoundingClientRect();
     if (sourceNode && sourceNode.nodeType !== 'raw' && vpRect) {
       const x = Math.round((e.clientX - vpRect.left) / tab.canvas.zoom);
       const y = Math.round((e.clientY - vpRect.top) / tab.canvas.zoom - 20);
-      const node = createNodeData(tab, 'dialogue', Math.max(20, x), Math.max(20, y));
-      if (applyConnection(tab, sourceNode, connectFromChoiceIdx, node)) {
-        insertNodeData(tab, node, sourceNode);
-        clearSelection();
-        selectedNodeIds.add(node.id);
-        markStructureChanged();
-        renderCanvas(tab);
-        updateInspector();
-        focusNodeInput(node.id, '.node-text-input', 0);
-      }
+      showNodeTypeMenu(e.clientX, e.clientY, (type) => {
+        createConnectedNode(tab, sourceNode, connectFromChoiceIdxAtDrop, type, x, y);
+      });
     }
   }
 
@@ -1672,6 +1881,22 @@ function initCanvasInteraction() {
     requestAnimationFrame(() => renderConnections(tab));
   }, { passive: false });
 
+  // Ctrl + clic sobre una línea: la corta (la salida queda sin destino)
+  cc.addEventListener('mousedown', (e) => {
+    if (e.button !== 0 || !(e.ctrlKey || e.metaKey) || e.target.closest('.dialogue-node')) return;
+    const tab = getActiveTab();
+    if (!tab) return;
+    const path = findConnectionAt(e.clientX, e.clientY, tab);
+    if (!path) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (cutConnection(tab, path)) {
+      markStructureChanged(tab);
+      renderCanvas(tab);
+      updateInspector();
+    }
+  }, true);
+
   cc.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
 
@@ -1687,8 +1912,9 @@ function initCanvasInteraction() {
         boxStartY = e.clientY;
         cc.classList.add('box-selecting');
         if (selBox) {
-          selBox.style.left = boxStartX + 'px';
-          selBox.style.top = boxStartY + 'px';
+          const wr = selBox.parentElement.getBoundingClientRect();
+          selBox.style.left = (boxStartX - wr.left) + 'px';
+          selBox.style.top = (boxStartY - wr.top) + 'px';
           selBox.style.width = '0px';
           selBox.style.height = '0px';
           selBox.classList.remove('hidden');
@@ -1728,8 +1954,9 @@ function initCanvasInteraction() {
       const w = Math.abs(e.clientX - boxStartX);
       const h = Math.abs(e.clientY - boxStartY);
 
-      selBox.style.left = x + 'px';
-      selBox.style.top = y + 'px';
+      const wr = selBox.parentElement.getBoundingClientRect();
+      selBox.style.left = (x - wr.left) + 'px';
+      selBox.style.top = (y - wr.top) + 'px';
       selBox.style.width = w + 'px';
       selBox.style.height = h + 'px';
 
@@ -1789,6 +2016,19 @@ function startNodeDrag(e, nodeId) {
     updateInspector();
   }
 
+  // Alt + arrastrar: el nodo sale del flujo y su padre se conecta con su hijo
+  if (e.altKey) {
+    let changed = false;
+    selectedNodeIds.forEach(id => {
+      const n = tab.nodes.find(x => x.id === id);
+      if (n && detachNodeReconnect(tab, n)) changed = true;
+    });
+    if (changed) {
+      markStructureChanged();
+      renderCanvas(tab);
+    }
+  }
+
   // Guardar offsets de todos los nodos seleccionados
   dragNodeOffsets.clear();
   selectedNodeIds.forEach(id => {
@@ -1830,13 +2070,53 @@ function handleNodeDragMove(e) {
     }
   });
 
+  dragMoved = true;
   renderConnections(tab);
   tab.rev = (tab.rev || 0) + 1;
   tab.isDirty = true;
 }
 
+/** Si el nodo arrastrado (único) quedó sobre una línea, se inserta como nodo intermedio. */
+function insertDraggedNodeOnConnection(tab, node) {
+  if (!node || node.isSpecial || node.nodeType !== 'dialogue') return false;
+  if (node.choices.length > 0 || (node.goto && node.goto !== 'END')) return false;
+  const el = document.querySelector(`.dialogue-node[data-id="${node.id}"]`);
+  if (!el) return false;
+  const rect = { l: node.x, t: node.y, r: node.x + el.offsetWidth, b: node.y + el.offsetHeight };
+  for (const path of document.querySelectorAll('#connections-svg path.connection:not(.connection-raw)')) {
+    const { fromId, toId, choiceIdx } = path.dataset;
+    if (!fromId || !toId || fromId === node.id || toId === node.id) continue;
+    const len = path.getTotalLength();
+    let hit = false;
+    for (let d = 0; d <= len && !hit; d += 8) {
+      const pt = path.getPointAtLength(d);
+      hit = pt.x >= rect.l && pt.x <= rect.r && pt.y >= rect.t && pt.y <= rect.b;
+    }
+    if (!hit) continue;
+    const source = tab.nodes.find(n => n.id === fromId);
+    const dest = tab.nodes.find(n => n.id === toId);
+    if (!source || !dest) continue;
+    const idx = /^-?\d+$/.test(choiceIdx) ? parseInt(choiceIdx, 10) : choiceIdx;
+    if (!applyConnection(tab, source, idx, node)) continue;
+    node.goto = dest.title === '__END__' ? 'END' : dest.title;
+    return true;
+  }
+  return false;
+}
+
 function endNodeDrag() {
   if (isDraggingNode) {
+    const tab = getActiveTab();
+    if (tab && dragMoved && selectedNodeIds.size === 1) {
+      const node = tab.nodes.find(n => n.id === draggingNodeId);
+      if (insertDraggedNodeOnConnection(tab, node)) {
+        markStructureChanged();
+        renderCanvas(tab);
+        updateInspector();
+      }
+    }
+    if (tab && dragMoved) recordHistory(tab, false);
+    dragMoved = false;
     isDraggingNode = false;
     draggingNodeId = null;
     dragNodeOffsets.clear();
@@ -1939,34 +2219,13 @@ function deleteSelectedNodes() {
 
   if (toDelete.length === 0) return;
 
-  const confirmMsg = toDelete.length === 1
-    ? `¿Eliminar el nodo seleccionado?`
-    : `¿Eliminar los ${toDelete.length} nodos seleccionados?`;
-
-  if (!confirm(confirmMsg)) return;
-
-  const deletedTitles = new Set();
-  toDelete.forEach(id => {
-    const n = tab.nodes.find(node => node.id === id);
-    if (n) deletedTitles.add(n.title);
-  });
-
-  tab.nodes = tab.nodes.filter(n => !selectedNodeIds.has(n.id));
-
-  // Limpiar referencias a nodos borrados
-  for (const n of tab.nodes) {
-    forEachNodeRef(n, (t) => (deletedTitles.has(t) ? '' : undefined));
-  }
-  // Los nodos raw conservan su texto; se avisa si aún apuntan a nodos borrados
-  const rawDangling = tab.nodes.filter(n => n.nodeType === 'raw' && n.rawTargets.some(t => deletedTitles.has(t))).length;
+  deleteNodesReconnect(tab, toDelete);
 
   clearSelection();
   markStructureChanged();
   renderCanvas(tab);
   updateInspector();
-  setStatus(rawDangling > 0
-    ? `Nodo(s) eliminado(s). ${rawDangling} nodo(s) raw aún apuntan a ellos.`
-    : 'Nodo(s) eliminado(s)', 'info');
+  setStatus('Nodo(s) eliminado(s)', 'info');
 }
 
 // ============================================================
@@ -2497,7 +2756,17 @@ function insertNodeData(tab, node, origin) {
  * Añade una opción a un nodo de diálogo y le crea automáticamente su nodo destino
  * (a la derecha, conectado, título `<nodo>_<slug o opcion_N>`).
  */
+/** Opción "Auto-nodos": si está activa, crear una opción crea también su nodo conectado. */
+function autoNodesEnabled() {
+  try { return localStorage.getItem('dialogueapp.autoNodes') !== '0'; } catch (_) { return true; }
+}
+
 function addChoiceWithTarget(tab, node, label) {
+  if (!autoNodesEnabled()) {
+    node.choices.push({ label: label || 'Opción', targetTitle: '' });
+    node.goto = '';
+    return null;
+  }
   const titles = new Set(tab.nodes.map(n => n.title));
   const n = node.choices.length + 1;
   const base = node.title + '_' + (label ? slugifyTitle(label) : 'opcion_' + n);
@@ -2791,17 +3060,19 @@ async function saveLayout(tabData) {
 // 23. UTILITIES
 // ============================================================
 
+/** Solo los errores se muestran (aviso temporal); el resto de mensajes no tiene indicador visible. */
 function setStatus(msg, type) {
-  const badge = document.getElementById('status-badge');
-  if (!badge) return;
-  badge.textContent = msg;
-  badge.className = 'badge' + (type ? ' badge-' + type : '');
-  if (type && type !== 'error') {
-    setTimeout(() => {
-      badge.textContent = 'Listo';
-      badge.className = 'badge';
-    }, 3000);
+  if (type !== 'error') return;
+  let toast = document.getElementById('status-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'status-toast';
+    document.body.appendChild(toast);
   }
+  toast.textContent = msg;
+  toast.classList.remove('hidden');
+  clearTimeout(setStatus._timer);
+  setStatus._timer = setTimeout(() => toast.classList.add('hidden'), 6000);
 }
 
 function handleFitView() {
