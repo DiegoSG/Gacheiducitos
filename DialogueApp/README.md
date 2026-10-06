@@ -15,6 +15,7 @@ Luego abre **http://localhost:3131** en el navegador (el servidor solo escucha e
 ## Funcionalidades
 
 - **Canvas visual estilo Blueprint** — nodos arrastrables conectados con curvas Bézier
+- **Vista Escritura** — editor de guion con minimapa, autocompletado y creación de nodos mientras escribes (ver "Vistas")
 - **Tabs** — múltiples archivos `.dialogue` abiertos en paralelo
 - **Parser/Serializer** — lee y escribe el formato `.dialogue` nativo de Dialogue Manager sin perder datos (ver "Round-trip y nodos raw")
 - **Guardado directo** — escribe en `rpg-g/src/...` al hacer `Ctrl+S` o el botón Guardar
@@ -43,22 +44,60 @@ Abrir y guardar un `.dialogue` sin tocarlo deja el archivo **idéntico byte a by
 - Los nodos visuales START y END no se guardan como nodos. START apunta a `start` (si existe) o al primer nodo; si lo conectas a otro nodo y el archivo no tiene `~ start`, se agrega uno al principio. END representa `=> END`. Un `~ end` o `~ start` real del archivo es un nodo normal.
 - Renombrar un nodo a un título ya existente se rechaza.
 
-## Atajos de teclado
- 
+## Vistas: Escritura y Nodos
+
+Cada pestaña tiene dos vistas a pantalla completa que **no comparten pantalla**. Se cambia con el selector del header o con `F1` / `F2` (se recuerda la última usada en `localStorage`). La barra lateral izquierda se colapsa con `Ctrl+B` en ambas vistas.
+
+- **Nodos** (`F2`): el canvas de nodos con el inspector a la derecha.
+- **Escritura** (`F1`): editor de guion con resaltado y números de línea. A la derecha, una columna estrecha (ocultable con `Alt+M`) con el **minimapa** del árbol (clic en un nodo = saltar a su `~ titulo`) y la **lista de nodos** (⚠ = aviso: destino inexistente, título duplicado o nodo sin salida).
+
+Sincronización: al entrar en Escritura el texto se genera con el serializador (los nodos sin cambios salen idénticos). Mientras escribes, el texto es la fuente: con un debounce de ~300 ms se parsea y se reemplazan los nodos conservando posiciones x/y por título (los nodos nuevos aparecen 340 px a la derecha del primero que los referencia). Al volver a Nodos, el nodo donde estaba el cursor queda seleccionado y centrado; al ir a Escritura el cursor va al nodo seleccionado. `Ctrl+S` funciona en ambas vistas (en Escritura parsea antes de guardar). Abrir y guardar sin tocar nada deja el archivo idéntico.
+
+### Escritura rápida
+
+- `Enter` al final de `Actor: texto` crea la línea siguiente con `Actor: `; `Enter` sobre una línea que solo tiene `Actor: ` borra el prefijo.
+- `Tab` al inicio de una línea de diálogo (o con solo el prefijo) alterna entre los dos últimos oradores; `Shift+Tab` inserta un tabulador.
+- Autocompletado (flechas, `Enter`/`Tab`, `Esc`): oradores al empezar la línea, nodos tras `=> ` y variables dentro de `GameVariables.get_var("` / `set_var("`.
+- `->` se convierte en `=>` (en líneas de opción `- ...` o al inicio de línea).
+- Escribir `=> destino` o `- opción => destino` con un destino inexistente (al pulsar `Enter` o salir de la línea) añade al final un nodo `~ destino` con `=> END`. Una `- opción` sin destino + `Enter` se completa con `=> <nodo>_<opción>` y crea ese nodo.
+- Al renombrar un `~ titulo` y salir de la línea, los `=> titulo` que apuntaban al nombre anterior se actualizan.
+- Las inserciones usan el undo nativo del navegador (`Ctrl+Z`).
+
+| Tecla (vista Escritura, foco en el editor) | Acción |
+|---|---|
+| `Ctrl+Enter` | Nodo nuevo a continuación del actual (enlaza la salida si no tenía) con el título seleccionado para renombrar |
+| `Ctrl+O` | Opción `- ` (usa el texto seleccionado) |
+| `Ctrl+I` | Condición `if GameVariables.get_var("") == true` + línea indentada |
+| `Alt+V` | `do GameVariables.set_var("", true)` |
+| `Alt+E` | `do GameManager.trigger_event("")` |
+| `Ctrl+.` | `=> END` |
+| `Ctrl+P` | Paleta: ir a un nodo por nombre |
+| `F12` / `Ctrl+clic` en `=> x` | Saltar a `~ x` |
+| `Alt+←` | Volver a la posición anterior |
+| `Alt+M` | Mostrar/ocultar minimapa y lista |
+
+## Atajos de teclado (generales y vista Nodos)
+
 | Tecla | Acción |
 |---|---|
-| `+` | Añadir nodo de diálogo |
-| `V` | Añadir nodo de variable |
-| `E` | Añadir nodo de evento |
-| `C` | Añadir nodo de condición |
+| `F1` / `F2` | Vista Escritura / vista Nodos |
+| `Ctrl + B` | Colapsar/mostrar la barra lateral |
+| `Ctrl + S` | Guardar tab activo (ambas vistas) |
+| `Escape` | Cerrar modal / deseleccionar |
+| `+` | Añadir nodo de diálogo (solo vista Nodos) |
+| `V` | Añadir nodo de variable (solo vista Nodos) |
+| `E` | Añadir nodo de evento (solo vista Nodos) |
+| `C` | Añadir nodo de condición (solo vista Nodos) |
 | `F` | Ajustar y centrar vista (Fit View) |
 | `Shift + Arrastrar` | Box selection (selección múltiple) |
 | `Ctrl + C` / `Ctrl + V` | Copiar y pegar nodos seleccionados |
 | `Supr` / `Backspace` | Eliminar nodos seleccionados |
-| `Ctrl + S` | Guardar tab activo |
-| `Escape` | Cerrar modal / deseleccionar |
+| Doble clic en el cuerpo de un nodo / botón ✎ | Abrir ese nodo en la vista Escritura |
+| `Enter` en el texto de una línea | Crea la línea siguiente y le da foco |
 | Rueda del ratón | Zoom del canvas |
 | Arrastrar fondo | Pan del canvas |
+
+En la vista Nodos, los nodos nuevos (`+`, `V`, `E`, `C`) se colocan a la derecha del nodo seleccionado y se conectan desde él si no tenía salida. Soltar una conexión arrastrada en espacio vacío crea un nodo de diálogo nuevo ya conectado.
 
 ## Tests
 
@@ -85,7 +124,8 @@ DialogueApp/
     ├── index.html
     ├── style.css
     ├── dialogue-format.js    # Parser/serializer (navegador y Node)
-    └── app.js
+    ├── app.js                # Estado, canvas de nodos, pestañas, inspector
+    └── writing.js            # Vista Escritura (editor, minimapa, autocompletado)
 ```
 
 ## Notas de seguridad

@@ -8,6 +8,7 @@
 // - Menú de Variables en Sidebar + Nodo Variable funcional
 // - Nodo Evento desacoplado con selector de eventos del juego
 // - Panel lateral derecho sincronizado (Inspector)
+// - Vistas Escritura / Nodos por pestaña (la vista Escritura vive en writing.js)
 // ============================================================
 
 const API_BASE = '';
@@ -85,7 +86,9 @@ function init() {
   document.getElementById('btn-refresh-files')?.addEventListener('click', loadDialogueFiles);
   document.getElementById('btn-add-variable')?.addEventListener('click', handleAddVariable);
   document.getElementById('btn-save')?.addEventListener('click', saveActiveTab);
-  document.getElementById('btn-quick-rewrite')?.addEventListener('click', handleQuickRewrite);
+  document.getElementById('btn-view-writing')?.addEventListener('click', () => setView('writing'));
+  document.getElementById('btn-view-nodes')?.addEventListener('click', () => setView('nodes'));
+  document.getElementById('btn-toggle-sidebar')?.addEventListener('click', toggleSidebar);
   document.getElementById('btn-new-tab')?.addEventListener('click', handleNewDialogue);
 
   // Canvas buttons
@@ -103,6 +106,7 @@ function init() {
   initCanvasInteraction();
   initContextMenu();
   initKeyboardShortcuts();
+  applySidebarState();
 
   setStatus('Listo');
   updateEmptyState();
@@ -119,16 +123,42 @@ function initKeyboardShortcuts() {
   document.addEventListener('keydown', (e) => {
     const activeEl = document.activeElement;
     const isTyping = activeEl && (
-      activeEl.tagName === 'INPUT' ||
+      (activeEl.tagName === 'INPUT' && !activeEl.readOnly) || // título de nodo en reposo: readOnly
       activeEl.tagName === 'TEXTAREA' ||
       activeEl.tagName === 'SELECT' ||
       activeEl.isContentEditable
     );
 
-    // Ctrl+S: Guardar
+    // Ctrl+S: Guardar (en ambas vistas)
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
       saveActiveTab();
+      return;
+    }
+
+    // F1 / F2: cambiar de vista. Ctrl+B: colapsar la sidebar
+    if (e.key === 'F1' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      setView('writing');
+      return;
+    }
+    if (e.key === 'F2' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      setView('nodes');
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      toggleSidebar();
+      return;
+    }
+
+    // En la vista Escritura los atajos del canvas no actúan (el textarea gestiona los suyos)
+    if (isWritingView()) {
+      if (e.key === 'Escape') {
+        closeModal();
+        hideContextMenu();
+      }
       return;
     }
 
@@ -426,6 +456,27 @@ function refreshAllVariableNodes() {
   const tab = getActiveTab();
   if (tab) renderCanvas(tab);
   updateInspector();
+  syncModelToWritingEditor(); // la vista Escritura refleja renombrados de variables
+}
+
+// ------------------------------------------------------------
+// Sidebar colapsable (Ctrl+B) — estado recordado en localStorage
+// ------------------------------------------------------------
+
+function applySidebarState() {
+  let collapsed = false;
+  try { collapsed = localStorage.getItem('dialogueapp.sidebarCollapsed') === '1'; } catch (_) {}
+  document.getElementById('app')?.classList.toggle('sidebar-collapsed', collapsed);
+}
+
+function toggleSidebar() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  const collapsed = app.classList.toggle('sidebar-collapsed');
+  try { localStorage.setItem('dialogueapp.sidebarCollapsed', collapsed ? '1' : '0'); } catch (_) {}
+  // El canvas cambia de ancho: se redibujan las conexiones
+  const tab = getActiveTab();
+  if (tab && !isWritingView()) requestAnimationFrame(() => renderConnections(tab));
 }
 
 // ============================================================
@@ -485,6 +536,7 @@ async function openFile(relPath) {
       rev: 0, // contador de ediciones (para no perder cambios hechos mientras se guarda)
       saving: false,
       canvas: { zoom: 1, panX: 0, panY: 0 },
+      view: getPreferredView(), // 'nodes' | 'writing'
     };
 
     AppState.tabs.push(tabData);
@@ -504,6 +556,7 @@ async function saveActiveTab() {
 
   if (tab.saving) return; // ya hay un guardado en curso
 
+  flushWritingSync(); // en vista Escritura, parsea lo último escrito antes de serializar
   tab.saving = true;
   const revAtStart = tab.rev || 0;
   try {
@@ -532,6 +585,7 @@ function getActiveTab() {
 }
 
 function activateTab(index) {
+  leaveWritingEditor(); // vuelca el texto del editor a la pestaña que se abandona
   clearSelection();
   AppState.activeTabIndex = index;
   updateTabBar();
@@ -542,17 +596,21 @@ function activateTab(index) {
     updateEmptyState();
   }
   updateInspector();
+  applyViewForTab();
 }
 
 function closeTab(index) {
   const tab = AppState.tabs[index];
   if (!tab) return;
+  if (tab === getActiveTab()) flushWritingSync();
   if (tab.isDirty && !window.confirm(`"${tab.title}" tiene cambios sin guardar. ¿Cerrar?`)) return;
 
+  if (tab === getActiveTab()) leaveWritingEditor();
   AppState.tabs.splice(index, 1);
   if (AppState.tabs.length === 0) {
     AppState.activeTabIndex = -1;
     clearCanvas();
+    applyViewForTab();
   } else {
     activateTab(Math.min(index, AppState.tabs.length - 1));
   }
@@ -750,6 +808,18 @@ function createNodeElement(node, tabData) {
     });
 
     header.appendChild(titleInput);
+
+    // ✎ abre el nodo en la vista Escritura
+    const editBtn = document.createElement('button');
+    editBtn.className = 'node-edit-btn';
+    editBtn.textContent = '✎';
+    editBtn.title = 'Editar en vista Escritura (o doble clic en el cuerpo del nodo)';
+    editBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setView('writing', { title: node.title });
+    });
+    header.appendChild(editBtn);
   }
 
   // START tiene puerto de salida en header
@@ -981,11 +1051,13 @@ function createNodeElement(node, tabData) {
     node.lines.forEach((line, idx) => {
       const row = document.createElement('div');
       row.className = 'node-line-row';
+      row.dataset.lineIdx = String(idx);
 
       const actorInput = document.createElement('input');
       actorInput.className = 'node-actor-input';
       actorInput.value = line.actor;
       actorInput.placeholder = 'Orador';
+      actorInput.dataset.line = String(idx);
       actorInput.addEventListener('mousedown', (e) => e.stopPropagation());
       actorInput.addEventListener('input', () => {
         line.actor = actorInput.value;
@@ -997,7 +1069,18 @@ function createNodeElement(node, tabData) {
       textInput.className = 'node-text-input';
       textInput.value = line.text;
       textInput.placeholder = 'Texto del diálogo…';
+      textInput.dataset.line = String(idx);
       textInput.addEventListener('mousedown', (e) => e.stopPropagation());
+      // Enter: crea la línea siguiente (mismo orador) y le da foco
+      textInput.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' || e.isComposing) return;
+        e.preventDefault();
+        node.lines.splice(idx + 1, 0, { actor: line.actor, text: '', condition: '' });
+        markDirty();
+        renderCanvas(tabData);
+        updateInspector();
+        focusNodeInput(node.id, '.node-text-input', idx + 1);
+      });
       textInput.addEventListener('input', () => {
         line.text = textInput.value;
         markDirty();
@@ -1027,10 +1110,12 @@ function createNodeElement(node, tabData) {
     addLineBtn.textContent = '+ Línea';
     addLineBtn.addEventListener('mousedown', (e) => e.stopPropagation());
     addLineBtn.addEventListener('click', () => {
-      node.lines.push({ actor: '', text: '', condition: '' });
+      const prev = node.lines[node.lines.length - 1];
+      node.lines.push({ actor: prev ? prev.actor : '', text: '', condition: '' });
       markDirty();
       renderCanvas(tabData);
       updateInspector();
+      focusNodeInput(node.id, '.node-text-input', node.lines.length - 1);
     });
     body.appendChild(addLineBtn);
     div.appendChild(body);
@@ -1048,6 +1133,7 @@ function createNodeElement(node, tabData) {
         labelInput.className = 'node-choice-input';
         labelInput.value = choice.label;
         labelInput.placeholder = 'Opción…';
+        labelInput.dataset.choice = String(idx);
         labelInput.addEventListener('mousedown', (e) => e.stopPropagation());
         labelInput.addEventListener('input', () => {
           choice.label = labelInput.value;
@@ -1095,6 +1181,7 @@ function createNodeElement(node, tabData) {
       markDirty();
       renderCanvas(tabData);
       updateInspector();
+      focusNodeInput(node.id, '.node-choice-input', node.choices.length - 1, true);
     });
     div.appendChild(addChoiceBtn);
 
@@ -1262,6 +1349,29 @@ function attachNodeEventListeners(div, node, tabData) {
     e.stopPropagation();
     showContextMenu(e.clientX, e.clientY);
   });
+
+  // Doble clic en el cuerpo vacío del nodo (no en inputs, selects ni en el título): abre la vista Escritura
+  div.addEventListener('dblclick', (e) => {
+    if (node.isSpecial) return;
+    if (e.target.closest('input, select, textarea, button, .port-out, .port-in, .node-header')) return;
+    e.stopPropagation();
+    setView('writing', { title: node.title });
+  });
+}
+
+/**
+ * Da foco a un input de un nodo tras un re-render (los nodos se reconstruyen en renderCanvas).
+ * @param {string} nodeId
+ * @param {string} selector clase del input (.node-text-input, .node-choice-input...)
+ * @param {number} idx índice de línea u opción (data-line / data-choice)
+ * @param {boolean} [select] seleccionar todo el texto
+ */
+function focusNodeInput(nodeId, selector, idx, select) {
+  const attr = selector === '.node-choice-input' ? 'data-choice' : 'data-line';
+  const el = document.querySelector(`.dialogue-node[data-id="${nodeId}"] ${selector}[${attr}="${idx}"]`);
+  if (!el) return;
+  el.focus();
+  if (select) el.select();
 }
 
 /**
@@ -1458,6 +1568,26 @@ function connectStartTo(tab, startNode, targetNode) {
   return true;
 }
 
+/**
+ * Conecta la salida (choiceIdx) de sourceNode con targetNode.
+ * choiceIdx: -1 = salida directa, n >= 0 = opción n, 'cond_<clave>' = salida de condición.
+ * @returns {boolean} true si hubo cambio
+ */
+function applyConnection(tab, sourceNode, choiceIdx, targetNode) {
+  if (typeof choiceIdx === 'string' && choiceIdx.startsWith('cond_')) {
+    sourceNode.conditionOutputs[choiceIdx.replace('cond_', '')] = targetNode.title;
+    return true;
+  }
+  if (choiceIdx >= 0 && sourceNode.choices[choiceIdx]) {
+    sourceNode.choices[choiceIdx].targetTitle = targetNode.title;
+    return true;
+  }
+  if (sourceNode.title === '__START__') return connectStartTo(tab, sourceNode, targetNode);
+  if (sourceNode.nodeType === 'raw') return false; // los nodos raw no tienen salidas editables desde el canvas
+  sourceNode.goto = targetNode.title;
+  return true;
+}
+
 function endConnection(e) {
   if (!isConnecting) return;
 
@@ -1468,53 +1598,38 @@ function endConnection(e) {
 
   const target = document.elementFromPoint(e.clientX, e.clientY);
   const targetNodeEl = target?.closest('.dialogue-node');
+  const tab = getActiveTab();
 
   if (targetNodeEl) {
     const targetNodeId = targetNodeEl.dataset.id;
-    if (targetNodeId && targetNodeId !== connectFromNodeId) {
-      const tab = getActiveTab();
-      if (tab) {
-        const sourceNode = tab.nodes.find(n => n.id === connectFromNodeId);
-        const targetNode = tab.nodes.find(n => n.id === targetNodeId);
-        if (sourceNode && targetNode && targetNode.title !== '__START__') {
-          let changed = true;
-          if (typeof connectFromChoiceIdx === 'string' && connectFromChoiceIdx.startsWith('cond_')) {
-            const key = connectFromChoiceIdx.replace('cond_', '');
-            sourceNode.conditionOutputs[key] = targetNode.title;
-          } else if (connectFromChoiceIdx >= 0 && sourceNode.choices[connectFromChoiceIdx]) {
-            sourceNode.choices[connectFromChoiceIdx].targetTitle = targetNode.title;
-          } else if (sourceNode.title === '__START__') {
-            changed = connectStartTo(tab, sourceNode, targetNode);
-          } else if (sourceNode.nodeType === 'raw') {
-            changed = false; // los nodos raw no tienen salidas editables desde el canvas
-          } else {
-            sourceNode.goto = targetNode.title;
-          }
-          if (changed) {
-            markDirty();
-            renderCanvas(tab);
-            updateInspector();
-          }
+    if (targetNodeId && targetNodeId !== connectFromNodeId && tab) {
+      const sourceNode = tab.nodes.find(n => n.id === connectFromNodeId);
+      const targetNode = tab.nodes.find(n => n.id === targetNodeId);
+      if (sourceNode && targetNode && targetNode.title !== '__START__') {
+        if (applyConnection(tab, sourceNode, connectFromChoiceIdx, targetNode)) {
+          markDirty();
+          renderCanvas(tab);
+          updateInspector();
         }
       }
     }
-  } else {
-    // Soltado en vacío -> conectar directamente con END
-    const tab = getActiveTab();
-    if (tab) {
-      const sourceNode = tab.nodes.find(n => n.id === connectFromNodeId);
-      if (sourceNode) {
-        if (typeof connectFromChoiceIdx === 'string' && connectFromChoiceIdx.startsWith('cond_')) {
-          const key = connectFromChoiceIdx.replace('cond_', '');
-          sourceNode.conditionOutputs[key] = 'END';
-        } else if (connectFromChoiceIdx >= 0 && sourceNode.choices[connectFromChoiceIdx]) {
-          sourceNode.choices[connectFromChoiceIdx].targetTitle = 'END';
-        } else if (sourceNode.title !== '__START__') {
-          sourceNode.goto = 'END';
-        }
+  } else if (tab && target && canvasContainer && canvasContainer.contains(target)
+      && !target.closest('#canvas-controls')) {
+    // Soltado en espacio vacío del canvas: crea un nodo de diálogo ahí, ya conectado
+    const sourceNode = tab.nodes.find(n => n.id === connectFromNodeId);
+    const vpRect = document.getElementById('canvas-viewport')?.getBoundingClientRect();
+    if (sourceNode && sourceNode.nodeType !== 'raw' && vpRect) {
+      const x = Math.round((e.clientX - vpRect.left) / tab.canvas.zoom);
+      const y = Math.round((e.clientY - vpRect.top) / tab.canvas.zoom - 20);
+      const node = createNodeData(tab, 'dialogue', Math.max(20, x), Math.max(20, y));
+      if (applyConnection(tab, sourceNode, connectFromChoiceIdx, node)) {
+        insertNodeData(tab, node);
+        clearSelection();
+        selectedNodeIds.add(node.id);
         markDirty();
         renderCanvas(tab);
         updateInspector();
+        focusNodeInput(node.id, '.node-text-input', 0);
       }
     }
   }
@@ -2322,18 +2437,8 @@ function buildNodeTargetOptions(selectEl, tab, currentVal) {
 // 18. NODE CREATION (GENERIC)
 // ============================================================
 
-function handleAddGenericNode(type) {
-  const tab = getActiveTab();
-  if (!tab) return;
-
-  const cc = document.getElementById('canvas-container');
-  let x = 380, y = 240;
-  if (cc && tab) {
-    const rect = cc.getBoundingClientRect();
-    x = Math.round(rect.width / 2 / tab.canvas.zoom - tab.canvas.panX);
-    y = Math.round(rect.height / 2 / tab.canvas.zoom - tab.canvas.panY);
-  }
-
+/** Crea los datos de un nodo nuevo del tipo indicado (sin insertarlo en la pestaña). */
+function createNodeData(tab, type, x, y) {
   const prefix = type === 'variable' ? 'var_' : (type === 'event' ? 'evento_' : (type === 'condition' ? 'check_' : 'nudo_'));
   const existingTitles = new Set(tab.nodes.map(n => n.title));
   let title = prefix + (tab.nodes.length - 1);
@@ -2343,12 +2448,12 @@ function handleAddGenericNode(type) {
     counter++;
   }
 
-  const node = {
+  return {
     id: generateId(),
     nodeType: type,
     title,
-    x: Math.max(20, x),
-    y: Math.max(20, y),
+    x,
+    y,
     lines: type === 'dialogue' ? [{ actor: '', text: '' }] : [],
     choices: [],
     mutations: [],
@@ -2371,10 +2476,82 @@ function handleAddGenericNode(type) {
       'default': ''
     }
   };
+}
 
+/** Inserta un nodo antes del END visual. */
+function insertNodeData(tab, node) {
   const endIdx = tab.nodes.findIndex(n => n.title === '__END__');
   if (endIdx >= 0) tab.nodes.splice(endIdx, 0, node);
   else tab.nodes.push(node);
+}
+
+/** Único nodo seleccionado que no sea START/END (o null). */
+function getSingleSelectedNode(tab) {
+  if (!tab || selectedNodeIds.size !== 1) return null;
+  const id = selectedNodeIds.values().next().value;
+  const n = tab.nodes.find(x => x.id === id);
+  return n && !n.isSpecial ? n : null;
+}
+
+/** Busca una posición libre a la derecha de `from`, bajando si choca con otros nodos. */
+function findFreeSlotRightOf(tab, from) {
+  const sizeOf = (n) => {
+    const el = document.querySelector(`.dialogue-node[data-id="${n.id}"]`);
+    return { w: el ? el.offsetWidth : 280, h: el ? el.offsetHeight : 160 };
+  };
+  const fs = sizeOf(from);
+  const x = from.x + Math.max(340, fs.w + 80);
+  let y = from.y;
+  const W = 280, H = 170;
+  for (let guard = 0; guard < 80; guard++) {
+    const hit = tab.nodes.find(n => {
+      if (n.isSpecial) return false;
+      const s = sizeOf(n);
+      return x < n.x + s.w && x + W > n.x && y < n.y + s.h && y + H > n.y;
+    });
+    if (!hit) break;
+    y = hit.y + sizeOf(hit).h + 30;
+  }
+  return { x, y };
+}
+
+/** Si `from` no tiene salida, la conecta con `node` (primera salida libre). */
+function autoConnectFrom(from, node) {
+  if (from.nodeType === 'raw') return;
+  if (from.nodeType === 'condition') {
+    const keys = from.conditionMode === 'compare' ? ['true', 'false'] : [...(from.switchCases || []), 'default'];
+    const free = keys.find(k => !from.conditionOutputs[k]);
+    if (free !== undefined) from.conditionOutputs[free] = node.title;
+    return;
+  }
+  if (from.choices.length > 0) {
+    const free = from.choices.find(c => !c.targetTitle);
+    if (free) free.targetTitle = node.title;
+    return;
+  }
+  if (!from.goto) from.goto = node.title;
+}
+
+function handleAddGenericNode(type) {
+  const tab = getActiveTab();
+  if (!tab) return;
+
+  const selected = getSingleSelectedNode(tab);
+  let x = 380, y = 240;
+  if (selected) {
+    ({ x, y } = findFreeSlotRightOf(tab, selected));
+  } else {
+    const cc = document.getElementById('canvas-container');
+    if (cc) {
+      const rect = cc.getBoundingClientRect();
+      x = Math.round(rect.width / 2 / tab.canvas.zoom - tab.canvas.panX);
+      y = Math.round(rect.height / 2 / tab.canvas.zoom - tab.canvas.panY);
+    }
+  }
+
+  const node = createNodeData(tab, type, Math.max(20, x), Math.max(20, y));
+  insertNodeData(tab, node);
+  if (selected) autoConnectFrom(selected, node);
 
   clearSelection();
   selectedNodeIds.add(node.id);
@@ -2382,6 +2559,7 @@ function handleAddGenericNode(type) {
   markDirty();
   renderCanvas(tab);
   updateInspector();
+  if (type === 'dialogue') focusNodeInput(node.id, '.node-text-input', 0);
 }
 
 // ============================================================
@@ -2558,64 +2736,7 @@ function showModal({ title, bodyHTML, onConfirm }) {
   }, 50);
 }
 
-function handleQuickRewrite() {
-  const tab = getActiveTab();
-  if (!tab) {
-    alert('Abre un archivo de diálogo primero.');
-    return;
-  }
-
-  const dialogueNodes = Object.values(tab.nodes).filter(n => n.type === 'dialogue' || !n.type);
-  if (dialogueNodes.length === 0) {
-    alert('No hay nodos de diálogo en este archivo.');
-    return;
-  }
-
-  const modalBox = document.getElementById('modal-box');
-  if (modalBox) modalBox.classList.add('modal-wide');
-
-  let html = `<p style="color:var(--text-secondary); margin-bottom:12px;">Edita rápidamente los textos y hablantes de todos los nodos de diálogo a la vez:</p>`;
-  
-  dialogueNodes.forEach(node => {
-    html += `
-      <div class="quick-rewrite-item" data-node-id="${node.id}">
-        <div class="quick-rewrite-header">
-          <span>Nodo: ${escapeHtml(node.title || node.id)}</span>
-          <div>
-            <label style="font-size:11px; margin-right:4px;">Personaje:</label>
-            <input type="text" class="quick-rewrite-character" value="${escapeHtml(node.character || '')}" placeholder="Narrador/Personaje">
-          </div>
-        </div>
-        <textarea class="quick-rewrite-textarea" rows="2" placeholder="Texto del diálogo...">${escapeHtml(node.text || '')}</textarea>
-      </div>
-    `;
-  });
-
-  showModal({
-    title: `📝 Guión Rápido — ${tab.filename}`,
-    bodyHTML: html,
-    onConfirm: () => {
-      const items = document.querySelectorAll('.quick-rewrite-item');
-      items.forEach(el => {
-        const nodeId = el.dataset.nodeId;
-        const charInput = el.querySelector('.quick-rewrite-character');
-        const textInput = el.querySelector('.quick-rewrite-textarea');
-        if (tab.nodes[nodeId]) {
-          tab.nodes[nodeId].character = charInput.value.trim();
-          tab.nodes[nodeId].text = textInput.value;
-        }
-      });
-      tab.isDirty = true;
-      updateStatusBadge();
-      renderCanvas();
-      updateInspector();
-    }
-  });
-}
-
 function closeModal() {
-  const modalBox = document.getElementById('modal-box');
-  if (modalBox) modalBox.classList.remove('modal-wide');
   document.getElementById('modal-overlay')?.classList.add('hidden');
 }
 
