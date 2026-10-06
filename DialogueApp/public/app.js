@@ -12,22 +12,6 @@
 
 const API_BASE = '';
 
-// Lista canónica de eventos del juego soportados por el motor
-const GAME_EVENTS_LIST = [
-  { id: 'abrir_puerta', label: '🚪 Abrir Puerta' },
-  { id: 'cerrar_puerta', label: '🔒 Cerrar Puerta' },
-  { id: 'dar_oro', label: '💰 Dar Oro' },
-  { id: 'dar_item', label: '🎒 Dar Ítem al Inventario' },
-  { id: 'remover_item', label: '🗑️ Quitar Ítem' },
-  { id: 'iniciar_alerta', label: '🚨 Iniciar Alerta' },
-  { id: 'terminar_alerta', label: '🕊️ Terminar Alerta' },
-  { id: 'iniciar_minijuego', label: '🎮 Iniciar Minijuego' },
-  { id: 'cambiar_nivel', label: '🗺️ Cambiar de Nivel' },
-  { id: 'reproducir_sonido', label: '🔊 Reproducir Sonido' },
-  { id: 'reproducir_musica', label: '🎵 Reproducir Música' },
-  { id: 'custom', label: '⚙️ Otro (Personalizado)...' }
-];
-
 // ============================================================
 // 1. STATE
 // ============================================================
@@ -45,9 +29,6 @@ let clipboardNodes = [];
 
 // Selección múltiple
 const selectedNodeIds = new Set();
-let lastSelectedNodeId = null;
-
-let contextMenuTargetId = null;
 
 // Conexiones interactivas
 let isConnecting = false;
@@ -115,7 +96,6 @@ function init() {
   document.getElementById('btn-fit-view')?.addEventListener('click', handleFitView);
 
   // Modal
-  document.getElementById('modal-cancel')?.addEventListener('click', closeModal);
   document.getElementById('modal-overlay')?.addEventListener('click', (e) => {
     if (e.target.id === 'modal-overlay') closeModal();
   });
@@ -227,7 +207,7 @@ function initKeyboardShortcuts() {
 // ============================================================
 
 const VAR_NAME_RE = /^[a-z][a-z0-9_]*$/;
-const FLAG_PREFIX = 'flag.';
+// FLAG_PREFIX, toVarPath, formatVarValue y generateId vienen de dialogue-format.js
 
 function escapeHtml(str) {
   return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -240,12 +220,6 @@ function validateVarName(name, exceptName) {
   return '';
 }
 
-/** Convierte un nombre legacy ("x") en ruta ("flag.x"); las rutas con punto se dejan igual. */
-function toVarPath(name) {
-  if (!name) return '';
-  return name.includes('.') ? name : FLAG_PREFIX + name;
-}
-
 /** Busca el tipo declarado de una ruta (flag.* del proyecto o variable del sistema). */
 function getVarType(path) {
   if (path.startsWith(FLAG_PREFIX)) {
@@ -256,17 +230,6 @@ function getVarType(path) {
   if (sys) return sys.type;
   if (path.startsWith('quest.')) return 'string';
   return '';
-}
-
-/** Formatea un valor para .dialogue: strings entre comillas; bool/número tal cual. */
-function formatVarValue(raw, path) {
-  let v = String(raw ?? '').trim();
-  if (v === '') return 'true';
-  if (/^(".*"|'.*')$/s.test(v)) return v;
-  const type = getVarType(path);
-  if (type === 'string') return `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
-  if (v === 'true' || v === 'false' || /^-?\d+(\.\d+)?$/.test(v)) return v;
-  return `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 }
 
 async function loadProjectConfig() {
@@ -397,7 +360,10 @@ function handleRenameVariable(v) {
           if (n.varName === oldPath) { n.varName = newPath; touched = true; }
           if (n.conditionVar === oldPath) { n.conditionVar = newPath; touched = true; }
         }
-        if (touched) tab.isDirty = true;
+        if (touched) {
+          tab.rev = (tab.rev || 0) + 1;
+          tab.isDirty = true;
+        }
       }
       v.name = name;
       saveProjectConfig();
@@ -508,13 +474,16 @@ async function openFile(relPath) {
       layoutData = await loadLayout(relPath);
     } catch (_) {}
 
-    const nodes = parseDialogue(content, layoutData);
+    const { header, nodes } = parseDialogueFile(content, layoutData);
 
     const tabData = {
       relPath,
       title: relPath.split('/').pop(),
+      header, // texto literal previo al primer "~ " (imports, using, comentarios)
       nodes,
       isDirty: false,
+      rev: 0, // contador de ediciones (para no perder cambios hechos mientras se guarda)
+      saving: false,
       canvas: { zoom: 1, panX: 0, panY: 0 },
     };
 
@@ -533,16 +502,23 @@ async function saveActiveTab() {
     return;
   }
 
+  if (tab.saving) return; // ya hay un guardado en curso
+
+  tab.saving = true;
+  const revAtStart = tab.rev || 0;
   try {
     setStatus('Guardando…');
-    const content = serializeDialogue(tab);
+    const content = serializeDialogue(tab, getVarType);
     await apiPost('/api/dialogues/save', { path: tab.relPath, content });
     await saveLayout(tab);
-    tab.isDirty = false;
+    // Si hubo ediciones mientras se guardaba, la pestaña sigue sucia
+    if ((tab.rev || 0) === revAtStart) tab.isDirty = false;
     updateTabBar();
     setStatus('Guardado: ' + tab.title, 'success');
   } catch (err) {
     setStatus('Error guardando: ' + err.message, 'error');
+  } finally {
+    tab.saving = false;
   }
 }
 
@@ -592,7 +568,7 @@ function updateTabBar() {
     const div = document.createElement('div');
     div.className = 'tab' + (i === AppState.activeTabIndex ? ' active' : '') + (tab.isDirty ? ' dirty' : '');
     div.title = tab.relPath;
-    div.innerHTML = `📄 ${tab.title} <span class="tab-close" data-idx="${i}">×</span>`;
+    div.innerHTML = `📄 ${escapeHtml(tab.title)} <span class="tab-close" data-idx="${i}">×</span>`;
     div.addEventListener('click', (e) => {
       if (e.target.classList.contains('tab-close')) closeTab(parseInt(e.target.dataset.idx));
       else activateTab(i);
@@ -604,7 +580,9 @@ function updateTabBar() {
 
 function markDirty() {
   const tab = getActiveTab();
-  if (tab && !tab.isDirty) {
+  if (!tab) return;
+  tab.rev = (tab.rev || 0) + 1;
+  if (!tab.isDirty) {
     tab.isDirty = true;
     updateTabBar();
   }
@@ -626,354 +604,10 @@ function clearCanvas() {
 }
 
 // ============================================================
-// 8. PARSER (.dialogue → Model)
+// 8. PARSER / SERIALIZER
+// Viven en dialogue-format.js (parseDialogueFile, serializeDialogue,
+// forEachNodeRef, renameNode, etc.), cargado antes que este script.
 // ============================================================
-
-function generateId() {
-  return typeof crypto !== 'undefined' && crypto.randomUUID
-    ? crypto.randomUUID()
-    : 'id_' + Math.random().toString(36).slice(2) + '_' + Date.now().toString(36);
-}
-
-function parseDialogue(content, layoutData) {
-  const nodesLayout = layoutData?.nodes || {};
-  const lines = content.split('\n');
-  const nodes = [];
-  let currentNode = null;
-  let defaultX = 280;
-  let defaultY = 160;
-  let pendingCondition = '';
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-
-    if (line.startsWith('~ ')) {
-      if (currentNode) nodes.push(finalizeParsedNode(currentNode));
-      pendingCondition = '';
-      const title = line.slice(2).trim();
-      const pos = nodesLayout[title] || {};
-      currentNode = {
-        id: generateId(),
-        nodeType: 'dialogue', // 'dialogue' | 'variable' | 'event'
-        title,
-        x: pos.x ?? defaultX,
-        y: pos.y ?? defaultY,
-        lines: [],
-        choices: [],
-        mutations: [],
-        goto: 'END',
-        varName: '',
-        varValue: 'true',
-        eventName: 'abrir_puerta',
-        eventParam: ''
-      };
-      defaultX += 340;
-      if (defaultX > 2000) {
-        defaultX = 280;
-        defaultY += 320;
-      }
-    } else if (line.startsWith('if ') && currentNode) {
-      pendingCondition = migrateLegacyCondition(line.replace(/^if\s+/, '').replace(/:$/, '').trim());
-    } else if (line.startsWith('elif ') && currentNode) {
-      pendingCondition = migrateLegacyCondition(line.replace(/^elif\s+/, '').replace(/:$/, '').trim());
-    } else if (line.startsWith('- ') && currentNode) {
-      const match = line.match(/^-\s+(.+?)\s+=>\s+(.+)$/);
-      if (match) {
-        currentNode.choices.push({ label: match[1].trim(), targetTitle: match[2].trim() });
-        currentNode.goto = '';
-      }
-      pendingCondition = '';
-    } else if (line.startsWith('=> ') && currentNode) {
-      if (pendingCondition) {
-        if (!currentNode.conditionalGotos) currentNode.conditionalGotos = [];
-        currentNode.conditionalGotos.push({ condition: pendingCondition, goto: line.slice(3).trim() });
-        pendingCondition = '';
-      } else {
-        currentNode.goto = line.slice(3).trim();
-      }
-    } else if (line.startsWith('do ') && currentNode) {
-      const mut = parseMutation(line);
-      currentNode.mutations.push(mut);
-      pendingCondition = '';
-    } else if (line && !line.startsWith('#') && !line.startsWith('//') && currentNode) {
-      const colonIdx = line.indexOf(': ');
-      if (colonIdx > 0 && colonIdx < 30) {
-        currentNode.lines.push({
-          actor: line.slice(0, colonIdx).trim(),
-          text: line.slice(colonIdx + 2).trim(),
-          condition: pendingCondition,
-        });
-      } else {
-        currentNode.lines.push({
-          actor: '',
-          text: line,
-          condition: pendingCondition,
-        });
-      }
-      pendingCondition = '';
-    }
-  }
-
-  if (currentNode) nodes.push(finalizeParsedNode(currentNode));
-
-  // Asegurar nodos especiales START y END
-  ensureSpecialNodes(nodes, nodesLayout);
-
-  return nodes;
-}
-
-function finalizeParsedNode(node) {
-  if (node.lines.length === 0 && node.mutations.length === 0 && node.conditionalGotos?.length > 0) {
-    node.nodeType = 'condition';
-    node.conditionOutputs = { default: node.goto || '' };
-    node.switchCases = [];
-    
-    const first = parseVarCondition(node.conditionalGotos[0].condition);
-    if (first) {
-      node.conditionVar = first.path;
-      node.conditionOperator = first.op;
-
-      if (node.conditionalGotos.length === 1) {
-        // Un solo if: modo comparación, conserva operador y valor tal cual
-        node.conditionMode = 'compare';
-        node.conditionValue = first.value;
-        node.conditionOutputs['true'] = node.conditionalGotos[0].goto;
-        node.conditionOutputs['false'] = node.goto || '';
-      } else {
-        node.conditionMode = 'switch';
-        for (const cg of node.conditionalGotos) {
-          const m = parseVarCondition(cg.condition);
-          if (m && m.op === '==') {
-            node.switchCases.push(m.value);
-            node.conditionOutputs[m.value] = cg.goto;
-          }
-        }
-      }
-    }
-    return node;
-  }
-
-  // Deducir si el nodo es en realidad un nodo de evento o de variable si no tiene diálogo
-  if (node.lines.length === 0 && node.mutations.length === 1) {
-    const mut = node.mutations[0];
-    if (mut.type === 'variable') {
-      node.nodeType = 'variable';
-      node.varName = mut.name;
-      node.varValue = mut.value;
-    } else if (mut.type === 'event') {
-      node.nodeType = 'event';
-      node.eventParam = mut.value || mut.name;
-      node.eventName = node.eventParam;
-    }
-  }
-  return node;
-}
-
-// Sintaxis nueva: GameVariables.get_var("ruta"). Antigua: NarrativeManager.get_flag("x") => ruta "flag.x".
-const GET_VAR_SRC = String.raw`(?:GameVariables\.get_var\(\s*['"]([^'"]+)['"]\s*\)|NarrativeManager\.get_flag\(\s*['"]([^'"]+)['"]\s*\))`;
-
-/** Parsea "<get_var/get_flag> <op> <valor>" → { path, op, value } o null. */
-function parseVarCondition(cond) {
-  const m = String(cond).trim().match(new RegExp('^' + GET_VAR_SRC + '\\s*(==|!=|>=|<=|>|<)\\s*(.+)$'));
-  if (!m) return null;
-  return { path: m[1] || toVarPath(m[2]), op: m[3], value: m[4].trim() };
-}
-
-/** Migra get_flag("x") → GameVariables.get_var("flag.x") dentro de un texto de condición. */
-function migrateLegacyCondition(text) {
-  return String(text).replace(/NarrativeManager\.get_flag\(\s*(['"])([^'"]+)\1\s*\)/g,
-    (_, q, name) => `GameVariables.get_var(${q}${toVarPath(name)}${q})`);
-}
-
-function parseMutation(line) {
-  // Asignación: do GameVariables.set_var("ruta", val) o (antigua) do NarrativeManager.set_flag("x", val)
-  const setMatch = line.match(/do\s+GameVariables\.set_var\(\s*['"]([^'"]+)['"]\s*,\s*(.+)\)\s*$/);
-  if (setMatch) {
-    return { type: 'variable', name: setMatch[1], value: setMatch[2].trim() };
-  }
-  const flagMatch = line.match(/do\s+NarrativeManager\.set_flag\(\s*['"]([^'"]+)['"]\s*,\s*(.+)\)\s*$/);
-  if (flagMatch) {
-    return { type: 'variable', name: toVarPath(flagMatch[1]), value: flagMatch[2].trim() };
-  }
-
-  // Detectar evento: do GameManager.trigger_event("actor") o ("evento", "param")
-  const evtMatch = line.match(/do\s+GameManager\.trigger_event\(['"](.+?)['"](?:\s*,\s*['"]?(.*?)['"]?)?\)/);
-  if (evtMatch) {
-    const actorOrParam = evtMatch[2] ? evtMatch[2] : evtMatch[1];
-    return { type: 'event', name: actorOrParam, value: actorOrParam };
-  }
-
-  // Triggers legacy
-  const runTrig = line.match(/do\s+GameManager\.run_trigger\(['"](.+?)['"]\)/);
-  if (runTrig) {
-    return { type: 'event', name: runTrig[1], value: '' };
-  }
-
-  return { type: 'event', name: line.slice(3).trim(), value: '' };
-}
-
-function ensureSpecialNodes(nodes, nodesLayout) {
-  // Detectar si hay un alias puro de start: un nodo 'start' sin diálogo que solo salta a otro nodo
-  const startAliasIdx = nodes.findIndex(n => n.title?.toLowerCase() === 'start' && n.lines.length === 0 && n.choices.length === 0 && n.mutations.length === 0 && (!n.conditionalGotos || n.conditionalGotos.length === 0) && n.goto);
-  let aliasTarget = '';
-  if (startAliasIdx !== -1) {
-    aliasTarget = nodes[startAliasIdx].goto;
-    nodes.splice(startAliasIdx, 1);
-  }
-
-  // Detectar si hay un alias puro de end: un nodo 'end' sin diálogo que solo salta a END
-  const endAliasIdx = nodes.findIndex(n => n.title?.toLowerCase() === 'end' && n.lines.length === 0 && n.choices.length === 0 && n.mutations.length === 0 && (!n.conditionalGotos || n.conditionalGotos.length === 0) && (n.goto === 'END' || !n.goto));
-  if (endAliasIdx !== -1) {
-    nodes.splice(endAliasIdx, 1);
-  }
-
-  const hasStart = nodes.some(n => n.title === '__START__');
-  const hasEnd = nodes.some(n => n.title === '__END__');
-
-  if (!hasStart) {
-    const pos = nodesLayout['__START__'] || {};
-    const firstReal = nodes.find(n => n.title !== '__END__');
-    nodes.unshift({
-      id: generateId(),
-      nodeType: 'special',
-      title: '__START__',
-      x: pos.x ?? 40,
-      y: pos.y ?? 160,
-      lines: [],
-      choices: [],
-      mutations: [],
-      goto: aliasTarget || (firstReal ? firstReal.title : ''),
-      isSpecial: true,
-    });
-  } else if (aliasTarget) {
-    const startNode = nodes.find(n => n.title === '__START__');
-    if (startNode && (!startNode.goto || startNode.goto === '__END__')) {
-      startNode.goto = aliasTarget;
-    }
-  }
-
-  if (!hasEnd) {
-    const maxX = nodes.reduce((mx, n) => Math.max(mx, n.x), 0);
-    const pos = nodesLayout['__END__'] || {};
-    nodes.push({
-      id: generateId(),
-      nodeType: 'special',
-      title: '__END__',
-      x: pos.x ?? (maxX + 360),
-      y: pos.y ?? 160,
-      lines: [],
-      choices: [],
-      mutations: [],
-      goto: '',
-      isSpecial: true,
-    });
-  }
-
-  nodes.forEach(n => {
-    if (n.title === '__START__' || n.title === '__END__') {
-      n.isSpecial = true;
-      n.nodeType = 'special';
-    }
-  });
-}
-
-// ============================================================
-// 9. SERIALIZER (Model → .dialogue)
-// ============================================================
-
-function serializeDialogue(tabData) {
-  let out = '';
-
-  const startNode = tabData.nodes.find(n => n.title === '__START__');
-  const firstTitle = startNode ? startNode.goto : '';
-
-  const realNodes = tabData.nodes.filter(n => n.title !== '__START__' && n.title !== '__END__');
-  if (firstTitle) {
-    const firstIdx = realNodes.findIndex(n => n.title === firstTitle);
-    if (firstIdx > 0) {
-      const [firstItem] = realNodes.splice(firstIdx, 1);
-      realNodes.unshift(firstItem);
-    }
-  }
-
-  const cleanTarget = (tgt) => {
-    if (!tgt || tgt === '__END__' || tgt === 'END') return 'END';
-    return tgt.trim().replace(/\s+/g, '_');
-  };
-
-  // Código correspondiente para el nodo START presente por defecto
-  const hasExplicitStartNode = realNodes.some(n => (n.title || '').trim().toLowerCase() === 'start');
-  if (!hasExplicitStartNode) {
-    const startTarget = cleanTarget(firstTitle || 'END');
-    out += `~ start\n\n=> ${startTarget}\n\n`;
-  }
-
-  for (const node of realNodes) {
-    const safeTitle = (node.title || 'nudo').trim().replace(/\s+/g, '_');
-    out += `~ ${safeTitle}\n\n`;
-
-    if (node.nodeType === 'variable') {
-      const vPath = toVarPath(node.varName || 'variable');
-      const vVal = formatVarValue(node.varValue, vPath);
-      out += `do GameVariables.set_var("${vPath}", ${vVal})\n`;
-      out += `=> ${cleanTarget(node.goto)}\n\n`;
-      continue;
-    }
-
-    if (node.nodeType === 'event') {
-      const actorTarget = (node.eventParam || node.eventName || 'DialogueEvent').trim();
-      out += `do GameManager.trigger_event("${actorTarget}")\n`;
-      out += `=> ${cleanTarget(node.goto)}\n\n`;
-      continue;
-    }
-
-    if (node.nodeType === 'condition') {
-      const vName = toVarPath(node.conditionVar || 'var');
-      if (node.conditionMode === 'compare') {
-        const op = node.conditionOperator || '==';
-        const val = formatVarValue(node.conditionValue, vName);
-        out += `if GameVariables.get_var("${vName}") ${op} ${val}\n`;
-        out += `\t=> ${cleanTarget(node.conditionOutputs?.['true'])}\n`;
-        out += `=> ${cleanTarget(node.conditionOutputs?.['false'])}\n\n`;
-      } else {
-        const cases = node.switchCases || [];
-        for (let i = 0; i < cases.length; i++) {
-          const cval = cases[i];
-          const cvalOut = formatVarValue(cval, vName);
-          out += `${i === 0 ? 'if' : 'elif'} GameVariables.get_var("${vName}") == ${cvalOut}\n`;
-          out += `\t=> ${cleanTarget(node.conditionOutputs?.[cval])}\n`;
-        }
-        out += `=> ${cleanTarget(node.conditionOutputs?.['default'])}\n\n`;
-      }
-      continue;
-    }
-
-    // Nodo estándar de diálogo
-    for (const line of node.lines) {
-      if (line.condition) out += `if ${line.condition}:\n`;
-      if (line.actor) out += `${line.actor}: `;
-      out += `${line.text}\n`;
-    }
-
-    if (node.choices.length > 0) {
-      for (const ch of node.choices) {
-        out += `- ${ch.label} => ${cleanTarget(ch.targetTitle)}\n`;
-      }
-    } else if (node.goto) {
-      out += `=> ${cleanTarget(node.goto)}\n`;
-    }
-    out += '\n';
-  }
-
-  // Código correspondiente para el nodo END presente por defecto
-  const hasExplicitEndNode = realNodes.some(n => (n.title || '').trim().toLowerCase() === 'end');
-  const hasEndNode = tabData.nodes.some(n => n.title === '__END__');
-  if (hasEndNode && !hasExplicitEndNode) {
-    out += `~ end\n\n=> END\n\n`;
-  }
-
-  return out.trimEnd() + '\n';
-}
 
 // ============================================================
 // 10. CANVAS RENDERING
@@ -1040,6 +674,7 @@ function createNodeElement(node, tabData) {
   if (node.nodeType === 'variable') div.classList.add('node-variable');
   if (node.nodeType === 'event') div.classList.add('node-event');
   if (node.nodeType === 'condition') div.classList.add('node-condition');
+  if (node.nodeType === 'raw') div.classList.add('node-raw');
 
   // --- HEADER ---
   const header = document.createElement('div');
@@ -1080,14 +715,17 @@ function createNodeElement(node, tabData) {
       if (titleInput.readOnly) return;
       titleInput.readOnly = true;
       titleInput.classList.remove('editing');
-      const oldTitle = node.title;
-      const sanitized = titleInput.value.replace(/\s+/g, '_');
-      titleInput.value = sanitized;
-      node.title = sanitized.trim() || oldTitle;
-      updateNodeReferences(tabData, oldTitle, node.title);
-      markDirty();
+      const sanitized = titleInput.value.replace(/\s+/g, '_').trim();
+      if (sanitized && sanitized !== node.title) {
+        if (applyNodeRename(tabData, node, sanitized)) {
+          markDirty();
+          renderCanvas(tabData);
+          updateInspector();
+          return;
+        }
+      }
+      titleInput.value = node.title; // vacío, sin cambios o rechazado: se revierte
       updateInspector();
-      requestAnimationFrame(() => renderConnections(tabData));
     };
 
     titleInput.addEventListener('blur', finishEditing);
@@ -1140,7 +778,48 @@ function createNodeElement(node, tabData) {
   const body = document.createElement('div');
   body.className = 'node-body';
 
-  if (node.nodeType === 'condition') {
+  if (node.nodeType === 'raw') {
+    // --- NODO RAW (sintaxis no modelable): cuerpo de solo lectura + destinos visuales ---
+    const bodyLines = getRawBody(node).replace(/\s+$/, '').split('\n');
+    const MAX_LINES = 8;
+    const pre = document.createElement('pre');
+    pre.className = 'node-raw-body';
+    pre.textContent = bodyLines.slice(0, MAX_LINES).join('\n') + (bodyLines.length > MAX_LINES ? '\n…' : '');
+    body.appendChild(pre);
+
+    const note = document.createElement('div');
+    note.className = 'node-raw-note';
+    note.textContent = 'Editar en vista Escritura';
+    note.title = 'Sintaxis no representable en el canvas: se conserva tal cual. Edítala como texto en el Inspector.';
+    body.appendChild(note);
+    div.appendChild(body);
+
+    if ((node.rawTargets || []).length > 0) {
+      const outsDiv = document.createElement('div');
+      outsDiv.className = 'node-choices';
+      node.rawTargets.forEach((target, idx) => {
+        const row = document.createElement('div');
+        row.className = 'node-choice';
+        row.style.justifyContent = 'space-between';
+
+        const lbl = document.createElement('span');
+        lbl.className = 'node-raw-target';
+        lbl.textContent = `=> ${target}`;
+
+        const portOut = document.createElement('span');
+        portOut.className = 'port-out port-readonly';
+        portOut.dataset.sourceId = node.id;
+        portOut.dataset.rawIdx = String(idx);
+        portOut.title = 'Conexión de solo lectura';
+
+        row.appendChild(lbl);
+        row.appendChild(portOut);
+        outsDiv.appendChild(row);
+      });
+      div.appendChild(outsDiv);
+    }
+
+  } else if (node.nodeType === 'condition') {
     // --- NODO CONDICIÓN ---
     const configDiv = document.createElement('div');
     configDiv.className = 'node-condition-config';
@@ -1554,7 +1233,6 @@ function attachNodeEventListeners(div, node, tabData) {
       } else {
         selectedNodeIds.add(node.id);
         div.classList.add('selected');
-        lastSelectedNodeId = node.id;
       }
     } else {
       // Si no tiene shift y el nodo no estaba seleccionado, se convierte en la única selección
@@ -1563,7 +1241,6 @@ function attachNodeEventListeners(div, node, tabData) {
         selectedNodeIds.add(node.id);
         div.classList.add('selected');
       }
-      lastSelectedNodeId = node.id;
     }
 
     updateInspector();
@@ -1583,18 +1260,22 @@ function attachNodeEventListeners(div, node, tabData) {
   div.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    contextMenuTargetId = node.id;
     showContextMenu(e.clientX, e.clientY);
   });
 }
 
-function updateNodeReferences(tab, oldTitle, newTitle) {
-  for (const n of tab.nodes) {
-    for (const ch of n.choices) {
-      if (ch.targetTitle === oldTitle) ch.targetTitle = newTitle;
-    }
-    if (n.goto === oldTitle) n.goto = newTitle;
+/**
+ * Renombra un nodo (rechaza títulos repetidos). Las referencias se actualizan
+ * con forEachNodeRef y, en nodos raw, reemplazando los destinos en su texto.
+ * @returns {boolean} true si se renombró (o no había cambios)
+ */
+function applyNodeRename(tab, node, newTitle) {
+  const res = renameNode(tab, node, newTitle);
+  if (!res.ok) {
+    setStatus(res.error, 'error');
+    return false;
   }
+  return true;
 }
 
 // ============================================================
@@ -1614,6 +1295,19 @@ function renderConnections(tabData) {
   for (const node of tabData.nodes) {
     const fromNodeEl = document.querySelector(`.dialogue-node[data-id="${node.id}"]`);
     if (!fromNodeEl) continue;
+
+    if (node.nodeType === 'raw') {
+      // Conexiones de solo lectura (punteadas) a partir de los destinos del texto
+      (node.rawTargets || []).forEach((target, idx) => {
+        const targetNode = nodeMap[target === 'END' ? '__END__' : target];
+        if (!targetNode || targetNode === node) return;
+        const toNodeEl = document.querySelector(`.dialogue-node[data-id="${targetNode.id}"]`);
+        const fromPort = fromNodeEl.querySelector(`.port-out[data-raw-idx="${idx}"]`);
+        const toPort = toNodeEl?.querySelector('.port-in');
+        if (fromPort && toPort) drawConnection(svg, fromPort, toPort, 'connection-raw');
+      });
+      continue;
+    }
 
     if (node.nodeType === 'condition') {
       const keys = Object.keys(node.conditionOutputs || {});
@@ -1663,7 +1357,7 @@ function renderConnections(tabData) {
   }
 }
 
-function drawConnection(svg, fromEl, toEl) {
+function drawConnection(svg, fromEl, toEl, extraClass) {
   const tab = getActiveTab();
   const zoom = tab ? tab.canvas.zoom : 1;
   const vpRect = document.getElementById('canvas-viewport')?.getBoundingClientRect();
@@ -1679,7 +1373,7 @@ function drawConnection(svg, fromEl, toEl) {
 
   const dx = Math.abs(x2 - x1) * 0.45 + 30;
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('class', 'connection');
+  path.setAttribute('class', 'connection' + (extraClass ? ' ' + extraClass : ''));
   path.setAttribute('d', `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`);
   path.setAttribute('fill', 'none');
   svg.appendChild(path);
@@ -1741,6 +1435,29 @@ function handleConnectionMove(e) {
   }
 }
 
+/**
+ * Conecta el nodo visual START con un destino.
+ * Si ya existe un nodo `start` real, solo se redirige cuando es un alias simple
+ * (sin líneas ni opciones); si no, START emite un `~ start` nuevo al serializar.
+ * @returns {boolean} true si hubo cambio
+ */
+function connectStartTo(tab, startNode, targetNode) {
+  const realStart = tab.nodes.find(n => n.title === 'start');
+  if (!realStart) {
+    startNode.goto = targetNode.title;
+    startNode.startTouched = true;
+    return true;
+  }
+  if (realStart === targetNode) return false;
+  const isAlias = realStart.nodeType === 'dialogue' && realStart.lines.length === 0 && realStart.choices.length === 0;
+  if (!isAlias) {
+    setStatus('El nodo "start" tiene contenido propio: conecta su salida en lugar de START.', 'error');
+    return false;
+  }
+  realStart.goto = targetNode.title;
+  return true;
+}
+
 function endConnection(e) {
   if (!isConnecting) return;
 
@@ -1760,17 +1477,24 @@ function endConnection(e) {
         const sourceNode = tab.nodes.find(n => n.id === connectFromNodeId);
         const targetNode = tab.nodes.find(n => n.id === targetNodeId);
         if (sourceNode && targetNode && targetNode.title !== '__START__') {
+          let changed = true;
           if (typeof connectFromChoiceIdx === 'string' && connectFromChoiceIdx.startsWith('cond_')) {
             const key = connectFromChoiceIdx.replace('cond_', '');
             sourceNode.conditionOutputs[key] = targetNode.title;
           } else if (connectFromChoiceIdx >= 0 && sourceNode.choices[connectFromChoiceIdx]) {
             sourceNode.choices[connectFromChoiceIdx].targetTitle = targetNode.title;
+          } else if (sourceNode.title === '__START__') {
+            changed = connectStartTo(tab, sourceNode, targetNode);
+          } else if (sourceNode.nodeType === 'raw') {
+            changed = false; // los nodos raw no tienen salidas editables desde el canvas
           } else {
             sourceNode.goto = targetNode.title;
           }
-          markDirty();
-          renderCanvas(tab);
-          updateInspector();
+          if (changed) {
+            markDirty();
+            renderCanvas(tab);
+            updateInspector();
+          }
         }
       }
     }
@@ -1896,7 +1620,6 @@ function initCanvasInteraction() {
           if (intersects) {
             selectedNodeIds.add(node.id);
             el.classList.add('selected');
-            lastSelectedNodeId = node.id;
           }
         });
       }
@@ -1937,7 +1660,6 @@ function startNodeDrag(e, nodeId) {
   if (!selectedNodeIds.has(nodeId)) {
     if (!e.shiftKey) clearSelection();
     selectedNodeIds.add(nodeId);
-    lastSelectedNodeId = nodeId;
     document.querySelector(`.dialogue-node[data-id="${nodeId}"]`)?.classList.add('selected');
     updateInspector();
   }
@@ -1984,6 +1706,7 @@ function handleNodeDragMove(e) {
   });
 
   renderConnections(tab);
+  tab.rev = (tab.rev || 0) + 1;
   tab.isDirty = true;
 }
 
@@ -2002,7 +1725,6 @@ function endNodeDrag() {
 
 function clearSelection() {
   selectedNodeIds.clear();
-  lastSelectedNodeId = null;
   document.querySelectorAll('.dialogue-node.selected').forEach(el => el.classList.remove('selected'));
 }
 
@@ -2055,14 +1777,17 @@ function pasteNodes() {
     copy.x += 60;
     copy.y += 60;
 
-    // Actualizar referencias internas
-    copy.choices.forEach(ch => {
-      if (titleMapping.has(ch.targetTitle)) {
-        ch.targetTitle = titleMapping.get(ch.targetTitle);
-      }
-    });
-    if (titleMapping.has(copy.goto)) {
-      copy.goto = titleMapping.get(copy.goto);
+    // Actualizar referencias internas (goto, opciones, condiciones)
+    forEachNodeRef(copy, (t) => (titleMapping.has(t) ? titleMapping.get(t) : undefined));
+    if (copy.nodeType === 'raw') {
+      // Nodo raw: el texto es la fuente de verdad; se remapean sus destinos y su línea "~ titulo"
+      for (const [oldT, newT] of titleMapping) copy.rawText = renameInRawText(copy.rawText, oldT, newT);
+      copy.rawText = copy.rawText.replace(/^~ [^\r\n]*/, '~ ' + copy.title);
+      copy.rawTargets = extractRawTargets(copy.rawText);
+    } else {
+      // Nodo estructurado nuevo: se serializa con el formato actual
+      delete copy.rawText;
+      delete copy.fingerprint;
     }
 
     if (endIdx >= 0) tab.nodes.splice(endIdx, 0, copy);
@@ -2070,7 +1795,6 @@ function pasteNodes() {
 
     pastedNodes.push(copy);
     selectedNodeIds.add(copy.id);
-    lastSelectedNodeId = copy.id;
   });
 
   markDirty();
@@ -2106,17 +1830,18 @@ function deleteSelectedNodes() {
 
   // Limpiar referencias a nodos borrados
   for (const n of tab.nodes) {
-    for (const ch of n.choices) {
-      if (deletedTitles.has(ch.targetTitle)) ch.targetTitle = '';
-    }
-    if (deletedTitles.has(n.goto)) n.goto = '';
+    forEachNodeRef(n, (t) => (deletedTitles.has(t) ? '' : undefined));
   }
+  // Los nodos raw conservan su texto; se avisa si aún apuntan a nodos borrados
+  const rawDangling = tab.nodes.filter(n => n.nodeType === 'raw' && n.rawTargets.some(t => deletedTitles.has(t))).length;
 
   clearSelection();
   markDirty();
   renderCanvas(tab);
   updateInspector();
-  setStatus('Nodo(s) eliminado(s)', 'info');
+  setStatus(rawDangling > 0
+    ? `Nodo(s) eliminado(s). ${rawDangling} nodo(s) raw aún apuntan a ellos.`
+    : 'Nodo(s) eliminado(s)', 'info');
 }
 
 // ============================================================
@@ -2170,7 +1895,7 @@ function updateInspector() {
       ${node.title === '__START__' ? `
         <div class="inspector-field">
           <label>Conectado a:</label>
-          <input type="text" value="${node.goto || '(sin conectar)'}" readonly>
+          <input type="text" value="${escapeHtml(node.goto || '(sin conectar)')}" readonly>
         </div>
       ` : ''}
     `;
@@ -2178,18 +1903,54 @@ function updateInspector() {
   }
 
   // Campo común: Título del nodo
-  const titleField = createInspectorField('Nombre del Nudo (Título)', 'text', node.title, (newVal) => {
-    const oldTitle = node.title;
-    const sanitized = newVal.replace(/\s+/g, '_');
-    node.title = sanitized.trim() || oldTitle;
-    updateNodeReferences(tab, oldTitle, node.title);
-    markDirty();
-    renderCanvas(tab);
+  const titleField = createInspectorField('Nombre del Nudo (Título)', 'text', node.title, () => {});
+  const titleInputEl = titleField.querySelector('input');
+  // Se renombra al confirmar (change), no en cada tecla: así no hay títulos intermedios repetidos
+  titleInputEl.addEventListener('change', () => {
+    const sanitized = titleInputEl.value.replace(/\s+/g, '_').trim();
+    if (sanitized && sanitized !== node.title && applyNodeRename(tab, node, sanitized)) {
+      markDirty();
+      renderCanvas(tab);
+      updateInspector();
+    } else {
+      titleInputEl.value = node.title;
+    }
   });
   formEl.appendChild(titleField);
 
   // Inspector según tipo de nodo
-  if (node.nodeType === 'variable') {
+  if (node.nodeType === 'raw') {
+    // --- INSPECTOR RAW: texto editable tal cual ---
+    const note = document.createElement('div');
+    note.className = 'inspector-note';
+    note.textContent = 'Este nudo usa sintaxis que el canvas no representa (else, set, %, comentarios, tags, etc.). Se guarda exactamente como lo escribas aquí.';
+    formEl.appendChild(note);
+
+    const rawField = document.createElement('div');
+    rawField.className = 'inspector-field';
+    rawField.innerHTML = '<label>Texto del nudo (sin la línea "~ título"):</label>';
+    const rawArea = document.createElement('textarea');
+    rawArea.className = 'inspector-textarea inspector-raw';
+    rawArea.rows = 14;
+    rawArea.spellcheck = false;
+    rawArea.value = getRawBody(node);
+    const targetsInfo = document.createElement('div');
+    targetsInfo.className = 'inspector-note';
+    const refreshTargets = () => {
+      targetsInfo.textContent = 'Destinos detectados: ' + ((node.rawTargets || []).join(', ') || '(ninguno)');
+    };
+    refreshTargets();
+    rawArea.addEventListener('input', () => {
+      setRawBody(node, rawArea.value);
+      refreshTargets();
+      markDirty();
+      renderCanvas(tab);
+    });
+    rawField.appendChild(rawArea);
+    formEl.appendChild(rawField);
+    formEl.appendChild(targetsInfo);
+
+  } else if (node.nodeType === 'variable') {
     // --- INSPECTOR VARIABLE ---
     const fieldVar = document.createElement('div');
     fieldVar.className = 'inspector-field';
@@ -2617,7 +2378,6 @@ function handleAddGenericNode(type) {
 
   clearSelection();
   selectedNodeIds.add(node.id);
-  lastSelectedNodeId = node.id;
 
   markDirty();
   renderCanvas(tab);
@@ -2675,28 +2435,38 @@ async function handleNewDialogue() {
       <div id="modal-folder-list"></div>
     </div>
     <div id="modal-full-path" style="color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; padding: 4px 0;"></div>
+    <div id="modal-new-error" style="color: var(--accent-danger); margin-top: 8px; font-size: 12px;"></div>
   `;
 
   showModal({
     title: 'Nuevo Diálogo',
     bodyHTML,
     onConfirm: async () => {
+      const fail = (msg) => {
+        const errEl = document.getElementById('modal-new-error');
+        if (errEl) errEl.textContent = msg;
+        setStatus(msg, 'error');
+        return false;
+      };
       let filename = document.getElementById('modal-filename')?.value.trim() || '';
-      if (!filename) return;
-      if (!filename.endsWith('.dialogue')) filename += '.dialogue';
-      const relPath = selectedFolder + '/' + filename;
+      if (filename.endsWith('.dialogue')) filename = filename.slice(0, -'.dialogue'.length);
+      if (!filename) return fail('Escribe un nombre de archivo.');
+      if (!/^[a-z0-9_\-\/]+$/.test(filename) || filename.includes('..') || filename.includes('//')
+        || filename.startsWith('/') || filename.endsWith('/')) {
+        return fail('Nombre inválido: usa minúsculas, números, guion bajo, guion y "/" (sin "..").');
+      }
+      const relPath = selectedFolder + '/' + filename + '.dialogue';
 
       try {
         const result = await apiPost('/api/dialogues/create', { relPath });
         if (result.ok === false && result.error === 'already_exists') {
-          setStatus('El archivo ya existe', 'error');
-          return;
+          return fail('El archivo ya existe');
         }
         await loadDialogueFiles();
         await openFile(relPath);
         setStatus('Creado: ' + relPath, 'success');
       } catch (err) {
-        setStatus('Error: ' + err.message, 'error');
+        return fail('Error: ' + err.message);
       }
     },
   });
@@ -2711,7 +2481,7 @@ async function handleNewDialogue() {
       if (pathEl) {
         const canGoUp = data.currentPath !== 'src' && data.currentPath.includes('/');
         pathEl.innerHTML = `${canGoUp ? '<span class="folder-up" id="folder-go-up" title="Subir carpeta">⬆ ..</span>' : ''}
-          <span>📁 ${data.currentPath}/</span>`;
+          <span>📁 ${escapeHtml(data.currentPath)}/</span>`;
         if (canGoUp) {
           document.getElementById('folder-go-up')?.addEventListener('click', () => {
             const parent = data.currentPath.split('/').slice(0, -1).join('/') || 'src';
@@ -2766,7 +2536,21 @@ function showModal({ title, bodyHTML, onConfirm }) {
 
   const confirmBtn = document.getElementById('modal-confirm');
   const cancelBtn = document.getElementById('modal-cancel');
-  if (confirmBtn) confirmBtn.onclick = () => { if (onConfirm() !== false) closeModal(); };
+  if (confirmBtn) {
+    confirmBtn.onclick = async () => {
+      if (confirmBtn.disabled) return; // evita doble envío mientras se espera onConfirm
+      confirmBtn.disabled = true;
+      try {
+        // Si onConfirm devuelve false el modal sigue abierto (error de validación)
+        if ((await onConfirm()) !== false) closeModal();
+      } catch (err) {
+        console.error('Error en el modal:', err);
+        setStatus('Error: ' + (err && err.message ? err.message : err), 'error');
+      } finally {
+        confirmBtn.disabled = false;
+      }
+    };
+  }
   if (cancelBtn) cancelBtn.onclick = closeModal;
 
   setTimeout(() => {
