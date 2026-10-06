@@ -19,8 +19,8 @@ function check(name, cond, extra) {
 }
 
 function load(content) {
-  const { header, nodes } = F.parseDialogueFile(content, {});
-  return { header, nodes };
+  const { header, nodes, startAlias } = F.parseDialogueFile(content, {});
+  return { header, nodes, startAlias };
 }
 
 function roundtrip(content) {
@@ -141,7 +141,12 @@ check('fixture raro con CRLF: round-trip exacto', roundtrip(WEIRD.replace(/\n/g,
     ['A: hola [#tag]\n', 'raw'],
     ['A: hola {{do x()}}\n', 'raw'],
     ['A: hola\n  => x\n', 'raw'],
-    ['- opcion\n', 'raw'],
+    ['- opcion\n', 'dialogue'],
+    ['- opcion =>\n', 'dialogue'],
+    ['- opcion\n\tA: hijo\n', 'raw'],
+    ['- a b => c d\n', 'dialogue'],
+    ['- \n', 'dialogue'],
+    ['A: hola\n- a\n- b => c\n', 'dialogue'],
     ['=>< sub\n', 'raw'],
     ['', 'dialogue'],
   ];
@@ -322,6 +327,184 @@ check('fixture raro con CRLF: round-trip exacto', roundtrip(WEIRD.replace(/\n/g,
   const tab = load('~ v\n\ndo GameVariables.set_var("flag.n", 1)\n=> END\n');
   findNode(tab, 'v').varValue = 'abc';
   check('serializeDialogue usa getVarType', F.serializeDialogue(tab, () => 'string').includes('set_var("flag.n", "abc")'));
+}
+
+// ------------------------------------------------------------
+// Opciones sin destino ("- texto" sin "=>")
+// ------------------------------------------------------------
+{
+  const tab = load('~ q\n\nB: ¿Quieres?\n- Sí\n- No => q_no\n');
+  const q = findNode(tab, 'q');
+  check('opción sin => es opción del modelo', q.nodeType === 'dialogue' && q.choices.length === 2);
+  check('opción sin => tiene destino vacío', q.choices[0].label === 'Sí' && q.choices[0].targetTitle === '' && q.choices[1].targetTitle === 'q_no');
+  check('opción sin => no se convierte en raw', q.nodeType !== 'raw');
+  q.lines[0].text = '¿Seguro?';
+  check('editar el nodo conserva la opción sin => (sin inventar END)',
+    F.serializeDialogue(tab) === '~ q\n\nB: ¿Seguro?\n- Sí\n- No => q_no\n');
+  q.choices[0].targetTitle = 'q_si';
+  check('conectar la opción añade el =>', F.serializeDialogue(tab).includes('- Sí => q_si\n'));
+  const half = load('~ q\n\n- Sí =>\n');
+  check('flecha a medias: opción sin destino', findNode(half, 'q').choices[0].label === 'Sí' && F.serializeDialogue(half) === '~ q\n\n- Sí =>\n');
+  const idx = load('~ q\n\n- Sí\n\tA: hijo\n');
+  check('opción con hijas indentadas sigue siendo raw', findNode(idx, 'q').nodeType === 'raw');
+}
+
+// ------------------------------------------------------------
+// flowOrder / helpers de nodos
+// ------------------------------------------------------------
+{
+  const titles = (arr) => arr.map(n => n.title).join(',');
+  const fo = (t) => F.flowOrder(t.nodes, t.startAlias && t.startAlias.node.goto);
+  // La respuesta aparece antes que la pregunta en el archivo
+  const a = load('~ resp1\n\n=> END\n\n~ resp2\n\n=> END\n\n~ start\n\nA: ¿?\n- Sí => resp1\n- No => resp2\n');
+  check('flowOrder: pregunta, resp1, resp2', titles(fo(a)) === 'start,resp1,resp2', titles(fo(a)));
+  check('flowOrder ignora START/END visuales', !fo(a).some(n => n.isSpecial));
+
+  // Un nodo con dos predecesores va después de ambos
+  const b = load('~ start\n\n- x => a\n- y => c\n\n~ c\n\n=> END\n\n~ a\n\n=> c\n');
+  check('flowOrder: nodo tras todos sus predecesores', titles(fo(b)) === 'start,a,c', titles(fo(b)));
+
+  // Ciclo: el primero visitado manda
+  const c = load('~ start\n\n=> b\n\n~ b\n\n- otra => start\n- sigue => c\n\n~ c\n\n=> b\n');
+  check('flowOrder con ciclos', titles(fo(c)) === 'b,c', titles(fo(c)));
+
+  // Huérfanos al final en su orden original
+  const d = load('~ h2\n\n=> END\n\n~ start\n\n=> x\n\n~ h1\n\n=> END\n\n~ x\n\n=> END\n');
+  check('flowOrder: huérfanos al final', titles(fo(d)) === 'x,h2,h1', titles(fo(d)));
+
+  // Sin start: parte del primer nodo; condiciones y raw cuentan
+  const e = load('~ a\n\nif GameVariables.get_var("flag.k") == true\n\t=> c\n=> b\n\n~ b\n\n=> END\n\n~ c\n\n% raro\n=> b\n');
+  check('flowOrder: condiciones y raw', titles(fo(e)) === 'a,c,b', titles(fo(e)));
+
+  // applyFlowOrder: serializa reordenado y conserva el texto literal de cada nodo
+  const f = load('~ resp1\n\n=> END\n\n~ start\n\nA: ¿?\n- Sí => resp1\n- No => resp2\n\n~ resp2\n% raro\n=> END');
+  check('applyFlowOrder cambia el orden', F.applyFlowOrder(f) === true);
+  const out = F.serializeDialogue(f);
+  check('applyFlowOrder: texto reordenado', out === '~ start\n\nA: ¿?\n- Sí => resp1\n- No => resp2\n\n~ resp1\n\n=> END\n\n~ resp2\n% raro\n=> END', JSON.stringify(out));
+  check('applyFlowOrder idempotente', F.applyFlowOrder(f) === false && F.serializeDialogue(f) === out);
+  const g = load('~ start\n\n=> END\n\n~ b\n\n=> END\n');
+  check('applyFlowOrder sin cambios no toca nada', F.applyFlowOrder(g) === false);
+
+  // Reorden con último nodo sin salto de línea final
+  const h = load('~ b\n\n=> END\n~ start\n\n=> b');
+  F.applyFlowOrder(h);
+  check('applyFlowOrder separa nodos pegados', F.serializeDialogue(h) === '~ start\n\n=> b\n\n~ b\n\n=> END\n', JSON.stringify(F.serializeDialogue(h)));
+
+  // Helpers
+  check('slugifyTitle', F.slugifyTitle('¡Sí, claro!') === 'si_claro' && F.slugifyTitle('') === 'opcion');
+  check('slugifyTitle máx 24', F.slugifyTitle('a'.repeat(40)).length === 24);
+  check('uniqueTitle', F.uniqueTitle('x', new Set(['x', 'x_2'])) === 'x_3' && F.uniqueTitle('y', new Set()) === 'y');
+  const t = load('~ q\n\n- a => q_a\n- b => q_b\n\n~ q_a\n\n=> END\n\n~ otro\n\n=> END\n');
+  const nuevo = { title: 'q_b', nodeType: 'dialogue', lines: [], choices: [], goto: 'END' };
+  F.insertNodeAfter(t.nodes, nuevo, findNode(t, 'q'));
+  check('insertNodeAfter: tras los hijos contiguos del origen', t.nodes.map(n => n.title).join(',') === '__START__,q,q_a,q_b,otro,__END__', t.nodes.map(n => n.title).join(','));
+}
+
+// ------------------------------------------------------------
+// Títulos/destinos con espacios (Dialogue Manager no los admite)
+// ------------------------------------------------------------
+{
+  const src = '~ start\n\n=> Bien Venida\n\n~ Bien Venida\nNPC 1: Hola\n- SI => Bien Venida_si\n- No => Bien Venida_no\n\n~ Bien Venida_si\nNPC 1: x\n=> END\n';
+  const a = load(src);
+  const nz = a.nodes.filter(n => !n.isSpecial);
+  check('espacios: ningún nodo raw', nz.every(n => n.nodeType !== 'raw'), nz.map(n => n.title + ':' + n.nodeType).join(','));
+  check('espacios: START apunta a destino completo', findNode(a, '__START__').goto === 'Bien Venida', JSON.stringify(findNode(a, '__START__').goto));
+  check('espacios: títulos inválidos detectados', F.isInvalidTitle('Bien Venida') && !F.isInvalidTitle('Bien_Venida') && !F.isInvalidTitle('END'));
+  check('validTitle', F.validTitle('Bien Venida') === 'Bien_Venida' && F.validTitle('¡Sí, él!') === 'Si_el' && F.validTitle('END') === 'END');
+  check('round-trip sin cambios idéntico', F.serializeDialogue(a) === src);
+
+  // Normalización: texto → versión válida con referencias
+  const norm = F.rewriteDestsInText(src, d => (F.isInvalidTitle(d) ? F.validTitle(d) : undefined))
+    .replace('~ Bien Venida', '~ Bien_Venida').replace('~ Bien Venida_si', '~ Bien_Venida_si');
+  const b = load(norm);
+  const bn = b.nodes.filter(n => !n.isSpecial);
+  check('normalizado: sin raw', bn.every(n => n.nodeType === 'dialogue' || n.modelable), bn.map(n => n.title + ':' + n.nodeType).join(','));
+  const bv = bn.find(n => n.title === 'Bien_Venida');
+  check('normalizado: Bien_Venida con 2 opciones reales',
+    bv && bv.choices.length === 2 && bv.choices[0].targetTitle === 'Bien_Venida_si' && bv.choices[1].targetTitle === 'Bien_Venida_no',
+    JSON.stringify(bv && bv.choices));
+  check('normalizado: alias start oculto, START → Bien_Venida', !bn.some(n => n.title === 'start') && findNode(b, '__START__').goto === 'Bien_Venida');
+
+  // Destinos exactos: no confunde prefijos ni toca END
+  const r = F.rewriteDestsInText('=> Bien\n- a => Bien Venida\n=> END', d => (d === 'Bien' ? 'X' : undefined));
+  check('rewriteDests: solo coincidencia exacta', r === '=> X\n- a => Bien Venida\n=> END', r);
+
+  // Renombrar con espacios en el canvas
+  const c = load('~ start\n\n- a => uno\n\n~ uno\n\n=> END\n');
+  const un = c.nodes.find(n => n.title === 'uno');
+  const res = F.renameNode(c, un, 'Bien Venida');
+  check('renameNode normaliza', res.ok && res.normalized && res.normalized.to === 'Bien_Venida' && un.title === 'Bien_Venida');
+  check('renameNode actualiza refs', c.nodes.find(n => n.title === 'start').choices[0].targetTitle === 'Bien_Venida');
+}
+
+// Archivos reales de rpg-g: siguen idénticos
+{
+  const dir = path.join(__dirname, '..', '..', 'rpg-g');
+  const found = [];
+  (function walk(d) {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      if (e.name === '.git' || e.name === '.godot' || e.name === 'node_modules') continue;
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) walk(p); else if (e.name.endsWith('.dialogue')) found.push(p);
+    }
+  })(dir);
+  for (const f of found) {
+    const txt = fs.readFileSync(f, 'utf8');
+    check('rpg-g idéntico: ' + path.basename(f), F.serializeDialogue(load(txt)) === txt);
+  }
+}
+
+// ------------------------------------------------------------
+// Alias `~ start` oculto
+// ------------------------------------------------------------
+{
+  const nuevo = load('~ start\n\n=> END\n');
+  check('alias: archivo nuevo sin nodo start', !nuevo.nodes.some(n => n.title === 'start') && nuevo.nodes.length === 2);
+  check('alias: START → END', findNode(nuevo, '__START__').goto === 'END');
+  check('alias: vacío → START sin conexión', findNode(load('~ start\n\n~ a\n=> END\n'), '__START__').goto === '');
+  const t = load('~ start\n\n=> accepted\n\n~ accepted\nA: hi\n=> END\n');
+  check('alias: START conecta directo al destino', findNode(t, '__START__').goto === 'accepted' && !findNode(t, 'start'));
+  const c = load('~ start\nA: hola\n=> a\n\n~ a\n=> END\n');
+  check('start con contenido sigue siendo nodo', !!findNode(c, 'start') && !c.startAlias && findNode(c, '__START__').goto === 'start');
+  // Reconectar START reescribe el alias
+  const st = findNode(t, '__START__');
+  st.goto = 'otro'; st.startTouched = true;
+  check('alias: reconectar START reescribe goto', F.serializeDialogue(t) === '~ start\n\n=> otro\n\n~ accepted\nA: hi\n=> END\n', F.serializeDialogue(t));
+  st.goto = ''; 
+  check('alias: START sin conexión → => END', F.serializeDialogue(t).startsWith('~ start\n\n=> END\n\n~ accepted'));
+  // alias en medio del archivo conserva su posición
+  const m = '~ a\n=> END\n\n~ start\n\n=> a\n\n~ b\n=> END\n';
+  check('alias en medio: round-trip', roundtrip(m) === m);
+}
+
+// ------------------------------------------------------------
+// flowDirty: cambio estructural en Nodos reordena el texto por flujo
+// ------------------------------------------------------------
+{
+  const src = '~ start\n\n=> Bien_Venida\n\n~ Bien_Venida\nNPC: Hola\n- Si => Bien_Venida_si\n- No => Bien_Venida_no\n\n~ Bien_Venida_si\nNPC: a\n=> END\n\n~ Bien_Venida_no\nNPC: b\n=> END\n';
+  const mk = () => {
+    const t = load(src);
+    const nuevo = { id: 'n_nuevo', title: 'nuevo', nodeType: 'dialogue', lines: [{ actor: 'NPC', text: 'x' }], choices: [], goto: 'Bien_Venida', x: 0, y: 0, conditionOutputs: {} };
+    F.insertNodeAfter(t.nodes, nuevo, null); // como en Nodos: va antes del END visual
+    const st = findNode(t, '__START__');
+    st.goto = 'nuevo'; st.startTouched = true;
+    return t;
+  };
+  const sinFlag = mk();
+  const outSin = F.serializeDialogue(sinFlag);
+  check('flowDirty ausente: el orden se mantiene (nuevo al final)', outSin.indexOf('~ nuevo') > outSin.indexOf('~ Bien_Venida_no'), outSin);
+  const t = mk();
+  t.flowDirty = true;
+  const out = F.serializeDialogue(t);
+  const idx = ['~ start => nuevo', '~ nuevo', '~ Bien_Venida\n', '~ Bien_Venida_si', '~ Bien_Venida_no'].map(k => out.indexOf(k.replace('~ start => nuevo', '~ start')));
+  check('flowDirty: orden start, nuevo, Bien_Venida, si, no', idx.every((v, i) => v >= 0 && (i === 0 || v > idx[i - 1])), out);
+  check('flowDirty: alias start apunta al nuevo', out.startsWith('~ start\n\n=> nuevo\n\n~ nuevo\n'), out);
+  check('flowDirty: se limpia tras serializar', t.flowDirty === false);
+  check('flowDirty: serializar de nuevo es estable', F.serializeDialogue(t) === out);
+  check('flowDirty: nodos sin cambios conservan texto', out.includes('~ Bien_Venida\nNPC: Hola\n- Si => Bien_Venida_si\n- No => Bien_Venida_no\n\n~ Bien_Venida_si\nNPC: a\n=> END\n\n~ Bien_Venida_no\nNPC: b\n=> END\n'), out);
+  // flowDirty sin cambios reales de orden: archivo idéntico
+  const same = load(src); same.flowDirty = true;
+  check('flowDirty sin cambio de flujo: idéntico', F.serializeDialogue(same) === src);
 }
 
 console.log(`${passed} comprobaciones correctas, ${failures} fallos`);

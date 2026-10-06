@@ -732,6 +732,7 @@ path.connection-preview {
 
 .badge-success { color: var(--accent-success); border-color: var(--accent-success); }
 .badge-error { color: var(--accent-danger); border-color: var(--accent-danger); }
+.badge-warning { color: #e0b341; border-color: #e0b341; }
 
 /* === INPUTS GLOBALES === */
 input[type="text"], input[type="number"], select, textarea {

@@ -39,8 +39,9 @@ Abrir y guardar un `.dialogue` sin tocarlo deja el archivo **idéntico byte a by
 
 - El texto previo al primer `~ ` (imports, `using`, comentarios) se conserva literal.
 - Cada nodo recuerda su texto original y una huella de sus campos. Al guardar solo se reescriben los nodos que editaste o creaste; el resto se emite tal cual. No se reordenan nodos.
-- Un nodo solo es editable en el canvas si usa sintaxis que el modelo representa fielmente: líneas `Actor: texto` o texto, `- opción => destino`, `=> destino`, `if cond` + una línea indentada (línea condicionada) o `=> destino` indentado (nodo condición, con `elif`), y un único `do GameVariables.set_var(...)` / `do GameManager.trigger_event("x")` (nodos variable/evento).
+- Un nodo solo es editable en el canvas si usa sintaxis que el modelo representa fielmente: líneas `Actor: texto` o texto, `- opción => destino` (toda línea `- texto` es una opción; sin `=>` queda sin destino y se guarda tal cual), `=> destino`, `if cond` + una línea indentada (línea condicionada) o `=> destino` indentado (nodo condición, con `elif`), y un único `do GameVariables.set_var(...)` / `do GameManager.trigger_event("x")` (nodos variable/evento).
 - Cualquier otra sintaxis (`else`, `set`, `%`, comentarios, tags `[#...]`, `[if ...]` inline, bloques indentados bajo opciones, varios `do`, etc.) convierte el nodo en **raw**: se muestra con borde punteado y su texto de solo lectura en el canvas, con las conexiones (punteadas) detectadas a partir de sus `=> destino`. Se edita como texto en el Inspector (al seleccionarlo) y se guarda exactamente como lo escribas. Renombrar otro nodo actualiza los destinos dentro de los nodos raw.
+- El botón **+ Opción** de un nodo de diálogo (y "+ Añadir Opción" del inspector) crea automáticamente el nodo destino a la derecha, ya conectado, con título `<nodo>_opcion_N`.
 - Los nodos visuales START y END no se guardan como nodos. START apunta a `start` (si existe) o al primer nodo; si lo conectas a otro nodo y el archivo no tiene `~ start`, se agrega uno al principio. END representa `=> END`. Un `~ end` o `~ start` real del archivo es un nodo normal.
 - Renombrar un nodo a un título ya existente se rechaza.
 
@@ -59,14 +60,15 @@ Sincronización: al entrar en Escritura el texto se genera con el serializador (
 - `Tab` al inicio de una línea de diálogo (o con solo el prefijo) alterna entre los dos últimos oradores; `Shift+Tab` inserta un tabulador.
 - Autocompletado (flechas, `Enter`/`Tab`, `Esc`): oradores al empezar la línea, nodos tras `=> ` y variables dentro de `GameVariables.get_var("` / `set_var("`.
 - `->` se convierte en `=>` (en líneas de opción `- ...` o al inicio de línea).
-- Escribir `=> destino` o `- opción => destino` con un destino inexistente (al pulsar `Enter` o salir de la línea) añade al final un nodo `~ destino` con `=> END`. Una `- opción` sin destino + `Enter` se completa con `=> <nodo>_<opción>` y crea ese nodo.
+- Escribir `=> destino` o `- opción => destino` con un destino inexistente (al pulsar `Enter` o salir de la línea) añade un nodo `~ destino` con `=> END` justo después del nodo de origen (y de sus otros destinos contiguos, para que el texto conserve el orden pregunta → respuestas). Una `- opción` sin destino se completa con `=> <nodo>_<opción>` (slug: minúsculas, sin acentos, `[a-z0-9_]`, máx. 24, único con sufijo `_2`, `_3`…) y crea ese nodo, al pulsar `Enter` o al salir de la línea.
+- **Ordenar por flujo** (botón de la barra de Escritura): reordena los nodos del texto siguiendo el flujo desde `start` (cada pregunta antes de sus respuestas; un nodo va tras todos sus predecesores; los no alcanzables, al final). Abrir y guardar sin tocar nada nunca reordena el archivo; la lista de nodos y el minimapa siempre se muestran en orden de flujo (solo visual).
 - Al renombrar un `~ titulo` y salir de la línea, los `=> titulo` que apuntaban al nombre anterior se actualizan.
 - Las inserciones usan el undo nativo del navegador (`Ctrl+Z`).
 
 | Tecla (vista Escritura, foco en el editor) | Acción |
 |---|---|
 | `Ctrl+Enter` | Nodo nuevo a continuación del actual (enlaza la salida si no tenía) con el título seleccionado para renombrar |
-| `Ctrl+O` | Opción `- ` (usa el texto seleccionado) |
+| `Ctrl+O` | Opción `- ` (usa el texto seleccionado); al pulsar `Enter` se completa con `=> <nodo>_<opción>` y se crea el nodo destino |
 | `Ctrl+I` | Condición `if GameVariables.get_var("") == true` + línea indentada |
 | `Alt+V` | `do GameVariables.set_var("", true)` |
 | `Alt+E` | `do GameManager.trigger_event("")` |

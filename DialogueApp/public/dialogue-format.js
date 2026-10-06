@@ -162,13 +162,42 @@ function setRawBody(node, body) {
   node.rawTargets = extractRawTargets(node.rawText);
 }
 
-/** Reemplaza los destinos "=> viejo" por "=> nuevo" en las líneas de salto de un texto raw. */
-function renameInRawText(rawText, oldTitle, newTitle) {
-  const re = new RegExp('(=>(?:<)?[ \\t]+)' + escapeRegExp(oldTitle) + '(?![\\w\\-])', 'g');
-  return String(rawText).split('\n').map(line => {
-    if (!/^[ \t]*(=>|-[ \t])/.test(line)) return line;
-    return line.replace(re, (_, pre) => pre + newTitle);
+/** Título válido para Godot: solo [A-Za-z0-9_]; sin acentos, espacios ni símbolos. 'END' no se toca. */
+function validTitle(title) {
+  const t = String(title ?? '').trim();
+  if (t === 'END' || t === '') return t;
+  const base = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  let v = base.replace(/[^A-Za-z0-9_]+/g, '_');
+  if (/^[^A-Za-z0-9_]/.test(base)) v = v.replace(/^_+/, '');
+  if (/[^A-Za-z0-9_]$/.test(base)) v = v.replace(/_+$/, '');
+  return v;
+}
+
+/** true si el título (o destino) usa caracteres no válidos para Godot. */
+function isInvalidTitle(title) {
+  const t = String(title ?? '').trim();
+  return t !== '' && t !== 'END' && t !== '__START__' && t !== '__END__' && validTitle(t) !== t;
+}
+
+/**
+ * Reescribe los destinos de las líneas "=> dest" / "- texto => dest" de un texto.
+ * El destino es el resto de la línea (recortado, sin "!" final). `fn(dest)` devuelve el nuevo o undefined.
+ */
+function rewriteDestsInText(text, fn) {
+  return String(text).split('\n').map(line => {
+    const m = line.match(/^([ \t]*=>(?:<)?[ \t]+)(.*?)([ \t\r]*)$/) ||
+      (/^[ \t]*-[ \t]/.test(line) ? line.match(/^([ \t]*-[ \t].*?[ \t]=>(?:<)?[ \t]+)(.*?)([ \t\r]*)$/) : null);
+    if (!m) return line;
+    const bang = m[2].endsWith('!') ? '!' : '';
+    const dest = bang ? m[2].slice(0, -1) : m[2];
+    const res = fn(dest);
+    return typeof res === 'string' && res !== dest ? m[1] + res + bang + m[3] : line;
   }).join('\n');
+}
+
+/** Reemplaza los destinos "=> viejo" por "=> nuevo" (coincidencia exacta del destino completo). */
+function renameInRawText(rawText, oldTitle, newTitle) {
+  return rewriteDestsInText(rawText, d => (d === oldTitle ? newTitle : undefined));
 }
 
 // ------------------------------------------------------------
@@ -208,18 +237,20 @@ function updateNodeReferences(tab, oldTitle, newTitle) {
 /**
  * Renombra un nodo: valida que el título no exista, actualiza referencias y,
  * si el nodo es raw, su línea "~ titulo".
- * @returns {{ok: boolean, error?: string}}
+ * @returns {{ok: boolean, error?: string, normalized?: {from: string, to: string}}}
  */
 function renameNode(tab, node, newTitle) {
-  const title = String(newTitle ?? '').trim().replace(/\s+/g, '_');
+  const typed = String(newTitle ?? '').trim();
+  const title = validTitle(typed);
   const oldTitle = node.title;
+  const normalized = title !== typed ? { from: typed, to: title } : undefined;
   if (!title) return { ok: false, error: 'El título no puede estar vacío.' };
-  if (title === oldTitle) return { ok: true };
+  if (title === oldTitle) return { ok: true, normalized };
   if (title === 'END' || title === '__START__' || title === '__END__') {
     return { ok: false, error: `"${title}" es un nombre reservado.` };
   }
   if (tab.nodes.some(n => n !== node && n.title === title)) {
-    return { ok: false, error: `Ya existe un nudo llamado "${title}".` };
+    return { ok: false, error: `Ya existe un nodo llamado "${title}".` };
   }
   node.title = title;
   if (node.nodeType === 'raw' && node.rawText) {
@@ -229,15 +260,163 @@ function renameNode(tab, node, newTitle) {
     node.rawText = `~ ${title}${eol}${rest}`;
   }
   updateNodeReferences(tab, oldTitle, title);
-  return { ok: true };
+  return { ok: true, normalized };
+}
+
+// ------------------------------------------------------------
+// Orden de flujo
+// ------------------------------------------------------------
+
+/** Destinos de un nodo en el orden en que aparecen (opciones, saltos, condiciones). Puede incluir '' y 'END'. */
+function nodeTargets(node) {
+  if (!node || node.isSpecial) return [];
+  if (node.nodeType === 'raw') return (node.rawTargets || []).filter(Boolean);
+  const out = [];
+  if (node.nodeType === 'condition' && node.conditionOutputs) {
+    const o = node.conditionOutputs;
+    const keys = node.conditionMode === 'compare' ? ['true', 'false'] : [...(node.switchCases || []), 'default'];
+    for (const k of keys) out.push(o[k]);
+  } else {
+    for (const cg of node.conditionalGotos || []) out.push(cg.goto);
+    for (const ch of node.choices || []) out.push(ch.targetTitle);
+    out.push(node.goto);
+  }
+  return out.filter(Boolean);
+}
+
+/**
+ * Orden de flujo de los nodos reales (ignora __START__/__END__): recorrido en profundidad desde
+ * `start` (o el primer nodo) siguiendo los destinos en orden de aparición; un nodo va después de
+ * TODOS sus predecesores directos (orden topológico estable; en ciclos manda el primero visitado).
+ * Los nodos no alcanzables (y los de título duplicado) van al final en su orden original.
+ * @param {any[]} nodes
+ * @param {string} [rootTitle] destino del alias `~ start` oculto (raíz del recorrido)
+ * @returns {any[]} nuevo array con los nodos reales reordenados
+ */
+function flowOrder(nodes, rootTitle) {
+  const real = nodes.filter(n => !n.isSpecial && n.title !== '__START__' && n.title !== '__END__');
+  if (real.length === 0) return [];
+  const byTitle = new Map();
+  for (const n of real) if (!byTitle.has(n.title)) byTitle.set(n.title, n);
+  const root = byTitle.get(rootTitle) || byTitle.get('start') || real[0];
+
+  // DFS: orden de descubrimiento y aristas de retroceso (ciclos), que se ignoran
+  const disc = new Map();
+  const onStack = new Set();
+  const succ = new Map(); // nodo -> Set de nodos (sin aristas de retroceso ni autobucles)
+  const dfs = (n) => {
+    disc.set(n, disc.size);
+    onStack.add(n);
+    const out = new Set();
+    for (const t of nodeTargets(n)) {
+      const d = byTitle.get(t);
+      if (!d || d === n) continue;
+      if (onStack.has(d)) continue; // retroceso
+      out.add(d);
+      if (!disc.has(d)) dfs(d);
+    }
+    succ.set(n, out);
+    onStack.delete(n);
+  };
+  dfs(root);
+
+  // Orden topológico estable (Kahn) priorizando el orden de descubrimiento
+  const indeg = new Map();
+  for (const n of disc.keys()) indeg.set(n, 0);
+  for (const outs of succ.values()) for (const d of outs) indeg.set(d, indeg.get(d) + 1);
+  const ready = [root];
+  const result = [];
+  while (ready.length) {
+    let bi = 0;
+    for (let i = 1; i < ready.length; i++) if (disc.get(ready[i]) < disc.get(ready[bi])) bi = i;
+    const n = ready.splice(bi, 1)[0];
+    result.push(n);
+    for (const d of succ.get(n)) {
+      indeg.set(d, indeg.get(d) - 1);
+      if (indeg.get(d) === 0) ready.push(d);
+    }
+  }
+  const placed = new Set(result);
+  for (const n of real) if (!placed.has(n)) result.push(n);
+  return result;
+}
+
+/** Slug para títulos de nodo: minúsculas, sin acentos, [a-z0-9_], máx. 24 caracteres. */
+function slugifyTitle(label) {
+  const s = String(label).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 24).replace(/_+$/g, '');
+  return s || 'opcion';
+}
+
+/** Devuelve `base` o `base_2`, `base_3`... hasta que no esté en `titles` (Set). */
+function uniqueTitle(base, titles) {
+  if (!titles.has(base)) return base;
+  let i = 2;
+  while (titles.has(`${base}_${i}`)) i++;
+  return `${base}_${i}`;
+}
+
+/**
+ * Inserta `node` en `nodes` justo después del último nodo de su origen: tras `origin` y tras los
+ * nodos contiguos que `origin` ya referencia (para conservar el orden pregunta → respuestas).
+ * Sin origen, antes del __END__ visual (o al final).
+ */
+function insertNodeAfter(nodes, node, origin) {
+  let at = origin ? nodes.indexOf(origin) : -1;
+  if (at < 0) {
+    const endIdx = nodes.findIndex(n => n.title === '__END__');
+    if (endIdx >= 0) nodes.splice(endIdx, 0, node); else nodes.push(node);
+    return;
+  }
+  const targets = new Set(nodeTargets(origin));
+  while (at + 1 < nodes.length && !nodes[at + 1].isSpecial && targets.has(nodes[at + 1].title)) at++;
+  nodes.splice(at + 1, 0, node);
+}
+
+/**
+ * Reordena tab.nodes por flujo (los especiales conservan su sitio). Los nodos con texto literal
+ * reciben una línea en blanco final si dejan de ser el último. Devuelve true si cambió el orden.
+ */
+function applyFlowOrder(tab, rootTitle) {
+  const real = tab.nodes.filter(n => !n.isSpecial);
+  const ordered = flowOrder(real, rootTitle || (tab.startAlias && tab.startAlias.node.goto));
+  const aliasMoves = !!tab.startAlias && tab.startAlias.index !== 0 && real.length > 0;
+  if (ordered.length !== real.length || (ordered.every((n, i) => n === real[i]) && !aliasMoves)) return false;
+  let k = 0;
+  tab.nodes = tab.nodes.map(n => (n.isSpecial ? n : ordered[k++]));
+  if (tab.startAlias) tab.startAlias.index = 0; // la entrada va primero
+  const list = tab.nodes.filter(n => !n.isSpecial);
+  if (tab.startAlias && list.length) list.unshift(tab.startAlias.node); // el alias va siempre primero
+  list.forEach((n, i) => {
+    if (i === list.length - 1 || typeof n.rawText !== 'string') return;
+    const eol = n.rawText.includes('\r\n') ? '\r\n' : '\n';
+    if (!n.rawText.endsWith(eol + eol)) n.rawText += n.rawText.endsWith(eol) ? eol : eol + eol;
+  });
+  return true;
 }
 
 // ------------------------------------------------------------
 // Parser (.dialogue → modelo)
 // ------------------------------------------------------------
 
-const DEST_RE = /^[^\s!{}\[\]<>]+$/;
-const CHOICE_RE = /^-\s+(.+?)\s+=>\s+(\S+)$/;
+const DEST_RE = /^[^\s!{}\[\]<>](?:[^!{}\[\]<>]*[^\s!{}\[\]<>])?$/; // admite espacios internos (se avisa)
+const CHOICE_RE = /^-\s+(.+?)\s+=>\s+(\S.*?)\s*$/;
+
+/**
+ * Parsea una línea de opción "- texto [=> destino]". Toda línea "- ..." es una opción:
+ * sin "=>" (o con la flecha a medias) queda sin destino (`target: ''`, `bare: true`).
+ * Devuelve { label, target, bare } o null si no es representable.
+ */
+function parseChoiceLine(t) {
+  const cm = t.match(CHOICE_RE);
+  if (cm) return DEST_RE.test(cm[2]) ? { label: cm[1].trim(), target: cm[2], bare: false } : null;
+  if (/^-\s*$/.test(t)) return { label: '', target: '', bare: true };
+  const m = t.match(/^-\s+(.+)$/);
+  if (!m) return null;
+  const label = m[1].replace(/\s*(=>|->)\s*$/, '').trim();
+  if (label === '' || /=>/.test(label)) return null;
+  return { label, target: '', bare: true };
+}
 
 /** Valida una línea de texto/actor y la separa en { actor, text }; null si no es representable. */
 function parseTextLine(t) {
@@ -252,7 +431,7 @@ function parseTextLine(t) {
 
 /** "=> destino" → destino, o null si no es representable. */
 function parseGotoLine(t) {
-  const m = t.match(/^=>\s+(\S+)$/);
+  const m = t.match(/^=>\s+(\S.*?)\s*$/);
   return m && DEST_RE.test(m[1]) ? m[1] : null;
 }
 
@@ -299,10 +478,10 @@ function analyzeBody(bodyLines) {
       if (dest === null) return null;
       items.push({ kind: 'goto', goto: dest });
     } else if (t.startsWith('-')) {
-      const cm = t.match(CHOICE_RE);
-      if (!cm || !DEST_RE.test(cm[2])) return null;
-      if (/\[#/.test(cm[1]) || /\[\/?(if|else)\b/.test(cm[1]) || /\{\{\s*(do|set)\b/.test(cm[1])) return null;
-      items.push({ kind: 'choice', label: cm[1].trim(), target: cm[2] });
+      const cm = parseChoiceLine(t);
+      if (!cm) return null;
+      if (/\[#/.test(cm.label) || /\[\/?(if|else)\b/.test(cm.label) || /\{\{\s*(do|set)\b/.test(cm.label)) return null;
+      items.push({ kind: 'choice', label: cm.label, target: cm.target, bare: cm.bare });
     } else if (/^do\s/.test(t)) {
       items.push({ kind: 'do', text: t });
     } else {
@@ -352,7 +531,9 @@ function analyzeBody(bodyLines) {
     } else if (it.kind === 'choice') {
       if (phase === 2) return null;
       phase = 1;
-      node.choices.push({ label: it.label, targetTitle: it.target });
+      const ch = { label: it.label, targetTitle: it.target };
+      if (it.bare) ch.bare = true; // opción sin "=>" en el texto (no entra en la huella)
+      node.choices.push(ch);
     } else if (it.kind === 'goto') {
       if (phase !== 0) return null;
       phase = 2;
@@ -495,11 +676,26 @@ function parseDialogueFile(content, layoutData) {
     nodes.push(node);
   });
 
-  ensureSpecialNodes(nodes, nodesLayout);
-  return { header, nodes };
+  // `~ start` alias puro (solo `=> destino` o vacío): no es un nodo visible; lo representa START.
+  let startAlias = null;
+  const ai = nodes.findIndex(n => n.title === 'start');
+  if (ai >= 0 && isPureStartAlias(nodes[ai])) {
+    startAlias = { node: nodes[ai], index: ai };
+    nodes.splice(ai, 1);
+  }
+
+  ensureSpecialNodes(nodes, nodesLayout, startAlias);
+  return { header, nodes, startAlias };
 }
 
 /** Compatibilidad: devuelve solo los nodos. */
+/** `~ start` sin líneas, opciones, mutaciones ni condiciones: solo alias de entrada. */
+function isPureStartAlias(n) {
+  return n.nodeType === 'dialogue' && n.modelable !== false
+    && !(n.lines || []).length && !(n.choices || []).length && !(n.mutations || []).length
+    && !(n.conditionalGotos || []).length;
+}
+
 function parseDialogue(content, layoutData) {
   return parseDialogueFile(content, layoutData).nodes;
 }
@@ -508,7 +704,7 @@ function parseDialogue(content, layoutData) {
  * Añade los nodos visuales __START__ y __END__ (no se serializan).
  * START apunta a `start` si existe, si no al primer nodo. END representa "=> END".
  */
-function ensureSpecialNodes(nodes, nodesLayout) {
+function ensureSpecialNodes(nodes, nodesLayout, startAlias) {
   const hasStart = nodes.some(n => n.title === '__START__');
   const hasEnd = nodes.some(n => n.title === '__END__');
 
@@ -516,7 +712,8 @@ function ensureSpecialNodes(nodes, nodesLayout) {
     const pos = nodesLayout['__START__'] || {};
     const real = nodes.filter(n => n.title !== '__END__');
     const startNode = real.find(n => n.title === 'start');
-    const target = startNode ? startNode.title : (real[0] ? real[0].title : '');
+    const target = startAlias ? (startAlias.node.goto || '')
+      : (startNode ? startNode.title : (real[0] ? real[0].title : ''));
     nodes.unshift({
       id: generateId(),
       nodeType: 'special',
@@ -569,7 +766,7 @@ function cleanTarget(tgt) {
 
 /** Serializa un nodo estructurado con el formato actual. Termina en línea en blanco. */
 function serializeNode(node, getVarType) {
-  const safeTitle = (node.title || 'nudo').trim().replace(/\s+/g, '_');
+  const safeTitle = (node.title || 'nodo').trim().replace(/\s+/g, '_');
   let out = `~ ${safeTitle}\n\n`;
 
   if (node.nodeType === 'variable') {
@@ -617,7 +814,8 @@ function serializeNode(node, getVarType) {
   }
   if ((node.choices || []).length > 0) {
     for (const ch of node.choices) {
-      body += `- ${ch.label} => ${cleanTarget(ch.targetTitle)}\n`;
+      const bare = ch.bare && !ch.targetTitle;
+      body += `- ${ch.label}${bare ? '' : ' => ' + cleanTarget(ch.targetTitle)}\n`;
     }
   } else if (node.goto) {
     body += `=> ${cleanTarget(node.goto)}\n`;
@@ -635,17 +833,35 @@ function serializeNode(node, getVarType) {
 function serializeDialogue(tabData, getVarType) {
   const real = tabData.nodes.filter(n => !n.isSpecial && n.title !== '__START__' && n.title !== '__END__');
   const startNode = tabData.nodes.find(n => n.title === '__START__');
+  const alias = tabData.startAlias ? tabData.startAlias.node : null;
+
+  // Cambio estructural hecho en Nodos: el texto sigue el orden de flujo (una sola vez)
+  if (tabData.flowDirty) {
+    tabData.flowDirty = false;
+    let root = alias ? (alias.goto || '') : '';
+    if (startNode && startNode.startTouched && startNode.goto) {
+      root = startNode.goto;
+      if (alias) alias.goto = startNode.goto; // START manda sobre su destino
+    }
+    applyFlowOrder(tabData, cleanTarget(root));
+    return serializeDialogue(tabData, getVarType);
+  }
 
   const chunks = [];
   const header = tabData.header || '';
   if (header) chunks.push({ text: header, literal: true });
 
   // El usuario conectó START y no existe ningún nodo `start`: se emite uno al principio
-  if (startNode && startNode.startTouched && startNode.goto && !real.some(n => n.title === 'start')) {
+  if (startNode && startNode.startTouched && startNode.goto && !alias && !real.some(n => n.title === 'start')) {
     chunks.push({ text: `~ start\n\n=> ${cleanTarget(startNode.goto)}\n\n`, literal: false });
   }
 
-  for (const node of real) {
+  // El alias `~ start` oculto se reinyecta en su posición original; START manda sobre su destino
+  if (alias && startNode && startNode.startTouched) alias.goto = startNode.goto || 'END';
+  const emit = alias ? real.slice() : real;
+  if (alias) emit.splice(Math.min(tabData.startAlias.index, emit.length), 0, alias);
+
+  for (const node of emit) {
     const unchanged = node.nodeType === 'raw'
       || (node.rawText !== undefined && node.fingerprint !== undefined && computeFingerprint(node) === node.fingerprint);
     if (unchanged && node.rawText !== undefined) chunks.push({ text: node.rawText, literal: true });
@@ -670,6 +886,7 @@ const DialogueFormat = {
   forEachNodeRef, updateNodeReferences, renameNode,
   analyzeBody, finalizeParsedNode, parseDialogueFile, parseDialogue, ensureSpecialNodes,
   cleanTarget, serializeNode, serializeDialogue,
+  parseChoiceLine, nodeTargets, flowOrder, slugifyTitle, validTitle, isInvalidTitle, isPureStartAlias, rewriteDestsInText, uniqueTitle, insertNodeAfter, applyFlowOrder,
 };
 
 if (typeof module !== 'undefined' && module.exports) {

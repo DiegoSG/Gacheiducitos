@@ -525,11 +525,12 @@ async function openFile(relPath) {
       layoutData = await loadLayout(relPath);
     } catch (_) {}
 
-    const { header, nodes } = parseDialogueFile(content, layoutData);
+    const { header, nodes, startAlias } = parseDialogueFile(content, layoutData);
 
     const tabData = {
       relPath,
       title: relPath.split('/').pop(),
+      startAlias, // alias `~ start` oculto (lo representa el START verde)
       header, // texto literal previo al primer "~ " (imports, using, comentarios)
       nodes,
       isDirty: false,
@@ -646,6 +647,13 @@ function markDirty() {
   }
 }
 
+/** Cambio estructural (crear/borrar nodos, conectar/reconectar): el texto debe seguir el orden de flujo. */
+function markStructureChanged(tab) {
+  const t = tab || getActiveTab();
+  if (t) t.flowDirty = true;
+  markDirty();
+}
+
 function updateEmptyState() {
   const hasTab = AppState.activeTabIndex >= 0 && AppState.tabs.length > 0;
   document.getElementById('canvas-empty-state')?.classList.toggle('hidden', hasTab);
@@ -757,7 +765,7 @@ function createNodeElement(node, tabData) {
     const titleInput = document.createElement('input');
     titleInput.className = 'node-title-input';
     titleInput.value = node.title;
-    titleInput.placeholder = 'nombre_nudo';
+    titleInput.placeholder = 'nombre_nodo';
     titleInput.readOnly = true;
     titleInput.title = 'Doble clic para renombrar';
 
@@ -773,7 +781,7 @@ function createNodeElement(node, tabData) {
       if (titleInput.readOnly) return;
       titleInput.readOnly = true;
       titleInput.classList.remove('editing');
-      const sanitized = titleInput.value.replace(/\s+/g, '_').trim();
+      const sanitized = titleInput.value.trim();
       if (sanitized && sanitized !== node.title) {
         if (applyNodeRename(tabData, node, sanitized)) {
           markDirty();
@@ -1148,7 +1156,7 @@ function createNodeElement(node, tabData) {
         delBtn.addEventListener('click', () => {
           node.choices.splice(idx, 1);
           if (node.choices.length === 0) node.goto = 'END';
-          markDirty();
+          markStructureChanged();
           renderCanvas(tabData);
           updateInspector();
         });
@@ -1176,9 +1184,8 @@ function createNodeElement(node, tabData) {
     addChoiceBtn.textContent = '+ Opción';
     addChoiceBtn.addEventListener('mousedown', (e) => e.stopPropagation());
     addChoiceBtn.addEventListener('click', () => {
-      node.choices.push({ label: 'Opción', targetTitle: '' });
-      node.goto = '';
-      markDirty();
+      addChoiceWithTarget(tabData, node);
+      markStructureChanged();
       renderCanvas(tabData);
       updateInspector();
       focusNodeInput(node.id, '.node-choice-input', node.choices.length - 1, true);
@@ -1385,6 +1392,9 @@ function applyNodeRename(tab, node, newTitle) {
     setStatus(res.error, 'error');
     return false;
   }
+  if (res.normalized) {
+    setStatus(`Título «${res.normalized.from}» → «${res.normalized.to}» (sin espacios)`, 'warning');
+  }
   return true;
 }
 
@@ -1553,7 +1563,7 @@ function handleConnectionMove(e) {
  */
 function connectStartTo(tab, startNode, targetNode) {
   const realStart = tab.nodes.find(n => n.title === 'start');
-  if (!realStart) {
+  if (!realStart) { // sin `~ start` con contenido: el alias (si existe) se reescribe al serializar
     startNode.goto = targetNode.title;
     startNode.startTouched = true;
     return true;
@@ -1607,7 +1617,7 @@ function endConnection(e) {
       const targetNode = tab.nodes.find(n => n.id === targetNodeId);
       if (sourceNode && targetNode && targetNode.title !== '__START__') {
         if (applyConnection(tab, sourceNode, connectFromChoiceIdx, targetNode)) {
-          markDirty();
+          markStructureChanged();
           renderCanvas(tab);
           updateInspector();
         }
@@ -1623,10 +1633,10 @@ function endConnection(e) {
       const y = Math.round((e.clientY - vpRect.top) / tab.canvas.zoom - 20);
       const node = createNodeData(tab, 'dialogue', Math.max(20, x), Math.max(20, y));
       if (applyConnection(tab, sourceNode, connectFromChoiceIdx, node)) {
-        insertNodeData(tab, node);
+        insertNodeData(tab, node, sourceNode);
         clearSelection();
         selectedNodeIds.add(node.id);
-        markDirty();
+        markStructureChanged();
         renderCanvas(tab);
         updateInspector();
         focusNodeInput(node.id, '.node-text-input', 0);
@@ -1912,7 +1922,7 @@ function pasteNodes() {
     selectedNodeIds.add(copy.id);
   });
 
-  markDirty();
+  markStructureChanged();
   renderCanvas(tab);
   updateInspector();
   setStatus(`${pastedNodes.length} nodo(s) pegado(s)`, 'success');
@@ -1951,7 +1961,7 @@ function deleteSelectedNodes() {
   const rawDangling = tab.nodes.filter(n => n.nodeType === 'raw' && n.rawTargets.some(t => deletedTitles.has(t))).length;
 
   clearSelection();
-  markDirty();
+  markStructureChanged();
   renderCanvas(tab);
   updateInspector();
   setStatus(rawDangling > 0
@@ -2018,11 +2028,11 @@ function updateInspector() {
   }
 
   // Campo común: Título del nodo
-  const titleField = createInspectorField('Nombre del Nudo (Título)', 'text', node.title, () => {});
+  const titleField = createInspectorField('Nombre del Nodo (Título)', 'text', node.title, () => {});
   const titleInputEl = titleField.querySelector('input');
   // Se renombra al confirmar (change), no en cada tecla: así no hay títulos intermedios repetidos
   titleInputEl.addEventListener('change', () => {
-    const sanitized = titleInputEl.value.replace(/\s+/g, '_').trim();
+    const sanitized = titleInputEl.value.trim();
     if (sanitized && sanitized !== node.title && applyNodeRename(tab, node, sanitized)) {
       markDirty();
       renderCanvas(tab);
@@ -2038,12 +2048,12 @@ function updateInspector() {
     // --- INSPECTOR RAW: texto editable tal cual ---
     const note = document.createElement('div');
     note.className = 'inspector-note';
-    note.textContent = 'Este nudo usa sintaxis que el canvas no representa (else, set, %, comentarios, tags, etc.). Se guarda exactamente como lo escribas aquí.';
+    note.textContent = 'Este nodo usa sintaxis que el canvas no representa (else, set, %, comentarios, tags, etc.). Se guarda exactamente como lo escribas aquí.';
     formEl.appendChild(note);
 
     const rawField = document.createElement('div');
     rawField.className = 'inspector-field';
-    rawField.innerHTML = '<label>Texto del nudo (sin la línea "~ título"):</label>';
+    rawField.innerHTML = '<label>Texto del nodo (sin la línea "~ título"):</label>';
     const rawArea = document.createElement('textarea');
     rawArea.className = 'inspector-textarea inspector-raw';
     rawArea.rows = 14;
@@ -2173,7 +2183,7 @@ function updateInspector() {
         buildNodeTargetOptions(selectOut, tab, node.conditionOutputs[key]);
         selectOut.addEventListener('change', () => {
           node.conditionOutputs[key] = selectOut.value;
-          markDirty();
+          markStructureChanged();
           renderCanvas(tab);
         });
         fieldOut.appendChild(selectOut);
@@ -2216,7 +2226,7 @@ function updateInspector() {
         buildNodeTargetOptions(selectOut, tab, node.conditionOutputs[cval]);
         selectOut.addEventListener('change', () => {
           node.conditionOutputs[node.switchCases[idx]] = selectOut.value;
-          markDirty();
+          markStructureChanged();
           renderCanvas(tab);
         });
 
@@ -2227,7 +2237,7 @@ function updateInspector() {
         btnDel.addEventListener('click', () => {
           delete node.conditionOutputs[node.switchCases[idx]];
           node.switchCases.splice(idx, 1);
-          markDirty();
+          markStructureChanged();
           renderCanvas(tab);
           updateInspector();
         });
@@ -2263,7 +2273,7 @@ function updateInspector() {
       buildNodeTargetOptions(selectDef, tab, node.conditionOutputs['default']);
       selectDef.addEventListener('change', () => {
         node.conditionOutputs['default'] = selectDef.value;
-        markDirty();
+        markStructureChanged();
         renderCanvas(tab);
       });
       fieldDef.appendChild(selectDef);
@@ -2331,7 +2341,7 @@ function updateInspector() {
       buildNodeTargetOptions(chTarget, tab, ch.targetTitle);
       chTarget.addEventListener('change', () => {
         ch.targetTitle = chTarget.value;
-        markDirty();
+        markStructureChanged();
         renderCanvas(tab);
       });
 
@@ -2342,7 +2352,7 @@ function updateInspector() {
       chDel.addEventListener('click', () => {
         node.choices.splice(cIdx, 1);
         if (node.choices.length === 0) node.goto = 'END';
-        markDirty();
+        markStructureChanged();
         renderCanvas(tab);
         updateInspector();
       });
@@ -2357,9 +2367,8 @@ function updateInspector() {
     addChoiceBtn.className = 'btn-small';
     addChoiceBtn.textContent = '+ Añadir Opción';
     addChoiceBtn.addEventListener('click', () => {
-      node.choices.push({ label: 'Nueva Opción', targetTitle: '' });
-      node.goto = '';
-      markDirty();
+      addChoiceWithTarget(tab, node);
+      markStructureChanged();
       renderCanvas(tab);
       updateInspector();
     });
@@ -2402,7 +2411,7 @@ function appendGotoInspectorField(formEl, node, tab) {
   buildNodeTargetOptions(sel, tab, node.goto);
   sel.addEventListener('change', () => {
     node.goto = sel.value;
-    markDirty();
+    markStructureChanged();
     renderCanvas(tab);
   });
   f.appendChild(sel);
@@ -2439,7 +2448,7 @@ function buildNodeTargetOptions(selectEl, tab, currentVal) {
 
 /** Crea los datos de un nodo nuevo del tipo indicado (sin insertarlo en la pestaña). */
 function createNodeData(tab, type, x, y) {
-  const prefix = type === 'variable' ? 'var_' : (type === 'event' ? 'evento_' : (type === 'condition' ? 'check_' : 'nudo_'));
+  const prefix = type === 'variable' ? 'var_' : (type === 'event' ? 'evento_' : (type === 'condition' ? 'check_' : 'nodo_'));
   const existingTitles = new Set(tab.nodes.map(n => n.title));
   let title = prefix + (tab.nodes.length - 1);
   let counter = 1;
@@ -2479,10 +2488,28 @@ function createNodeData(tab, type, x, y) {
 }
 
 /** Inserta un nodo antes del END visual. */
-function insertNodeData(tab, node) {
-  const endIdx = tab.nodes.findIndex(n => n.title === '__END__');
-  if (endIdx >= 0) tab.nodes.splice(endIdx, 0, node);
-  else tab.nodes.push(node);
+function insertNodeData(tab, node, origin) {
+  // Con origen, justo después de su último nodo hijo (el texto mantiene pregunta → respuestas)
+  insertNodeAfter(tab.nodes, node, origin && !origin.isSpecial ? origin : null);
+}
+
+/**
+ * Añade una opción a un nodo de diálogo y le crea automáticamente su nodo destino
+ * (a la derecha, conectado, título `<nodo>_<slug o opcion_N>`).
+ */
+function addChoiceWithTarget(tab, node, label) {
+  const titles = new Set(tab.nodes.map(n => n.title));
+  const n = node.choices.length + 1;
+  const base = node.title + '_' + (label ? slugifyTitle(label) : 'opcion_' + n);
+  const title = uniqueTitle(base, titles);
+  const { x, y } = findFreeSlotRightOf(tab, node);
+  const target = createNodeData(tab, 'dialogue', Math.max(20, x), Math.max(20, y));
+  target.title = title;
+  target.goto = 'END';
+  node.choices.push({ label: label || 'Opción', targetTitle: title });
+  node.goto = '';
+  insertNodeData(tab, target, node);
+  return target;
 }
 
 /** Único nodo seleccionado que no sea START/END (o null). */
@@ -2550,13 +2577,13 @@ function handleAddGenericNode(type) {
   }
 
   const node = createNodeData(tab, type, Math.max(20, x), Math.max(20, y));
-  insertNodeData(tab, node);
+  insertNodeData(tab, node, selected);
   if (selected) autoConnectFrom(selected, node);
 
   clearSelection();
   selectedNodeIds.add(node.id);
 
-  markDirty();
+  markStructureChanged();
   renderCanvas(tab);
   updateInspector();
   if (type === 'dialogue') focusNodeInput(node.id, '.node-text-input', 0);

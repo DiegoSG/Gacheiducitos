@@ -258,13 +258,14 @@
     // START visual conectado a mano: se conserva si sigue siendo válido
     const oldStart = old.find(n => n.title === '__START__');
     const newStart = nodes.find(n => n.title === '__START__');
-    if (oldStart && oldStart.startTouched && newStart && !nodes.some(n => n.title === 'start')
+    if (oldStart && oldStart.startTouched && newStart && !parsed.startAlias && !nodes.some(n => n.title === 'start')
         && newTitles.has(oldStart.goto)) {
       newStart.goto = oldStart.goto;
       newStart.startTouched = true;
     }
 
     tab.header = parsed.header;
+    tab.startAlias = parsed.startAlias;
     tab.nodes = nodes;
     tab.scriptText = text;
     tab.lastParsedText = text;
@@ -375,26 +376,14 @@
   }
 
   function destOnLine(line) {
-    const re = /=>(?:<)?\s+(\S+)/g;
-    const m = re.exec(line);
+    const m = /=>(?:<)?\s+(\S.*?)\s*$/.exec(line);
     if (!m) return null;
     const dest = m[1].replace(/!$/, '');
-    const s = m.index + m[0].length - m[1].length;
-    return { dest, s, e: s + m[1].length };
+    const s2 = line.indexOf(m[1], m.index + 2);
+    return { dest, s: s2, e: s2 + dest.length };
   }
 
-  function slugify(label) {
-    const s = String(label).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-      .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 24).replace(/_+$/g, '');
-    return s || 'opcion';
-  }
-
-  function uniqueTitle(base, titles) {
-    if (!titles.has(base)) return base;
-    let i = 2;
-    while (titles.has(`${base}_${i}`)) i++;
-    return `${base}_${i}`;
-  }
+  const slugify = slugifyTitle;
 
   function currentNodeRange(text, pos) {
     const ranges = nodeRanges(text);
@@ -465,12 +454,12 @@
     } else if (rest.startsWith('#') || rest.startsWith('//')) {
       html = esc(indent) + `<span class="w-comment">${esc(rest)}</span>`;
     } else if (/^=>/.test(rest)) {
-      const g = rest.match(/^(=>(?:<)?)(\s+)(\S+)(.*)$/);
+      const g = rest.match(/^(=>(?:<)?)(\s+)(\S.*?)(\s*)$/);
       html = g
         ? esc(indent) + `<span class="w-arrow">${esc(g[1])}</span>${esc(g[2])}${destSpan(g[3], titles)}${esc(g[4])}`
         : esc(indent) + `<span class="w-arrow">${esc(rest)}</span>`;
     } else if (/^-(\s|$)/.test(rest)) {
-      const g = rest.match(/^(-\s*)(.*?)(\s+=>(?:<)?\s+)(\S+)(\s*)$/);
+      const g = rest.match(/^(-\s*)(.*?)(\s+=>(?:<)?\s+)(\S.*?)(\s*)$/);
       if (g) {
         html = esc(indent) + `<span class="w-bullet">${esc(g[1])}</span><span class="w-option">${esc(g[2])}</span>`
           + `<span class="w-arrow">${esc(g[3])}</span>${destSpan(g[4], titles)}${esc(g[5])}`;
@@ -566,6 +555,9 @@
     for (const n of real) count.set(n.title, (count.get(n.title) || 0) + 1);
     for (const n of real) {
       if (count.get(n.title) > 1) add(n.title, 'Título duplicado');
+      if (isInvalidTitle(n.title) || targetsOf(n).some(isInvalidTitle)) {
+        add(n.title, 'Título no válido para Godot: usa guiones bajos');
+      }
       const targets = targetsOf(n);
       if (targets.length === 0) add(n.title, 'Nodo sin salida');
       for (const t of targets) {
@@ -588,7 +580,8 @@
 
   function renderMinimap(tab) {
     if (!minimap) return;
-    const nodes = tab.nodes;
+    const real = flowOrder(tab.nodes, tab.startAlias && tab.startAlias.node.goto); // se dibuja en orden de flujo (solo visual)
+    const nodes = [tab.nodes.find(n => n.title === '__START__'), ...real, tab.nodes.find(n => n.title === '__END__')].filter(Boolean);
     if (nodes.length === 0) { minimap.innerHTML = ''; return; }
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const n of nodes) {
@@ -637,7 +630,7 @@
   function renderNodeList(tab) {
     if (!nodeListEl) return;
     const warn = tab._warnings || new Map();
-    const real = tab.nodes.filter(n => !n.isSpecial);
+    const real = flowOrder(tab.nodes, tab.startAlias && tab.startAlias.node.goto);
     nodeCountEl.textContent = `(${real.length})`;
     nodeListEl.innerHTML = real.map(n => {
       const w = warn.get(n.title);
@@ -710,7 +703,7 @@
     }
     if (lastLineIdx >= 0 && idx !== lastLineIdx && !busy) {
       const prev = text.split('\n')[lastLineIdx];
-      if (prev !== undefined) ensureStubsForLine(prev, true);
+      if (prev !== undefined) completeLine(lastLineIdx);
     }
     lastLineIdx = idx;
   }
@@ -719,7 +712,7 @@
    * Al salir de un encabezado `~ titulo` editado, actualiza los `=> titulo` que apuntaban al
    * título anterior (igual que renombrar en el canvas).
    */
-  function finalizeHeaderWatch() {
+  function finalizeHeaderWatch(force) {
     const w = headerWatch;
     headerWatch = null;
     if (!w || !boundTab) return;
@@ -727,11 +720,20 @@
     const lines = text.split('\n');
     const line = lines[w.idx];
     if (line === undefined || !line.startsWith('~ ')) return;
-    const newTitle = line.slice(2).trim();
-    if (!newTitle || newTitle === w.title) return;
-    if (collectTitles(text).has(w.title)) return; // el título viejo sigue existiendo en otro nodo
-    const updated = renameInRawText(text, w.title, newTitle).split('\n');
+    const typed = line.slice(2).trim();
+    if (!typed) return;
+    const edited = typed !== w.title;
+    const target = validTitle(typed);
+    const fixHeader = target !== typed && target !== '' && (edited || force);
+    if (!edited && !fixHeader) return;
+    // Referencias: al título anterior (si ya no existe) y al texto escrito (p. ej. "=> Bien Venida")
+    const stillOld = collectTitles(text).has(w.title);
+    const map = new Map();
+    if (edited && !stillOld) map.set(w.title, target);
+    if (fixHeader) map.set(typed, target);
+    const updated = rewriteDestsInText(text, (d) => map.get(d)).split('\n');
     if (updated.length !== lines.length) return;
+    if (fixHeader) updated[w.idx] = '~ ' + target;
     // Caret por (línea, columna) para que los cambios en otras líneas no lo muevan
     const pos = ta.selectionStart;
     const cLine = lineIndexAt(text, pos);
@@ -753,7 +755,9 @@
       for (let i = 0; i < cLine; i++) o += ls[i].length + 1;
       const np = Math.min(o + cCol, now.length);
       ta.setSelectionRange(np, np);
-      toast(`Referencias a «${w.title}» actualizadas a «${newTitle}»`);
+      toast(fixHeader
+        ? `Título «${typed}» → «${target}» (sin espacios)`
+        : `Referencias a «${w.title}» actualizadas a «${target}»`);
     }
   }
 
@@ -810,32 +814,93 @@
   // Creación de nodos "a la par"
   // ------------------------------------------------------------
 
-  /** Añade al final del texto un nodo stub por cada destino inexistente de la línea. */
-  function ensureStubsForLine(line, restoreCaret) {
-    const t = line.trim();
-    if (!(t.startsWith('=>') || /^-\s/.test(t))) return false;
-    const d = destOnLine(t);
-    if (!d) return false;
-    const dest = d.dest;
-    if (dest === 'END' || dest === '__END__' || dest === '__START__') return false;
-    if (!/^[^\s!{}\[\]<>"'=]+$/.test(dest)) return false;
-    if (collectTitles(ta.value).has(dest)) return false;
-    appendStub(dest, restoreCaret);
-    return true;
+  /** Reemplaza [a, b) conservando el cursor y el scroll (el cursor se desplaza si estaba después). */
+  function editKeepCaret(a, b, str) {
+    const s = ta.selectionStart, e = ta.selectionEnd, top = ta.scrollTop;
+    const d = str.length - (b - a);
+    const adj = (p) => (p > b || (p === b && a !== b) ? p + d : p); // inserción pura en el caret: el caret se queda delante
+    replaceRange(a, b, str);
+    ta.setSelectionRange(adj(s), adj(e));
+    ta.scrollTop = top;
+    syncScroll();
   }
 
-  function appendStub(dest, keepCaret = true) {
-    const s = ta.selectionStart, e = ta.selectionEnd, top = ta.scrollTop;
+  /**
+   * Inserta el stub `~ dest => END` justo después del nodo que contiene `originPos` (y de los nodos
+   * contiguos a los que ese nodo ya apunta), para que el texto conserve el flujo pregunta → respuestas.
+   */
+  function insertStub(dest, originPos) {
     const t = ta.value;
-    const sep = t.endsWith('\n\n') ? '' : (t.endsWith('\n') ? '\n' : (t === '' ? '' : '\n\n'));
-    replaceRange(t.length, t.length, `${sep}~ ${dest}\n\n=> END\n`);
-    if (keepCaret) {
-      ta.setSelectionRange(s, e);
-      ta.scrollTop = top;
-      syncScroll();
+    const ranges = nodeRanges(t);
+    let i = -1;
+    ranges.forEach((r, k) => { if (r.start <= originPos) i = k; });
+    if (i < 0) i = ranges.length - 1;
+    let at = t.length;
+    if (i >= 0) {
+      const targets = new Set();
+      const own = t.slice(ranges[i].start, ranges[i].end);
+      rewriteDestsInText(own, (d) => { targets.add(d); });
+      let j = i;
+      while (j + 1 < ranges.length && targets.has(ranges[j + 1].title)) j++;
+      at = ranges[j].end;
     }
+    let str;
+    if (at >= t.length) {
+      const sep = t.endsWith('\n\n') ? '' : (t.endsWith('\n') ? '\n' : (t === '' ? '' : '\n\n'));
+      str = `${sep}~ ${dest}\n\n=> END\n`;
+    } else {
+      const before = t.slice(0, at);
+      const sep = before.endsWith('\n\n') ? '' : (before.endsWith('\n') ? '\n' : '\n\n');
+      str = `${sep}~ ${dest}\n\n=> END\n\n`;
+    }
+    editKeepCaret(at, at, str);
     toast(`Nodo «${dest}» creado`);
     lastLineIdx = lineIndexAt(ta.value, ta.selectionStart);
+  }
+
+  /**
+   * Completa la línea `lineIdx`: una opción "- texto" sin destino recibe "=> <nodo>_<slug>" y, si el
+   * destino de la línea no existe, se crea su nodo stub tras el nodo de origen.
+   */
+  function completeLine(lineIdx) {
+    const t = ta.value;
+    const lines = t.split('\n');
+    const line = lines[lineIdx];
+    if (line === undefined) return false;
+    const tt = line.trim();
+    if (!(tt.startsWith('=>') || /^-\s/.test(tt))) return false;
+    let ls = 0;
+    for (let i = 0; i < lineIdx; i++) ls += lines[i].length + 1;
+
+    let dest;
+    const om = line.match(/^(\s*)-\s+(.+?)\s*$/);
+    const noDest = om && (!/=>/.test(om[2]) || /\s=>\s*$/.test(om[2]));
+    if (noDest) {
+      const label = om[2].replace(/\s*(=>|->)\s*$/, '').trim();
+      if (!label) return false;
+      const origin = currentNodeRange(t, ls);
+      const base = ((origin && origin.title) || 'nodo') + '_' + slugify(label);
+      dest = uniqueTitle(base, collectTitles(t));
+      editKeepCaret(ls, ls + line.length, `${om[1]}- ${label} => ${dest}`);
+    } else {
+      const d = destOnLine(tt);
+      if (!d) return false;
+      dest = d.dest;
+      if (dest === 'END' || dest === '__END__' || dest === '__START__') return false;
+      const vd = validTitle(dest);
+      if (vd !== dest) {
+        if (!vd || !/^[^\s!{}\[\]<>"'=]+$/.test(vd)) return false;
+        // El destino abarca hasta el final de la línea: se normaliza a la versión válida
+        const nl = rewriteDestsInText(line, () => vd);
+        editKeepCaret(ls, ls + line.length, nl);
+        toast(`Destino «${dest}» → «${vd}» (sin espacios)`);
+        dest = vd;
+      }
+      if (!/^[^\s!{}\[\]<>"'=]+$/.test(dest)) return false;
+      if (collectTitles(t).has(dest)) return false;
+    }
+    insertStub(dest, ls);
+    return true;
   }
 
   // ------------------------------------------------------------
@@ -873,6 +938,12 @@
 
     // Encabezado de nodo: baja a la primera línea del cuerpo
     if (li.text.startsWith('~ ')) {
+      const idx0 = lineIndexAt(t, pos);
+      if (isInvalidTitle(li.text.slice(2))) {
+        if (!headerWatch || headerWatch.idx !== idx0) headerWatch = { idx: idx0, title: li.text.slice(2).trim() };
+        finalizeHeaderWatch(true);
+        return handleEnter();
+      }
       const next = lineInfo(t, Math.min(li.end + 1, t.length));
       if (li.end >= t.length) { replaceRange(li.end, li.end, '\n\n'); return true; }
       setCaret(next.end === next.start ? next.start : next.start);
@@ -889,27 +960,20 @@
     }
     if (sp) {
       replaceRange(pos, pos, '\n' + indent + sp.actor + ': ');
-      ensureStubsForLine(li.text, true);
       return true;
     }
 
-    // Opción sin destino: se completa con => <nodo>_<slug> y se crea el stub
-    const opt = li.text.match(/^(\s*)-\s+(.+?)\s*$/);
-    if (opt && !/=>/.test(li.text)) {
-      const titles = collectTitles(t);
-      const base = (curTitle || 'nodo') + '_' + slugify(opt[2]);
-      const dest = uniqueTitle(base, titles);
-      replaceRange(pos, pos, ` => ${dest}\n${indent}`);
-      const after = ta.selectionStart;
-      appendStub(dest, true);
-      ta.setSelectionRange(after, after);
-      scrollCaretIntoView();
+    // Opción ("- texto") o salto: se completa el destino y se crea el nodo si no existe
+    if (/^\s*-\s*$/.test(li.text)) {
+      // Solo "- ": se borra (igual que el prefijo "Orador: ")
+      replaceRange(li.start + indent.length, li.end, '');
       return true;
     }
-
-    if (/^\s*(-\s.*)?=>/.test(li.text) || /^\s*-\s.*=>/.test(li.text) || /^\s*=>/.test(li.text)) {
+    if (/^\s*(-\s|=>)/.test(li.text)) {
+      const idx = lineIndexAt(t, pos);
       replaceRange(pos, pos, '\n' + indent);
-      ensureStubsForLine(li.text, true);
+      completeLine(idx);
+      scrollCaretIntoView();
       return true;
     }
 
@@ -1001,7 +1065,36 @@
       setCaret(s + 2 + sel.length);
       return;
     }
+    // Línea que solo tiene "Orador: " (continuación automática): se sustituye por la opción
+    const li = lineInfo(ta.value, s);
+    const sp = splitActor(li.text);
+    if (sp && sp.rest.trim() === '') {
+      replaceRange(li.start + sp.indent.length, li.end, '- ');
+      setCaret(li.start + sp.indent.length + 2);
+      return;
+    }
     insertOnFreshLine('- ', 2);
+  }
+
+  /** Reordena los nodos del texto por flujo (pregunta → respuestas) y conserva el cursor. */
+  function orderByFlow() {
+    const tab = boundTab;
+    if (!tab) return;
+    syncFromText(tab);
+    const pos = ta.selectionStart;
+    const cur = currentNodeRange(ta.value, pos);
+    const off = cur ? pos - cur.start : 0;
+    if (!applyFlowOrder(tab)) { toast('Los nodos ya están en orden de flujo'); return; }
+    const text = serializeDialogue(tab, getVarType);
+    replaceRange(0, ta.value.length, text);
+    syncFromText(tab);
+    const r = cur ? nodeRanges(ta.value).find(x => x.title === cur.title) : null;
+    const np = r ? Math.min(r.start + off, ta.value.length) : 0;
+    ta.setSelectionRange(np, np);
+    scrollCaretIntoView();
+    updateCursor(true);
+    refreshAll();
+    toast('Nodos ordenados por flujo');
   }
 
   function insertCondition() {
@@ -1300,6 +1393,7 @@
     bar?.querySelectorAll('button[data-act]').forEach(btn => {
       btn.addEventListener('click', () => { if (!boundTab) return; ta.focus(); ACTIONS[btn.dataset.act]?.(); });
     });
+    $('btn-flow-order')?.addEventListener('click', () => { if (boundTab) { ta.focus(); orderByFlow(); } });
     $('btn-palette')?.addEventListener('click', openPalette);
     $('btn-toggle-side')?.addEventListener('click', toggleSide);
 
@@ -1355,5 +1449,5 @@
     getPreferredView, isWritingView, setView, applyViewForTab,
     flushWritingSync, syncModelToWritingEditor: syncModelToEditor, leaveWritingEditor: leaveEditor,
   });
-  window.Writing = { analyzeNodes, targetsOf, collectTitles, nodeRanges, slugify, splitActor };
+  window.Writing = { analyzeNodes, targetsOf, collectTitles, nodeRanges, slugify, splitActor, orderByFlow };
 })();
