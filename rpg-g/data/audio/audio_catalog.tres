@@ -1,923 +1,1554 @@
-[gd_resource type="Resource" script_class="AudioCatalog" load_steps=232 format=3]
+[gd_resource type="Resource" script_class="AudioCatalog" load_steps=416 format=3]
 
 [ext_resource type="Script" path="res://data/resource_types/audio_catalog.gd" id="1_catalog"]
 [ext_resource type="Script" path="res://data/resource_types/audio_entry.gd" id="2_entry"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/oga_rpgchip_rpgchip01_title_screen.ogg" id="s1_oga_rpgchip_rpgchip01_title_screen"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/oga_rpgchip_rpgchip03_town.ogg" id="s2_oga_rpgchip_rpgchip03_town"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/oga_rpgchip_rpgchip07_the_shrine_of_mysteries.ogg" id="s3_oga_rpgchip_rpgchip07_the_shrine_of_mysteries"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/oga_rpgchip_rpgchip06_dungeon.ogg" id="s4_oga_rpgchip_rpgchip06_dungeon"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/oga_rpgchip_rpgchip13_battle_1.ogg" id="s5_oga_rpgchip_rpgchip13_battle_1"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/oga_rpgchip_rpgchip15_game_over.ogg" id="s6_oga_rpgchip_rpgchip15_game_over"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/oga_rpgchip_rpgchip10_fountain_of_the_fairies.ogg" id="s7_oga_rpgchip_rpgchip10_fountain_of_the_fairies"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/oga_rpgchip_rpgchip09_rainy_streets.ogg" id="s8_oga_rpgchip_rpgchip09_rainy_streets"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/oga_rpgchip_rpgchip05_pavane.ogg" id="s9_oga_rpgchip_rpgchip05_pavane"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/oga_rpgchip_rpgchip11_airship.ogg" id="s10_oga_rpgchip_rpgchip11_airship"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/oga_rpgchip_rpgchip14_battle_2.ogg" id="s11_oga_rpgchip_rpgchip14_battle_2"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/oga_rpgchip_rpgchip08_castle_on_the_mountain.ogg" id="s12_oga_rpgchip_rpgchip08_castle_on_the_mountain"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_footstep_grass_000.ogg" id="s13_kenney_impact_footstep_grass_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_drawKnife1.ogg" id="s14_kenney_rpg_drawKnife1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactPunch_medium_000.ogg" id="s15_kenney_impact_impactPunch_medium_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactPlate_light_000.ogg" id="s16_kenney_impact_impactPlate_light_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_metalLatch.ogg" id="s17_kenney_rpg_metalLatch"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactPunch_heavy_000.ogg" id="s18_kenney_impact_impactPunch_heavy_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactSoft_heavy_000.ogg" id="s19_kenney_impact_impactSoft_heavy_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaserUp2.ogg" id="s20_kenney_digital_phaserUp2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_lowDown.ogg" id="s21_kenney_digital_lowDown"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_powerUp8.ogg" id="s22_kenney_digital_powerUp8"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_powerUp3.ogg" id="s23_kenney_digital_powerUp3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_click_003.ogg" id="s24_kenney_interface_click_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_error_004.ogg" id="s25_kenney_interface_error_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaserDown2.ogg" id="s26_kenney_digital_phaserDown2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaserUp3.ogg" id="s27_kenney_digital_phaserUp3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_tick_001.ogg" id="s28_kenney_interface_tick_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_zap1.ogg" id="s29_kenney_digital_zap1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_tick_002.ogg" id="s30_kenney_interface_tick_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_handleCoins2.ogg" id="s31_kenney_rpg_handleCoins2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_tick_004.ogg" id="s32_kenney_interface_tick_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_switch_002.ogg" id="s33_kenney_interface_switch_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_powerUp5.ogg" id="s34_kenney_digital_powerUp5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_confirmation_001.ogg" id="s35_kenney_interface_confirmation_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_pluck_001.ogg" id="s36_kenney_interface_pluck_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactSoft_medium_001.ogg" id="s37_kenney_impact_impactSoft_medium_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_question_002.ogg" id="s38_kenney_interface_question_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_question_001.ogg" id="s39_kenney_interface_question_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_question_004.ogg" id="s40_kenney_interface_question_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_footstep_concrete_001.ogg" id="s41_kenney_impact_footstep_concrete_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_knifeSlice.ogg" id="s42_kenney_rpg_knifeSlice"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactPunch_medium_002.ogg" id="s43_kenney_impact_impactPunch_medium_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_zapTwoTone.ogg" id="s44_kenney_digital_zapTwoTone"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactMetal_light_001.ogg" id="s45_kenney_impact_impactMetal_light_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaserDown3.ogg" id="s46_kenney_digital_phaserDown3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_handleCoins.ogg" id="s47_kenney_rpg_handleCoins"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactSoft_medium_000.ogg" id="s48_kenney_impact_impactSoft_medium_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactWood_medium_000.ogg" id="s49_kenney_impact_impactWood_medium_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactWood_heavy_000.ogg" id="s50_kenney_impact_impactWood_heavy_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactBell_heavy_000.ogg" id="s51_kenney_impact_impactBell_heavy_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactBell_heavy_003.ogg" id="s52_kenney_impact_impactBell_heavy_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_error_002.ogg" id="s53_kenney_interface_error_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_creak1.ogg" id="s54_kenney_rpg_creak1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_bookClose.ogg" id="s55_kenney_rpg_bookClose"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_error_003.ogg" id="s56_kenney_interface_error_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_powerUp1.ogg" id="s57_kenney_digital_powerUp1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_switch_003.ogg" id="s58_kenney_interface_switch_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_switch_004.ogg" id="s59_kenney_interface_switch_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_toggle_001.ogg" id="s60_kenney_interface_toggle_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactPlate_medium_000.ogg" id="s61_kenney_impact_impactPlate_medium_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_click_002.ogg" id="s62_kenney_interface_click_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_bong_001.ogg" id="s63_kenney_interface_bong_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaseJump3.ogg" id="s64_kenney_digital_phaseJump3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_metalClick.ogg" id="s65_kenney_rpg_metalClick"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_doorOpen_1.ogg" id="s66_kenney_rpg_doorOpen_1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_doorClose_1.ogg" id="s67_kenney_rpg_doorClose_1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_lowRandom.ogg" id="s68_kenney_digital_lowRandom"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_scifi_forceField_000.ogg" id="s69_kenney_scifi_forceField_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactWood_heavy_001.ogg" id="s70_kenney_impact_impactWood_heavy_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaserUp1.ogg" id="s71_kenney_digital_phaserUp1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_scroll_001.ogg" id="s72_kenney_interface_scroll_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_toggle_002.ogg" id="s73_kenney_interface_toggle_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_select_002.ogg" id="s74_kenney_interface_select_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_open_001.ogg" id="s75_kenney_interface_open_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_scroll_002.ogg" id="s76_kenney_interface_scroll_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_scroll_003.ogg" id="s77_kenney_interface_scroll_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_click_001.ogg" id="s78_kenney_interface_click_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_drop_001.ogg" id="s79_kenney_interface_drop_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_click_004.ogg" id="s80_kenney_interface_click_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_confirmation_002.ogg" id="s81_kenney_interface_confirmation_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_close_001.ogg" id="s82_kenney_interface_close_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_PIZZI03.ogg" id="s83_kenney_jingles_jingles_PIZZI03"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_SAX03.ogg" id="s84_kenney_jingles_jingles_SAX03"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_bookOpen.ogg" id="s85_kenney_rpg_bookOpen"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_bookFlip1.ogg" id="s86_kenney_rpg_bookFlip1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_confirmation_003.ogg" id="s87_kenney_interface_confirmation_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_zap2.ogg" id="s88_kenney_digital_zap2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaserUp4.ogg" id="s89_kenney_digital_phaserUp4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_error_001.ogg" id="s90_kenney_interface_error_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_select_003.ogg" id="s91_kenney_interface_select_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_error_005.ogg" id="s92_kenney_interface_error_005"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_cloth1.ogg" id="s93_kenney_rpg_cloth1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_select_004.ogg" id="s94_kenney_interface_select_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_beltHandle1.ogg" id="s95_kenney_rpg_beltHandle1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_error_006.ogg" id="s96_kenney_interface_error_006"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_cloth3.ogg" id="s97_kenney_rpg_cloth3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_beltHandle2.ogg" id="s98_kenney_rpg_beltHandle2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_back_001.ogg" id="s99_kenney_interface_back_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_confirmation_004.ogg" id="s100_kenney_interface_confirmation_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_open_002.ogg" id="s101_kenney_interface_open_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_close_002.ogg" id="s102_kenney_interface_close_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_back_003.ogg" id="s103_kenney_interface_back_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_maximize_003.ogg" id="s104_kenney_interface_maximize_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_minimize_003.ogg" id="s105_kenney_interface_minimize_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_back_002.ogg" id="s106_kenney_interface_back_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_back_004.ogg" id="s107_kenney_interface_back_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_open_003.ogg" id="s108_kenney_interface_open_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_close_003.ogg" id="s109_kenney_interface_close_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_bookFlip2.ogg" id="s110_kenney_rpg_bookFlip2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_scroll_004.ogg" id="s111_kenney_interface_scroll_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_click_005.ogg" id="s112_kenney_interface_click_005"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_pluck_002.ogg" id="s113_kenney_interface_pluck_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_error_007.ogg" id="s114_kenney_interface_error_007"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_maximize_006.ogg" id="s115_kenney_interface_maximize_006"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_minimize_006.ogg" id="s116_kenney_interface_minimize_006"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_select_005.ogg" id="s117_kenney_interface_select_005"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_select_006.ogg" id="s118_kenney_interface_select_006"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_error_008.ogg" id="s119_kenney_interface_error_008"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_powerUp6.ogg" id="s120_kenney_digital_powerUp6"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaserDown1.ogg" id="s121_kenney_digital_phaserDown1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaserUp5.ogg" id="s122_kenney_digital_phaserUp5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaseJump1.ogg" id="s123_kenney_digital_phaseJump1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_drop_002.ogg" id="s124_kenney_interface_drop_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaseJump2.ogg" id="s125_kenney_digital_phaseJump2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaseJump4.ogg" id="s126_kenney_digital_phaseJump4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_PIZZI08.ogg" id="s127_kenney_jingles_jingles_PIZZI08"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_minimize_004.ogg" id="s128_kenney_interface_minimize_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_maximize_004.ogg" id="s129_kenney_interface_maximize_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_NES05.ogg" id="s130_kenney_jingles_jingles_NES05"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_NES00.ogg" id="s131_kenney_jingles_jingles_NES00"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_NES10.ogg" id="s132_kenney_jingles_jingles_NES10"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_minimize_005.ogg" id="s133_kenney_interface_minimize_005"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_NES03.ogg" id="s134_kenney_jingles_jingles_NES03"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_open_004.ogg" id="s135_kenney_interface_open_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_footstep_concrete_002.ogg" id="s136_kenney_impact_footstep_concrete_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactMining_000.ogg" id="s137_kenney_impact_impactMining_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactPlank_medium_000.ogg" id="s138_kenney_impact_impactPlank_medium_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactMetal_light_000.ogg" id="s139_kenney_impact_impactMetal_light_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactMining_002.ogg" id="s140_kenney_impact_impactMining_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactSoft_heavy_002.ogg" id="s141_kenney_impact_impactSoft_heavy_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactMining_003.ogg" id="s142_kenney_impact_impactMining_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_powerUp2.ogg" id="s143_kenney_digital_powerUp2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_metalPot1.ogg" id="s144_kenney_rpg_metalPot1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactMetal_medium_000.ogg" id="s145_kenney_impact_impactMetal_medium_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaserUp6.ogg" id="s146_kenney_digital_phaserUp6"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_scifi_explosionCrunch_000.ogg" id="s147_kenney_scifi_explosionCrunch_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_scifi_explosionCrunch_002.ogg" id="s148_kenney_scifi_explosionCrunch_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_scifi_lowFrequency_explosion_000.ogg" id="s149_kenney_scifi_lowFrequency_explosion_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactPunch_heavy_002.ogg" id="s150_kenney_impact_impactPunch_heavy_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_doorOpen_2.ogg" id="s151_kenney_rpg_doorOpen_2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_drop_003.ogg" id="s152_kenney_interface_drop_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_powerUp4.ogg" id="s153_kenney_digital_powerUp4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_scifi_explosionCrunch_001.ogg" id="s154_kenney_scifi_explosionCrunch_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_drop_004.ogg" id="s155_kenney_interface_drop_004"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactSoft_medium_002.ogg" id="s156_kenney_impact_impactSoft_medium_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_lowThreeTone.ogg" id="s157_kenney_digital_lowThreeTone"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_cloth2.ogg" id="s158_kenney_rpg_cloth2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactBell_heavy_001.ogg" id="s159_kenney_impact_impactBell_heavy_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_NES01.ogg" id="s160_kenney_jingles_jingles_NES01"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_NES11.ogg" id="s161_kenney_jingles_jingles_NES11"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaseJump5.ogg" id="s162_kenney_digital_phaseJump5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_footstep_concrete_003.ogg" id="s163_kenney_impact_footstep_concrete_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_rpg_cloth4.ogg" id="s164_kenney_rpg_cloth4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_laser3.ogg" id="s165_kenney_digital_laser3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_pepSound2.ogg" id="s166_kenney_digital_pepSound2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactWood_medium_002.ogg" id="s167_kenney_impact_impactWood_medium_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_powerUp7.ogg" id="s168_kenney_digital_powerUp7"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_select_007.ogg" id="s169_kenney_interface_select_007"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_phaserUp7.ogg" id="s170_kenney_digital_phaserUp7"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_NES02.ogg" id="s171_kenney_jingles_jingles_NES02"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_NES12.ogg" id="s172_kenney_jingles_jingles_NES12"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_scifi_slime_000.ogg" id="s173_kenney_scifi_slime_000"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_scifi_computerNoise_001.ogg" id="s174_kenney_scifi_computerNoise_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactPlate_medium_001.ogg" id="s175_kenney_impact_impactPlate_medium_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_interface_scratch_001.ogg" id="s176_kenney_interface_scratch_001"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_NES04.ogg" id="s177_kenney_jingles_jingles_NES04"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_NES13.ogg" id="s178_kenney_jingles_jingles_NES13"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactBell_heavy_002.ogg" id="s179_kenney_impact_impactBell_heavy_002"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_impact_impactSoft_medium_003.ogg" id="s180_kenney_impact_impactSoft_medium_003"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_powerUp9.ogg" id="s181_kenney_digital_powerUp9"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_digital_pepSound4.ogg" id="s182_kenney_digital_pepSound4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_NES06.ogg" id="s183_kenney_jingles_jingles_NES06"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/kenney_jingles_jingles_NES14.ogg" id="s184_kenney_jingles_jingles_NES14"]
 
 [sub_resource type="Resource" id="Entry_music_alert"]
 script = ExtResource("2_entry")
 id = &"music_alert"
+stream = ExtResource("s5_oga_rpgchip_rpgchip13_battle_1")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_music_death"]
 script = ExtResource("2_entry")
 id = &"music_death"
+stream = ExtResource("s6_oga_rpgchip_rpgchip15_game_over")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_music_level_01"]
 script = ExtResource("2_entry")
 id = &"music_level_01"
+stream = ExtResource("s2_oga_rpgchip_rpgchip03_town")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_music_level_02"]
 script = ExtResource("2_entry")
 id = &"music_level_02"
+stream = ExtResource("s3_oga_rpgchip_rpgchip07_the_shrine_of_mysteries")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_music_level_03"]
 script = ExtResource("2_entry")
 id = &"music_level_03"
+stream = ExtResource("s4_oga_rpgchip_rpgchip06_dungeon")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_music_mg_catcher"]
 script = ExtResource("2_entry")
 id = &"music_mg_catcher"
+stream = ExtResource("s7_oga_rpgchip_rpgchip10_fountain_of_the_fairies")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_music_mg_excavation"]
 script = ExtResource("2_entry")
 id = &"music_mg_excavation"
+stream = ExtResource("s8_oga_rpgchip_rpgchip09_rainy_streets")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_music_mg_result"]
 script = ExtResource("2_entry")
 id = &"music_mg_result"
+stream = ExtResource("s9_oga_rpgchip_rpgchip05_pavane")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_music_mg_runner"]
 script = ExtResource("2_entry")
 id = &"music_mg_runner"
+stream = ExtResource("s10_oga_rpgchip_rpgchip11_airship")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_music_mg_smasher"]
 script = ExtResource("2_entry")
 id = &"music_mg_smasher"
+stream = ExtResource("s11_oga_rpgchip_rpgchip14_battle_2")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_music_mg_trampolin"]
 script = ExtResource("2_entry")
 id = &"music_mg_trampolin"
+stream = ExtResource("s12_oga_rpgchip_rpgchip08_castle_on_the_mountain")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_music_start_menu"]
 script = ExtResource("2_entry")
 id = &"music_start_menu"
+stream = ExtResource("s1_oga_rpgchip_rpgchip01_title_screen")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_player_step"]
 script = ExtResource("2_entry")
 id = &"sfx_player_step"
+stream = ExtResource("s13_kenney_impact_footstep_grass_000")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_player_attack"]
 script = ExtResource("2_entry")
 id = &"sfx_player_attack"
+stream = ExtResource("s14_kenney_rpg_drawKnife1")
 
 [sub_resource type="Resource" id="Entry_sfx_player_attack_hit"]
 script = ExtResource("2_entry")
 id = &"sfx_player_attack_hit"
+stream = ExtResource("s15_kenney_impact_impactPunch_medium_000")
 
 [sub_resource type="Resource" id="Entry_sfx_player_block_on"]
 script = ExtResource("2_entry")
 id = &"sfx_player_block_on"
+stream = ExtResource("s16_kenney_impact_impactPlate_light_000")
+volume_db = -3.0
 
 [sub_resource type="Resource" id="Entry_sfx_player_block_off"]
 script = ExtResource("2_entry")
 id = &"sfx_player_block_off"
+stream = ExtResource("s17_kenney_rpg_metalLatch")
+volume_db = -3.0
 
 [sub_resource type="Resource" id="Entry_sfx_player_hurt"]
 script = ExtResource("2_entry")
 id = &"sfx_player_hurt"
+stream = ExtResource("s18_kenney_impact_impactPunch_heavy_000")
 
 [sub_resource type="Resource" id="Entry_sfx_player_knockback"]
 script = ExtResource("2_entry")
 id = &"sfx_player_knockback"
+stream = ExtResource("s19_kenney_impact_impactSoft_heavy_000")
 
 [sub_resource type="Resource" id="Entry_sfx_player_invulnerable"]
 script = ExtResource("2_entry")
 id = &"sfx_player_invulnerable"
+stream = ExtResource("s20_kenney_digital_phaserUp2")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_player_death"]
 script = ExtResource("2_entry")
 id = &"sfx_player_death"
+stream = ExtResource("s21_kenney_digital_lowDown")
 
 [sub_resource type="Resource" id="Entry_sfx_player_respawn"]
 script = ExtResource("2_entry")
 id = &"sfx_player_respawn"
+stream = ExtResource("s22_kenney_digital_powerUp8")
+volume_db = -3.0
 
 [sub_resource type="Resource" id="Entry_sfx_player_heal"]
 script = ExtResource("2_entry")
 id = &"sfx_player_heal"
+stream = ExtResource("s23_kenney_digital_powerUp3")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_player_interact"]
 script = ExtResource("2_entry")
 id = &"sfx_player_interact"
+stream = ExtResource("s24_kenney_interface_click_003")
+volume_db = -3.0
 
 [sub_resource type="Resource" id="Entry_sfx_player_interact_none"]
 script = ExtResource("2_entry")
 id = &"sfx_player_interact_none"
+stream = ExtResource("s25_kenney_interface_error_004")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_status_applied"]
 script = ExtResource("2_entry")
 id = &"sfx_status_applied"
+stream = ExtResource("s26_kenney_digital_phaserDown2")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_status_removed"]
 script = ExtResource("2_entry")
 id = &"sfx_status_removed"
+stream = ExtResource("s27_kenney_digital_phaserUp3")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_status_tick"]
 script = ExtResource("2_entry")
 id = &"sfx_status_tick"
+stream = ExtResource("s28_kenney_interface_tick_001")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_status_inflicted"]
 script = ExtResource("2_entry")
 id = &"sfx_status_inflicted"
+stream = ExtResource("s29_kenney_digital_zap1")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_hud_health_changed"]
 script = ExtResource("2_entry")
 id = &"sfx_hud_health_changed"
+stream = ExtResource("s30_kenney_interface_tick_002")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_sfx_hud_gold_changed"]
 script = ExtResource("2_entry")
 id = &"sfx_hud_gold_changed"
+stream = ExtResource("s31_kenney_rpg_handleCoins2")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_hud_status_row_changed"]
 script = ExtResource("2_entry")
 id = &"sfx_hud_status_row_changed"
+stream = ExtResource("s32_kenney_interface_tick_004")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_sfx_hud_slot_changed"]
 script = ExtResource("2_entry")
 id = &"sfx_hud_slot_changed"
+stream = ExtResource("s33_kenney_interface_switch_002")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_hud_max_health_changed"]
 script = ExtResource("2_entry")
 id = &"sfx_hud_max_health_changed"
+stream = ExtResource("s34_kenney_digital_powerUp5")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_loot_toast_new"]
 script = ExtResource("2_entry")
 id = &"sfx_loot_toast_new"
+stream = ExtResource("s35_kenney_interface_confirmation_001")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_loot_toast_add"]
 script = ExtResource("2_entry")
 id = &"sfx_loot_toast_add"
+stream = ExtResource("s36_kenney_interface_pluck_001")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_loot_inventory_bounce"]
 script = ExtResource("2_entry")
 id = &"sfx_loot_inventory_bounce"
+stream = ExtResource("s37_kenney_impact_impactSoft_medium_001")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_enemy_detect"]
 script = ExtResource("2_entry")
 id = &"sfx_enemy_detect"
+stream = ExtResource("s38_kenney_interface_question_002")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_enemy_reacquire"]
 script = ExtResource("2_entry")
 id = &"sfx_enemy_reacquire"
+stream = ExtResource("s39_kenney_interface_question_001")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_enemy_lose_target"]
 script = ExtResource("2_entry")
 id = &"sfx_enemy_lose_target"
+stream = ExtResource("s40_kenney_interface_question_004")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_enemy_chase"]
 script = ExtResource("2_entry")
 id = &"sfx_enemy_chase"
+stream = ExtResource("s41_kenney_impact_footstep_concrete_001")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_sfx_enemy_attack"]
 script = ExtResource("2_entry")
 id = &"sfx_enemy_attack"
+stream = ExtResource("s42_kenney_rpg_knifeSlice")
 
 [sub_resource type="Resource" id="Entry_sfx_enemy_hurt"]
 script = ExtResource("2_entry")
 id = &"sfx_enemy_hurt"
+stream = ExtResource("s43_kenney_impact_impactPunch_medium_002")
 
 [sub_resource type="Resource" id="Entry_sfx_enemy_stunned"]
 script = ExtResource("2_entry")
 id = &"sfx_enemy_stunned"
+stream = ExtResource("s44_kenney_digital_zapTwoTone")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_enemy_invulnerable"]
 script = ExtResource("2_entry")
 id = &"sfx_enemy_invulnerable"
+stream = ExtResource("s45_kenney_impact_impactMetal_light_001")
+volume_db = -3.0
 
 [sub_resource type="Resource" id="Entry_sfx_enemy_death"]
 script = ExtResource("2_entry")
 id = &"sfx_enemy_death"
+stream = ExtResource("s46_kenney_digital_phaserDown3")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_enemy_loot_drop"]
 script = ExtResource("2_entry")
 id = &"sfx_enemy_loot_drop"
+stream = ExtResource("s47_kenney_rpg_handleCoins")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_loot_land"]
 script = ExtResource("2_entry")
 id = &"sfx_loot_land"
+stream = ExtResource("s48_kenney_impact_impactSoft_medium_000")
+volume_db = -3.0
 
 [sub_resource type="Resource" id="Entry_sfx_dummy_hit"]
 script = ExtResource("2_entry")
 id = &"sfx_dummy_hit"
+stream = ExtResource("s49_kenney_impact_impactWood_medium_000")
 
 [sub_resource type="Resource" id="Entry_sfx_dummy_destroyed"]
 script = ExtResource("2_entry")
 id = &"sfx_dummy_destroyed"
+stream = ExtResource("s50_kenney_impact_impactWood_heavy_000")
 
 [sub_resource type="Resource" id="Entry_sfx_alert_on"]
 script = ExtResource("2_entry")
 id = &"sfx_alert_on"
+stream = ExtResource("s51_kenney_impact_impactBell_heavy_000")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_alert_off"]
 script = ExtResource("2_entry")
 id = &"sfx_alert_off"
+stream = ExtResource("s52_kenney_impact_impactBell_heavy_003")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_npc_busy_alert"]
 script = ExtResource("2_entry")
 id = &"sfx_npc_busy_alert"
+stream = ExtResource("s53_kenney_interface_error_002")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_chest_open"]
 script = ExtResource("2_entry")
 id = &"sfx_chest_open"
+stream = ExtResource("s54_kenney_rpg_creak1")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_chest_close"]
 script = ExtResource("2_entry")
 id = &"sfx_chest_close"
+stream = ExtResource("s55_kenney_rpg_bookClose")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_chest_loot"]
 script = ExtResource("2_entry")
 id = &"sfx_chest_loot"
+stream = ExtResource("s47_kenney_rpg_handleCoins")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_chest_empty"]
 script = ExtResource("2_entry")
 id = &"sfx_chest_empty"
+stream = ExtResource("s56_kenney_interface_error_003")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_pickup_item"]
 script = ExtResource("2_entry")
 id = &"sfx_pickup_item"
+stream = ExtResource("s57_kenney_digital_powerUp1")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_pickup_gold"]
 script = ExtResource("2_entry")
 id = &"sfx_pickup_gold"
+stream = ExtResource("s31_kenney_rpg_handleCoins2")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_switch_on"]
 script = ExtResource("2_entry")
 id = &"sfx_switch_on"
+stream = ExtResource("s58_kenney_interface_switch_003")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_switch_off"]
 script = ExtResource("2_entry")
 id = &"sfx_switch_off"
+stream = ExtResource("s59_kenney_interface_switch_004")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_switch_used"]
 script = ExtResource("2_entry")
 id = &"sfx_switch_used"
+stream = ExtResource("s60_kenney_interface_toggle_001")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_plate_pressed"]
 script = ExtResource("2_entry")
 id = &"sfx_plate_pressed"
+stream = ExtResource("s61_kenney_impact_impactPlate_medium_000")
+volume_db = -3.0
 
 [sub_resource type="Resource" id="Entry_sfx_plate_released"]
 script = ExtResource("2_entry")
 id = &"sfx_plate_released"
+stream = ExtResource("s62_kenney_interface_click_002")
+volume_db = -3.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_event"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_event"
+stream = ExtResource("s63_kenney_interface_bong_001")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_portal_enter"]
 script = ExtResource("2_entry")
 id = &"sfx_portal_enter"
+stream = ExtResource("s64_kenney_digital_phaseJump3")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_door_locked"]
 script = ExtResource("2_entry")
 id = &"sfx_door_locked"
+stream = ExtResource("s65_kenney_rpg_metalClick")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_door_unlock_key"]
 script = ExtResource("2_entry")
 id = &"sfx_door_unlock_key"
+stream = ExtResource("s17_kenney_rpg_metalLatch")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_key_used"]
 script = ExtResource("2_entry")
 id = &"sfx_key_used"
+stream = ExtResource("s65_kenney_rpg_metalClick")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_door_lock"]
 script = ExtResource("2_entry")
 id = &"sfx_door_lock"
+stream = ExtResource("s17_kenney_rpg_metalLatch")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_door_unlock"]
 script = ExtResource("2_entry")
 id = &"sfx_door_unlock"
+stream = ExtResource("s66_kenney_rpg_doorOpen_1")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_door_toggle"]
 script = ExtResource("2_entry")
 id = &"sfx_door_toggle"
+stream = ExtResource("s67_kenney_rpg_doorClose_1")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_portal_inactive"]
 script = ExtResource("2_entry")
 id = &"sfx_portal_inactive"
+stream = ExtResource("s68_kenney_digital_lowRandom")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_portal_hum"]
 script = ExtResource("2_entry")
 id = &"sfx_portal_hum"
+stream = ExtResource("s69_kenney_scifi_forceField_000")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_sfx_destroy_node"]
 script = ExtResource("2_entry")
 id = &"sfx_destroy_node"
+stream = ExtResource("s70_kenney_impact_impactWood_heavy_001")
 
 [sub_resource type="Resource" id="Entry_sfx_spawn"]
 script = ExtResource("2_entry")
 id = &"sfx_spawn"
+stream = ExtResource("s71_kenney_digital_phaserUp1")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_anim_action"]
 script = ExtResource("2_entry")
 id = &"sfx_anim_action"
+stream = ExtResource("s72_kenney_interface_scroll_001")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_vis_col_action"]
 script = ExtResource("2_entry")
 id = &"sfx_vis_col_action"
+stream = ExtResource("s73_kenney_interface_toggle_002")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_minigame_interact"]
 script = ExtResource("2_entry")
 id = &"sfx_minigame_interact"
+stream = ExtResource("s74_kenney_interface_select_002")
+volume_db = -3.0
 
 [sub_resource type="Resource" id="Entry_sfx_npc_talk"]
 script = ExtResource("2_entry")
 id = &"sfx_npc_talk"
+stream = ExtResource("s30_kenney_interface_tick_002")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_open"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_open"
+stream = ExtResource("s75_kenney_interface_open_001")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_type"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_type"
+stream = ExtResource("s28_kenney_interface_tick_001")
+volume_db = -14.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_line_done"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_line_done"
+stream = ExtResource("s32_kenney_interface_tick_004")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_skip"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_skip"
+stream = ExtResource("s76_kenney_interface_scroll_002")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_fast_forward"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_fast_forward"
+stream = ExtResource("s77_kenney_interface_scroll_003")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_next"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_next"
+stream = ExtResource("s78_kenney_interface_click_001")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_continue_shown"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_continue_shown"
+stream = ExtResource("s79_kenney_interface_drop_001")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_responses_shown"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_responses_shown"
+stream = ExtResource("s36_kenney_interface_pluck_001")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_response_focus"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_response_focus"
+stream = ExtResource("s80_kenney_interface_click_004")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_response_select"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_response_select"
+stream = ExtResource("s81_kenney_interface_confirmation_002")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_voice"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_voice"
+stream = ExtResource("s30_kenney_interface_tick_002")
+volume_db = -12.0
 
 [sub_resource type="Resource" id="Entry_sfx_dialogue_close"]
 script = ExtResource("2_entry")
 id = &"sfx_dialogue_close"
+stream = ExtResource("s82_kenney_interface_close_001")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_quest_started"]
 script = ExtResource("2_entry")
 id = &"sfx_quest_started"
+stream = ExtResource("s83_kenney_jingles_jingles_PIZZI03")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_quest_completed"]
 script = ExtResource("2_entry")
 id = &"sfx_quest_completed"
+stream = ExtResource("s84_kenney_jingles_jingles_SAX03")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_inventory_open"]
 script = ExtResource("2_entry")
 id = &"sfx_inventory_open"
+stream = ExtResource("s85_kenney_rpg_bookOpen")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_inventory_close"]
 script = ExtResource("2_entry")
 id = &"sfx_inventory_close"
+stream = ExtResource("s55_kenney_rpg_bookClose")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_inventory_move"]
 script = ExtResource("2_entry")
 id = &"sfx_inventory_move"
+stream = ExtResource("s86_kenney_rpg_bookFlip1")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_inventory_use"]
 script = ExtResource("2_entry")
 id = &"sfx_inventory_use"
+stream = ExtResource("s87_kenney_interface_confirmation_003")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_item_heal"]
 script = ExtResource("2_entry")
 id = &"sfx_item_heal"
+stream = ExtResource("s23_kenney_digital_powerUp3")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_item_damage"]
 script = ExtResource("2_entry")
 id = &"sfx_item_damage"
+stream = ExtResource("s88_kenney_digital_zap2")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_item_apply_status"]
 script = ExtResource("2_entry")
 id = &"sfx_item_apply_status"
+stream = ExtResource("s26_kenney_digital_phaserDown2")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_item_cure_status"]
 script = ExtResource("2_entry")
 id = &"sfx_item_cure_status"
+stream = ExtResource("s89_kenney_digital_phaserUp4")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_inventory_use_fail"]
 script = ExtResource("2_entry")
 id = &"sfx_inventory_use_fail"
+stream = ExtResource("s90_kenney_interface_error_001")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_inventory_assign"]
 script = ExtResource("2_entry")
 id = &"sfx_inventory_assign"
+stream = ExtResource("s91_kenney_interface_select_003")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_inventory_assign_fail"]
 script = ExtResource("2_entry")
 id = &"sfx_inventory_assign_fail"
+stream = ExtResource("s92_kenney_interface_error_005")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_inventory_notice"]
 script = ExtResource("2_entry")
 id = &"sfx_inventory_notice"
+stream = ExtResource("s63_kenney_interface_bong_001")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_inventory_changed"]
 script = ExtResource("2_entry")
 id = &"sfx_inventory_changed"
+stream = ExtResource("s93_kenney_rpg_cloth1")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_inventory_gold"]
 script = ExtResource("2_entry")
 id = &"sfx_inventory_gold"
+stream = ExtResource("s47_kenney_rpg_handleCoins")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_slot_use"]
 script = ExtResource("2_entry")
 id = &"sfx_slot_use"
+stream = ExtResource("s94_kenney_interface_select_004")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_slot_equip"]
 script = ExtResource("2_entry")
 id = &"sfx_slot_equip"
+stream = ExtResource("s95_kenney_rpg_beltHandle1")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_slot_empty"]
 script = ExtResource("2_entry")
 id = &"sfx_slot_empty"
+stream = ExtResource("s96_kenney_interface_error_006")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_slot_clear"]
 script = ExtResource("2_entry")
 id = &"sfx_slot_clear"
+stream = ExtResource("s97_kenney_rpg_cloth3")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_slot_reassign"]
 script = ExtResource("2_entry")
 id = &"sfx_slot_reassign"
+stream = ExtResource("s98_kenney_rpg_beltHandle2")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_focus"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_focus"
+stream = ExtResource("s28_kenney_interface_tick_001")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_confirm"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_confirm"
+stream = ExtResource("s35_kenney_interface_confirmation_001")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_cancel"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_cancel"
+stream = ExtResource("s99_kenney_interface_back_001")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_disabled"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_disabled"
+stream = ExtResource("s90_kenney_interface_error_001")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_new_game"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_new_game"
+stream = ExtResource("s100_kenney_interface_confirmation_004")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_continue"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_continue"
+stream = ExtResource("s81_kenney_interface_confirmation_002")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_options_open"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_options_open"
+stream = ExtResource("s101_kenney_interface_open_002")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_options_close"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_options_close"
+stream = ExtResource("s102_kenney_interface_close_002")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_quit"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_quit"
+stream = ExtResource("s103_kenney_interface_back_003")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_pause_open"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_pause_open"
+stream = ExtResource("s104_kenney_interface_maximize_003")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_pause_close"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_pause_close"
+stream = ExtResource("s105_kenney_interface_minimize_003")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_exit_to_start"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_exit_to_start"
+stream = ExtResource("s106_kenney_interface_back_002")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_abandon"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_abandon"
+stream = ExtResource("s107_kenney_interface_back_004")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_submenu_open"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_submenu_open"
+stream = ExtResource("s108_kenney_interface_open_003")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_ui_submenu_close"]
 script = ExtResource("2_entry")
 id = &"sfx_ui_submenu_close"
+stream = ExtResource("s109_kenney_interface_close_003")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_map_open"]
 script = ExtResource("2_entry")
 id = &"sfx_map_open"
+stream = ExtResource("s110_kenney_rpg_bookFlip2")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_map_close"]
 script = ExtResource("2_entry")
 id = &"sfx_map_close"
+stream = ExtResource("s55_kenney_rpg_bookClose")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_map_zoom"]
 script = ExtResource("2_entry")
 id = &"sfx_map_zoom"
+stream = ExtResource("s111_kenney_interface_scroll_004")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_map_center"]
 script = ExtResource("2_entry")
 id = &"sfx_map_center"
+stream = ExtResource("s112_kenney_interface_click_005")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_map_discover"]
 script = ExtResource("2_entry")
 id = &"sfx_map_discover"
+stream = ExtResource("s87_kenney_interface_confirmation_003")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_save_autosave"]
 script = ExtResource("2_entry")
 id = &"sfx_save_autosave"
+stream = ExtResource("s113_kenney_interface_pluck_002")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_sfx_save_done"]
 script = ExtResource("2_entry")
 id = &"sfx_save_done"
+stream = ExtResource("s100_kenney_interface_confirmation_004")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_save_error"]
 script = ExtResource("2_entry")
 id = &"sfx_save_error"
+stream = ExtResource("s114_kenney_interface_error_007")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_save_loaded"]
 script = ExtResource("2_entry")
 id = &"sfx_save_loaded"
+stream = ExtResource("s115_kenney_interface_maximize_006")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_save_deleted"]
 script = ExtResource("2_entry")
 id = &"sfx_save_deleted"
+stream = ExtResource("s116_kenney_interface_minimize_006")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_save_slot_save"]
 script = ExtResource("2_entry")
 id = &"sfx_save_slot_save"
+stream = ExtResource("s117_kenney_interface_select_005")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_save_slot_load"]
 script = ExtResource("2_entry")
 id = &"sfx_save_slot_load"
+stream = ExtResource("s118_kenney_interface_select_006")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_save_slot_delete"]
 script = ExtResource("2_entry")
 id = &"sfx_save_slot_delete"
+stream = ExtResource("s119_kenney_interface_error_008")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_save_slot_focus"]
 script = ExtResource("2_entry")
 id = &"sfx_save_slot_focus"
+stream = ExtResource("s30_kenney_interface_tick_002")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_checkpoint"]
 script = ExtResource("2_entry")
 id = &"sfx_checkpoint"
+stream = ExtResource("s120_kenney_digital_powerUp6")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_fade_out"]
 script = ExtResource("2_entry")
 id = &"sfx_fade_out"
+stream = ExtResource("s121_kenney_digital_phaserDown1")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_sfx_fade_in"]
 script = ExtResource("2_entry")
 id = &"sfx_fade_in"
+stream = ExtResource("s122_kenney_digital_phaserUp5")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_sfx_level_change"]
 script = ExtResource("2_entry")
 id = &"sfx_level_change"
+stream = ExtResource("s123_kenney_digital_phaseJump1")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_level_loaded"]
 script = ExtResource("2_entry")
 id = &"sfx_level_loaded"
+stream = ExtResource("s124_kenney_interface_drop_002")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_minigame_enter"]
 script = ExtResource("2_entry")
 id = &"sfx_minigame_enter"
+stream = ExtResource("s125_kenney_digital_phaseJump2")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_minigame_return"]
 script = ExtResource("2_entry")
 id = &"sfx_minigame_return"
+stream = ExtResource("s126_kenney_digital_phaseJump4")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_minigame_rewards"]
 script = ExtResource("2_entry")
 id = &"sfx_minigame_rewards"
+stream = ExtResource("s127_kenney_jingles_jingles_PIZZI08")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_game_paused"]
 script = ExtResource("2_entry")
 id = &"sfx_game_paused"
+stream = ExtResource("s128_kenney_interface_minimize_004")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_game_resumed"]
 script = ExtResource("2_entry")
 id = &"sfx_game_resumed"
+stream = ExtResource("s129_kenney_interface_maximize_004")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_mg_start"]
 script = ExtResource("2_entry")
 id = &"sfx_mg_start"
+stream = ExtResource("s130_kenney_jingles_jingles_NES05")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_mg_win"]
 script = ExtResource("2_entry")
 id = &"sfx_mg_win"
+stream = ExtResource("s131_kenney_jingles_jingles_NES00")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_mg_lose"]
 script = ExtResource("2_entry")
 id = &"sfx_mg_lose"
+stream = ExtResource("s132_kenney_jingles_jingles_NES10")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_mg_result_shown"]
 script = ExtResource("2_entry")
 id = &"sfx_mg_result_shown"
+stream = ExtResource("s63_kenney_interface_bong_001")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_mg_result_continue"]
 script = ExtResource("2_entry")
 id = &"sfx_mg_result_continue"
+stream = ExtResource("s35_kenney_interface_confirmation_001")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_mg_reward_added"]
 script = ExtResource("2_entry")
 id = &"sfx_mg_reward_added"
+stream = ExtResource("s47_kenney_rpg_handleCoins")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_mg_pause"]
 script = ExtResource("2_entry")
 id = &"sfx_mg_pause"
+stream = ExtResource("s133_kenney_interface_minimize_005")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_mg_abandon"]
 script = ExtResource("2_entry")
 id = &"sfx_mg_abandon"
+stream = ExtResource("s107_kenney_interface_back_004")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_mg_finished"]
 script = ExtResource("2_entry")
 id = &"sfx_mg_finished"
+stream = ExtResource("s134_kenney_jingles_jingles_NES03")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_start"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_start"
+stream = ExtResource("s135_kenney_interface_open_004")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_step"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_step"
+stream = ExtResource("s136_kenney_impact_footstep_concrete_002")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_dig"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_dig"
+stream = ExtResource("s137_kenney_impact_impactMining_000")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_push"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_push"
+stream = ExtResource("s138_kenney_impact_impactPlank_medium_000")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_push_blocked"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_push_blocked"
+stream = ExtResource("s139_kenney_impact_impactMetal_light_000")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_rock_fall"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_rock_fall"
+stream = ExtResource("s140_kenney_impact_impactMining_002")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_rock_slide"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_rock_slide"
+stream = ExtResource("s141_kenney_impact_impactSoft_heavy_002")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_rock_land"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_rock_land"
+stream = ExtResource("s142_kenney_impact_impactMining_003")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_coin"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_coin"
+stream = ExtResource("s31_kenney_rpg_handleCoins2")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_item"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_item"
+stream = ExtResource("s143_kenney_digital_powerUp2")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_quest_item"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_quest_item"
+stream = ExtResource("s83_kenney_jingles_jingles_PIZZI03")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_bomb_pickup"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_bomb_pickup"
+stream = ExtResource("s144_kenney_rpg_metalPot1")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_bomb_plant"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_bomb_plant"
+stream = ExtResource("s145_kenney_impact_impactMetal_medium_000")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_bomb_fuse"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_bomb_fuse"
+stream = ExtResource("s146_kenney_digital_phaserUp6")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_explosion"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_explosion"
+stream = ExtResource("s147_kenney_scifi_explosionCrunch_000")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_chain_explosion"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_chain_explosion"
+stream = ExtResource("s148_kenney_scifi_explosionCrunch_002")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_bomb_impact"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_bomb_impact"
+stream = ExtResource("s149_kenney_scifi_lowFrequency_explosion_000")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_crushed"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_crushed"
+stream = ExtResource("s150_kenney_impact_impactPunch_heavy_002")
 
 [sub_resource type="Resource" id="Entry_sfx_exc_exit_blocked"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_exit_blocked"
+stream = ExtResource("s25_kenney_interface_error_004")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_exit_open"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_exit_open"
+stream = ExtResource("s151_kenney_rpg_doorOpen_2")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_exc_lose"]
 script = ExtResource("2_entry")
 id = &"sfx_exc_lose"
+stream = ExtResource("s132_kenney_jingles_jingles_NES10")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_catch_spawn"]
 script = ExtResource("2_entry")
 id = &"sfx_catch_spawn"
+stream = ExtResource("s152_kenney_interface_drop_003")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_sfx_catch_item"]
 script = ExtResource("2_entry")
 id = &"sfx_catch_item"
+stream = ExtResource("s153_kenney_digital_powerUp4")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_catch_bomb"]
 script = ExtResource("2_entry")
 id = &"sfx_catch_bomb"
+stream = ExtResource("s154_kenney_scifi_explosionCrunch_001")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_catch_miss"]
 script = ExtResource("2_entry")
 id = &"sfx_catch_miss"
+stream = ExtResource("s155_kenney_interface_drop_004")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_catch_floor_hit"]
 script = ExtResource("2_entry")
 id = &"sfx_catch_floor_hit"
+stream = ExtResource("s156_kenney_impact_impactSoft_medium_002")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_catch_life_lost"]
 script = ExtResource("2_entry")
 id = &"sfx_catch_life_lost"
+stream = ExtResource("s157_kenney_digital_lowThreeTone")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_catch_move"]
 script = ExtResource("2_entry")
 id = &"sfx_catch_move"
+stream = ExtResource("s158_kenney_rpg_cloth2")
+volume_db = -10.0
 
 [sub_resource type="Resource" id="Entry_sfx_catch_time_up"]
 script = ExtResource("2_entry")
 id = &"sfx_catch_time_up"
+stream = ExtResource("s159_kenney_impact_impactBell_heavy_001")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_catch_win"]
 script = ExtResource("2_entry")
 id = &"sfx_catch_win"
+stream = ExtResource("s160_kenney_jingles_jingles_NES01")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_catch_lose"]
 script = ExtResource("2_entry")
 id = &"sfx_catch_lose"
+stream = ExtResource("s161_kenney_jingles_jingles_NES11")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_jump"]
 script = ExtResource("2_entry")
 id = &"sfx_run_jump"
+stream = ExtResource("s162_kenney_digital_phaseJump5")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_land"]
 script = ExtResource("2_entry")
 id = &"sfx_run_land"
+stream = ExtResource("s163_kenney_impact_footstep_concrete_003")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_duck"]
 script = ExtResource("2_entry")
 id = &"sfx_run_duck"
+stream = ExtResource("s164_kenney_rpg_cloth4")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_stand"]
 script = ExtResource("2_entry")
 id = &"sfx_run_stand"
+stream = ExtResource("s97_kenney_rpg_cloth3")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_shoot"]
 script = ExtResource("2_entry")
 id = &"sfx_run_shoot"
+stream = ExtResource("s165_kenney_digital_laser3")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_shoot_empty"]
 script = ExtResource("2_entry")
 id = &"sfx_run_shoot_empty"
+stream = ExtResource("s24_kenney_interface_click_003")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_ammo"]
 script = ExtResource("2_entry")
 id = &"sfx_run_ammo"
+stream = ExtResource("s166_kenney_digital_pepSound2")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_enemy_killed"]
 script = ExtResource("2_entry")
 id = &"sfx_run_enemy_killed"
+stream = ExtResource("s29_kenney_digital_zap1")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_obstacle_destroyed"]
 script = ExtResource("2_entry")
 id = &"sfx_run_obstacle_destroyed"
+stream = ExtResource("s167_kenney_impact_impactWood_medium_002")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_coin"]
 script = ExtResource("2_entry")
 id = &"sfx_run_coin"
+stream = ExtResource("s31_kenney_rpg_handleCoins2")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_item"]
 script = ExtResource("2_entry")
 id = &"sfx_run_item"
+stream = ExtResource("s168_kenney_digital_powerUp7")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_target"]
 script = ExtResource("2_entry")
 id = &"sfx_run_target"
+stream = ExtResource("s169_kenney_interface_select_007")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_target_spawn"]
 script = ExtResource("2_entry")
 id = &"sfx_run_target_spawn"
+stream = ExtResource("s79_kenney_interface_drop_001")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_enemy_spawn"]
 script = ExtResource("2_entry")
 id = &"sfx_run_enemy_spawn"
+stream = ExtResource("s46_kenney_digital_phaserDown3")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_death"]
 script = ExtResource("2_entry")
 id = &"sfx_run_death"
+stream = ExtResource("s21_kenney_digital_lowDown")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_world_stop"]
 script = ExtResource("2_entry")
 id = &"sfx_run_world_stop"
+stream = ExtResource("s121_kenney_digital_phaserDown1")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_speed_up"]
 script = ExtResource("2_entry")
 id = &"sfx_run_speed_up"
+stream = ExtResource("s170_kenney_digital_phaserUp7")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_win"]
 script = ExtResource("2_entry")
 id = &"sfx_run_win"
+stream = ExtResource("s171_kenney_jingles_jingles_NES02")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_run_lose"]
 script = ExtResource("2_entry")
 id = &"sfx_run_lose"
+stream = ExtResource("s172_kenney_jingles_jingles_NES12")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_smash_spawn"]
 script = ExtResource("2_entry")
 id = &"sfx_smash_spawn"
+stream = ExtResource("s173_kenney_scifi_slime_000")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_smash_insect_loop"]
 script = ExtResource("2_entry")
 id = &"sfx_smash_insect_loop"
+stream = ExtResource("s174_kenney_scifi_computerNoise_001")
+volume_db = -14.0
 
 [sub_resource type="Resource" id="Entry_sfx_smash_hit"]
 script = ExtResource("2_entry")
 id = &"sfx_smash_hit"
+stream = ExtResource("s175_kenney_impact_impactPlate_medium_001")
+volume_db = -2.0
 
 [sub_resource type="Resource" id="Entry_sfx_smash_miss"]
 script = ExtResource("2_entry")
 id = &"sfx_smash_miss"
+stream = ExtResource("s176_kenney_interface_scratch_001")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_smash_escape"]
 script = ExtResource("2_entry")
 id = &"sfx_smash_escape"
+stream = ExtResource("s20_kenney_digital_phaserUp2")
+volume_db = -8.0
 
 [sub_resource type="Resource" id="Entry_sfx_smash_win"]
 script = ExtResource("2_entry")
 id = &"sfx_smash_win"
+stream = ExtResource("s177_kenney_jingles_jingles_NES04")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_smash_lose"]
 script = ExtResource("2_entry")
 id = &"sfx_smash_lose"
+stream = ExtResource("s178_kenney_jingles_jingles_NES13")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_smash_time_up"]
 script = ExtResource("2_entry")
 id = &"sfx_smash_time_up"
+stream = ExtResource("s179_kenney_impact_impactBell_heavy_002")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_tramp_bounce"]
 script = ExtResource("2_entry")
 id = &"sfx_tramp_bounce"
+stream = ExtResource("s123_kenney_digital_phaseJump1")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_tramp_special_bounce"]
 script = ExtResource("2_entry")
 id = &"sfx_tramp_special_bounce"
+stream = ExtResource("s126_kenney_digital_phaseJump4")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_tramp_side"]
 script = ExtResource("2_entry")
 id = &"sfx_tramp_side"
+stream = ExtResource("s180_kenney_impact_impactSoft_medium_003")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_tramp_coin"]
 script = ExtResource("2_entry")
 id = &"sfx_tramp_coin"
+stream = ExtResource("s31_kenney_rpg_handleCoins2")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_tramp_item"]
 script = ExtResource("2_entry")
 id = &"sfx_tramp_item"
+stream = ExtResource("s181_kenney_digital_powerUp9")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_tramp_special_spawn"]
 script = ExtResource("2_entry")
 id = &"sfx_tramp_special_spawn"
+stream = ExtResource("s182_kenney_digital_pepSound4")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_tramp_height"]
 script = ExtResource("2_entry")
 id = &"sfx_tramp_height"
+stream = ExtResource("s81_kenney_interface_confirmation_002")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_tramp_win"]
 script = ExtResource("2_entry")
 id = &"sfx_tramp_win"
+stream = ExtResource("s183_kenney_jingles_jingles_NES06")
+volume_db = -6.0
 
 [sub_resource type="Resource" id="Entry_sfx_tramp_fall"]
 script = ExtResource("2_entry")
 id = &"sfx_tramp_fall"
+stream = ExtResource("s21_kenney_digital_lowDown")
+volume_db = -4.0
 
 [sub_resource type="Resource" id="Entry_sfx_tramp_lose"]
 script = ExtResource("2_entry")
 id = &"sfx_tramp_lose"
+stream = ExtResource("s184_kenney_jingles_jingles_NES14")
+volume_db = -6.0
 
 [resource]
 script = ExtResource("1_catalog")
