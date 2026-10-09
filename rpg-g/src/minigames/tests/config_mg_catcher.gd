@@ -7,6 +7,8 @@ extends Control
 @onready var spawn_rate_label = $VBoxContainer/SpawnRate/Value
 @onready var max_objects_slider = $VBoxContainer/MaxObjects/Slider
 @onready var max_objects_label = $VBoxContainer/MaxObjects/Value
+@onready var floor_wait_slider = $VBoxContainer/FloorWait/Slider
+@onready var floor_wait_label = $VBoxContainer/FloorWait/Value
 @onready var game_mode_option = $VBoxContainer/GameMode/OptionButton
 @onready var target_value_slider = $VBoxContainer/TargetValue/Slider
 @onready var target_value_label = $VBoxContainer/TargetValue/Value
@@ -21,6 +23,7 @@ var config = {
 	"base_fall_speed": 200.0,
 	"spawn_rate": 1.0,
 	"max_falling_objects": 10,
+	"floor_wait_time": 3.0,
 	"game_mode": "TIME",
 	"target_value": 30.0,
 	"lives": 3
@@ -31,6 +34,7 @@ func _ready() -> void:
 	fall_speed_slider.value = config.base_fall_speed
 	spawn_rate_slider.value = config.spawn_rate
 	max_objects_slider.value = config.max_falling_objects
+	floor_wait_slider.value = config.floor_wait_time
 	game_mode_option.selected = 0 if config.game_mode == "TIME" else 1
 	target_value_slider.value = config.target_value
 	lives_slider.value = config.lives
@@ -39,6 +43,7 @@ func _ready() -> void:
 	fall_speed_slider.value_changed.connect(_on_fall_speed_changed)
 	spawn_rate_slider.value_changed.connect(_on_spawn_rate_changed)
 	max_objects_slider.value_changed.connect(_on_max_objects_changed)
+	floor_wait_slider.value_changed.connect(_on_floor_wait_changed)
 	game_mode_option.item_selected.connect(_on_game_mode_selected)
 	target_value_slider.value_changed.connect(_on_target_value_changed)
 	lives_slider.value_changed.connect(_on_lives_changed)
@@ -52,6 +57,7 @@ func _update_labels():
 	fall_speed_label.text = str(config.base_fall_speed)
 	spawn_rate_label.text = "%.1f s" % config.spawn_rate
 	max_objects_label.text = str(config.max_falling_objects)
+	floor_wait_label.text = "%.1f s" % config.floor_wait_time
 	target_value_label.text = str(config.target_value)
 	lives_label.text = str(config.lives)
 
@@ -65,6 +71,10 @@ func _on_spawn_rate_changed(value: float) -> void:
 
 func _on_max_objects_changed(value: float) -> void:
 	config.max_falling_objects = int(value)
+	_update_labels()
+
+func _on_floor_wait_changed(value: float) -> void:
+	config.floor_wait_time = value
 	_update_labels()
 
 func _on_game_mode_selected(index: int) -> void:
