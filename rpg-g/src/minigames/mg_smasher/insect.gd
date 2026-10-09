@@ -18,8 +18,6 @@ var time_passed: float = 0.0
 var _loop_player: AudioStreamPlayer2D = null
 
 func _ready() -> void:
-	# Enable input picking for clicking
-	input_pickable = true
 	var loop_entry: AudioEntry = AudioManager.get_playable_entry(&"sfx_smash_insect_loop")
 	if loop_entry != null:
 		_loop_player = AudioStreamPlayer2D.new()
@@ -85,11 +83,7 @@ func _process(delta: float) -> void:
 	# Slightly adjust rotation based on the wave derivative (spider head faces forward)
 	rotation = base_rot - PI / 2.0 + (cos(path_offset * wave_frequency) * wave_amplitude * wave_frequency * 0.5)
 
-func _input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		smash()
-
-## Golpea al bicho (click de mouse o cursor de input). Ignora golpes repetidos.
+## Golpea al bicho. Lo llama SmashCursor (click o `interact`). Ignora golpes repetidos.
 func smash() -> void:
 	if not is_active:
 		return
