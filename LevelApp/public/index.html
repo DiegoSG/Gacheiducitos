@@ -29,6 +29,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
 .issue{padding:3px 6px;border-left:3px solid var(--warn);margin:3px 0;cursor:pointer;background:#2a2e37}
 .issue.err{border-color:var(--err)}.issue:hover{background:#333844}
 .dim{color:var(--dim)}
+#side code{word-break:break-all}
 input[type=color]{width:44px;height:24px;padding:0;flex:none}
 #status{position:absolute;left:8px;bottom:6px;color:var(--dim);background:#0008;padding:2px 6px;border-radius:4px;pointer-events:none}
 #modal{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:10}
@@ -56,6 +57,7 @@ const TYPES = {
   npc:      {label:"NPC",           key:"n", color:"#5aa9ff", letter:"N", prefix:"N"},
   chest:    {label:"Cofre",         key:"c", color:"#f0c040", letter:"C", prefix:"C"},
   minigame: {label:"Minijuego",     key:"m", color:"#ff9a45", letter:"M", prefix:"M"},
+  trigger:  {label:"Trigger",       key:"g", color:"#35c8d8", letter:"G", prefix:"G"},
   note:     {label:"Nota",          key:"o", color:"#e8e070", letter:"T", prefix:"Nota_"}
 };
 const CHILD_DEFAULTS = {
@@ -129,6 +131,16 @@ function delLevel(l){
 }
 function sceneFile(l){ return slug(l.name)+".tscn"; }
 
+/* Diálogo de NPC/Trigger. props.dlg: undefined = proxy con nombre por defecto, "" = sin diálogo, ruta = ese archivo */
+const DLG_DIR = "src/overworld/dialogues/";
+let knownDialogues = [];
+const hasDialogue = e => e.type==="npc"||e.type==="trigger";
+function defaultDlgPath(e){ return DLG_DIR+slug(levelById(e.levelId).name)+"_"+slug(e.name)+".dialogue"; }
+function entDialogue(e){
+  if(!hasDialogue(e)||e.props.dlg==="") return null;
+  return {file:e.props.dlg||defaultDlgPath(e), title:(e.props.dlgTitle||"").trim()||"start"};
+}
+
 /* ===== Historial / guardado ===== */
 function migrate(){
   delete S.zones;
@@ -172,6 +184,7 @@ function drawIcon(c, type, x, y, s, selected){
   else if(type==="npc"||type==="spawn"||type==="start"){c.arc(0,0,r,0,7);}
   else if(type==="minigame"){for(let i=0;i<6;i++){const a=i*Math.PI/3;c.lineTo(Math.cos(a)*r,Math.sin(a)*r);}c.closePath();}
   else if(type==="note"){c.rect(-r,-r*.7,s,s*.8);}
+  else if(type==="trigger"){c.moveTo(0,-r);c.lineTo(r,0);c.lineTo(0,r);c.lineTo(-r,0);c.closePath();}
   else {c.roundRect?c.roundRect(-r,-r,s,s,3):c.rect(-r,-r,s,s);}
   c.fill(); c.stroke();
   c.fillStyle="#000"; c.font="bold "+Math.round(s*.5)+"px system-ui"; c.textAlign="center"; c.textBaseline="middle";
@@ -374,6 +387,7 @@ function validate(){
   const used=new Set(S.ents.filter(e=>e.type==="portal"&&e.target).map(e=>e.target));
   for(const q of sp) if((q.ent.type==="spawn"||(q.ent.type==="portal"&&q.child))&&!used.has(q.key)) add("warn","Spawn "+q.arrival+" sin usar (ningún portal apunta a él)",{kind:"ent",id:q.ent.id,slot:q.child?q.child.slot:undefined});
   for(const e of S.ents) if(e.type==="minigame"&&!MG_TYPES.hasOwnProperty(e.props.mg||"")) add("warn","Minijuego "+e.name+" sin tipo",{kind:"ent",id:e.id});
+  for(const e of S.ents) if(e.type==="trigger"&&!entDialogue(e)) add("warn","Trigger "+e.name+" sin diálogo (no hará nada)",{kind:"ent",id:e.id});
   const links=new Set();
   for(const e of S.ents) if(e.type==="portal"){
     const R={kind:"ent",id:e.id};
@@ -406,13 +420,15 @@ function buildSpec(){
       grid_rect:{x:l.x,y:l.y,w:l.w,h:l.h}, size_px:{w:l.w*px,h:l.h*px},
       world_boundary:{width:l.w*px,height:l.h*px},
       layers:["GroundLayer","DetailLayer","PropsLayer"],
-      arrival_spawns:byLevel.get(l.id)||[], portals:[], enemies:[], npcs:[], chests:[], minigames:[], notes:[]
+      arrival_spawns:byLevel.get(l.id)||[], portals:[], enemies:[], npcs:[], chests:[], minigames:[], triggers:[], notes:[]
     };
     for(const e of ents){
       const base={id:e.name, ...P(e), description:e.text||""};
+      const dl=entDialogue(e), dialogue=dl&&{file:dl.file, res_path:"res://"+dl.file, title:dl.title};
       if(e.type==="start"||e.type==="spawn") continue;
       else if(e.type==="enemy") o.enemies.push({...base,enemy_type:e.props.kind||""});
-      else if(e.type==="npc") o.npcs.push({...base,npc_name:e.props.npc||""});
+      else if(e.type==="npc") o.npcs.push({...base,npc_name:e.props.npc||"",dialogue});
+      else if(e.type==="trigger") o.triggers.push({...base,kind:e.props.kind||"area",mode:e.props.mode||"on_enter",one_shot:e.props.once!==false,event_id:(e.props.event||"").trim()||e.name,dialogue});
       else if(e.type==="chest") o.chests.push({...base,contents:e.props.contents||""});
       else if(e.type==="note"){ const n=parseNote(e.text); o.notes.push({id:e.name,...P(e),kind:n.prompts.length?(n.info?"mixed":"prompt"):"info",info:n.info,prompts:n.prompts,text:e.text||""}); }
       else if(e.type==="portal"){
@@ -429,7 +445,7 @@ function buildSpec(){
   });
   return {
     format:"gacheiducitos-levelapp", version:1,
-    instructions:"Para cada nivel de 'levels': crear la escena en scene_path con raiz root_node, capas GroundLayer/DetailLayer/PropsLayer (y_sort en PropsLayer), WorldBoundaryManager con world_boundary y un ArrivalSpawnPoint por cada entrada de arrival_spawns (ya incluye start, spawns sueltos, llegadas de portales y salidas de minijuegos, con el nivel donde estan posicionados; px = centro de la celda, relativo al nivel), LevelPortal con target_scene_path + target_arrival_id, enemigos/npcs/cofres como instancias placeholder con persistence_id unico. Notas: 'info' es solo contexto de diseño; cada texto de 'prompts' (escrito entre // //) es una instruccion que hay que interpretar y ejecutar sobre ese nivel. Revisar 'warnings' antes de generar. El layout y el arte los define el usuario.",
+    instructions:"Para cada nivel de 'levels': crear la escena en scene_path con raiz root_node, capas GroundLayer/DetailLayer/PropsLayer (y_sort en PropsLayer), WorldBoundaryManager con world_boundary y un ArrivalSpawnPoint por cada entrada de arrival_spawns (ya incluye start, spawns sueltos, llegadas de portales y salidas de minijuegos, con el nivel donde estan posicionados; px = centro de la celda, relativo al nivel), LevelPortal con target_scene_path + target_arrival_id, enemigos/npcs/cofres como instancias placeholder con persistence_id unico. NPCs y triggers con 'dialogue' usan ese .dialogue (si no existe se crea un proxy); cada trigger se instancia segun 'kind' (area/plate/switch/event) con un DialogueAction en su activacion. Notas: 'info' es solo contexto de diseño; cada texto de 'prompts' (escrito entre // //) es una instruccion que hay que interpretar y ejecutar sobre ese nivel. Revisar 'warnings' antes de generar. El layout y el arte los define el usuario.",
     cell_px:px, levels,
     warnings:validate().map(v=>v.lvl+": "+v.msg)
   };
@@ -455,6 +471,20 @@ const GEN_LEVELS_DIR = "rpg-g/src/overworld/levels";
 const gq = s => JSON.stringify(String(s));
 const gvec = (x,y) => "Vector2("+x+", "+y+")";
 const gname = s => String(s).replace(/[^A-Za-z0-9_]/g,"_") || "Nodo";
+/* Tipos de trigger del juego: escena a instanciar y propiedad donde van las acciones de activación */
+const TRIGGER_KINDS = {
+  area:   {label:"Área (GameTrigger)",            scene:"interactables/game_trigger_area.tscn",   actions:"actions_if_true"},
+  plate:  {label:"Placa de presión",              scene:"interactables/pressure_plate.tscn",      actions:"on_enter_actions"},
+  switch: {label:"Palanca / interruptor",         scene:"interactables/switch_interactable.tscn", actions:"trigger_actions"},
+  event:  {label:"Evento remoto (desde diálogo)", scene:"interactables/dialogue_event.tscn",      actions:"actions"}
+};
+/* GameTrigger.TriggerMode */
+const TRIGGER_MODES = {
+  on_enter:   {label:"Al pisar",            value:0},
+  on_exit:    {label:"Al salir",            value:1},
+  interact:   {label:"Al interactuar",      value:3},
+  auto_start: {label:"Al cargar el nivel",  value:4}
+};
 
 /* Devuelve el texto .tscn de un nivel del spec (levels_spec.json). Función pura. */
 function genScene(sp, L){
@@ -491,8 +521,11 @@ function genScene(sp, L){
   const ent=(e,scene,extra)=>N(gname(e.id),null,"Entities",["position = "+gvec(e.px.x,e.px.y),...extra,"metadata/levelapp_id = "+gq(e.id)],scene);
   const enemy=R("enemy","PackedScene",SC+"enemies/generic_enemy.tscn");
   for(const e of L.enemies) ent(e,enemy,["persistence_id = "+gq(key+"_"+e.id),"metadata/levelapp_enemy_type = "+gq(e.enemy_type||"")]);
+  const dlgRes=d=>R("dlg_"+d.file.replace(/[^A-Za-z0-9]+/g,"_"),"Resource",d.res_path);
   const npc=R("npc","PackedScene",SC+"npcs/npc_barnaby.tscn");
-  for(const e of L.npcs) ent(e,npc,[...(e.npc_name?["npc_name = "+gq(e.npc_name)]:[]),"metadata/levelapp_npc = "+gq(e.npc_name||"")]);
+  for(const e of L.npcs) ent(e,npc,[...(e.npc_name?["npc_name = "+gq(e.npc_name)]:[]),
+    ...(e.dialogue?["dialogue_resource = "+dlgRes(e.dialogue),"dialogue_start_title = "+gq(e.dialogue.title)]:[]),
+    "metadata/levelapp_npc = "+gq(e.npc_name||"")]);
   const chest=R("chest","PackedScene",SC+"interactables/chest.tscn");
   for(const e of L.chests) ent(e,chest,["persistence_id = "+gq(key+"_"+e.id),"metadata/levelapp_contents = "+gq(e.contents||"")]);
   const mgs=R("mg","PackedScene",SC+"interactables/minigame_interactable.tscn");
@@ -503,6 +536,25 @@ function genScene(sp, L){
       "\nwin_level_path = "+gq(tl(e.win_spawn.level).scene_path)+"\nwin_spawn_id = "+gq(e.win_spawn.arrival_id)+
       "\nlose_level_path = "+gq(tl(e.lose_spawn.level).scene_path)+"\nlose_spawn_id = "+gq(e.lose_spawn.arrival_id));
     ent(e,mgs,['actions_if_true = Array['+base+']([SubResource("'+sid+'")])',"metadata/levelapp_minigame = "+gq(e.minigame||"")]);
+  });
+  (L.triggers||[]).forEach((e,i)=>{
+    const K=TRIGGER_KINDS[e.kind]||TRIGGER_KINDS.area, kind=TRIGGER_KINDS[e.kind]?e.kind:"area", once=e.one_shot!==false, lines=[];
+    if(kind==="area"){
+      const mode=TRIGGER_MODES[e.mode]||TRIGGER_MODES.on_enter;
+      lines.push("trigger_mode = "+mode.value,"one_shot = "+once);
+      if(mode===TRIGGER_MODES.interact) lines.push("collision_layer = 16"); // visible para el ActionableFinder del jugador
+    }
+    else if(kind==="plate") lines.push("one_shot = "+once);
+    else if(kind==="switch") lines.push("is_toggleable = "+!once);
+    else lines.push("event_id = "+gq(e.event_id||e.id),"one_shot = "+once);
+    lines.push("persistence_id = "+gq(key+"_"+e.id));
+    if(e.dialogue){
+      const sid="dlgaction"+(i+1);
+      const act=R("dlgaction","Script","res://src/core/pipeline/actions/dialogue_action.gd"), base=R("action","Script","res://src/core/pipeline/action_resource.gd");
+      subs.push('[sub_resource type="Resource" id="'+sid+'"]\nscript = '+act+"\ndialogue_resource = "+dlgRes(e.dialogue)+"\ndialogue_title = "+gq(e.dialogue.title));
+      lines.push(K.actions+' = Array['+base+']([SubResource("'+sid+'")])');
+    }
+    ent(e,R("trg_"+kind,"PackedScene",SC+K.scene),[...lines,"metadata/levelapp_trigger_kind = "+gq(kind)]);
   });
   const st=L.arrival_spawns.find(a=>a.kind==="start")||L.arrival_spawns[0], pp=st?st.px:{x:60,y:60};
   N("Player",null,".",["position = "+gvec(pp.x,pp.y)],R("player","PackedScene",SC+"player/player.tscn"));
@@ -524,6 +576,20 @@ function genPromptsDoc(sp){
     }
   }
   return o;
+}
+
+/* Proxy por cada .dialogue referenciado (uno por archivo). El servidor solo crea los que no existen. */
+function genDialogueProxies(sp){
+  const out=new Map();
+  for(const L of sp.levels){
+    const refs=[...L.npcs.map(e=>({e,who:"NPC "+e.id,speaker:e.npc_name||e.id})),...(L.triggers||[]).map(e=>({e,who:"trigger "+e.id,speaker:""}))];
+    for(const {e,who,speaker} of refs){
+      if(!e.dialogue||out.has(e.dialogue.file)) continue;
+      const line="(Diálogo pendiente de "+who+" en "+L.name+")";
+      out.set(e.dialogue.file,{file:e.dialogue.file,content:"~ "+e.dialogue.title+"\n\n"+(speaker?speaker+": ":"")+line+"\n=> END\n"});
+    }
+  }
+  return [...out.values()];
 }
 /*GEN-END*/
 /* ===== Generación en disco (vía server.js; rutas fijas del proyecto) ===== */
@@ -571,14 +637,22 @@ async function generateWorld(){
   try{
     if(!await resolveNameClashes()) return flash("Generación cancelada");
     const spec=buildSpec();
-    const r=await api("/api/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({scenes:spec.levels.map(L=>({file:L.scene_file,content:genScene(spec,L)})),prompts:genPromptsDoc(spec)})});
+    const r=await api("/api/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({scenes:spec.levels.map(L=>({file:L.scene_file,content:genScene(spec,L)})),prompts:genPromptsDoc(spec),dialogues:genDialogueProxies(spec)})});
     const warns=spec.warnings.filter(w=>w.startsWith("warn"));
-    infoModal("Niveles generados","<p>"+r.written.length+" escena(s) en <code>"+esc(r.levelsDir)+"</code>:</p><ul>"+r.written.map(f=>"<li>"+esc(f)+"</li>").join("")+"</ul><p>Prompts y notas en <code>"+esc(r.promptsFile)+"</code>.</p>"+(warns.length?"<p class='dim'>Avisos del validador ("+warns.length+") sin resolver.</p>":""));
+    const dl=(t,a)=>a.length?"<p>"+t+":</p><ul>"+a.map(f=>"<li>"+esc(f)+"</li>").join("")+"</ul>":"";
+    infoModal("Niveles generados","<p>"+r.written.length+" escena(s) en <code>"+esc(r.levelsDir)+"</code>:</p><ul>"+r.written.map(f=>"<li>"+esc(f)+"</li>").join("")+"</ul>"+
+      dl("Diálogos proxy creados",r.dialoguesCreated||[])+dl("Diálogos existentes asignados",r.dialoguesExisting||[])+
+      "<p>Prompts y notas en <code>"+esc(r.promptsFile)+"</code>.</p>"+(warns.length?"<p class='dim'>Avisos del validador ("+warns.length+") sin resolver.</p>":""));
+    loadDialogues();
   }catch(e){ infoModal("No se generó nada",'<p>'+esc(e.message)+'</p>'+(e.data&&e.data.conflicts?"<ul>"+e.data.conflicts.map(f=>"<li>"+esc(f)+"</li>").join("")+"</ul>":"")); }
 }
 /* proyecto guardado en LevelApp/data (además de localStorage) */
 let saveT=null;
 function saveToServer(){ if(!hasServer()) return; clearTimeout(saveT); saveT=setTimeout(()=>fetch("/api/project",{method:"POST",headers:{"Content-Type":"application/json"},body:snapshot()}).catch(()=>{}),400); }
+async function loadDialogues(){
+  if(!hasServer()) return;
+  try{ knownDialogues=(await api("/api/dialogues")).files; refreshUI(); }catch(e){}
+}
 async function loadFromServer(){
   if(!hasServer()) return;
   try{ const j=await api("/api/project"); if(j&&j.levels&&j.levels.length){ restore(JSON.stringify(j)); hist=[snapshot()]; histPos=0; draw(); } }catch(e){}
@@ -647,6 +721,27 @@ function refreshUI(){
     if(e.type==="chest") h+=`<div class="row"><label>Contenido</label><input data-p="contents" value="${esc(e.props.contents||"")}"></div>`;
     if(e.type==="minigame") h+=`<div class="row"><label>Minijuego</label><select data-p="mg"><option value="">(sin definir)</option>${Object.keys(MG_TYPES).map(k=>`<option ${e.props.mg===k?"selected":""}>${k}</option>`).join("")}</select></div>
       <div class="dim">Spawns de salida: ${e.children.map(c=>esc(childId(e,c))).join(", ")}</div>`;
+    if(e.type==="trigger"){
+      const kind=TRIGGER_KINDS[e.props.kind]?e.props.kind:"area", opt=(o,v)=>Object.keys(o).map(k=>`<option value="${k}" ${v===k?"selected":""}>${esc(o[k].label)}</option>`).join("");
+      h+=`<div class="row"><label>Tipo</label><select data-p="kind">${opt(TRIGGER_KINDS,kind)}</select></div>`;
+      if(kind==="area") h+=`<div class="row"><label>Se activa</label><select data-p="mode">${opt(TRIGGER_MODES,TRIGGER_MODES[e.props.mode]?e.props.mode:"on_enter")}</select></div>`;
+      if(kind==="event") h+=`<div class="row"><label>event_id</label><input data-p="event" value="${esc(e.props.event||"")}" placeholder="${esc(e.name)}"></div>
+        <div class="dim">Se activa con <code>do GameManager.trigger_event("${esc((e.props.event||"").trim()||e.name)}")</code> desde otro diálogo.</div>`;
+      h+=`<div class="row"><label>${kind==="switch"?"Un solo uso":"Una vez"}</label><input type="checkbox" data-p="once" ${e.props.once!==false?"checked":""} style="flex:none"></div>`;
+    }
+    if(hasDialogue(e)){
+      const d=entDialogue(e), known=d&&knownDialogues.includes(d.file), isNew=d&&!known;
+      h+=`<h3>Diálogo</h3>
+      <div class="row"><label>Archivo</label><select data-dlg>
+        <option value="" ${!d?"selected":""}>(sin diálogo)</option>
+        <option value="__new" ${isNew?"selected":""}>Nuevo (proxy)</option>
+        ${knownDialogues.map(f=>`<option value="${esc(f)}" ${d&&d.file===f?"selected":""}>${esc(f.replace(/^src\//,""))}</option>`).join("")}
+      </select></div>`;
+      if(isNew) h+=`<div class="row"><label>Nombre</label><input data-dlgname value="${esc(d.file.split("/").pop().replace(/\.dialogue$/,""))}"></div>
+        <div class="dim">Al generar: si <code>${esc(d.file)}</code> existe se asigna; si no, se crea un proxy y se asigna.</div>`;
+      if(d) h+=`<div class="row"><label>Título</label><input data-p="dlgTitle" value="${esc(e.props.dlgTitle||"")}" placeholder="start"></div>`;
+      if(!hasServer()) h+=`<div class="dim">Abre la app con su servidor para ver los diálogos del proyecto.</div>`;
+    }
     h+=`<div class="row"><label>${e.type==="note"?"Texto":"Notas"}</label><textarea data-f="text">${esc(e.text)}</textarea></div>
     ${e.type==="note"?'<div class="dim">Texto entre //barras// = prompt que se interpreta al generar el nivel; el resto es solo información de diseño.</div>':""}
     <div class="row"><button class="danger" data-act="del">Eliminar</button></div>`;
@@ -664,7 +759,9 @@ function refreshUI(){
 
   const target=()=>sel&&sel.kind==="level"?levelById(sel.id):entById(sel.id);
   side.querySelectorAll("[data-f]").forEach(i=>i.onchange=()=>{ const o=target(), f=i.dataset.f, old=o[f]; o[f]=i.type==="number"?parseInt(i.value)||0:i.value; if((f==="w"||f==="h")&&o[f]<1) o[f]=1; if(sel.kind==="level"&&["x","y","w","h"].includes(f)&&overlapsAny(o,o.x,o.y,o.w,o.h)){ o[f]=old; flash("Los niveles no pueden superponerse"); refreshUI(); } commit(); draw(); });
-  side.querySelectorAll("[data-p]").forEach(i=>i.onchange=()=>{ target().props[i.dataset.p]=i.value; commit(); });
+  side.querySelectorAll("[data-p]").forEach(i=>i.onchange=()=>{ target().props[i.dataset.p]=i.type==="checkbox"?i.checked:i.value; commit(); draw(); });
+  side.querySelectorAll("[data-dlg]").forEach(i=>i.onchange=()=>{ const p=target().props; if(i.value==="__new") delete p.dlg; else p.dlg=i.value; commit(); });
+  side.querySelectorAll("[data-dlgname]").forEach(i=>i.onchange=()=>{ const p=target().props, n=slug(i.value.trim()); if(i.value.trim()) p.dlg=DLG_DIR+n+".dialogue"; else delete p.dlg; commit(); });
   side.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{
     const a=b.dataset.act;
     if(a==="del") deleteSel();
@@ -683,7 +780,7 @@ function focusSel(){
 /* ===== Inicio ===== */
 try{ const saved=localStorage.getItem(LS_KEY); if(saved){ S=Object.assign(fresh(),JSON.parse(saved)); migrate(); } }catch(e){}
 hist=[snapshot()]; histPos=0;
-buildToolbar(); refreshUI(); resize(); loadFromServer();
+buildToolbar(); refreshUI(); resize(); loadFromServer(); loadDialogues();
 </script>
 </body>
 </html>
