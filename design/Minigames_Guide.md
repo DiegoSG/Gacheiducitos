@@ -171,6 +171,7 @@ Si necesitas lanzar un minijuego por código vía `GameManager.minigame_config =
 | | `"lives"` | `int` | Vidas |
 | | `"base_fall_speed"` | `float` | Velocidad de caída |
 | | `"spawn_rate"` | `float` | Intervalo de spawn en segundos |
+| | `"floor_wait_time"` | `float` | Segundos que los objetos que no matan quedan en el suelo (las bombas desaparecen al tocarlo). Menos = más difícil. Default `3.0` |
 | | `"item_pool"` | `Array[String]` | Pool de ítems otorgables |
 | | `"critical_item_ids"` | `Array[String]` | IDs de ítems que quitan vida al expirar en suelo |
 | **Excavation**| `"win_condition"` | `int` | `0` = Todas, `1` = Cantidad, `2` = Misión |
