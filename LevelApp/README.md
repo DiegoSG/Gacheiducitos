@@ -25,8 +25,8 @@ Abre **http://localhost:3132** (sin dependencias: solo Node).
 - Escribe un `.tscn` por nivel en `rpg-g/src/overworld/levels/` y las notas/prompts en `design/Level_Prompts.md`.
 - **Nunca sobrescribe**: si un nivel ya existe, pide un nombre nuevo para ese nivel.
 - No genera si el validador tiene errores.
-- Cada escena incluye `WorldBoundaryManager`, capas, `SpawnPoints`, portales, entidades, `Player` en el start y `SceneMusic` sin música asignada.
-- Diálogos: cada NPC y cada Trigger tienen un campo **Diálogo** con los `.dialogue` de `rpg-g/src` o «Nuevo (proxy)». Al generar, si el archivo existe se asigna; si no, se crea un proxy (`~ start` + línea pendiente + `=> END`, por defecto en `rpg-g/src/overworld/dialogues/<nivel>_<objeto>.dialogue`) y se asigna. Nunca se sobrescribe un `.dialogue` existente.
+- Cada escena incluye `WorldBoundaryManager`, capas, `SpawnPoints`, portales, entidades, `Player` en el start y `SceneMusic`. La **Música** de cada nivel se elige en su panel entre los `music_*` del catálogo de audio (`rpg-g/data/audio/audio_catalog.tres`); por defecto «(mute)», que genera `SceneMusic` sin `music_id`.
+- Diálogos: cada NPC y cada Trigger tienen un campo **Diálogo** (por defecto «sin diálogo») con los `.dialogue` de `rpg-g/src` o «Nuevo (proxy)». Al generar, si el archivo existe se asigna; si no, se crea un proxy (`~ start` + línea pendiente + `=> END`, por defecto en `rpg-g/src/overworld/dialogues/<nivel>_<objeto>.dialogue`) y se asigna. Nunca se sobrescribe un `.dialogue` existente.
 - Notas: `//texto//` = prompt a interpretar por un agente; el resto es información de diseño.
 
 ## Trigger (G)

@@ -9,6 +9,7 @@ const PROJECT_FILE = path.resolve(__dirname, 'data/levelapp_proyecto.json');
 const RPG_ROOT = path.resolve(__dirname, '../rpg-g');
 const SRC_DIR = path.resolve(RPG_ROOT, 'src');
 const LEVELS_DIR = path.resolve(SRC_DIR, 'overworld/levels');
+const AUDIO_CATALOG = path.resolve(RPG_ROOT, 'data/audio/audio_catalog.tres');
 const PROMPTS_FILE = path.resolve(__dirname, '../design/Level_Prompts.md');
 const SCENE_FILE_RE = /^[a-z0-9_]+\.tscn$/;
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
@@ -40,6 +41,16 @@ function listDialogues(dir = SRC_DIR, out = []) {
     else if (d.name.endsWith('.dialogue')) out.push(path.relative(RPG_ROOT, abs).split(path.sep).join('/'));
   }
   return out.sort();
+}
+
+/** Ids de música del catálogo de audio (music_*), con el archivo asignado si lo tiene. */
+function listMusic() {
+  if (!fs.existsSync(AUDIO_CATALOG)) return [];
+  const text = fs.readFileSync(AUDIO_CATALOG, 'utf8');
+  const streams = Object.fromEntries([...text.matchAll(/\[ext_resource type="AudioStream" path="([^"]+)" id="([^"]+)"\]/g)].map(m => [m[2], m[1]]));
+  return [...text.matchAll(/^id = &"(music_[^"]*)"\n(?:stream = ExtResource\("([^"]+)"\))?/gm)]
+    .map(m => ({ id: m[1], file: m[2] && streams[m[2]] ? path.basename(streams[m[2]]) : '' }))
+    .sort((a, b) => a.id.localeCompare(b.id));
 }
 
 /** Ruta absoluta de un .dialogue relativo a rpg-g, o null si sale de rpg-g/src. */
@@ -83,6 +94,7 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname === '/api/levels' && req.method === 'GET') return send(res, 200, { files: listLevels() });
     if (url.pathname === '/api/dialogues' && req.method === 'GET') return send(res, 200, { files: listDialogues() });
+    if (url.pathname === '/api/music' && req.method === 'GET') return send(res, 200, { music: listMusic() });
     if (url.pathname === '/api/project' && req.method === 'GET')
       return send(res, 200, fs.existsSync(PROJECT_FILE) ? fs.readFileSync(PROJECT_FILE) : '{}');
     if (url.pathname === '/api/project' && req.method === 'POST') {

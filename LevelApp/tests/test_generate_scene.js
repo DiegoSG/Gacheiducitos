@@ -17,11 +17,12 @@ assert(b.includes("win_spawn_id = \"at_M01_win\"") && b.includes("minigame_type 
 assert(a.includes('persistence_id = "level_01_E01"') && a.includes('name="SceneMusic"'));
 assert(Object.values(out).some(t => t.includes('path="res://src/overworld/npcs/npc_barnaby.tscn"')) && !Object.values(out).some(t => t.includes("dummy_npc")), "NPCs usan npc_barnaby.tscn");
 assert(ctx.genPromptsDoc(spec).includes("PROMPT: agregar un arbol grande"));
-assert(!a.includes("dialogue_resource") && ctx.genDialogueProxies(spec).length === 0, "spec sin diálogos no cambia");
+assert(a.includes("dialogue_resource = null") && ctx.genDialogueProxies(spec).length === 0, "NPC sin diálogo no hereda el de la escena base");
 
 // Diálogos en NPC y triggers
 const dlg = f => ({ file: "src/" + f, res_path: "res://src/" + f, title: "start" });
 const s2 = JSON.parse(JSON.stringify(spec)), L1 = s2.levels[0];
+L1.music_id = "music_level_01";
 L1.npcs[0].dialogue = dlg("overworld/npcs/barnaby.dialogue");
 const pos = { cell: { x: 1, y: 1 }, px: { x: 90, y: 90 } };
 L1.triggers = [
@@ -44,6 +45,7 @@ assert(scenePath(g2).endsWith("pressure_plate.tscn") && g2.includes("one_shot = 
 assert(scenePath(g3).endsWith("switch_interactable.tscn") && g3.includes("is_toggleable = false") && g3.includes("trigger_actions = Array["), "palanca");
 assert(scenePath(g4).endsWith("dialogue_event.tscn") && g4.includes('event_id = "abrir_puerta"') && g4.includes("\nactions = Array["), "evento remoto");
 assert(g5.includes("trigger_mode = 0") && !g5.includes("Array[") && !g5.includes("collision_layer"), "trigger sin diálogo no lleva acciones ni capa de interacción");
+assert(t.includes('music_id = &"music_level_01"') && !a.includes("music_id"), "música del nivel; sin música = SceneMusic sin music_id");
 const px = ctx.genDialogueProxies(s2);
 assert.strictEqual(px.map(p => p.file).join(), ["src/overworld/npcs/barnaby.dialogue", "src/overworld/dialogues/level_01_g01.dialogue", "src/overworld/dialogues/level_01_g03.dialogue", "src/overworld/dialogues/level_01_g04.dialogue"].join());
 assert(px[0].content.startsWith("~ start\n\nBarnaby: ") && px[1].content.startsWith("~ intro\n") && px[1].content.endsWith("=> END\n"));

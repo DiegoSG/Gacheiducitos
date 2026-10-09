@@ -131,14 +131,14 @@ function delLevel(l){
 }
 function sceneFile(l){ return slug(l.name)+".tscn"; }
 
-/* Diálogo de NPC/Trigger. props.dlg: undefined = proxy con nombre por defecto, "" = sin diálogo, ruta = ese archivo */
+/* Diálogo de NPC/Trigger. props.dlg: vacío = sin diálogo (por defecto), ruta = ese archivo (si no existe, proxy al generar) */
 const DLG_DIR = "src/overworld/dialogues/";
-let knownDialogues = [];
+let knownDialogues = [], knownMusic = [];
 const hasDialogue = e => e.type==="npc"||e.type==="trigger";
 function defaultDlgPath(e){ return DLG_DIR+slug(levelById(e.levelId).name)+"_"+slug(e.name)+".dialogue"; }
 function entDialogue(e){
-  if(!hasDialogue(e)||e.props.dlg==="") return null;
-  return {file:e.props.dlg||defaultDlgPath(e), title:(e.props.dlgTitle||"").trim()||"start"};
+  if(!hasDialogue(e)||!e.props.dlg) return null;
+  return {file:e.props.dlg, title:(e.props.dlgTitle||"").trim()||"start"};
 }
 
 /* ===== Historial / guardado ===== */
@@ -416,7 +416,7 @@ function buildSpec(){
     const ents=S.ents.filter(e=>e.levelId===l.id);
     const o={
       name:l.name, scene_file:sceneFile(l), scene_path:"res://src/overworld/levels/"+sceneFile(l), root_node:pascal(l.name),
-      color:levelColor(l), description:l.text||"",
+      color:levelColor(l), description:l.text||"", music_id:l.music||"",
       grid_rect:{x:l.x,y:l.y,w:l.w,h:l.h}, size_px:{w:l.w*px,h:l.h*px},
       world_boundary:{width:l.w*px,height:l.h*px},
       layers:["GroundLayer","DetailLayer","PropsLayer"],
@@ -524,7 +524,7 @@ function genScene(sp, L){
   const dlgRes=d=>R("dlg_"+d.file.replace(/[^A-Za-z0-9]+/g,"_"),"Resource",d.res_path);
   const npc=R("npc","PackedScene",SC+"npcs/npc_barnaby.tscn");
   for(const e of L.npcs) ent(e,npc,[...(e.npc_name?["npc_name = "+gq(e.npc_name)]:[]),
-    ...(e.dialogue?["dialogue_resource = "+dlgRes(e.dialogue),"dialogue_start_title = "+gq(e.dialogue.title)]:[]),
+    ...(e.dialogue?["dialogue_resource = "+dlgRes(e.dialogue),"dialogue_start_title = "+gq(e.dialogue.title)]:["dialogue_resource = null"]),
     "metadata/levelapp_npc = "+gq(e.npc_name||"")]);
   const chest=R("chest","PackedScene",SC+"interactables/chest.tscn");
   for(const e of L.chests) ent(e,chest,["persistence_id = "+gq(key+"_"+e.id),"metadata/levelapp_contents = "+gq(e.contents||"")]);
@@ -558,7 +558,7 @@ function genScene(sp, L){
   });
   const st=L.arrival_spawns.find(a=>a.kind==="start")||L.arrival_spawns[0], pp=st?st.px:{x:60,y:60};
   N("Player",null,".",["position = "+gvec(pp.x,pp.y)],R("player","PackedScene",SC+"player/player.tscn"));
-  N("SceneMusic","Node",".",["script = "+R("music","Script","res://src/core/components/scene_music.gd")]);
+  N("SceneMusic","Node",".",["script = "+R("music","Script","res://src/core/components/scene_music.gd"),...(L.music_id?["music_id = &"+gq(L.music_id)]:[])]);
   return "[gd_scene format=3]\n\n"+ext.join("\n")+"\n\n"+(subs.length?subs.join("\n\n")+"\n\n":"")+nodes.join("\n\n")+"\n";
 }
 
@@ -651,7 +651,7 @@ let saveT=null;
 function saveToServer(){ if(!hasServer()) return; clearTimeout(saveT); saveT=setTimeout(()=>fetch("/api/project",{method:"POST",headers:{"Content-Type":"application/json"},body:snapshot()}).catch(()=>{}),400); }
 async function loadDialogues(){
   if(!hasServer()) return;
-  try{ knownDialogues=(await api("/api/dialogues")).files; refreshUI(); }catch(e){}
+  try{ knownDialogues=(await api("/api/dialogues")).files; knownMusic=(await api("/api/music")).music; refreshUI(); }catch(e){}
 }
 async function loadFromServer(){
   if(!hasServer()) return;
@@ -693,6 +693,7 @@ function refreshUI(){
     <div class="row"><label>Nombre</label><input data-f="name" value="${esc(l.name)}"></div>
     <div class="row"><label>Archivo</label><span class="dim">${esc(sceneFile(l))}</span></div>
     <div class="row"><label>Color</label><input type="color" data-f="color" value="${levelColor(l)}"></div>
+    <div class="row"><label>Música</label><select data-f="music"><option value="">(mute)</option>${[...new Set([...knownMusic.map(m=>m.id),...(l.music?[l.music]:[])])].map(id=>{ const m=knownMusic.find(x=>x.id===id); return `<option value="${esc(id)}" ${l.music===id?"selected":""}>${esc(id+(m&&m.file?" · "+m.file:""))}</option>`; }).join("")}</select></div>
     <div class="grid4"><input data-f="x" type="number" value="${l.x}" title="x"><input data-f="y" type="number" value="${l.y}" title="y"><input data-f="w" type="number" min="1" value="${l.w}" title="ancho"><input data-f="h" type="number" min="1" value="${l.h}" title="alto"></div>
     <div class="dim">x, y, ancho, alto (celdas)</div>
     <div class="row"><label>Notas</label><textarea data-f="text">${esc(l.text)}</textarea></div>
@@ -760,8 +761,8 @@ function refreshUI(){
   const target=()=>sel&&sel.kind==="level"?levelById(sel.id):entById(sel.id);
   side.querySelectorAll("[data-f]").forEach(i=>i.onchange=()=>{ const o=target(), f=i.dataset.f, old=o[f]; o[f]=i.type==="number"?parseInt(i.value)||0:i.value; if((f==="w"||f==="h")&&o[f]<1) o[f]=1; if(sel.kind==="level"&&["x","y","w","h"].includes(f)&&overlapsAny(o,o.x,o.y,o.w,o.h)){ o[f]=old; flash("Los niveles no pueden superponerse"); refreshUI(); } commit(); draw(); });
   side.querySelectorAll("[data-p]").forEach(i=>i.onchange=()=>{ target().props[i.dataset.p]=i.type==="checkbox"?i.checked:i.value; commit(); draw(); });
-  side.querySelectorAll("[data-dlg]").forEach(i=>i.onchange=()=>{ const p=target().props; if(i.value==="__new") delete p.dlg; else p.dlg=i.value; commit(); });
-  side.querySelectorAll("[data-dlgname]").forEach(i=>i.onchange=()=>{ const p=target().props, n=slug(i.value.trim()); if(i.value.trim()) p.dlg=DLG_DIR+n+".dialogue"; else delete p.dlg; commit(); });
+  side.querySelectorAll("[data-dlg]").forEach(i=>i.onchange=()=>{ const p=target().props; p.dlg=i.value==="__new"?defaultDlgPath(target()):i.value; commit(); });
+  side.querySelectorAll("[data-dlgname]").forEach(i=>i.onchange=()=>{ const p=target().props, n=slug(i.value.trim()); p.dlg=i.value.trim()?DLG_DIR+n+".dialogue":defaultDlgPath(target()); commit(); });
   side.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{
     const a=b.dataset.act;
     if(a==="del") deleteSel();
