@@ -25,8 +25,22 @@ Abre **http://localhost:3132** (sin dependencias: solo Node).
 - Escribe un `.tscn` por nivel en `rpg-g/src/overworld/levels/` y las notas/prompts en `design/Level_Prompts.md`.
 - **Nunca sobrescribe**: si un nivel ya existe, pide un nombre nuevo para ese nivel.
 - No genera si el validador tiene errores.
-- Cada escena incluye `WorldBoundaryManager`, capas, `SpawnPoints`, portales, entidades, `Player` en el start y `SceneMusic` sin música asignada.
+- Cada escena incluye `WorldBoundaryManager`, capas, `SpawnPoints`, portales, entidades, `Player` en el start y `SceneMusic`. La **Música** de cada nivel se elige en su panel entre los `music_*` del catálogo de audio (`rpg-g/data/audio/audio_catalog.tres`); por defecto «(mute)», que genera `SceneMusic` sin `music_id`.
+- Diálogos: cada NPC y cada Trigger tienen un campo **Diálogo** (por defecto «sin diálogo») con los `.dialogue` de `rpg-g/src` o «Nuevo (proxy)». Al generar, si el archivo existe se asigna; si no, se crea un proxy (`~ start` + línea pendiente + `=> END`, por defecto en `rpg-g/src/overworld/dialogues/<nivel>_<objeto>.dialogue`) y se asigna. Nunca se sobrescribe un `.dialogue` existente.
 - Notas: `//texto//` = prompt a interpretar por un agente; el resto es información de diseño.
+
+## Trigger (G)
+
+Un objeto Trigger tiene un **Tipo**, que elige la escena del juego, y su diálogo se ejecuta como `DialogueAction` cuando se activa:
+
+| Tipo | Escena | Se activa | Acciones donde va el diálogo |
+|---|---|---|---|
+| Área | `interactables/game_trigger_area.tscn` (`GameTrigger`) | al pisar, al salir, al interactuar o al cargar el nivel | `actions_if_true` |
+| Placa de presión | `interactables/pressure_plate.tscn` | al pisarla | `on_enter_actions` |
+| Palanca / interruptor | `interactables/switch_interactable.tscn` | al encenderla | `trigger_actions` |
+| Evento remoto | `interactables/dialogue_event.tscn` | con `do GameManager.trigger_event("event_id")` desde otro diálogo | `actions` |
+
+«Una vez» se traduce a `one_shot` (en la palanca, a `is_toggleable = false`). Cada trigger lleva `persistence_id = <nivel>_<id>`.
 
 ## Exportación manual
 
