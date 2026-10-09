@@ -55,6 +55,7 @@ var catcher_lives: int = 3
 var catcher_fall_speed: float = 200.0
 var catcher_spawn_rate: float = 0.8
 var catcher_max_objects: int = 8
+var catcher_floor_wait_time: float = 3.0
 var catcher_item_pool: Array[String] = ["blue_potion", "red_potion", "green_herb"]
 var catcher_critical_item_ids: Array[String] = ["falling_bomb", "falling_rock"]
 
@@ -235,6 +236,13 @@ func _get_property_list() -> Array[Dictionary]:
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
 		list.append({
+			"name": "catcher_floor_wait_time",
+			"type": TYPE_FLOAT,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "0.0,10.0,0.1",
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
+		list.append({
 			"name": "catcher_item_pool",
 			"type": TYPE_ARRAY,
 			"hint": PROPERTY_HINT_TYPE_STRING,
@@ -411,6 +419,7 @@ func get_built_config() -> Dictionary:
 			c["base_fall_speed"] = catcher_fall_speed
 			c["spawn_rate"] = catcher_spawn_rate
 			c["max_falling_objects"] = catcher_max_objects
+			c["floor_wait_time"] = catcher_floor_wait_time
 			c["item_pool"] = catcher_item_pool
 			c["critical_item_ids"] = catcher_critical_item_ids
 		MinigameType.EXCAVATION:

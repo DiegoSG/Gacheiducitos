@@ -104,6 +104,26 @@ custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
 text = "10"
 
+[node name="FloorWait" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/FloorWait"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Tiempo en suelo:"
+
+[node name="Slider" type="HSlider" parent="VBoxContainer/FloorWait"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 10.0
+step = 0.5
+value = 3.0
+
+[node name="Value" type="Label" parent="VBoxContainer/FloorWait"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+text = "3.0 s"
+
 [node name="GameMode" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 

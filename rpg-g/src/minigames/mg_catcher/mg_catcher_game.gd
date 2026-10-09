@@ -11,6 +11,8 @@ extends MinigameBase
 var base_fall_speed: float = 200.0
 var spawn_rate: float = 1.0
 var max_falling_objects: int = 10
+## Segundos que los objetos que no matan quedan en el suelo antes de desaparecer.
+var floor_wait_time: float = 3.0
 var game_mode: String = "TIME"
 var target_value: float = 30.0
 var item_pool: Array = []
@@ -30,6 +32,7 @@ func _ready() -> void:
 		base_fall_speed = config.get("base_fall_speed", 200.0)
 		spawn_rate = config.get("spawn_rate", 1.0)
 		max_falling_objects = config.get("max_falling_objects", 10)
+		floor_wait_time = config.get("floor_wait_time", 3.0)
 		game_mode = config.get("game_mode", "TIME")
 		target_value = config.get("target_value", 30.0)
 		lives = config.get("lives", 3)
@@ -123,7 +126,7 @@ func _on_spawn_timeout() -> void:
 
 	add_child(item)
 	AudioManager.play_sfx(&"sfx_catch_spawn")
-	item.setup(base_fall_speed, Vector2(spawn_x, -50), is_crit, chosen_item_id, custom_texture)
+	item.setup(base_fall_speed, Vector2(spawn_x, -50), is_crit, chosen_item_id, custom_texture, floor_wait_time)
 	item.hit_floor.connect(func(_type): pass)
 	item.expired.connect(_on_item_expired)
 	item.caught.connect(func(type): _on_item_caught(type, item))
