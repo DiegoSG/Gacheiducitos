@@ -245,7 +245,7 @@ debug_toggle={
 
 [internationalization]
 
-locale/translations_pot_files=PackedStringArray("res://src/overworld/npcs/barnaby.dialogue", "res://src/overworld/npcs/test.dialogue", "res://src/overworld/interactables/chest.dialogue", "res://src/core/tests/test_map_check.dialogue", "res://src/overworld/npcs/probando.dialogue")
+locale/translations_pot_files=PackedStringArray("res://src/overworld/npcs/barnaby.dialogue", "res://src/overworld/npcs/test.dialogue", "res://src/overworld/interactables/chest.dialogue", "res://src/core/tests/test_map_check.dialogue", "res://src/overworld/npcs/probando.dialogue", "res://src/overworld/dialogues/level_02_nuevo_n01.dialogue", "res://src/overworld/dialogues/level_01_nuevo_g01.dialogue", "res://src/overworld/dialogues/level_03_nuevo_g02.dialogue")
 
 [layer_names]
 

@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://chkqtb4i58jbh"
+path="res://.godot/imported/probando.dialogue-976b26f1fff2e5d4253f6cdb5a7626b3.tres"
+
+[deps]
+
+source_file="res://src/overworld/npcs/probando.dialogue"
+dest_files=["res://.godot/imported/probando.dialogue-976b26f1fff2e5d4253f6cdb5a7626b3.tres"]
+
+[params]
+
+defaults=true
