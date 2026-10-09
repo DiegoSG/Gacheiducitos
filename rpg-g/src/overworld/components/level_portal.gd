@@ -104,8 +104,6 @@ var _is_triggered: bool = false
 var _persistence_key: String = ""
 ## Diálogo generado a partir de locked_text (se crea la primera vez que se necesita)
 var _locked_text_resource: Resource = null
-## Zumbido ambiental del portal activo (se crea en runtime solo si hay sonido asignado).
-var _hum_player: AudioStreamPlayer2D = null
 
 ## Palabras/prefijos que Dialogue Manager interpreta como sintaxis al inicio de una línea
 const _DIALOGUE_SYNTAX_PREFIXES: Array[String] = ["- ", "~", "=>", "=<", "#", "%", "if ", "elif ", "else", "do ", "do! ", "set ", "while ", "match ", "when ", "import ", "using "]
@@ -120,29 +118,8 @@ func _ready() -> void:
 		if not body_exited.is_connected(_on_body_exited):
 			body_exited.connect(_on_body_exited)
 		_set_debug_visibility(ArrivalSpawnPoint.debug_visuals_visible)
-		_create_hum_player()
 		_restore_state()
 	_update_visuals()
-
-func _create_hum_player() -> void:
-	var entry: AudioEntry = AudioManager.get_playable_entry(&"sfx_portal_hum")
-	if entry == null:
-		return
-	_hum_player = AudioStreamPlayer2D.new()
-	_hum_player.bus = &"SFX"
-	_hum_player.volume_db = entry.volume_db
-	_hum_player.stream = entry.stream
-	add_child(_hum_player)
-
-## El zumbido suena solo mientras es un portal activo y abierto.
-func _update_hum() -> void:
-	if _hum_player == null:
-		return
-	var should_play: bool = mode == Mode.PORTAL and is_active and not is_locked
-	if should_play and not _hum_player.playing:
-		_hum_player.play()
-	elif not should_play and _hum_player.playing:
-		_hum_player.stop()
 
 func _restore_state() -> void:
 	if _persistence_key.is_empty():
@@ -186,8 +163,6 @@ func _update_visuals() -> void:
 			door_sprite.texture = portal_active_texture
 		else:
 			door_sprite.texture = door_unlocked_texture
-
-	_update_hum()
 
 	if has_node("ExitIdLabel"):
 		$ExitIdLabel.text = exit_id
