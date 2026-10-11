@@ -29,6 +29,11 @@ Abre **http://localhost:3132** (sin dependencias: solo Node).
 - Diálogos: cada NPC y cada Trigger tienen un campo **Diálogo** (por defecto «sin diálogo») con los `.dialogue` de `rpg-g/src` o «Nuevo (proxy)». Al generar, si el archivo existe se asigna; si no, se crea un proxy (`~ start` + línea pendiente + `=> END`, por defecto en `rpg-g/src/overworld/dialogues/<nivel>_<objeto>.dialogue`) y se asigna. Nunca se sobrescribe un `.dialogue` existente.
 - Notas: `//texto//` = prompt a interpretar por un agente; el resto es información de diseño.
 
+## Portal (P)
+
+- **Llave**: texto opcional con el id de la llave (solo informativo en el spec).
+- **Sin enemigos** (casilla, apagada por defecto): genera `requires_no_enemies = true` en el `LevelPortal`; no se puede pasar mientras quede algún enemigo vivo (grupo `enemy`) en la escena. El texto del globo se ajusta en Godot con `enemies_alive_text` (si está vacío usa `locked_text`).
+
 ## Trigger (G)
 
 Un objeto Trigger tiene un **Tipo**, que elige la escena del juego, y su diálogo se ejecuta como `DialogueAction` cuando se activa:

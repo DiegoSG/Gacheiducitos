@@ -49,5 +49,11 @@ assert(t.includes('music_id = &"music_level_01"') && !a.includes("music_id"), "m
 const px = ctx.genDialogueProxies(s2);
 assert.strictEqual(px.map(p => p.file).join(), ["src/overworld/npcs/barnaby.dialogue", "src/overworld/dialogues/level_01_g01.dialogue", "src/overworld/dialogues/level_01_g03.dialogue", "src/overworld/dialogues/level_01_g04.dialogue"].join());
 assert(px[0].content.startsWith("~ start\n\nBarnaby: ") && px[1].content.startsWith("~ intro\n") && px[1].content.endsWith("=> END\n"));
+
+// Portal bloqueado mientras haya enemigos vivos
+assert(!a.includes("requires_no_enemies"), "por defecto el portal no exige escena sin enemigos");
+const s3 = JSON.parse(JSON.stringify(spec)); s3.levels[0].portals[0].requires_no_enemies = true;
+const p1 = ctx.genScene(s3, s3.levels[0]).split("\n\n").find(b => b.startsWith('[node name="P01"')) || "";
+assert(p1.includes("requires_no_enemies = true\nmetadata/levelapp_id"), "portal con requires_no_enemies");
 const dir = process.argv[2]; if (dir) { fs.mkdirSync(dir, { recursive: true }); for (const k in out) fs.writeFileSync(path.join(dir, k), out[k]); }
 console.log("OK");

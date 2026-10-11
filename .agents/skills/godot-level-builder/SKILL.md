@@ -16,6 +16,7 @@ Guías fuente: `design/Guia_Creacion_Niveles.md` y `design/Level_Design_Items_Gu
 - Al menos un `ArrivalSpawnPoint` con `arrival_id = "start"`; IDs únicos por nivel (`from_<origen>`, `from_<mg>_win/lose`).
 - Cada `LevelPortal`: `target_level_path` existente + `arrival_id` que **exista en el nivel destino**. Verificar ambos lados (ida y vuelta).
 - Puertas con llave: asignar `key` (recurso `ItemData`); asignarla marca `is_locked`. `consume_key` la quita al abrir.
+- Puertas/portales que exigen limpiar la sala: `requires_no_enemies = true` bloquea el paso mientras quede un nodo vivo en el grupo `enemy`; texto opcional en `enemies_alive_text`.
 - Minijuegos: `minigame_interactable.tscn` + `MinigameAction` con rutas/spawns de victoria y derrota válidos.
 
 ## 3. Persistencia y checkpoints

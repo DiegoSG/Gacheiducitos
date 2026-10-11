@@ -435,7 +435,7 @@ function buildSpec(){
         const t=e.target&&spMap.get(e.target), tl=t&&levelById(t.levelId), arr=e.children[0];
         o.portals.push({...base, arrival_spawn:spLoc(e,arr.slot),
           target_level:tl?tl.name:null, target_scene_path:tl?"res://src/overworld/levels/"+sceneFile(tl)+"":null, target_arrival_id:t?t.arrival:null,
-          key:e.props.key||""});
+          key:e.props.key||"", requires_no_enemies:e.props.noEnemies===true});
       } else if(e.type==="minigame"){
         const w=e.children.find(c=>c.slot==="win"), lo=e.children.find(c=>c.slot==="lose");
         o.minigames.push({...base, minigame:e.props.mg||"", win_spawn:spLoc(e,w.slot), lose_spawn:spLoc(e,lo.slot)});
@@ -514,7 +514,9 @@ function genScene(sp, L){
     const nm=gname(p.id), same=p.arrival_spawn.level===L.name, lines=["position = "+gvec(p.px.x,p.px.y)];
     if(p.target_scene_path) lines.push("target_level_path = "+gq(p.target_scene_path));
     if(p.target_arrival_id) lines.push("exit_id = "+gq(p.target_arrival_id));
-    lines.push("arrival_id = "+gq(same?p.arrival_spawn.arrival_id:p.arrival_spawn.arrival_id+"_local"),"metadata/levelapp_id = "+gq(p.id));
+    lines.push("arrival_id = "+gq(same?p.arrival_spawn.arrival_id:p.arrival_spawn.arrival_id+"_local"));
+    if(p.requires_no_enemies) lines.push("requires_no_enemies = true");
+    lines.push("metadata/levelapp_id = "+gq(p.id));
     N(nm,null,"Portals",lines,portalScene);
     if(same) N("SpawnPoint",null,"Portals/"+nm,["position = "+gvec(p.arrival_spawn.px.x-p.px.x,p.arrival_spawn.px.y-p.px.y)]);
   }
@@ -715,7 +717,8 @@ function refreshUI(){
       h+=`<div class="row"><label>Llega aquí</label><span class="dim">${esc(childId(e,e.children[0]))}</span></div>
       <div class="row"><label>Destino</label><span>${tg?esc(levelById(tg.levelId).name+" › "+tg.arrival):'<span class="dim">sin destino (arrastra el punto amarillo)</span>'}</span></div>
       ${tg?'<div class="row"><button data-act="unlink">Quitar conexión</button></div>':""}
-      <div class="row"><label>Llave</label><input data-p="key" value="${esc(e.props.key||"")}" placeholder="opcional"></div>`;
+      <div class="row"><label>Llave</label><input data-p="key" value="${esc(e.props.key||"")}" placeholder="opcional"></div>
+      <div class="row"><label>Sin enemigos</label><input type="checkbox" data-p="noEnemies" ${e.props.noEnemies===true?"checked":""} style="flex:none"><span class="dim">no se puede pasar con enemigos vivos</span></div>`;
     }
     if(e.type==="enemy") h+=`<div class="row"><label>Tipo</label><input data-p="kind" value="${esc(e.props.kind||"")}"></div>`;
     if(e.type==="npc") h+=`<div class="row"><label>NPC</label><input data-p="npc" value="${esc(e.props.npc||"")}"></div>`;
