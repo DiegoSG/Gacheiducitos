@@ -9,7 +9,7 @@ Guías fuente: `design/Guia_Creacion_Niveles.md` y `design/Level_Design_Items_Gu
 
 ## 1. Base
 - Hoy no existe plantilla en el repo (`template_level.tscn`/`prototype_template.tscn` fueron eliminadas): duplicar un `level_XX.tscn` existente y limpiarlo, o pedir al usuario que cree la plantilla. Archivo `snake_case` (`level_forest_entrance.tscn`), nodo raíz `PascalCase`.
-- Grilla oficial **60x60 px**, tileset `core_tileset.tres`. Capas: `GroundLayer`, `DetailLayer`, `PropsLayer` (`y_sort_enabled`).
+- Grilla oficial **60x60 px**, tileset `core_tileset.tres`. Capas bajo `Environment` (`y_sort_enabled`): `GroundLayer` (z -2), `DetailLayer` (z -1), `PropsLayer` (`y_sort_enabled`, z 0), `OverheadLayer` (z 10, sin colisión, copas de árboles). Ver `design/Capas_y_Orden_Z.md`.
 - `WorldBoundaryManager`: `width`/`height` en px cubriendo toda el área jugable.
 
 ## 2. Conexiones

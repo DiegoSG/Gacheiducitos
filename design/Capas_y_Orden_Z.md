@@ -1,6 +1,6 @@
-# Capas de Tilemap y Orden en Z (Propuesta)
+# Capas de Tilemap y Orden en Z
 
-> Estado: **propuesta, pendiente de aprobación.** No se ha tocado ninguna escena, script ni la LevelApp.
+> Estado: **capas creadas** en los niveles de `src/overworld/levels/` y en el generador de la LevelApp. El reparto de tiles entre capas lo hace el usuario.
 
 ## 1. Problema
 
@@ -50,32 +50,29 @@ LevelXX (Node2D, y_sort_enabled)
 | Arbustos pequeños (fila 9, columnas 0-5) | `PropsLayer` |
 | **Copas de árboles (fila 10, columnas 0-5)** | **`OverheadLayer`** |
 | Troncos (fila 11, columnas 0-5) | `PropsLayer` |
-| **Techos (filas 6-8)** | **`OverheadLayer`** |
-| Muros, ventanas, puertas, cercas, barriles (filas 3-5, 9-12) | `PropsLayer` |
-| Parte alta de arcos y portones (7:3, 8:3, 16:3, 17:3) | `OverheadLayer` |
+| Muros, techos, ventanas, puertas, cercas, barriles (filas 3-12) | `PropsLayer` |
+
+Los techos (filas 6-8) tienen colisión en el tileset: son edificios sólidos vistos desde arriba, así que quedan en `PropsLayer` y el y-sort ya los dibuja sobre el jugador cuando pasa por detrás. Solo pasan a `OverheadLayer` si se pintan como alero transitable (sin colisión).
 
 Regla general: **lo que tiene colisión va en `PropsLayer`; lo que está por encima de la cabeza del jugador va en `OverheadLayer`.**
 
-## 3. Cambios a implementar (tras aprobación)
+## 3. Cambios aplicados
 
-### Escenas
-- `level_01..03.tscn` (y los `*_nuevo` / `level_04..06`): `Environment.y_sort_enabled = true`, `z_index` por capa según la tabla, añadir `OverheadLayer` vacía.
-- `level_03.tscn`: devolver `Player` a la raíz del nivel.
-- Mover los tiles de copas/techos ya pintados de `PropsLayer` a `OverheadLayer` (script de una vez sobre `tile_map_data`, o a mano en el editor).
-- `player.tscn` y `generic_enemy.tscn`: sin cambios de nodos; el y-sort usa su `position` (centro del cuerpo).
-
-### Tileset (`core_tileset.tres`)
-- Fuente `rpg_tiles_60`: `y_sort_origin` en la base de los troncos y objetos de `PropsLayer` para que el ordenamiento use el pie del objeto.
+### Escenas (`src/overworld/levels/*.tscn`)
+- `Environment` y `Portals`: `y_sort_enabled = true`.
+- `GroundLayer` `z_index = -2`, `DetailLayer` `z_index = -1`.
+- Nueva `OverheadLayer` (`z_index = 10`, `collision_enabled = false`) después de `PropsLayer`.
+- No se movió ningún tile: `OverheadLayer` queda vacía y el reparto de copas/techos entre capas se hace a mano en el editor.
+- `level_03.tscn` conserva su `z_index = 1` manual en `PropsLayer`; con el esquema nuevo debería volver a 0 para que el y-sort funcione con el jugador.
+- `player.tscn` y `generic_enemy.tscn`: sin cambios; el y-sort usa su `position` (centro del cuerpo).
 
 ### LevelApp
-- `public/index.html` (generador): añadir `OverheadLayer` (`z_index = 10`), `y_sort_enabled` en `Environment` y `z_index` en `GroundLayer`/`DetailLayer`; actualizar `layers` del spec y el texto de `instructions`.
-- Test `tests/test_generate_scene.js`: comprobar la nueva capa.
+- Generador (`public/index.html`): mismas capas y `z_index`; `layers` del spec incluye `OverheadLayer`.
+- `tests/test_generate_scene.js`: comprueba el y-sort de `Environment`, los `z_index` y la nueva capa.
 
-### Documentación
-- `design/Guia_Creacion_Niveles.md`, `design/Manual_Tecnico.md` y skill `godot-level-builder`: nueva capa y tabla de Z.
-
-### Escena de prueba
-- `src/overworld/levels/test_layers_z.tscn`: un árbol, una casa con techo y un arco; el jugador camina por detrás y por delante de cada uno.
+### Pendiente
+- Escena de prueba `test_layers_z.tscn` (árbol, casa y arco para caminar por delante y por detrás).
+- `y_sort_origin` por tile en `core_tileset.tres` si algún objeto alto necesita ordenarse por su base.
 
 ## 4. Fuera de alcance (TODO en el Roadmap)
 Organizar la posición en Z de **todos** los objetos de la escena (interactuables, efectos, proyectiles, minijuegos) queda como tarea del Backlog.

@@ -16,16 +16,24 @@ width = 1920.0
 height = 1080.0
 
 [node name="Environment" type="Node2D" parent="." unique_id=1173616031]
+y_sort_enabled = true
 
 [node name="GroundLayer" type="TileMapLayer" parent="Environment" unique_id=1228967790]
+z_index = -2
 tile_set = ExtResource("2_ehqxv")
 
 [node name="DetailLayer" type="TileMapLayer" parent="Environment" unique_id=2064264625]
+z_index = -1
 tile_set = ExtResource("2_ehqxv")
 
 [node name="PropsLayer" type="TileMapLayer" parent="Environment" unique_id=1702730148]
 y_sort_enabled = true
 tile_set = ExtResource("2_ehqxv")
+
+[node name="OverheadLayer" type="TileMapLayer" parent="Environment" unique_id=153710184]
+z_index = 10
+tile_set = ExtResource("2_ehqxv")
+collision_enabled = false
 
 [node name="SpawnPoints" type="Node2D" parent="." unique_id=1674647729]
 position = Vector2(-8, 24)
@@ -40,6 +48,7 @@ metadata/_custom_type_script = "uid://b24wrgfyi41x2"
 y_sort_enabled = true
 
 [node name="Portals" type="Node2D" parent="." unique_id=265911282]
+y_sort_enabled = true
 
 [node name="LevelPortal" parent="Portals" unique_id=1271243254 instance=ExtResource("3_0pt0e")]
 position = Vector2(917, 60)
