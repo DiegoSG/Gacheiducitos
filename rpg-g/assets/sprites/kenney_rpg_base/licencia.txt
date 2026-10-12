@@ -1,0 +1,40 @@
+Kenney - RPG pack: base (proxy / placeholder)
+=============================================
+
+Autor:    Kenney Vleugels (www.kenney.nl)
+Pack:     https://kenney.nl/assets/rpg-base
+Licencia: Creative Commons Zero (CC0 1.0) - dominio público
+          http://creativecommons.org/publicdomain/zero/1.0/
+          Uso comercial permitido. Atribución NO obligatoria
+          (opcional: "Kenney.nl").
+Descarga: 2026-10-11, desde el espejo https://github.com/ETdoFresh/kenney.nl
+          (carpeta kenneyrpgpack), porque kenney.nl no era accesible
+          desde el entorno de trabajo.
+
+Contenido
+- rpg_pack_sheet_64.png  spritesheet original: grilla de 20x13 celdas de 64x64
+                         (229 tiles usados).
+- rpg_tiles_60.png       la misma grilla reescalada celda a celda a 60x60
+                         (1200x780), lista como fuente de TileSet con la
+                         grilla del proyecto. Las coordenadas de atlas
+                         coinciden con las del sheet original.
+
+Qué hay (coordenadas col:fila del atlas)
+- 0-14 : 0-2   suelos: pasto, tierra y agua con bordes (autotile 3x3).
+- 0-8  : 3-5   paredes de piedra clara, con arcos y portón.
+- 9-17 : 3-5   paredes de piedra gris, con arcos y portón.
+- 0-6  : 6-8   techos de madera (laterales, cumbreras, hastiales).
+- 9-15 : 6-8   techos de pizarra.
+- 7-8 / 16-17 : 6-8  escaleras y bloques.
+- 0-5  : 9-11  arbustos y árboles (los árboles ocupan 2 celdas de alto).
+- 6-9  : 9-12  vallas, cajas y barriles.
+- 10-19: 9-12  ventanas y puertas (se ponen encima de las paredes,
+               en DetailLayer).
+
+Texto original de la licencia (license.txt del pack):
+
+	RPG pack: base by Kenney Vleugels (www.kenney.nl)
+	License (CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+	You may use these graphics in personal and commercial projects.
+	Credit (Kenney or www.kenney.nl) would be nice but is not mandatory.

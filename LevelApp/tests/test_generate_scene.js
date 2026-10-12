@@ -17,6 +17,12 @@ assert(b.includes("win_spawn_id = \"at_M01_win\"") && b.includes("minigame_type 
 assert(a.includes('persistence_id = "level_01_E01"') && a.includes('name="SceneMusic"'));
 assert(Object.values(out).some(t => t.includes('path="res://src/overworld/npcs/npc_barnaby.tscn"')) && !Object.values(out).some(t => t.includes("dummy_npc")), "NPCs usan npc_barnaby.tscn");
 assert(ctx.genPromptsDoc(spec).includes("PROMPT: agregar un arbol grande"));
+
+// Capas y orden en Z (design/Capas_y_Orden_Z.md)
+assert(a.includes('[node name="Environment" type="Node2D" parent="."]\ny_sort_enabled = true'), "Environment participa del y-sort");
+assert(a.includes('[node name="GroundLayer" type="TileMapLayer" parent="Environment"]\nz_index = -2') && a.includes('[node name="DetailLayer" type="TileMapLayer" parent="Environment"]\nz_index = -1'), "suelo bajo el jugador");
+assert(/\[node name="GroundLayer"[^\n]*\]\nz_index = -2\ntile_set = [^\n]+\ncollision_enabled = false/.test(a) && /\[node name="DetailLayer"[^\n]*\]\nz_index = -1\ntile_set = [^\n]+\ncollision_enabled = false/.test(a), "suelo y detalle sin colision");
+assert(/\[node name="OverheadLayer" type="TileMapLayer" parent="Environment"\]\nz_index = 10\ntile_set = [^\n]+\ncollision_enabled = false/.test(a), "OverheadLayer sobre el jugador y sin colision");
 assert(a.includes("dialogue_resource = null") && ctx.genDialogueProxies(spec).length === 0, "NPC sin diálogo no hereda el de la escena base");
 
 // Diálogos en NPC y triggers
@@ -49,5 +55,15 @@ assert(t.includes('music_id = &"music_level_01"') && !a.includes("music_id"), "m
 const px = ctx.genDialogueProxies(s2);
 assert.strictEqual(px.map(p => p.file).join(), ["src/overworld/npcs/barnaby.dialogue", "src/overworld/dialogues/level_01_g01.dialogue", "src/overworld/dialogues/level_01_g03.dialogue", "src/overworld/dialogues/level_01_g04.dialogue"].join());
 assert(px[0].content.startsWith("~ start\n\nBarnaby: ") && px[1].content.startsWith("~ intro\n") && px[1].content.endsWith("=> END\n"));
+
+// Cuadros de colisión: StaticBody2D + CollisionShape2D rectangular bajo Collisions
+assert(!a.includes('name="Collisions"'), "sin cuadros no hay nodo Collisions");
+const s3 = JSON.parse(JSON.stringify(spec));
+s3.levels[0].collisions = [{ id: "Col_01", cell: { x: 2, y: 1 }, size: { w: 3, h: 2 }, rect_px: { x: 120, y: 60, w: 180, h: 120 } }];
+const c3 = ctx.genScene(s3, s3.levels[0]);
+assert(c3.includes('[sub_resource type="RectangleShape2D" id="colshape1"]\nsize = Vector2(180, 120)'), "forma rectangular del tamaño del cuadro");
+assert(c3.includes('[node name="Col_01" type="StaticBody2D" parent="Collisions"]\nposition = Vector2(210, 120)\ncollision_mask = 0'), "cuerpo estático centrado en el cuadro");
+assert(c3.includes('[node name="CollisionShape2D" type="CollisionShape2D" parent="Collisions/Col_01"]\nshape = SubResource("colshape1")'));
+assert(c3.indexOf("[sub_resource") < c3.indexOf("[node "), "sub_resources antes de los nodos");
 const dir = process.argv[2]; if (dir) { fs.mkdirSync(dir, { recursive: true }); for (const k in out) fs.writeFileSync(path.join(dir, k), out[k]); }
 console.log("OK");

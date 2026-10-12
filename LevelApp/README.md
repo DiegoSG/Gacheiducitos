@@ -29,6 +29,12 @@ Abre **http://localhost:3132** (sin dependencias: solo Node).
 - Diálogos: cada NPC y cada Trigger tienen un campo **Diálogo** (por defecto «sin diálogo») con los `.dialogue` de `rpg-g/src` o «Nuevo (proxy)». Al generar, si el archivo existe se asigna; si no, se crea un proxy (`~ start` + línea pendiente + `=> END`, por defecto en `rpg-g/src/overworld/dialogues/<nivel>_<objeto>.dialogue`) y se asigna. Nunca se sobrescribe un `.dialogue` existente.
 - Notas: `//texto//` = prompt a interpretar por un agente; el resto es información de diseño.
 
+## Colisión (B)
+
+Herramienta para maquetar: arrastra dentro de un nivel para dibujar un cuadro vacío (queda limitado al nivel y la herramienta sigue activa para dibujar varios; `V` o `Esc` para volver a seleccionar). Con Seleccionar se mueve arrastrándolo, se redimensiona desde la esquina blanca y se borra con Supr; también se editan nombre, posición y tamaño en el panel. Al mover el nivel, sus cuadros van con él.
+
+Al generar, cada cuadro es un `StaticBody2D` (capa 1 «world», `collision_mask = 0`) con un `CollisionShape2D` rectangular del mismo tamaño, dentro de un nodo `Collisions`. En el spec aparecen en `collisions` (celda, tamaño y `rect_px`). El validador marca cuadros fuera del nivel y nombres repetidos.
+
 ## Trigger (G)
 
 Un objeto Trigger tiene un **Tipo**, que elige la escena del juego, y su diálogo se ejecuta como `DialogueAction` cuando se activa:

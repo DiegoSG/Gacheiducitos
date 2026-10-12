@@ -1,0 +1,33 @@
+Kenney - RTS Pack: Medieval (proxy / placeholder)
+==================================================
+
+Autor:    Kenney Vleugels (www.kenney.nl)
+Pack:     https://kenney.nl/assets/medieval-rts
+Licencia: Creative Commons Zero (CC0 1.0) - dominio público
+          http://creativecommons.org/publicdomain/zero/1.0/
+          Uso comercial permitido. Atribución NO obligatoria
+          (opcional: "Kenney.nl").
+Descarga: 2026-10-11, PNG "Retina" (2x) desde el espejo
+          https://github.com/ETdoFresh/kenney.nl (carpeta kenney_medievalrtspack),
+          porque kenney.nl no era accesible desde el entorno de trabajo.
+
+Contenido de esta carpeta
+- tiles/        58 tiles de suelo originales a 128x128 (pasto, tierra, piedra,
+                arena, agua, nieve, caminos, árboles sobre pasto, cultivos).
+- structures/   23 construcciones (casas, torres, molinos, castillo, granja),
+                hasta 128 px aprox.
+- environment/  21 plantas y rocas sueltas (árboles, arbustos, troncos, piedras).
+- medieval_tiles_60.png  los 58 tiles reescalados a 60x60 en un atlas de
+                10x6 celdas, listo para usar como fuente de TileSet
+                (misma grilla que core_tileset.tres).
+- Se omitieron los soldados (Unit) del pack.
+- Nombres de archivo pasados a snake_case (medievalTile_01 -> medieval_tile_01).
+
+Texto original de la licencia (License.txt del pack):
+
+	RTS Pack: Medieval
+	by  Kenney Vleugels (Kenney.nl)
+	License (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+	You may use these assets in personal and commercial projects.
+	Credit (Kenney or www.kenney.nl) would be nice but is not mandatory.

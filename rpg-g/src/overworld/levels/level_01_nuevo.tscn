@@ -1,0 +1,97 @@
+[gd_scene format=3 uid="uid://cyxjhwjrajlgw"]
+
+[ext_resource type="Script" uid="uid://cdmyt7x3cb2em" path="res://src/minigames/mg_runner/mg_runner_obstacle.gd" id="6_1lxdd"]
+[ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="r1_wbm"]
+[ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="r2_tileset"]
+[ext_resource type="PackedScene" path="res://src/overworld/components/arrival_spawn_point.tscn" id="r3_asp"]
+[ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="r4_portal"]
+[ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="r9_player"]
+
+[node name="Level01Nuevo" type="Node2D" unique_id=1480999272]
+y_sort_enabled = true
+metadata/levelapp_level = "Level_01_nuevo"
+
+[node name="WorldBoundaryManager" type="Node2D" parent="." unique_id=496493740]
+script = ExtResource("r1_wbm")
+width = 2460.0
+height = 1740.0
+
+[node name="Environment" type="Node2D" parent="." unique_id=585925502]
+y_sort_enabled = true
+
+[node name="GroundLayer" type="TileMapLayer" parent="Environment" unique_id=1868742278]
+z_index = -2
+tile_set = ExtResource("r2_tileset")
+collision_enabled = false
+
+[node name="DetailLayer" type="TileMapLayer" parent="Environment" unique_id=481223789]
+z_index = -1
+tile_set = ExtResource("r2_tileset")
+collision_enabled = false
+
+[node name="PropsLayer" type="TileMapLayer" parent="Environment" unique_id=417916328]
+y_sort_enabled = true
+tile_set = ExtResource("r2_tileset")
+
+[node name="OverheadLayer" type="TileMapLayer" parent="Environment" unique_id=339081663]
+z_index = 10
+tile_set = ExtResource("r2_tileset")
+collision_enabled = false
+
+[node name="SpawnPoints" type="Node2D" parent="." unique_id=1150695489]
+
+[node name="at_M01_win" parent="SpawnPoints" unique_id=228915799 instance=ExtResource("r3_asp")]
+position = Vector2(1230, 930)
+arrival_id = "at_M01_win"
+
+[node name="start" parent="SpawnPoints" unique_id=2062481990 instance=ExtResource("r3_asp")]
+position = Vector2(330, 870)
+arrival_id = "start"
+
+[node name="Entities" type="Node2D" parent="." unique_id=797879141]
+y_sort_enabled = true
+
+[node name="Portals" type="Node2D" parent="." unique_id=134897073]
+y_sort_enabled = true
+
+[node name="P02" parent="Portals" unique_id=1960738208 instance=ExtResource("r4_portal")]
+position = Vector2(1170, 30)
+collision_layer = 16
+mode = 1
+target_level_path = "res://src/overworld/levels/level_02_nuevo.tscn"
+exit_id = "at_P01"
+arrival_id = "at_P02"
+metadata/levelapp_id = "P02"
+
+[node name="P10" parent="Portals" unique_id=598188239 instance=ExtResource("r4_portal")]
+position = Vector2(2430, 450)
+collision_layer = 16
+mode = 1
+target_level_path = "res://src/overworld/levels/level_04.tscn"
+exit_id = "at_P09"
+arrival_id = "at_P10"
+metadata/levelapp_id = "P10"
+
+[node name="P12" parent="Portals" unique_id=1721574212 instance=ExtResource("r4_portal")]
+position = Vector2(2430, 1350)
+collision_layer = 16
+mode = 1
+target_level_path = "res://src/overworld/levels/level_04.tscn"
+exit_id = "at_P11"
+arrival_id = "at_P12"
+metadata/levelapp_id = "P12"
+
+[node name="P13" parent="Portals" unique_id=1535767339 instance=ExtResource("r4_portal")]
+position = Vector2(1230, 1710)
+collision_layer = 16
+mode = 1
+target_level_path = "res://src/overworld/levels/level_05.tscn"
+exit_id = "at_P14"
+arrival_id = "at_P13"
+metadata/levelapp_id = "P13"
+
+[node name="Player" parent="." unique_id=902558321 instance=ExtResource("r9_player")]
+position = Vector2(330, 870)
+
+[node name="SceneMusic" type="Node" parent="." unique_id=585697724]
+script = ExtResource("6_1lxdd")

@@ -50,6 +50,7 @@
 - [ ] **Backup `.bak` de partidas guardadas.**
 - [ ] **Scripts de test headless:** los runners de `src/core/tests/` no corren con `--script` (decisión: QA manual).
 - [ ] **DialogueApp:** nodos que mezclan texto y `do` pierden la mutación; switch con operadores distintos de `==`.
+- [ ] **Orden en Z de la escena:** organizar la posición en Z (`z_index` / y-sort) de todos los objetos de la escena (tiles, entidades, interactuables, efectos y UI). Capas de tilemap ya resueltas en `design/Capas_y_Orden_Z.md`.
 
 
 ## Controles y Joystick (esquema unificado)

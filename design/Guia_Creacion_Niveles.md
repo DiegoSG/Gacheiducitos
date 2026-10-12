@@ -8,7 +8,7 @@ Esta guía paso a paso está diseñada para que cualquier desarrollador o diseñ
 
 Cada nivel de Overworld está compuesto por:
 1. **`WorldBoundaryManager`**: Define el ancho y alto del mapa en píxeles, dibuja los límites en el editor y genera colisiones invisibles que impiden que el jugador se salga del mundo.
-2. **`Environment`**: Agrupa las capas de `TileMapLayer` (`GroundLayer`, `DetailLayer`, `PropsLayer`) con la grilla oficial de **60x60 px**.
+2. **`Environment`** (`y_sort_enabled`): Agrupa las capas de `TileMapLayer` (`GroundLayer`, `DetailLayer`, `PropsLayer`, `OverheadLayer`) con la grilla oficial de **60x60 px**. Orden en Z: `design/Capas_y_Orden_Z.md`.
 3. **`SpawnPoints`**: Contiene uno o más nodos `ArrivalSpawnPoint` con IDs únicos para saber dónde aterriza el jugador al entrar.
 4. **`Player` + `BoundedCamera`**: La entidad del jugador con su cámara que respeta los límites del `WorldBoundaryManager`.
 5. **Entidades & Triggers**: Puertas/Portales (`LevelPortal`), Enemigos (`GenericEnemy`), Cofres (`Chest`), Ítems en el suelo (`PickupItem`), NPCs (`SimpleNPC`) y Minijuegos (`minigame_interactable.tscn`).
@@ -32,9 +32,10 @@ Cada nivel de Overworld está compuesto por:
 
 ### Paso 3: Pintar el Suelo y Obstáculos (`TileMapLayer`)
 1. Despliega el nodo **`Environment`**. Encontrarás:
-   * **`GroundLayer`**: Para el césped, tierra, pisos base.
-   * **`DetailLayer`**: Para detalles sobre el suelo (flores, caminos, grietas).
-   * **`PropsLayer`**: Para árboles, columnas, rocas con colisión. (Tiene `y_sort_enabled = true`).
+   * **`GroundLayer`**: Para el césped, tierra, pisos base. Sin colisión.
+   * **`DetailLayer`**: Para detalles sobre el suelo (flores, caminos, grietas). Sin colisión.
+   * **`PropsLayer`**: Para árboles (copa y tronco juntos), columnas, muros, techos y rocas. Única capa con colisión (Physics Layer 0 del tileset). Tiene `y_sort_enabled = true`: se ordena con el jugador según su Y.
+   * **`OverheadLayer`**: Para lo que siempre tapa al jugador. `z_index = 10`, sin colisión aunque el tile la tenga.
 2. Selecciona `GroundLayer` y abajo en la pestaña **TileMap** selecciona los tiles de `core_tileset.tres` (grilla 60x60). Pinta la superficie dentro del recuadro del `WorldBoundaryManager`.
 
 ### Paso 4: Colocar los Puntos de Llegada (`ArrivalSpawnPoint`)

@@ -67,7 +67,7 @@ const CHILD_DEFAULTS = {
 const PALETTE = ["#5aa9ff","#4cd07d","#ff9a45","#e06bd0","#e8e070","#35c8d8","#ff6b6b","#a070ff"];
 const LS_KEY = "gacheiducitos_levelapp_v1";
 function fresh(){
-  return {levels:[], ents:[], counters:{}, uid:0, cellPx:60, bidir:true, view:{ox:40,oy:40,z:24}};
+  return {levels:[], ents:[], boxes:[], counters:{}, uid:0, cellPx:60, bidir:true, view:{ox:40,oy:40,z:24}};
 }
 let S = fresh();
 let sel = null;          // {kind:"level"|"ent", id}
@@ -78,6 +78,7 @@ function nextNum(k){ S.counters[k] = (S.counters[k]||0)+1; return S.counters[k];
 const pad = n => String(n).padStart(2,"0");
 const levelById = id => S.levels.find(l=>l.id===id);
 const entById = id => S.ents.find(e=>e.id===id);
+const boxById = id => S.boxes.find(b=>b.id===id);
 function slug(n){ return n.toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"") || "level"; }
 function pascal(n){ return n.split(/[^A-Za-z0-9]+/).filter(Boolean).map(s=>s[0].toUpperCase()+s.slice(1)).join("") || "Level"; }
 
@@ -95,6 +96,14 @@ function addEnt(type, lv, lx, ly){
   (CHILD_DEFAULTS[type]||[]).forEach(c=>e.children.push({...c}));
   S.ents.push(e); return e;
 }
+/* cuadros de colisión: rectángulos vacíos dentro de un nivel (celdas relativas al nivel); al generar son StaticBody2D */
+function addBox(lv,lx,ly,w,h){
+  const b = {id:++S.uid, levelId:lv.id, lx, ly, w, h, name:"Col_"+pad(nextNum("B")), text:""};
+  S.boxes.push(b); return b;
+}
+function boxPos(b){ const l=levelById(b.levelId); return {x:l.x+b.lx, y:l.y+b.ly}; }
+function boxInside(b){ const l=levelById(b.levelId); return b.lx>=0&&b.ly>=0&&b.lx+b.w<=l.w&&b.ly+b.h<=l.h; }
+function clampCell(l,c){ return {x:Math.max(l.x,Math.min(l.x+l.w-1,c.x)), y:Math.max(l.y,Math.min(l.y+l.h-1,c.y))}; }
 function entPos(e){ const l=levelById(e.levelId); return {x:l.x+e.lx, y:l.y+e.ly}; }
 function childId(e,c){
   if(e.type==="portal") return "at_"+e.name;
@@ -127,6 +136,7 @@ function delEnt(e){
 }
 function delLevel(l){
   for(const e of S.ents.filter(e=>e.levelId===l.id)) delEnt(e);
+  S.boxes = S.boxes.filter(b=>b.levelId!==l.id);
   S.levels = S.levels.filter(x=>x!==l);
 }
 function sceneFile(l){ return slug(l.name)+".tscn"; }
@@ -144,6 +154,7 @@ function entDialogue(e){
 /* ===== Historial / guardado ===== */
 function migrate(){
   delete S.zones;
+  if(!Array.isArray(S.boxes)) S.boxes=[];
   S.ents=S.ents.filter(e=>e.type!=="respawn");
   S.levels.forEach((l,i)=>{ delete l.zone; if(!/^#[0-9a-f]{6}$/i.test(l.color||"")) l.color=PALETTE[i%PALETTE.length]; });
 }
@@ -156,11 +167,11 @@ function commit(){
 }
 function restore(json){
   const v = S.view; S = Object.assign(fresh(), JSON.parse(json)); migrate(); if(!S.view) S.view=v;
-  if(sel && ((sel.kind==="level"&&!levelById(sel.id))||(sel.kind==="ent"&&!entById(sel.id)))) sel=null;
+  if(sel && ((sel.kind==="level"&&!levelById(sel.id))||(sel.kind==="ent"&&!entById(sel.id))||(sel.kind==="box"&&!boxById(sel.id)))) sel=null;
   refreshUI();
 }
-function undo(){ if(histPos>0){ histPos--; restore(hist[histPos]); } }
-function redo(){ if(histPos<hist.length-1){ histPos++; restore(hist[histPos]); } }
+function undo(){ if(histPos>0){ histPos--; restore(hist[histPos]); draw(); } }
+function redo(){ if(histPos<hist.length-1){ histPos++; restore(hist[histPos]); draw(); } }
 
 /* ===== Canvas ===== */
 const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
@@ -238,6 +249,16 @@ function draw(c=ctx, w=W, h=H, v=S.view, ex=false){
     c.fillText(l.name,p.x+5,p.y+4);
     if(isSel&&!ex){ c.fillStyle="#fff"; c.fillRect(p.x+l.w*v.z-8,p.y+l.h*v.z-8,12,12); }
   }
+  // cuadros de colisión
+  for(const b of S.boxes){
+    const l=levelById(b.levelId), q=boxPos(b), p=toScreen(q.x,q.y,v), bw=b.w*v.z, bh=b.h*v.z, isSel=sel&&sel.kind==="box"&&sel.id===b.id&&!ex;
+    c.fillStyle="#ffffff0d"; c.fillRect(p.x,p.y,bw,bh);
+    c.strokeStyle=isSel?"#fff":(boxInside(b)?"#d8dce4":"#ff5050"); c.lineWidth=isSel?2.5:1.5; c.strokeRect(p.x+.5,p.y+.5,bw-1,bh-1);
+    // título centrado: se achica para caber en el cuadro
+    let fs=Math.min(16,bh*.45); c.font="bold "+fs+"px system-ui"; const tw=c.measureText(b.name).width; if(tw>bw-6) fs*=(bw-6)/tw;
+    if(fs>=7){ c.font="bold "+fs+"px system-ui"; c.textAlign="center"; c.textBaseline="middle"; c.lineWidth=3; c.strokeStyle="#000c"; c.strokeText(b.name,p.x+bw/2,p.y+bh/2); c.fillStyle=isSel?"#fff":"#d8dce4"; c.fillText(b.name,p.x+bw/2,p.y+bh/2); }
+    if(isSel){ c.fillStyle="#fff"; c.fillRect(p.x+bw-6,p.y+bh-6,10,10); }
+  }
   // conexiones
   const sp = spawnPoints(); const spMap = new Map(sp.map(s=>[s.key,s]));
   const selEnt = sel&&sel.kind==="ent"?entById(sel.id):null, selSlot = selEnt&&sel.slot||null;
@@ -265,6 +286,7 @@ function draw(c=ctx, w=W, h=H, v=S.view, ex=false){
   // preview
   if(!ex&&drag){
     if(drag.type==="draw-level"){ const r=rectFrom(drag.c0,drag.c1), p=toScreen(r.x,r.y); c.strokeStyle=overlapsAny(null,r.x,r.y,r.w,r.h)?"#ff5050":"#fff"; c.setLineDash([5,4]); c.lineWidth=2; c.strokeRect(p.x,p.y,r.w*S.view.z,r.h*S.view.z); c.setLineDash([]); c.fillStyle="#fff"; c.font="12px system-ui"; c.textAlign="left"; c.textBaseline="bottom"; c.fillText(r.w+" x "+r.h, p.x, p.y-3); }
+    if(drag.type==="draw-box"){ const r=rectFrom(drag.c0,drag.c1), p=toScreen(r.x,r.y); c.strokeStyle="#fff"; c.setLineDash([4,3]); c.lineWidth=1.5; c.strokeRect(p.x,p.y,r.w*S.view.z,r.h*S.view.z); c.setLineDash([]); c.fillStyle="#fff"; c.font="12px system-ui"; c.textAlign="left"; c.textBaseline="bottom"; c.fillText(r.w+" x "+r.h, p.x, p.y-3); }
     if(drag.type==="link"){ const a=entPos(drag.ent), A=toScreen(a.x+.5,a.y+.5); arrow(c,A.x,A.y,mouse.x,mouse.y,"#ffd24d",2.5); }
   }
 }
@@ -283,6 +305,8 @@ function hit(sx,sy){
   }
   for(const e of [...S.ents].reverse()){ if(e.type==="note"){ const L=noteLayout(ctx,e,S.view); if(sx>=L.x&&sx<=L.x+L.w&&sy>=L.y&&sy<=L.y+L.h) return {k:"ent",ent:e}; continue; } const p=entPos(e), P=toScreen(p.x+.5,p.y+.5); if(Math.abs(sx-P.x)<=s/2&&Math.abs(sy-P.y)<=s/2) return {k:"ent",ent:e}; }
   if(sel&&sel.kind==="level"){ const l=levelById(sel.id), p=toScreen(l.x+l.w,l.y+l.h); if(Math.abs(sx-p.x)<=10&&Math.abs(sy-p.y)<=10) return {k:"resize",level:l}; }
+  if(sel&&sel.kind==="box"){ const b=boxById(sel.id), q=boxPos(b), p=toScreen(q.x+b.w,q.y+b.h); if(Math.abs(sx-p.x)<=10&&Math.abs(sy-p.y)<=10) return {k:"box-resize",box:b}; }
+  { const c=cellOf(sx,sy); for(const b of [...S.boxes].reverse()){ const q=boxPos(b); if(c.x>=q.x&&c.x<q.x+b.w&&c.y>=q.y&&c.y<q.y+b.h) return {k:"box",box:b}; } }
   const c=cellOf(sx,sy), l=levelAt(c.x,c.y); if(l) return {k:"level",level:l};
   return null;
 }
@@ -293,6 +317,7 @@ cv.addEventListener("mousedown",ev=>{
   if(ev.button===1||ev.button===2||(ev.button===0&&spaceDown)){ drag={type:"pan",sx:m.x,sy:m.y,ox:S.view.ox,oy:S.view.oy}; return; }
   if(ev.button!==0) return;
   if(tool==="level"){ drag={type:"draw-level",c0:c,c1:c}; draw(); return; }
+  if(tool==="box"){ const lv=levelAt(c.x,c.y); if(!lv){ flash("Dibuja el cuadro dentro de un nivel"); return; } drag={type:"draw-box",level:lv,c0:c,c1:c}; draw(); return; }
   if(tool!=="select"){
     const lv=levelAt(c.x,c.y); if(!lv){ flash("Coloca el objeto dentro de un nivel"); return; }
     if(tool==="start"&&S.ents.some(e=>e.type==="start"&&e.levelId===lv.id)){ flash("Este nivel ya tiene Start"); return; }
@@ -304,6 +329,8 @@ cv.addEventListener("mousedown",ev=>{
   else if(h.k==="child"){ sel={kind:"ent",id:h.ent.id,slot:h.child.slot}; drag={type:"move-child",ent:h.ent,child:h.child,moved:false}; refreshUI(); }
   else if(h.k==="ent"){ sel={kind:"ent",id:h.ent.id}; drag={type:"move-ent",ent:h.ent,moved:false}; refreshUI(); }
   else if(h.k==="resize"){ drag={type:"resize",level:h.level,moved:false}; }
+  else if(h.k==="box-resize"){ drag={type:"resize-box",box:h.box,moved:false}; }
+  else if(h.k==="box"){ sel={kind:"box",id:h.box.id}; drag={type:"move-box",box:h.box,c0:c,x0:h.box.lx,y0:h.box.ly,moved:false}; refreshUI(); }
   else { sel={kind:"level",id:h.level.id}; drag={type:"move-level",level:h.level,c0:c,x0:h.level.x,y0:h.level.y,moved:false}; refreshUI(); }
   draw();
 });
@@ -313,6 +340,9 @@ window.addEventListener("mousemove",ev=>{
   if(!drag) return;
   if(drag.type==="pan"){ S.view.ox=drag.ox+m.x-drag.sx; S.view.oy=drag.oy+m.y-drag.sy; }
   else if(drag.type==="draw-level") drag.c1=c;
+  else if(drag.type==="draw-box") drag.c1=clampCell(drag.level,c);
+  else if(drag.type==="move-box"){ const b=drag.box, l=levelById(b.levelId), nx=Math.max(0,Math.min(l.w-b.w,drag.x0+c.x-drag.c0.x)), ny=Math.max(0,Math.min(l.h-b.h,drag.y0+c.y-drag.c0.y)); if(nx!==b.lx||ny!==b.ly){ b.lx=nx; b.ly=ny; drag.moved=true; } }
+  else if(drag.type==="resize-box"){ const b=drag.box, l=levelById(b.levelId), q=boxPos(b), nw=Math.max(1,Math.min(l.w-b.lx,c.x-q.x+1)), nh=Math.max(1,Math.min(l.h-b.ly,c.y-q.y+1)); if(nw!==b.w||nh!==b.h){ b.w=nw; b.h=nh; drag.moved=true; } }
   else if(drag.type==="move-level"){ const l=drag.level, nx=drag.x0+c.x-drag.c0.x, ny=drag.y0+c.y-drag.c0.y; if((nx!==l.x||ny!==l.y)&&!overlapsAny(l,nx,ny,l.w,l.h)){ l.x=nx; l.y=ny; drag.moved=true; } }
   else if(drag.type==="resize"){ const l=drag.level; const nw=Math.max(1,c.x-l.x+1), nh=Math.max(1,c.y-l.y+1); if((nw!==l.w||nh!==l.h)&&!overlapsAny(l,l.x,l.y,nw,nh)){ l.w=nw; l.h=nh; drag.moved=true; } }
   else if(drag.type==="move-ent"){ const lv=levelAt(c.x,c.y); if(lv){ const e=drag.ent; const nlx=c.x-lv.x, nly=c.y-lv.y; if(lv.id!==e.levelId||nlx!==e.lx||nly!==e.ly){ e.levelId=lv.id; e.lx=nlx; e.ly=nly; drag.moved=true; } } }
@@ -322,6 +352,7 @@ window.addEventListener("mousemove",ev=>{
 window.addEventListener("mouseup",ev=>{
   if(!drag) return; const d=drag; drag=null; const m=mpos(ev);
   if(d.type==="draw-level"){ const r=rectFrom(d.c0,d.c1); if(overlapsAny(null,r.x,r.y,r.w,r.h)){ flash("Los niveles no pueden superponerse"); setTool("select"); } else { const l=addLevel(r.x,r.y,r.w,r.h); sel={kind:"level",id:l.id}; setTool("select"); commit(); } }
+  else if(d.type==="draw-box"){ const r=rectFrom(d.c0,d.c1), l=d.level; const b=addBox(l,r.x-l.x,r.y-l.y,r.w,r.h); sel={kind:"box",id:b.id}; commit(); }
   else if(d.type==="link"){
     const s=iconSize(S.view); let best=null;
     for(const sp of spawnPoints()){ const P=toScreen(sp.x+.5,sp.y+.5); if(Math.abs(m.x-P.x)<=s*.6&&Math.abs(m.y-P.y)<=s*.6) best=sp; }
@@ -354,13 +385,16 @@ window.addEventListener("keydown",ev=>{
   if(ev.key==="Escape"){ setTool("select"); return; }
   if(ev.key==="v"){ setTool("select"); return; }
   if(ev.key==="l"){ setTool("level"); return; }
+  if(ev.key==="b"){ setTool("box"); return; }
   for(const k in TYPES) if(TYPES[k].key===ev.key){ setTool(k); return; }
 });
 window.addEventListener("keyup",ev=>{ if(ev.code==="Space") spaceDown=false; });
 function deleteSel(){
   if(!sel) return;
   if(sel.slot) return flash("Es un spawn: borra su objeto (selecciónalo desde el panel)");
-  if(sel.kind==="level") delLevel(levelById(sel.id)); else delEnt(entById(sel.id));
+  if(sel.kind==="level") delLevel(levelById(sel.id));
+  else if(sel.kind==="box") S.boxes=S.boxes.filter(b=>b.id!==sel.id);
+  else delEnt(entById(sel.id));
   sel=null; commit(); draw();
 }
 let flashT=null;
@@ -379,6 +413,15 @@ function validate(){
     for(const o of S.levels) if(o.id>l.id&&l.x<o.x+o.w&&o.x<l.x+l.w&&l.y<o.y+o.h&&o.y<l.y+l.h) add("err","Niveles superpuestos: "+l.name+" y "+o.name,R);
     for(const e of ents){
       const inside=e.lx>=0&&e.ly>=0&&e.lx<l.w&&e.ly<l.h; if(!inside) add("err",e.name+" fuera de "+l.name,{kind:"ent",id:e.id});
+    }
+  }
+  for(const l of S.levels){
+    const seen=new Set();
+    for(const b of S.boxes.filter(b=>b.levelId===l.id)){
+      const R={kind:"box",id:b.id};
+      if(!boxInside(b)) add("err","Colisión "+b.name+" fuera de "+l.name,R);
+      if(seen.has(gname(b.name))) add("err",l.name+": nombre de colisión repetido: "+b.name,R);
+      seen.add(gname(b.name));
     }
   }
   for(const sp1 of sp) if(sp1.orphan) add("err","Spawn "+sp1.arrival+" fuera de todo nivel",{kind:"ent",id:sp1.ent.id,slot:sp1.child.slot});
@@ -419,8 +462,10 @@ function buildSpec(){
       color:levelColor(l), description:l.text||"", music_id:l.music||"",
       grid_rect:{x:l.x,y:l.y,w:l.w,h:l.h}, size_px:{w:l.w*px,h:l.h*px},
       world_boundary:{width:l.w*px,height:l.h*px},
-      layers:["GroundLayer","DetailLayer","PropsLayer"],
-      arrival_spawns:byLevel.get(l.id)||[], portals:[], enemies:[], npcs:[], chests:[], minigames:[], triggers:[], notes:[]
+      layers:["GroundLayer","DetailLayer","PropsLayer","OverheadLayer"],
+      arrival_spawns:byLevel.get(l.id)||[],
+      collisions:S.boxes.filter(b=>b.levelId===l.id).map(b=>({id:b.name, cell:{x:b.lx,y:b.ly}, size:{w:b.w,h:b.h}, rect_px:{x:b.lx*px,y:b.ly*px,w:b.w*px,h:b.h*px}, description:b.text||""})),
+      portals:[], enemies:[], npcs:[], chests:[], minigames:[], triggers:[], notes:[]
     };
     for(const e of ents){
       const base={id:e.name, ...P(e), description:e.text||""};
@@ -445,7 +490,7 @@ function buildSpec(){
   });
   return {
     format:"gacheiducitos-levelapp", version:1,
-    instructions:"Para cada nivel de 'levels': crear la escena en scene_path con raiz root_node, capas GroundLayer/DetailLayer/PropsLayer (y_sort en PropsLayer), WorldBoundaryManager con world_boundary y un ArrivalSpawnPoint por cada entrada de arrival_spawns (ya incluye start, spawns sueltos, llegadas de portales y salidas de minijuegos, con el nivel donde estan posicionados; px = centro de la celda, relativo al nivel), LevelPortal con target_scene_path + target_arrival_id, enemigos/npcs/cofres como instancias placeholder con persistence_id unico. NPCs y triggers con 'dialogue' usan ese .dialogue (si no existe se crea un proxy); cada trigger se instancia segun 'kind' (area/plate/switch/event) con un DialogueAction en su activacion. Notas: 'info' es solo contexto de diseño; cada texto de 'prompts' (escrito entre // //) es una instruccion que hay que interpretar y ejecutar sobre ese nivel. Revisar 'warnings' antes de generar. El layout y el arte los define el usuario.",
+    instructions:"Para cada nivel de 'levels': crear la escena en scene_path con raiz root_node, capas GroundLayer (z -2)/DetailLayer (z -1)/PropsLayer (y_sort, z 0)/OverheadLayer (z 10, lo que tapa al jugador); solo PropsLayer tiene colision (Physics Layer 0 del tileset) dentro de Environment con y_sort, WorldBoundaryManager con world_boundary y un ArrivalSpawnPoint por cada entrada de arrival_spawns (ya incluye start, spawns sueltos, llegadas de portales y salidas de minijuegos, con el nivel donde estan posicionados; px = centro de la celda, relativo al nivel), un StaticBody2D con CollisionShape2D rectangular por cada entrada de collisions (rect_px relativo al nivel), LevelPortal con target_scene_path + target_arrival_id, enemigos/npcs/cofres como instancias placeholder con persistence_id unico. NPCs y triggers con 'dialogue' usan ese .dialogue (si no existe se crea un proxy); cada trigger se instancia segun 'kind' (area/plate/switch/event) con un DialogueAction en su activacion. Notas: 'info' es solo contexto de diseño; cada texto de 'prompts' (escrito entre // //) es una instruccion que hay que interpretar y ejecutar sobre ese nivel. Revisar 'warnings' antes de generar. El layout y el arte los define el usuario.",
     cell_px:px, levels,
     warnings:validate().map(v=>v.lvl+": "+v.msg)
   };
@@ -494,13 +539,24 @@ function genScene(sp, L){
   N(L.root_node,"Node2D",null,["y_sort_enabled = true","metadata/levelapp_level = "+gq(L.name)]);
   N("WorldBoundaryManager","Node2D",".",["script = "+R("wbm","Script",SC+"components/world_boundary_manager.gd"),"width = "+L.world_boundary.width+".0","height = "+L.world_boundary.height+".0"]);
   const ts=R("tileset","TileSet","res://assets/sprites/core_tileset.tres");
-  N("Environment","Node2D",".");
-  N("GroundLayer","TileMapLayer","Environment",["tile_set = "+ts]);
-  N("DetailLayer","TileMapLayer","Environment",["tile_set = "+ts]);
+  // capas y orden en Z: design/Capas_y_Orden_Z.md
+  N("Environment","Node2D",".",["y_sort_enabled = true"]);
+  N("GroundLayer","TileMapLayer","Environment",["z_index = -2","tile_set = "+ts,"collision_enabled = false"]);
+  N("DetailLayer","TileMapLayer","Environment",["z_index = -1","tile_set = "+ts,"collision_enabled = false"]);
   N("PropsLayer","TileMapLayer","Environment",["y_sort_enabled = true","tile_set = "+ts]);
+  N("OverheadLayer","TileMapLayer","Environment",["z_index = 10","tile_set = "+ts,"collision_enabled = false"]);
   N("SpawnPoints","Node2D",".");
   N("Entities","Node2D",".",["y_sort_enabled = true"]);
-  N("Portals","Node2D",".");
+  N("Portals","Node2D",".",["y_sort_enabled = true"]);
+  // cuadros de colisión dibujados en LevelApp: StaticBody2D en la capa "world" (1), que el jugador ya choca
+  const cols=L.collisions||[];
+  if(cols.length) N("Collisions","Node2D",".");
+  cols.forEach((b,i)=>{
+    const sid="colshape"+(i+1), nm=gname(b.id), r=b.rect_px;
+    subs.push('[sub_resource type="RectangleShape2D" id="'+sid+'"]\nsize = '+gvec(r.w,r.h));
+    N(nm,"StaticBody2D","Collisions",["position = "+gvec(r.x+r.w/2,r.y+r.h/2),"collision_mask = 0","metadata/levelapp_id = "+gq(b.id)]);
+    N("CollisionShape2D","CollisionShape2D","Collisions/"+nm,['shape = SubResource("'+sid+'")']);
+  });
   // spawns (llegada) ubicados en este nivel; las llegadas de portal del mismo nivel viven en el propio portal
   const own=new Map(L.portals.map(p=>[p.id,p]));
   const inPortal=a=>{ const p=a.kind==="portal_arrival"&&own.get(a.owner); return p&&p.arrival_spawn.level===L.name; };
@@ -666,6 +722,7 @@ function buildToolbar(){
   const sep=()=>{ const s=document.createElement("span"); s.className="sep"; tb.appendChild(s); };
   btn("Seleccionar (V)",()=>setTool("select"),tool==="select"?"on":"");
   btn("Nivel (L)",()=>setTool("level"),tool==="level"?"on":"","Arrastra en la grilla");
+  btn("Colisión (B)",()=>setTool("box"),tool==="box"?"on":"","Arrastra dentro de un nivel: cuadro vacío que se exporta como colisión");
   sep();
   for(const k in TYPES) btn(TYPES[k].label+" ("+TYPES[k].key.toUpperCase()+")",()=>setTool(k),tool===k?"on":"");
   sep();
@@ -698,6 +755,15 @@ function refreshUI(){
     <div class="dim">x, y, ancho, alto (celdas)</div>
     <div class="row"><label>Notas</label><textarea data-f="text">${esc(l.text)}</textarea></div>
     <div class="row"><button class="danger" data-act="del">Eliminar nivel</button></div>`;
+  } else if(sel&&sel.kind==="box"){
+    const b=boxById(sel.id), lv=levelById(b.levelId);
+    h+=`<h3>Colisión · ${esc(lv.name)}</h3>
+    <div class="row"><label>Nombre</label><input data-f="name" value="${esc(b.name)}"></div>
+    <div class="grid4"><input data-f="lx" type="number" value="${b.lx}" title="x"><input data-f="ly" type="number" value="${b.ly}" title="y"><input data-f="w" type="number" min="1" value="${b.w}" title="ancho"><input data-f="h" type="number" min="1" value="${b.h}" title="alto"></div>
+    <div class="dim">x, y (relativas al nivel), ancho, alto (celdas) · ${b.w*S.cellPx} x ${b.h*S.cellPx} px</div>
+    <div class="row"><label>Notas</label><textarea data-f="text">${esc(b.text)}</textarea></div>
+    <div class="dim">Al generar se crea un StaticBody2D con su CollisionShape2D rectangular en el nodo Collisions. Arrastra el cuadro para moverlo y la esquina blanca para redimensionarlo.</div>
+    <div class="row"><button class="danger" data-act="del">Eliminar colisión</button></div>`;
   } else if(sel&&sel.kind==="ent"&&sel.slot){
     const e=entById(sel.id), sp=spawnPoints(true).find(q=>q.key===e.id+":"+sel.slot), lv=levelById(sp.levelId);
     h+=`<h3>Spawn de ${e.type==="portal"?"llegada":"salida"}</h3>
@@ -746,19 +812,19 @@ function refreshUI(){
     h+=`<div class="row"><label>${e.type==="note"?"Texto":"Notas"}</label><textarea data-f="text">${esc(e.text)}</textarea></div>
     ${e.type==="note"?'<div class="dim">Texto entre //barras// = prompt que se interpreta al generar el nivel; el resto es solo información de diseño.</div>':""}
     <div class="row"><button class="danger" data-act="del">Eliminar</button></div>`;
-  } else h+=`<h3>Selección</h3><div class="dim">Nada seleccionado. Dibuja niveles con “Nivel (L)”; añade objetos con los botones o sus teclas.</div>`;
+  } else h+=`<h3>Selección</h3><div class="dim">Nada seleccionado. Dibuja niveles con “Nivel (L)” y cuadros de colisión dentro de ellos con “Colisión (B)”; añade objetos con los botones o sus teclas.</div>`;
 
   h+=`<h3>Proyecto</h3>
   <div class="row"><label>Px por celda</label><input id="cellPx" type="number" min="1" value="${S.cellPx}"></div>
   <div class="row"><label>Bidireccional</label><input id="bidir" type="checkbox" ${S.bidir?"checked":""} style="flex:none"><span class="dim">al conectar A→B, B→A si B no tiene destino</span></div>
-  <div class="dim">Niveles: ${S.levels.length} · Objetos: ${S.ents.length}</div>`;
+  <div class="dim">Niveles: ${S.levels.length} · Objetos: ${S.ents.length} · Colisiones: ${S.boxes.length}</div>`;
 
   const val=validate();
   h+=`<h3>Validador (${val.length})</h3>`+(val.length?val.map((v,i)=>`<div class="issue ${v.lvl}" data-i="${i}">${esc(v.msg)}</div>`).join(""):`<div class="dim">Sin problemas.</div>`);
   h+=`<h3>Atajos</h3><div class="dim">Rueda: zoom · Espacio+arrastrar o clic derecho: mover vista · Supr: borrar · Arrastra el punto amarillo de un portal hasta un spawn para conectar.</div>`;
   side.innerHTML=h;
 
-  const target=()=>sel&&sel.kind==="level"?levelById(sel.id):entById(sel.id);
+  const target=()=>sel&&sel.kind==="level"?levelById(sel.id):sel.kind==="box"?boxById(sel.id):entById(sel.id);
   side.querySelectorAll("[data-f]").forEach(i=>i.onchange=()=>{ const o=target(), f=i.dataset.f, old=o[f]; o[f]=i.type==="number"?parseInt(i.value)||0:i.value; if((f==="w"||f==="h")&&o[f]<1) o[f]=1; if(sel.kind==="level"&&["x","y","w","h"].includes(f)&&overlapsAny(o,o.x,o.y,o.w,o.h)){ o[f]=old; flash("Los niveles no pueden superponerse"); refreshUI(); } commit(); draw(); });
   side.querySelectorAll("[data-p]").forEach(i=>i.onchange=()=>{ target().props[i.dataset.p]=i.type==="checkbox"?i.checked:i.value; commit(); draw(); });
   side.querySelectorAll("[data-dlg]").forEach(i=>i.onchange=()=>{ const p=target().props; p.dlg=i.value==="__new"?defaultDlgPath(target()):i.value; commit(); });
@@ -774,7 +840,7 @@ function refreshUI(){
   document.getElementById("bidir").onchange=e=>{ S.bidir=e.target.checked; commit(); };
 }
 function focusSel(){
-  let p; if(sel.kind==="level"){ const l=levelById(sel.id); p={x:l.x+l.w/2,y:l.y+l.h/2}; } else { const q=entPos(entById(sel.id)), c0=sel.slot&&entById(sel.id).children.find(c=>c.slot===sel.slot); p={x:q.x+(c0?c0.dx:0)+.5,y:q.y+(c0?c0.dy:0)+.5}; }
+  let p; if(sel.kind==="box"){ const b=boxById(sel.id), q=boxPos(b); p={x:q.x+b.w/2,y:q.y+b.h/2}; } else if(sel.kind==="level"){ const l=levelById(sel.id); p={x:l.x+l.w/2,y:l.y+l.h/2}; } else { const q=entPos(entById(sel.id)), c0=sel.slot&&entById(sel.id).children.find(c=>c.slot===sel.slot); p={x:q.x+(c0?c0.dx:0)+.5,y:q.y+(c0?c0.dy:0)+.5}; }
   S.view.ox=W/2-p.x*S.view.z; S.view.oy=H/2-p.y*S.view.z;
 }
 
