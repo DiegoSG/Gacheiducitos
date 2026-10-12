@@ -34,9 +34,9 @@ Este documento explica cómo funcionan técnicamente los sistemas implementados 
 
 ## 5. Overworld y TileMap
 *   **Estructura:**
-    *   `GroundLayer`: Suelo (sin colisión).
+    *   `GroundLayer` / `DetailLayer`: Suelo y detalles (`collision_enabled = false`).
     *   `PropsLayer`: Objetos y muros (con colisión). Tiene `y_sort_enabled = true` y, como `Environment` también lo tiene, se ordena junto al jugador y las entidades.
-    *   `OverheadLayer`: Copas de árboles y elementos que siempre tapan al jugador (`z_index = 10`, sin colisión).
+    *   `OverheadLayer`: Elementos que siempre tapan al jugador (`z_index = 10`, `collision_enabled = false`).
     *   Tabla completa de capas y `z_index`: `design/Capas_y_Orden_Z.md`.
 *   **TileSet:** `core_tileset.tres` define las colisiones de los tiles.
 

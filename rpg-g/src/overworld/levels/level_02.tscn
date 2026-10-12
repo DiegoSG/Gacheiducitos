@@ -21,10 +21,12 @@ y_sort_enabled = true
 [node name="GroundLayer" type="TileMapLayer" parent="Environment" unique_id=1228967790]
 z_index = -2
 tile_set = ExtResource("2_ehqxv")
+collision_enabled = false
 
 [node name="DetailLayer" type="TileMapLayer" parent="Environment" unique_id=2064264625]
 z_index = -1
 tile_set = ExtResource("2_ehqxv")
+collision_enabled = false
 
 [node name="PropsLayer" type="TileMapLayer" parent="Environment" unique_id=1702730148]
 y_sort_enabled = true

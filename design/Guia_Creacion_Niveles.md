@@ -32,10 +32,10 @@ Cada nivel de Overworld está compuesto por:
 
 ### Paso 3: Pintar el Suelo y Obstáculos (`TileMapLayer`)
 1. Despliega el nodo **`Environment`**. Encontrarás:
-   * **`GroundLayer`**: Para el césped, tierra, pisos base.
-   * **`DetailLayer`**: Para detalles sobre el suelo (flores, caminos, grietas).
-   * **`PropsLayer`**: Para troncos, columnas, muros, techos y rocas con colisión. (Tiene `y_sort_enabled = true`: se ordena con el jugador según su Y).
-   * **`OverheadLayer`**: Para lo que siempre tapa al jugador: copas de árboles (fila 10 de `rpg_tiles_60`). `z_index = 10`, sin colisión.
+   * **`GroundLayer`**: Para el césped, tierra, pisos base. Sin colisión.
+   * **`DetailLayer`**: Para detalles sobre el suelo (flores, caminos, grietas). Sin colisión.
+   * **`PropsLayer`**: Para árboles (copa y tronco juntos), columnas, muros, techos y rocas. Única capa con colisión (Physics Layer 0 del tileset). Tiene `y_sort_enabled = true`: se ordena con el jugador según su Y.
+   * **`OverheadLayer`**: Para lo que siempre tapa al jugador. `z_index = 10`, sin colisión aunque el tile la tenga.
 2. Selecciona `GroundLayer` y abajo en la pestaña **TileMap** selecciona los tiles de `core_tileset.tres` (grilla 60x60). Pinta la superficie dentro del recuadro del `WorldBoundaryManager`.
 
 ### Paso 4: Colocar los Puntos de Llegada (`ArrivalSpawnPoint`)
