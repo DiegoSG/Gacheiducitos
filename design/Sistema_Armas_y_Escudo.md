@@ -4,7 +4,7 @@
 **Proyecto:** RPG-G (Godot 4.6)
 **Estado:** Diseño aprobado — implementados equipamiento (2 armas + escudo), `WeaponData`, `ShieldData` y sus componentes (13 Oct). Pendiente: armas arrojadizas (`ThrowableData`, `ThrowComponent`, proyectil) y HUD de equipamiento.
 **Prueba:** `src/core/tests/test_weapons.tscn` (comprobaciones automáticas al abrirla y pickups para probar a mano).
-**Notas de implementación:** `try_block` se separó en `covers_hit(attack_direction)` y `absorb(damage)`; la UI del inventario muestra el equipo como filas `[Arma 1 / Arma 2 / Escudo]` (Enter equipa o desequipa) hasta que exista el diseño del HUD. `weapon_prev` / `weapon_next`: Q / R, rueda del ratón y RB (LB ya es el escudo). Los slots rápidos intercambian: el arma o escudo del slot se equipa y lo que estaba equipado pasa a ese slot.
+**Notas de implementación:** `try_block` se separó en `covers_hit(attack_direction)` y `absorb(damage)`; lo equipado no ocupa lugar en la lista del inventario (se muestra en una línea arriba y en el HUD bajo la mochila); Enter sobre un arma o escudo lo equipa y lo que había vuelve a la lista. **No hay input para alternar armas** (decisión de Diego, 13 Oct): se equipa desde el inventario o los slots rápidos, así que en la práctica se usa un solo slot de arma; `Inventory` conserva los 2 slots del diseño. Los slots rápidos intercambian: el arma o escudo del slot se equipa y lo que estaba equipado pasa a ese slot.
 ---
 
 ## 1. Visión General
@@ -19,7 +19,7 @@ El jugador tiene **tres slots de equipamiento**: dos de arma y uno de escudo.
 
 Reglas:
 - Solo **una de las dos armas está activa**. El botón **Atacar usa el arma activa**: si es cuerpo a cuerpo golpea, si es arrojadiza lanza. No hay botón aparte para lanzar.
-- Se alterna el arma activa con `weapon_prev` / `weapon_next` (Q/R, rueda del ratón, LB/RB).
+- ~~Se alterna el arma activa con `weapon_prev` / `weapon_next`~~: descartado (13 Oct). Las armas se equipan desde el inventario o los slots rápidos.
 - El equipamiento se asigna **desde el inventario**. Lo que no está equipado permanece en el inventario como un ítem más.
 - Las armas **no se mejoran**: solo se cambian por otras.
 - Armas y escudos son **ítems** (`ItemData`) y se obtienen como cualquier ítem (pickup, cofre, recompensa, `ItemAction`).
@@ -102,7 +102,7 @@ Ubicación: `rpg-g/data/resource_types/equipment/`.
 
 ## 6. Controles
 
-Según `design/Controles_y_Input.md`: Atacar (J / clic izq. / X-▢) usa el arma activa, Escudo (K / clic der. / LT-L2), y alternar arma activa con `weapon_prev` / `weapon_next` (Q/R, rueda, LB/RB). No hay botón de lanzar.
+Según `design/Controles_y_Input.md`: Atacar (J / clic izq. / X-▢) usa el arma activa, Escudo (K / clic der. / LT-L2), sin botón para alternar armas (se equipan desde el inventario o los slots rápidos 1-4). No hay botón de lanzar.
 
 ---
 

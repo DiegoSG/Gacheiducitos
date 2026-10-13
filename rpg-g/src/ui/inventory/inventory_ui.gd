@@ -3,13 +3,6 @@ extends CanvasLayer
 @onready var control: Control = $Control
 @onready var item_list: ItemList = $Control/Panel/ItemList
 
-const SLOT_NAMES: Dictionary = {
-	Inventory.SLOT_WEAPON_1: "Arma 1",
-	Inventory.SLOT_WEAPON_2: "Arma 2",
-	Inventory.SLOT_SHIELD: "Escudo",
-}
-## Metadata de las filas de equipo: el slot va con este prefijo para distinguirlas de los ítems.
-const EQUIPPED_META_PREFIX: String = "equipped:"
 
 var _notice_label: Label = null
 var _equipment_label: Label = null
@@ -112,44 +105,22 @@ func refresh_ui() -> void:
 	var selected: PackedInt32Array = item_list.get_selected_items()
 	var previous_index: int = selected[0] if not selected.is_empty() else 0
 	var previous_meta: Variant = item_list.get_item_metadata(previous_index) if not selected.is_empty() else null
-	var previous_item_id: String = _meta_item_id(previous_meta)
+	var previous_item_id: String = previous_meta as String if previous_meta is String else ""
 	item_list.clear()
 	_update_equipment_label()
-	_fill_equipped()
 	_fill_list()
 	if item_list.item_count > 0:
 		var index: int = mini(previous_index, item_list.item_count - 1)
 		for i: int in item_list.item_count:
-			if not previous_item_id.is_empty() and _meta_item_id(item_list.get_item_metadata(i)) == previous_item_id:
+			if not previous_item_id.is_empty() and item_list.get_item_metadata(i) == previous_item_id:
 				index = i
 				break
 		item_list.select(index)
 		item_list.ensure_current_is_visible()
 
-## Id del ítem de una fila (las filas de equipo guardan "equipped:<slot>").
-func _meta_item_id(meta: Variant) -> String:
-	if not meta is String:
-		return ""
-	var text: String = meta as String
-	if text.begins_with(EQUIPPED_META_PREFIX):
-		return Inventory.get_equipped_id(text.substr(EQUIPPED_META_PREFIX.length()))
-	return text
-
-## Filas del equipo puesto (arriba de la lista). Activarlas desequipa.
-func _fill_equipped() -> void:
-	for slot: String in Inventory.equipped:
-		var data: ItemData = Inventory.get_equipped(slot)
-		if data == null:
-			continue
-		var active_mark: String = " ★" if slot == Inventory.active_weapon else ""
-		var idx: int = item_list.add_item("%s [%s%s]" % [data.name, SLOT_NAMES[slot], active_mark], data.icon)
-		item_list.set_item_metadata(idx, EQUIPPED_META_PREFIX + slot)
-
 func _fill_list() -> void:
 	var items: Dictionary = Inventory.get_items()
 	if items.is_empty():
-		if item_list.item_count > 0:
-			return
 		item_list.add_item("(Inventario vacío)")
 		return
 		
@@ -188,16 +159,11 @@ func _on_item_activated(index: int) -> void:
 	if not item_id is String or (item_id as String).is_empty():
 		return
 	var id: String = item_id as String
-	if id.begins_with(EQUIPPED_META_PREFIX):
-		var slot: String = id.substr(EQUIPPED_META_PREFIX.length())
-		Inventory.unequip(slot)
-		_show_notice("%s: vacío" % SLOT_NAMES.get(slot, slot))
-		return
 	var data: ItemData = ItemDatabase.get_item(id)
 	if data and data.is_equippable():
 		var slot: String = Inventory.default_slot_for(data)
 		if Inventory.equip(id, slot):
-			_show_notice("Equipado en %s" % SLOT_NAMES.get(slot, slot))
+			_show_notice("Equipado: %s" % data.name)
 		return
 	Inventory.use_item(id)
 
@@ -213,8 +179,6 @@ func _assign_selected_to_slot(slot_index: int) -> void:
 	var item_id: Variant = item_list.get_item_metadata(selected[0])
 	if not item_id is String or (item_id as String).is_empty():
 		return
-	if (item_id as String).begins_with(EQUIPPED_META_PREFIX):
-		item_id = Inventory.get_equipped_id((item_id as String).substr(EQUIPPED_META_PREFIX.length()))
 	if not QuickSlots.can_assign(item_id as String):
 		AudioManager.play_ui(&"sfx_inventory_assign_fail")
 		_show_notice("Este ítem no se puede asignar a un slot")
@@ -267,12 +231,10 @@ func _create_equipment_label() -> void:
 func _update_equipment_label() -> void:
 	if _equipment_label == null:
 		return
-	var parts: PackedStringArray = []
-	for slot: String in Inventory.equipped:
-		var data: ItemData = Inventory.get_equipped(slot)
-		var active_mark: String = "★" if slot == Inventory.active_weapon else ""
-		parts.append("%s%s: %s" % [active_mark, SLOT_NAMES[slot], data.name if data else "—"])
-	_equipment_label.text = " · ".join(parts)
+	# Lo equipado no ocupa lugar en la lista: solo se muestra aquí
+	var weapon: ItemData = Inventory.get_active_weapon()
+	var shield: ItemData = Inventory.get_equipped(Inventory.SLOT_SHIELD)
+	_equipment_label.text = "Arma: %s · Escudo: %s" % [weapon.name if weapon else "—", shield.name if shield else "—"]
 
 func _show_notice(text: String) -> void:
 	if _notice_label == null:

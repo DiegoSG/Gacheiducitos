@@ -342,8 +342,3 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("attack"):
 		attack()
 		get_viewport().set_input_as_handled()
-
-	if event.is_action_pressed("weapon_prev") or event.is_action_pressed("weapon_next"):
-		# Con dos slots, anterior y siguiente alternan igual
-		Inventory.switch_active_weapon()
-		get_viewport().set_input_as_handled()

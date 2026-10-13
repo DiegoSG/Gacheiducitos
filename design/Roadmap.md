@@ -101,7 +101,7 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 - [x] Ítems `test_*` movidos a `src/core/tests/items/` (ya no aparecen en el juego ni en LevelApp).
 
 ### Tanda 4 del plan: Equipamiento y Escudo (13 Oct)
-- [x] Equipamiento: 2 slots de arma (una activa, se alterna con `weapon_prev` / `weapon_next`) y 1 de escudo, guardados en la partida (`Inventory.equipped`). Se equipa desde el inventario o un slot rápido.
+- [x] Equipamiento: arma y escudo equipados, guardados en la partida (`Inventory.equipped`); lo equipado no ocupa lugar en el inventario. Se equipa desde el inventario o un slot rápido; no hay tecla para alternar armas (decisión de Diego, 13 Oct).
 - [x] `WeaponData` (daño, cooldown, alcance, knockback, visual y estado) y `WeaponComponent`; sin arma, golpe base.
 - [x] Escudo completo: `ShieldData` con `coverage_angle`, `block_percent`, velocidad al bloquear y estados que detiene; sin escudo no se bloquea.
 - [x] Variables `equip.weapon_1`, `equip.weapon_2`, `equip.shield` y `equip.active`.

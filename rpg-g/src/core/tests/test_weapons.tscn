@@ -75,8 +75,6 @@ offset_left = 40.0
 offset_top = 60.0
 offset_right = 1400.0
 offset_bottom = 200.0
-text = "Recoge la espada, el garrote y los dos escudos (abajo). En el inventario (I), Enter o doble clic sobre un arma o escudo lo equipa; sobre una fila [Arma 1 / Arma 2 / Escudo] lo desequipa.
-Q / R / rueda / RB alternan el arma activa (★). Golpea a los muñecos: el garrote pega más fuerte, más ancho y más lento.
-Escudo frontal: mantén L mirando a la araña (derecha); de frente no hace daño, de espaldas sí. Escudo de mitad: cubre todo, deja pasar la mitad y permite moverse lento.
-Sin escudo equipado no se puede bloquear.
-Slots rápidos: asigna un arma o escudo con 1-4 en el inventario y púlsalo fuera: se intercambia con lo que llevas. Las pociones se gastan y el slot se vacía al acabarse."
+text = "Recoge las armas, los escudos y las pociones de abajo. En el inventario (I), Enter o doble clic sobre un arma o escudo lo equipa; lo que llevabas vuelve a la lista (lo equipado no ocupa lugar en ella).
+Slots rápidos: asigna un arma, escudo o poción con 1-4 dentro del inventario y púlsalo fuera: el arma o escudo se intercambia con lo que llevas; la poción se gasta y el slot se vacía al acabarse.
+Golpea a los muñecos: el daño, el alcance y el ritmo dependen del arma. Escudo: mantén L mirando a la araña (derecha). Sin escudo no se puede bloquear."
