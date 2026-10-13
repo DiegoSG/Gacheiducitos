@@ -3,7 +3,9 @@ extends CanvasLayer
 @onready var control: Control = $Control
 @onready var item_list: ItemList = $Control/Panel/ItemList
 
+
 var _notice_label: Label = null
+var _equipment_label: Label = null
 var _notice_tween: Tween = null
 var _connected_slots: QuickSlots = null
 
@@ -13,12 +15,15 @@ func _ready() -> void:
 		control.visible = false
 		
 	Inventory.inventory_changed.connect(_on_inventory_changed)
+	Inventory.equipment_changed.connect(_on_equipment_changed)
+	Inventory.active_weapon_changed.connect(_on_active_weapon_changed)
 
 	if item_list:
 		item_list.item_activated.connect(_on_item_activated)
 		item_list.item_selected.connect(_on_item_selected)
 	
 	_create_notice_label()
+	_create_equipment_label()
 	refresh_ui()
 
 ## Con el inventario abierto se intercepta antes que la GUI: la ItemList con foco consumiría
@@ -86,16 +91,30 @@ func _on_inventory_changed() -> void:
 	if is_open():
 		refresh_ui()
 
+func _on_equipment_changed(_slot: String, _item_id: String) -> void:
+	_on_inventory_changed()
+
+func _on_active_weapon_changed(_slot: String) -> void:
+	_on_inventory_changed()
+
 func refresh_ui() -> void:
 	if not item_list:
 		return
-	# Conserva la fila seleccionada al reconstruir (usar/asignar un ítem refresca la lista).
+	# Conserva la fila seleccionada al reconstruir (usar/asignar/equipar refresca la lista).
+	# Se busca por ítem: al equipar, las filas cambian de orden.
 	var selected: PackedInt32Array = item_list.get_selected_items()
 	var previous_index: int = selected[0] if not selected.is_empty() else 0
+	var previous_meta: Variant = item_list.get_item_metadata(previous_index) if not selected.is_empty() else null
+	var previous_item_id: String = previous_meta as String if previous_meta is String else ""
 	item_list.clear()
+	_update_equipment_label()
 	_fill_list()
 	if item_list.item_count > 0:
 		var index: int = mini(previous_index, item_list.item_count - 1)
+		for i: int in item_list.item_count:
+			if not previous_item_id.is_empty() and item_list.get_item_metadata(i) == previous_item_id:
+				index = i
+				break
 		item_list.select(index)
 		item_list.ensure_current_is_visible()
 
@@ -137,8 +156,16 @@ func _on_item_activated(index: int) -> void:
 	if not item_list:
 		return
 	var item_id: Variant = item_list.get_item_metadata(index)
-	if item_id is String and not (item_id as String).is_empty():
-		Inventory.use_item(item_id as String)
+	if not item_id is String or (item_id as String).is_empty():
+		return
+	var id: String = item_id as String
+	var data: ItemData = ItemDatabase.get_item(id)
+	if data and data.is_equippable():
+		var slot: String = Inventory.default_slot_for(data)
+		if Inventory.equip(id, slot):
+			_show_notice("Equipado: %s" % data.name)
+		return
+	Inventory.use_item(id)
 
 ## Asigna el ítem seleccionado al slot rápido (solo arma, escudo o consumible).
 func _assign_selected_to_slot(slot_index: int) -> void:
@@ -184,6 +211,30 @@ func _create_notice_label() -> void:
 	_notice_label.modulate.a = 0.0
 	_notice_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(_notice_label)
+
+## Línea fija bajo el título con los 3 slots de equipo (placeholder hasta el diseño del HUD).
+func _create_equipment_label() -> void:
+	var panel: Control = get_node_or_null("Control/Panel") as Control
+	if panel == null or item_list == null:
+		return
+	_equipment_label = Label.new()
+	_equipment_label.anchor_right = 1.0
+	_equipment_label.offset_top = 26.0
+	_equipment_label.offset_bottom = 70.0
+	_equipment_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_equipment_label.add_theme_font_size_override("font_size", 12)
+	_equipment_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_equipment_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(_equipment_label)
+	item_list.offset_top = 74.0
+
+func _update_equipment_label() -> void:
+	if _equipment_label == null:
+		return
+	# Lo equipado no ocupa lugar en la lista: solo se muestra aquí
+	var weapon: ItemData = Inventory.get_active_weapon()
+	var shield: ItemData = Inventory.get_equipped(Inventory.SLOT_SHIELD)
+	_equipment_label.text = "Arma: %s · Escudo: %s" % [weapon.name if weapon else "—", shield.name if shield else "—"]
 
 func _show_notice(text: String) -> void:
 	if _notice_label == null:

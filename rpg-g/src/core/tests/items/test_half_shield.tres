@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/items/icons/leather_cap.png" id="2_icon"]
+[ext_resource type="Script" path="res://data/resource_types/equipment/shield_data.gd" id="3_shield"]
+
+[sub_resource type="Resource" id="ShieldData_test_half_shield"]
+script = ExtResource("3_shield")
+block_percent = 50.0
+coverage_angle = 360.0
+move_speed_multiplier = 0.4
+blocks_statuses = false
+
+[resource]
+script = ExtResource("1_script")
+id = "test_half_shield"
+name = "Escudo de prueba (mitad)"
+icon = ExtResource("2_icon")
+description = "Prueba: bloquea la mitad del daño desde cualquier lado, deja moverse lento y no frena estados."
+type = 1
+stackable = false
+equipment = SubResource("ShieldData_test_half_shield")

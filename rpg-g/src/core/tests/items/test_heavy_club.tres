@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/items/icons/wood_log.png" id="2_icon"]
+[ext_resource type="Script" path="res://data/resource_types/equipment/weapon_data.gd" id="3_weapon"]
+
+[sub_resource type="Resource" id="WeaponData_test_heavy_club"]
+script = ExtResource("3_weapon")
+damage = 3
+cooldown = 0.6
+reach = Vector2(100, 90)
+knockback = 600.0
+
+[resource]
+script = ExtResource("1_script")
+id = "test_heavy_club"
+name = "Garrote de prueba"
+icon = ExtResource("2_icon")
+description = "Prueba: +3 de daño, golpe ancho, lento."
+type = 1
+stackable = false
+equipment = SubResource("WeaponData_test_heavy_club")

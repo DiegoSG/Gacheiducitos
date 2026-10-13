@@ -1,75 +1,154 @@
 # Hoja de Ruta del Proyecto (Roadmap)
 
-## Fase 1: Prototipo (Completado)
-- [x] Movimiento Básico del Jugador (Grilla 60x60, colisiones y cámara)
-- [x] Sistema de Interacción (Actionable, Cofres, Puertas, Portales, Palancas y Placas)
-- [x] Sistema de Eventos y Triggers (GameTrigger, DoorAction, DestroyNodeAction)
-- [x] Sistema de Enemigos en Overworld (Patrullas, detección, persecución y LootDropComponent)
-- [x] Sistema de Inventario Base y UI conectada
+**Actualizado:** 13 de Octubre, 2026 (con las marcas de Diego en el checklist) · rama `FirstPlayableTest`
 
-## Fase 2: Minijuegos y Bucle Principal (Completado)
-- [x] Base de Minijuegos existentes (Excavation, Catcher, Runner, Smasher, Trampolin)
-- [x] Estandarización y ciclo de vida común (`MinigameBase` / `IMinigame`)
-- [x] Sistema de victoria / derrota uniforme con UI desacoplada
-- [x] Recolección de items/drops en minijuegos transferibles a `Inventory`
-- [x] Triggers y señales de inicio desde el Overworld (`MinigameAction` / `GameTrigger`)
-- [x] Retorno parametrizado al Overworld con nivel y spawn específico (reutilizando IDs de llegada de puertas/portales)
-- [x] Herramientas de configuración y balance de minijuegos
+Esta es la **única lista de tareas pendientes** del proyecto. Unifica lo que antes estaba repartido en este archivo, en `Feature_Checklist.md` (sección "Tareas Pendientes" y las features 🟡), en los `TODO` del código, en los docs de diseño (`Sistema_Armas_y_Escudo.md`, `Controles_y_Input.md`, `Capas_y_Orden_Z.md`, `Sistema_Checkpoints_y_Guardado.md`, `Minijuego_*.md`, `misiones/`) y en las revisiones de audio y DialogueApp.
 
-## Fase 2.5: Primer Jugable de Test (Milestone Actual)
-- [x] Limpieza integral del código (bugs, sistemas duplicados, tipado, código muerto) — 29 Sep 2026
-- [x] Variables unificadas (`GameVariables`, condiciones, `VariableWatcher`) integradas con DialogueApp
-- [x] Estados alterados (`StatusEffectData`) y efectos de ítems combinables
-- [x] Texto de puerta cerrada y pausa del juego durante diálogos
-- [ ] Equipamiento: 2 slots de arma (cuerpo a cuerpo o arrojadiza, una activa) + escudo, asignables desde el inventario — `design/Sistema_Armas_y_Escudo.md`
-- [ ] Mapa de controles estándar y soporte de joystick — `design/Controles_y_Input.md`
-- [ ] Menú principal y menú de pausa
-- [ ] Flujo de Game Over
-- [ ] Plantilla de nivel (`template_level.tscn`) y 2 niveles interconectados del Vertical Slice
-- [x] Sistema de audio: `AudioManager`, catálogo de IDs, música por escena, volumen en Opciones y 229 sonidos conectados — `design/Sistema_Audio.md`
-- [ ] Archivos de audio (música y efectos) asignados en `data/audio/audio_catalog.tres`
-- [ ] Animación de salida de portal
+- `Feature_Checklist.md` queda como **historial** de checkpoints y criterios de aceptación; ya no lleva pendientes.
+- Los docs de diseño describen **cómo** se hace algo; aquí solo se anota **qué falta** y en qué orden, con un enlace al doc.
+- Prioridad: **P1** = bloquea el primer test jugable · **P2** = siguiente fase · **P3** = backlog / cuando haya tiempo.
 
-## Fase 3: Expansión de Contenido
-- [ ] Añadir NPCs y Diálogo avanzado (`DialogueManager`)
-- [ ] Mazmorras y nuevos niveles interconectados
-- [ ] Implementación de Sonido y Música
+---
 
-## Fase 4: Pulido y Lanzamiento
-- [ ] Corrección de Errores y pruebas de integración
-- [ ] Pulido de UI/UX
-- [ ] Exportar Builds (Desktop / Mobile)
+## 1. Ahora — Fase 2.5: Primer Jugable de Test
 
-## Backlog y Mejoras (TODO)
-- [ ] **Controles de Minijuegos en Móviles:** Pruebas en Android para controles táctiles en minijuegos.
-- [ ] **Cambio rápido de armas:** elegir cualquier arma del inventario sin abrirlo.
-- [ ] **Selección rápida de ítems (hotbar).**
-- [ ] **Menú de remapeo de controles para el jugador.**
-- [ ] **Sistema de energía:** diseñado en `Sistema_Checkpoints_y_Guardado.md`, no implementado (la Poción Azul lo menciona).
+Decisiones ya tomadas: el primer test **no** incluye el sistema completo de armas (va en 2.6); Game Over y pantalla de victoria serán un nivel propio más adelante. Audio, niveles del Vertical Slice, orden en Z y plantilla ya están hechos (ver §6).
+
+| # | Pri | Tarea | Ref |
+|---|---|---|---|
+| 1 | P2 | **Menú de opciones** real (hoy es placeholder dentro de los menús unificados de inicio/pausa, que ya funcionan): volumen y pantalla completa (decisión de Diego, 13 Oct). | `Controles_y_Input.md` |
+
+## 2. Siguiente — Fase 2.6: Combate y Equipamiento
+
+| # | Pri | Tarea | Ref |
+|---|---|---|---|
+| 1 | P2 | **Armas arrojadizas:** `ThrowableData`, `ThrowComponent`, `projectile.tscn` y munición desde el inventario (los slots de arma ya las aceptan). | `Sistema_Armas_y_Escudo.md` |
+| 2 | P2 | **HUD de equipamiento:** falta la munición de las arrojadizas y la posición definitiva. Ya hay un placeholder con el arma activa y el escudo bajo el icono del inventario (`equipment_hud.gd`). | `Sistema_Armas_y_Escudo.md` |
+| 3 | P2 | **Diseño definitivo del HUD:** lugar fijo de cada elemento (esquinas, slots, inventario, barra de accesos). Sesión de diseño; va después de las armas (decisión de Diego, 13 Oct). | — |
+| 4 | P2 | **Armas y escudos reales:** datos y arte de las armas del juego (hoy solo hay la Espada de Madera y los ítems `test_*`). | — |
+| 5 | P2 | **Game Over / Victoria** como nivel propio. | Decisión de Diego (5 Oct) |
+
+## 3. Fase 3: Expansión de Contenido
+
+- [ ] NPCs y diálogo avanzado (`DialogueManager`), voz distinta por NPC.
+- [ ] Mazmorras y nuevos niveles interconectados.
 - [ ] **Registro de misiones visible:** `QuestAction` existe pero no hay UI de misiones.
-- [ ] **Backup `.bak` de partidas guardadas.**
-- [ ] **Scripts de test headless:** los runners de `src/core/tests/` no corren con `--script` (decisión: QA manual).
-- [ ] **DialogueApp:** nodos que mezclan texto y `do` pierden la mutación; switch con operadores distintos de `==`.
-- [ ] **Orden en Z de la escena:** organizar la posición en Z (`z_index` / y-sort) de todos los objetos de la escena (tiles, entidades, interactuables, efectos y UI). Capas de tilemap ya resueltas en `design/Capas_y_Orden_Z.md`.
+- [ ] **Puntos de interés de las quests en el mapa:** conectar `register_poi` / `remove_poi` a las quests reales (siempre visibles, aunque la zona no esté descubierta).
+- [ ] **Arte pintado del mapa del mundo** (la grilla y el guardado de lo descubierto ya están; va en rama aparte).
+- [ ] **Misiones de minijuegos** (framework de 4 capas: core loop, modificadores, objetivo con 3 estrellas, gancho narrativo). — `misiones/00-sistema-general.md`
+- [ ] **Sistema de energía** (`energy` / `max_energy` en `PlayerStats` y snapshots; la Poción Azul ya lo menciona). — `Sistema_Checkpoints_y_Guardado.md`
 
+## 4. Fase 4: Pulido y Lanzamiento
 
-## Controles y Joystick (esquema unificado)
-Mapa completo por contexto y hardware en la hoja "Gacheiducitos - Mapa de Controles" (Drive). Principio: los inputs no cambian entre contextos, para que aprender a jugar sea simple.
-Esquema de botones: abajo = Acción, izquierda = Secundario (atacar, disparar, avance rápido de diálogo), arriba = Inventario, derecha = Comodín (reservado; hace de Atrás en menús, por confirmar). Pausa = Start. Stick derecho libre: solo se usaría para los slots si el mando elegido no tiene flechas.
+- [ ] Corrección de errores y pruebas de integración.
+- [ ] Pulido de UI/UX.
+- [ ] **Controles táctiles (Android):** joystick virtual y botones Acción, Secundario, Bloqueo, Mochila, Pausa y slots 1-4.
+- [ ] Exportar builds (Desktop / Mobile).
 
-- [x] **Separar acciones de gameplay de las `ui_*`:** `move_*`, `interact`, `attack`, `block`, `pause`, `inventory`, `slot_1..4`. Las `ui_*` quedan solo para menús.
-- [x] **Limpiar mapeos extra:** quitar Back (inventario) y LB (ataque) del InputMap; el D-Pad deja de mover en Overworld (sus 4 flechas son los slots) y el stick izquierdo queda como único movimiento. En minijuegos no hay slots y el D-Pad queda libre.
-- [x] **Teclado nuevo:** K ataca/dispara/avance rápido, L bloquea, Tab/I inventario, P pausa, Esc atrás, E/Espacio/Enter acción.
-- [ ] **Bloqueo (`block`):** acción y comportamiento del jugador (LB/L1/L en mando). _Placeholder hecho: estado `is_blocking` y señal, sin daño ni animación._
-- [ ] **4 slots de equipado rápido:** teclas 1-4 y D-Pad (↑ → ↓ ←). Sirven para cambiar arma, consumir poción y cambiar escudo. _Placeholder hecho: componente, entrada y HUD; falta el efecto real de arma, escudo y poción._
-- [x] **Asignación de slots desde el inventario:** con el inventario abierto, las teclas 1-4 (D-Pad) asignan el ítem seleccionado. Solo armas, escudos y consumibles; no llaves ni ítems de quest.
-- [ ] **Menús unificados (inicio, pausa y opciones):** mismo esquema de navegación en los tres; Start abre y cierra la pausa. La pausa de un minijuego incluye "Abandonar minijuego", que cuenta como perder (se pierden los ítems recogidos en esa partida). _Hecho: pausa (con Abandonar en minijuegos) y menú de inicio como escena principal. Placeholder: opciones._
-- [x] **Runner con mando:** A salta, X dispara, D-Pad abajo agacha. Evaluando desplazamiento lateral con D-Pad izquierda/derecha.
-- [x] **Pausa en minijuegos:** conectar `pause` en Runner, Catcher, Trampolín, Smasher y Excavación.
-- [x] **Diálogos:** el texto se escribe solo; Acción lo completa de golpe; Acción de nuevo pasa al siguiente; Avance rápido salta al final del diálogo o al próximo nodo de decisión.
-- [x] **Smasher con mando:** cursor movido con el stick izquierdo y Acción para golpear (hoy solo responde a click de mouse).
-- [x] **Debug F3:** pasar `KEY_F3` hardcodeado a una acción del InputMap.
-- [ ] **Mapa del mundo (descubrimiento progresivo):** el mapa se va revelando a medida que el jugador avanza; guardar lo descubierto en el sistema de guardado. _Placeholder hecho: grilla por nivel y guardado de lo descubierto; falta el arte pintado (rama aparte)._
-- [x] **Controles del mapa:** M / View-Create-Select abre y cierra; mover con WASD o stick; zoom in/out con +/− o rueda y gatillos RT/LT (R2/L2, ZR/ZL); Secundario (K/X/□/Y) centra en el jugador.
-- [ ] **Puntos de interés de las Quest en el mapa:** marcadores de los objetivos de las misiones activas, visibles al abrir el mapa. Aparecen siempre, incluso sobre zonas aún no descubiertas. _Placeholder hecho: `register_poi` / `remove_poi`; falta conectarlo a las quests reales._
-- [ ] **Controles táctiles (Android):** joystick virtual y botones Acción, Secundario, Bloqueo, Mochila, Pausa y slots 1-4 (reemplaza el ítem de Backlog "Controles de Minijuegos en Móviles").
+---
+
+## 5. Backlog por área (P3)
+
+### Controles e input
+- [ ] Cambio rápido de armas sin abrir el inventario.
+- [ ] Hotbar de ítems (consumibles o llaves en el Overworld).
+
+### Audio
+- [ ] Variantes (varios archivos) por entrada de `AudioEntry`.
+- [ ] Ajustar `cooldown` y `pitch_random` en el catálogo (pasos, tipeo, persecución, golpes).
+- [ ] Ambiente por nivel (`amb_level_XX` vía `SceneMusic`), con sonidos provisionales (decisión de Diego, 13 Oct).
+
+### Minijuegos
+- **Excavación:** niveles hechos a mano (pintados en TileMap) además del procedimental · enemigo ciego guiado por sonido y sigilo en túneles · ideas de `misiones/02-excavacion.md` (oxígeno con ventilación, contador de pasos).
+- **Trampolín:** temas visuales (cielo, noche, espacio, cueva) · variedad de plataformas (móviles, frágiles) y su balance.
+- **Smasher:** temas visuales y dianas temáticas · spawners y zonas de salida configurables · variantes de insectos.
+- **Catcher:** temas visuales · viento lateral · combos por racha.
+- **Runner:** rutas bifurcadas y plataformas altas · enemigos con regla escudo vs. barricada · fondo que cambia en el recorrido.
+
+### Guardado y técnico
+- [ ] Tests headless: los runners de `src/core/tests/` no corren con `--script` (decisión actual: QA manual).
+
+### Limpieza del repositorio
+- [ ] Decidir qué hacer con el PR #4 (`JoystickAndControls`, abierto) y mergear `FirstPlayableTest` → `develop` cuando el test esté listo.
+
+---
+
+## 6. Hecho
+
+### Marcado como hecho por Diego (13 Oct)
+- [x] Archivos de audio asignados en `audio_catalog.tres` (229 entradas con `stream`).
+- [x] Vertical Slice: 2 niveles interconectados.
+- [x] Orden en Z de toda la escena.
+- [x] Plantilla de nivel (cubierta por LevelApp).
+- [x] Menú de remapeo de controles.
+- [x] Excavación: contador de objetivos en UI.
+- [x] Minijuegos Laberinto y Ritmo: cerrados (no hay código en el repo; quedan fuera del roadmap).
+- [x] DialogueApp: `switch` con otros operadores, señal de `trigger_event` conectada y pendientes de la revisión.
+- [x] Estado actualizado en `Controles_y_Input.md` y `Sistema_Armas_y_Escudo.md`.
+
+### Tanda 1 del plan (13 Oct)
+- [x] Antídoto real con efecto de cura (`CureStatusEffect`, cura todos los estados).
+- [x] Sin sonidos dobles: se quitaron `sfx_player_invulnerable` y `sfx_enemy_stunned` del mismo frame que el daño.
+- [x] `AudioEntry.pitch_random` y `AudioEntry.cooldown` (0 por defecto; botones en `test_audio.tscn`).
+- [x] Backup `.bak` de cada slot y lectura del backup si la partida está dañada (`test_save_backup.tscn`).
+- [x] PR en borrador #5, #8, #13 y #14 cerrados.
+
+### Tanda 2 del plan (13 Oct)
+- [x] El sonido de un golpe lo elige quien lo recibe; golpe bloqueado con `sfx_player_block_hit`. `sfx_player_attack_hit` y `sfx_enemy_attack` quedan sin uso en el catálogo.
+- [x] Salida de portal: el jugador aparece en el portal y camina hasta su `SpawnPoint` (`test_portal_exit.tscn`).
+- [x] `sfx_enemy_attack_windup` al entrar en rango de ataque y `sfx_player_low_health` al bajar del 25% de vida (sonidos proxy).
+- [x] Sonido posicional `AudioManager.play_sfx_at` en enemigos y dummies.
+- [x] Ítems `test_*` movidos a `src/core/tests/items/` (ya no aparecen en el juego ni en LevelApp).
+
+### Tanda 4 del plan: Equipamiento y Escudo (13 Oct)
+- [x] Equipamiento: arma y escudo equipados, guardados en la partida (`Inventory.equipped`); lo equipado no ocupa lugar en el inventario. Se equipa desde el inventario o un slot rápido; no hay tecla para alternar armas (decisión de Diego, 13 Oct).
+- [x] `WeaponData` (daño, cooldown, alcance, knockback, visual y estado) y `WeaponComponent`; sin arma, golpe base.
+- [x] Escudo completo: `ShieldData` con `coverage_angle`, `block_percent`, velocidad al bloquear y estados que detiene; sin escudo no se bloquea.
+- [x] Variables `equip.weapon_1`, `equip.weapon_2`, `equip.shield` y `equip.active`.
+- [x] Los golpes con estado (veneno) vuelven a aplicarlo al jugador: antes los i-frames del mismo golpe lo anulaban.
+- [x] Prueba `src/core/tests/test_weapons.tscn` (reemplaza a `test_shield.tscn`).
+- [x] Slots rápidos: un arma o escudo se intercambia con lo equipado (lo que llevabas queda en el slot); un consumible agotado deja el slot vacío (pedido de Diego, 13 Oct).
+- [x] Partida nueva: el jugador empieza con el arma básica (`Inventory.STARTING_WEAPON_ID`, hoy la Espada de Madera) equipada y sin escudo; los saves sin equipo también la reciben.
+- [x] Ítems placeholder para probar: Espada de Hierro, Escudo de Madera y Escudo de Hierro (iconos provisionales).
+- [x] Tanda 3 decidida: opciones con pantalla completa, HUD después de las armas, ambiente provisional y Runner sin D-Pad lateral.
+
+### Fase 1: Prototipo
+- [x] Movimiento (grilla 60x60, colisiones, cámara con límites por nivel).
+- [x] Interacción: Actionable, cofres, puertas, portales, palancas y placas de presión.
+- [x] Eventos y triggers (`GameTrigger`, `DoorAction`, `DestroyNodeAction`).
+- [x] Enemigos en Overworld (patrulla, detección, persecución, `LootDropComponent`).
+- [x] Inventario base y UI.
+
+### Fase 2: Minijuegos y bucle principal
+- [x] 5 minijuegos (Excavación, Catcher, Runner, Smasher, Trampolín) sobre `MinigameBase` con victoria/derrota uniforme.
+- [x] Recompensas de minijuegos al `Inventory` y retorno al Overworld con nivel y spawn.
+- [x] Herramientas de configuración y balance.
+
+### Fase 2.5 (hasta ahora)
+- [x] Limpieza integral del código (29 Sep).
+- [x] `GameVariables`, condiciones y `VariableWatcher`, integrados con DialogueApp.
+- [x] Estados alterados (`StatusEffectData`) y efectos de ítems.
+- [x] Texto de puerta cerrada y pausa durante diálogos.
+- [x] Sistema de audio: `AudioManager`, catálogo de 229 IDs, música por escena, volumen.
+- [x] Escudo proxy: bloquea daño y estados, conserva knockback, sin movimiento al bloquear.
+- [x] Enemigos que paran a distancia de ataque y vuelven a perseguir si el jugador se aleja.
+- [x] Puertas y portales bloqueados mientras haya enemigos vivos.
+- [x] Sin zumbido ambiental en portales.
+- [x] Smasher: radio de impacto mayor que la mira · Catcher: tiempo en suelo regulable.
+- [x] Capas de tilemap y y-sort (`Capas_y_Orden_Z.md`): solo `PropsLayer` colisiona; árboles en una sola capa.
+- [x] Tileset proxy (Kenney medieval) en `core_tileset.tres`.
+
+### Controles y joystick (esquema unificado)
+Abajo = Acción, izquierda = Secundario, arriba = Inventario, derecha = Comodín/Atrás, Start = Pausa. Mapa completo en la hoja "Gacheiducitos - Mapa de Controles" (Drive).
+- [x] Acciones de gameplay separadas de las `ui_*`; mapeos extra limpiados; D-Pad = slots en Overworld.
+- [x] Teclado nuevo (K ataca, L bloquea, Tab/I inventario, P pausa, Esc atrás, E/Espacio/Enter acción).
+- [x] Bloqueo (`block`) conectado al escudo proxy.
+- [x] Asignación de slots desde el inventario.
+- [x] Pausa y menú de inicio unificados (con "Abandonar minijuego").
+- [x] Runner, Smasher y pausa de minijuegos con mando; diálogos con avance y avance rápido; F3 en el InputMap.
+- [x] Mapa del mundo con descubrimiento progresivo y sus controles.
+
+### Herramientas
+- [x] LevelApp: editor visual, NPC = `npc_barnaby.tscn`, diálogos en NPC y Trigger, música por nivel, colisiones visibles y suelo checker.
+- [x] DialogueApp: guardado sin pérdidas, parser modular, servidor solo en 127.0.0.1, vistas Escritura y Nodos, undo/redo.
+- [x] Versión web de LevelApp y DialogueApp en Firebase (`levelapp-f4d64`) con login y lista de accesos; soporte táctil retirado.

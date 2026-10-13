@@ -25,7 +25,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 
 	is_knocked_back = true
 	health -= damage
-	AudioManager.play_sfx(&"sfx_dummy_hit")
+	AudioManager.play_sfx_at(&"sfx_dummy_hit", global_position)
 
 	# Efecto visual de daño
 	sprite.modulate = Color.RED

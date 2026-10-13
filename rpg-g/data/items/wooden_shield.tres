@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/items/icons/wood_log.png" id="2_icon"]
+[ext_resource type="Script" path="res://data/resource_types/equipment/shield_data.gd" id="3_shield"]
+
+[sub_resource type="Resource" id="ShieldData_wooden_shield"]
+script = ExtResource("3_shield")
+block_percent = 60.0
+coverage_angle = 120.0
+move_speed_multiplier = 0.3
+blocks_statuses = false
+
+[resource]
+script = ExtResource("1_script")
+id = "wooden_shield"
+name = "Escudo de Madera"
+value = 120
+icon = ExtResource("2_icon")
+description = "PLACEHOLDER: bloquea el 60% de frente (120°), deja moverse lento y no frena estados. Icono provisional."
+type = 1
+stackable = false
+equipment = SubResource("ShieldData_wooden_shield")

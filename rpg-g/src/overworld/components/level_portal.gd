@@ -332,6 +332,11 @@ func _persist_state() -> void:
 		return
 	WorldStateManager.save_state(_persistence_key, {"is_locked": is_locked, "is_active": is_active})
 
+## El jugador llega a través de este portal: ignora su contacto hasta que salga del área,
+## para que la caminata de salida no lo devuelva al nivel anterior.
+func begin_arrival() -> void:
+	_is_triggered = true
+
 func get_spawn_position() -> Vector2:
 	if has_node("SpawnPoint"):
 		return $SpawnPoint.global_position

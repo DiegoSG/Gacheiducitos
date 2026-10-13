@@ -4,6 +4,8 @@ const SAVE_PATH_AUTO: String = "user://save_auto.json"
 const SAVE_PATH_SLOT_PATTERN: String = "user://save_slot_%d.json"
 const AUTOSAVE_SLOT_ID: int = 0
 const MAX_MANUAL_SLOTS: int = 4
+## Copia de la partida anterior de cada slot; se usa si el archivo principal está dañado.
+const BACKUP_SUFFIX: String = ".bak"
 
 signal game_saved(slot_id: int)
 signal game_loaded(slot_id: int)
@@ -39,6 +41,7 @@ func save_slot(slot_id: int) -> void:
 	}
 
 	var file_path: String = get_slot_path(slot_id)
+	_backup_slot_file(file_path)
 	var file: FileAccess = FileAccess.open(file_path, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(data, "\t"))
@@ -52,23 +55,9 @@ func save_slot(slot_id: int) -> void:
 		push_error("[SaveSystem] Error guardando archivo: ", file_path)
 
 func load_slot(slot_id: int) -> void:
-	var file_path: String = get_slot_path(slot_id)
-
-	if not FileAccess.file_exists(file_path):
+	var data: Dictionary = _read_slot_data(get_slot_path(slot_id))
+	if data.is_empty():
 		return
-
-	var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
-	if not file:
-		push_error("[SaveSystem] No se pudo abrir el archivo: ", file_path)
-		return
-	var content: String = file.get_as_text()
-	file.close()
-
-	var parsed: Variant = JSON.parse_string(content)
-	if not parsed is Dictionary:
-		return
-
-	var data: Dictionary = parsed as Dictionary
 
 	if data.has("world_state"):
 		WorldStateManager.restore_snapshot(data["world_state"])
@@ -102,22 +91,10 @@ func load_slot(slot_id: int) -> void:
 	game_loaded.emit(slot_id)
 
 func get_slot_metadata(slot_id: int) -> Dictionary:
-	var path: String = get_slot_path(slot_id)
-	if not FileAccess.file_exists(path):
+	var data: Dictionary = _read_slot_data(get_slot_path(slot_id))
+	if data.is_empty():
 		return {"exists": false}
-		
-	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
-	if not file:
-		return {"exists": false}
-		
-	var content: String = file.get_as_text()
-	file.close()
-	
-	var parsed: Variant = JSON.parse_string(content)
-	if not parsed is Dictionary:
-		return {"exists": false}
-		
-	var data: Dictionary = parsed as Dictionary
+
 	var timestamp: float = data.get("timestamp", 0.0)
 	var level_name: String = "Desconocido"
 	
@@ -155,7 +132,41 @@ func delete_slot(slot_id: int) -> void:
 	if FileAccess.file_exists(file_path):
 		var err: Error = DirAccess.remove_absolute(file_path)
 		if err == OK:
+			if FileAccess.file_exists(file_path + BACKUP_SUFFIX):
+				DirAccess.remove_absolute(file_path + BACKUP_SUFFIX)
 			AudioManager.play_ui(&"sfx_save_deleted")
 			game_deleted.emit(slot_id)
 		else:
 			push_error("[SaveSystem] Error al borrar el archivo: ", file_path)
+
+## Copia el archivo actual del slot a su backup antes de sobrescribirlo.
+func _backup_slot_file(file_path: String) -> void:
+	if not FileAccess.file_exists(file_path):
+		return
+	var err: Error = DirAccess.copy_absolute(file_path, file_path + BACKUP_SUFFIX)
+	if err != OK:
+		push_warning("[SaveSystem] No se pudo crear el backup de %s (error %d)" % [file_path, err])
+
+## Lee la partida del slot. Si el archivo principal falta o está dañado, usa el backup.
+## Devuelve un diccionario vacío si ninguno se puede leer.
+func _read_slot_data(file_path: String) -> Dictionary:
+	var data: Dictionary = _parse_save_file(file_path)
+	if data.is_empty():
+		data = _parse_save_file(file_path + BACKUP_SUFFIX)
+		if not data.is_empty():
+			push_warning("[SaveSystem] Partida dañada o ausente, se usó el backup: ", file_path)
+	return data
+
+func _parse_save_file(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if not file:
+		push_error("[SaveSystem] No se pudo abrir el archivo: ", path)
+		return {}
+	var content: String = file.get_as_text()
+	file.close()
+	var parsed: Variant = JSON.parse_string(content)
+	if not parsed is Dictionary:
+		return {}
+	return parsed as Dictionary

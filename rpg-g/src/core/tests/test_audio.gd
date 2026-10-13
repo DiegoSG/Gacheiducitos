@@ -30,6 +30,8 @@ func _ready() -> void:
 	_add_button("Detener música", func() -> void: AudioManager.stop_music())
 	_add_button("Efecto de juego (se corta en pausa)", func() -> void: AudioManager.play_sfx(SFX_ID))
 	_add_button("Efecto de interfaz (suena en pausa)", func() -> void: AudioManager.play_ui(UI_ID))
+	_add_button("Efecto con tono variable (±20%)", _play_with_pitch_random)
+	_add_button("Efecto con cooldown 0.5 s (pulsar rápido)", _play_with_cooldown)
 	_add_button("ID sin sonido asignado", func() -> void: AudioManager.play_sfx(UNASSIGNED_ID))
 	_add_button("ID inexistente", func() -> void: AudioManager.play_sfx(UNKNOWN_ID))
 	_add_button("Pausar / reanudar", _toggle_pause)
@@ -47,6 +49,24 @@ func _toggle_pause() -> void:
 		GameManager.request_pause()
 	else:
 		GameManager.release_pause()
+
+## Cambia la entrada solo en memoria: cada pulsación debe sonar con un tono distinto.
+func _play_with_pitch_random() -> void:
+	var entry: AudioEntry = AudioManager.get_playable_entry(SFX_ID)
+	if entry == null:
+		return
+	entry.pitch_random = 0.2
+	entry.cooldown = 0.0
+	AudioManager.play_sfx(SFX_ID)
+
+## Cambia la entrada solo en memoria: pulsando rápido solo suena una vez cada medio segundo.
+func _play_with_cooldown() -> void:
+	var entry: AudioEntry = AudioManager.get_playable_entry(SFX_ID)
+	if entry == null:
+		return
+	entry.pitch_random = 0.0
+	entry.cooldown = 0.5
+	AudioManager.play_sfx(SFX_ID)
 
 func _update_status() -> void:
 	_status_label.text = "Música: %s | Pausa: %s" % [AudioManager.get_current_music_id(), get_tree().paused]
