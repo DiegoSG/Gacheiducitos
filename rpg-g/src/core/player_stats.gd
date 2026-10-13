@@ -8,6 +8,8 @@ signal status_removed(status_id: String)
 signal stats_changed
 
 const MIN_SPEED_MULTIPLIER: float = 0.1
+## Fracción de la vida máxima por debajo de la cual suena el aviso de vida baja.
+const LOW_HEALTH_RATIO: float = 0.25
 
 ## Evita sonidos de HUD al restaurar un snapshot.
 var _is_restoring: bool = false
@@ -29,6 +31,8 @@ var health: int = 4:
 		health = clampi(value, 0, get_max_health())
 		if health != prev_health and not _is_restoring:
 			AudioManager.play_ui(&"sfx_hud_health_changed")
+			if health > 0 and is_low_health(health) and not is_low_health(prev_health):
+				AudioManager.play_sfx(&"sfx_player_low_health")
 		health_changed.emit(health, get_max_health())
 		if health <= 0 and prev_health > 0:
 			player_died.emit()
@@ -248,3 +252,7 @@ func restore_snapshot(snapshot: Dictionary) -> void:
 		gold = int(snapshot["gold"])
 	_is_restoring = false
 	stats_changed.emit()
+
+## true si la vida dada está en zona de aviso (como mínimo 1 punto, aunque la vida máxima sea baja).
+func is_low_health(value: int) -> bool:
+	return value <= maxi(1, floori(get_max_health() * LOW_HEALTH_RATIO))

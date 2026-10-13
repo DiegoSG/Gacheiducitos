@@ -4,6 +4,7 @@ extends Node
 ## - Música: play_music / stop_music, con fundido entre pistas. Se atenúa mientras el juego está pausado.
 ## - Efectos de juego: play_sfx. Se cortan cuando el juego se pausa; si se piden con el juego ya
 ##   pausado (por ejemplo desde un diálogo), suenan como efecto de interfaz.
+## - Efectos en el mundo: play_sfx_at suena desde una posición (se atenúa con la distancia a la cámara).
 ## - Efectos de interfaz: play_ui. Suenan también con el juego pausado (menús, inventario, diálogos).
 ## Un identificador sin sonido asignado no reproduce nada y avisa una sola vez por consola.
 ## Cada entrada puede variar el tono (pitch_random) y limitar repeticiones (cooldown).
@@ -16,6 +17,9 @@ const MUSIC_BUS: StringName = &"Music"
 const SFX_BUS: StringName = &"SFX"
 const SFX_POOL_SIZE: int = 8
 const UI_POOL_SIZE: int = 8
+const SFX_2D_POOL_SIZE: int = 12
+## Distancia (px) a partir de la cual un efecto posicional deja de oírse.
+const SFX_2D_MAX_DISTANCE: float = 900.0
 const DEFAULT_FADE_TIME: float = 0.5
 const SILENT_DB: float = -80.0
 ## Atenuación de la música mientras el juego está pausado.
@@ -32,6 +36,7 @@ var _music_tween: Tween = null
 var _duck_tween: Tween = null
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _ui_players: Array[AudioStreamPlayer] = []
+var _sfx_2d_players: Array[AudioStreamPlayer2D] = []
 var _warned_ids: Dictionary[StringName, bool] = {}
 ## Último instante (ms) en que sonó cada identificador con cooldown.
 var _last_played_ms: Dictionary[StringName, int] = {}
@@ -50,6 +55,13 @@ func _ready() -> void:
 		_sfx_players.append(_create_player(SFX_BUS, Node.PROCESS_MODE_PAUSABLE))
 	for i: int in UI_POOL_SIZE:
 		_ui_players.append(_create_player(SFX_BUS, Node.PROCESS_MODE_ALWAYS))
+	for i: int in SFX_2D_POOL_SIZE:
+		var player_2d: AudioStreamPlayer2D = AudioStreamPlayer2D.new()
+		player_2d.bus = SFX_BUS
+		player_2d.max_distance = SFX_2D_MAX_DISTANCE
+		player_2d.process_mode = Node.PROCESS_MODE_PAUSABLE
+		add_child(player_2d)
+		_sfx_2d_players.append(player_2d)
 
 	load_settings()
 
@@ -99,6 +111,25 @@ func get_current_music_id() -> StringName:
 ## Efecto de juego: se corta si el juego se pausa.
 func play_sfx(id: StringName) -> void:
 	_play_from_pool(id, _ui_players if get_tree().paused else _sfx_players)
+
+## Efecto de juego que suena desde una posición del mundo. Con el juego pausado suena como interfaz.
+func play_sfx_at(id: StringName, world_position: Vector2) -> void:
+	if get_tree().paused:
+		_play_from_pool(id, _ui_players)
+		return
+	var entry: AudioEntry = _get_entry_for_play(id)
+	if entry == null:
+		return
+	var player: AudioStreamPlayer2D = _sfx_2d_players[0]
+	for candidate: AudioStreamPlayer2D in _sfx_2d_players:
+		if not candidate.playing:
+			player = candidate
+			break
+	player.global_position = world_position
+	player.stream = entry.stream
+	player.volume_db = entry.volume_db
+	player.pitch_scale = 1.0 + randf_range(-entry.pitch_random, entry.pitch_random)
+	player.play()
 
 ## Efecto de interfaz: suena aunque el juego esté pausado.
 func play_ui(id: StringName) -> void:
@@ -155,20 +186,27 @@ func _create_player(bus: StringName, mode: Node.ProcessMode) -> AudioStreamPlaye
 	return player
 
 func _play_from_pool(id: StringName, pool: Array[AudioStreamPlayer]) -> void:
-	var entry: AudioEntry = _get_playable_entry(id)
+	var entry: AudioEntry = _get_entry_for_play(id)
 	if entry == null:
 		return
-	if entry.cooldown > 0.0:
-		var now_ms: int = Time.get_ticks_msec()
-		var last_ms: int = _last_played_ms.get(id, -1000000)
-		if now_ms - last_ms < int(entry.cooldown * 1000.0):
-			return
-		_last_played_ms[id] = now_ms
 	var player: AudioStreamPlayer = _get_free_player(pool)
 	player.stream = entry.stream
 	player.volume_db = entry.volume_db
 	player.pitch_scale = 1.0 + randf_range(-entry.pitch_random, entry.pitch_random)
 	player.play()
+
+## Entrada lista para sonar ahora: con sonido asignado y fuera de su cooldown (lo registra).
+func _get_entry_for_play(id: StringName) -> AudioEntry:
+	var entry: AudioEntry = _get_playable_entry(id)
+	if entry == null:
+		return null
+	if entry.cooldown > 0.0:
+		var now_ms: int = Time.get_ticks_msec()
+		var last_ms: int = _last_played_ms.get(id, -1000000)
+		if now_ms - last_ms < int(entry.cooldown * 1000.0):
+			return null
+		_last_played_ms[id] = now_ms
+	return entry
 
 ## Devuelve un reproductor libre; si todos están ocupados, reutiliza el primero.
 func _get_free_player(pool: Array[AudioStreamPlayer]) -> AudioStreamPlayer:
@@ -210,6 +248,8 @@ func _on_pause_changed(paused: bool) -> void:
 	if paused:
 		for player: AudioStreamPlayer in _sfx_players:
 			player.stop()
+		for player_2d: AudioStreamPlayer2D in _sfx_2d_players:
+			player_2d.stop()
 	_set_music_duck(PAUSE_DUCK_DB if paused else 0.0)
 
 func _set_music_duck(target_db: float) -> void:

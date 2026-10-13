@@ -117,6 +117,14 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 ## Configura la textura y el flip horizontal para las 8 rotaciones posibles
+## Orienta al jugador sin moverlo (por ejemplo, durante la caminata automática al salir de un portal).
+func face_direction(direction: Vector2) -> void:
+	if direction == Vector2.ZERO:
+		return
+	last_direction = direction.normalized()
+	_update_sprite_facing(last_direction)
+	shield_component.set_facing(last_direction)
+
 func _update_sprite_facing(dir: Vector2) -> void:
 	if not sprite or dir == Vector2.ZERO:
 		return
@@ -181,6 +189,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 
 	# Escudo PROXY: un golpe bloqueado no hace daño ni activa i-frames (el knockback ya se aplicó)
 	if shield_component.try_block(damage, attack_direction):
+		AudioManager.play_sfx(&"sfx_player_block_hit")
 		return
 
 	# Si ya está invencible, no resta vida ni reinicia el temporizador de i-frames
@@ -213,6 +222,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 func _on_status_inflicted(effect: StatusEffectData) -> void:
 	if is_dead or is_invulnerable or shield_component.is_blocking:
 		return
+	AudioManager.play_sfx(&"sfx_status_inflicted")
 	PlayerStats.apply_status(effect)
 
 func _on_player_died() -> void:
