@@ -2,7 +2,7 @@
 
 **Fecha:** 29 de Septiembre, 2026
 **Proyecto:** RPG-G (Godot 4.6)
-**Estado:** Diseño aprobado — pendiente de implementación (sin código)
+**Estado:** Implementado (esquema unificado, pausa, slots, mapa). Pendiente: efecto real de los slots, menú de opciones y controles táctiles — ver `Roadmap.md`.
 
 ---
 
