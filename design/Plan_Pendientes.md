@@ -15,7 +15,7 @@ Las tareas van en tandas, de la más simple a la más grande. Cada tanda empieza
 | 1.5 | Backup `.bak` | Antes de sobrescribir un slot, copiar el archivo anterior a `.bak`; al cargar, si el principal está corrupto, usar el `.bak`. | `src/core/save_system.gd` |
 | 1.6 | Limpieza de PRs | Cerrar los borradores #5, #8, #13 y #14 (su contenido ya está en `FirstPlayableTest` o quedó obsoleto). Lo hago solo con tu OK. | GitHub |
 
-## Tanda 2 — Pequeñas, con prueba en Godot (Revisa)
+## Tanda 2 — Pequeñas, con prueba en Godot (Revisa) · ✅ hecha el 13 Oct
 
 | # | Tarea | Qué se hace |
 |---|---|---|

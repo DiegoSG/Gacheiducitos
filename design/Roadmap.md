@@ -16,9 +16,7 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 
 | # | Pri | Tarea | Ref |
 |---|---|---|---|
-| 1 | P1 | **Sonido de golpe bloqueado** (`sfx_player_block_hit`) y mover el sonido del golpe al receptor (hoy `HitboxComponent` suena antes de saber si hubo daño, así que un bloqueo suena como un golpe). | `revisiones/sonidos-revision.md` |
-| 2 | P2 | **Animación de salida de portal:** el personaje aparece en el portal y camina solo hasta el arrival point. | `TODO` en `src/core/game_manager.gd:209` |
-| 3 | P2 | **Menú de opciones** real (hoy es placeholder dentro de los menús unificados de inicio/pausa, que ya funcionan). | `Controles_y_Input.md` |
+| 1 | P2 | **Menú de opciones** real (hoy es placeholder dentro de los menús unificados de inicio/pausa, que ya funcionan). | `Controles_y_Input.md` |
 
 ## 2. Siguiente — Fase 2.6: Combate y Equipamiento
 
@@ -30,7 +28,6 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 | 4 | P2 | **HUD de equipamiento:** iconos de las 2 armas (activa resaltada, munición si es arrojadiza) y del escudo. | `Sistema_Armas_y_Escudo.md` |
 | 5 | P2 | **Diseño definitivo del HUD:** lugar fijo de cada elemento (esquinas, slots, inventario, barra de accesos). Sesión de diseño. | — |
 | 6 | P2 | **Game Over / Victoria** como nivel propio. | Decisión de Diego (5 Oct) |
-| 7 | P2 | Contenido: borrar ítems `test_*` cuando ya no se usen. | — |
 
 ## 3. Fase 3: Expansión de Contenido
 
@@ -61,8 +58,7 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 ### Audio
 - [ ] Variantes (varios archivos) por entrada de `AudioEntry`.
 - [ ] Ajustar `cooldown` y `pitch_random` en el catálogo (pasos, tipeo, persecución, golpes).
-- [ ] Sonido posicional: `AudioManager.play_sfx_at(id, pos)` con pool de `AudioStreamPlayer2D`.
-- [ ] Nuevos IDs: `sfx_enemy_attack_windup`, `amb_level_XX` (ambiente por nivel), `sfx_player_low_health`.
+- [ ] Ambiente por nivel (`amb_level_XX` vía `SceneMusic`).
 
 ### Minijuegos
 - **Excavación:** niveles hechos a mano (pintados en TileMap) además del procedimental · enemigo ciego guiado por sonido y sigilo en túneles · ideas de `misiones/02-excavacion.md` (oxígeno con ventilación, contador de pasos).
@@ -98,6 +94,13 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 - [x] `AudioEntry.pitch_random` y `AudioEntry.cooldown` (0 por defecto; botones en `test_audio.tscn`).
 - [x] Backup `.bak` de cada slot y lectura del backup si la partida está dañada (`test_save_backup.tscn`).
 - [x] PR en borrador #5, #8, #13 y #14 cerrados.
+
+### Tanda 2 del plan (13 Oct)
+- [x] El sonido de un golpe lo elige quien lo recibe; golpe bloqueado con `sfx_player_block_hit`. `sfx_player_attack_hit` y `sfx_enemy_attack` quedan sin uso en el catálogo.
+- [x] Salida de portal: el jugador aparece en el portal y camina hasta su `SpawnPoint` (`test_portal_exit.tscn`).
+- [x] `sfx_enemy_attack_windup` al entrar en rango de ataque y `sfx_player_low_health` al bajar del 25% de vida (sonidos proxy).
+- [x] Sonido posicional `AudioManager.play_sfx_at` en enemigos y dummies.
+- [x] Ítems `test_*` movidos a `src/core/tests/items/` (ya no aparecen en el juego ni en LevelApp).
 
 ### Fase 1: Prototipo
 - [x] Movimiento (grilla 60x60, colisiones, cámara con límites por nivel).
