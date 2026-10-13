@@ -23,7 +23,7 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 | # | Pri | Tarea | Ref |
 |---|---|---|---|
 | 1 | P2 | **Armas arrojadizas:** `ThrowableData`, `ThrowComponent`, `projectile.tscn` y munición desde el inventario (los slots de arma ya las aceptan). | `Sistema_Armas_y_Escudo.md` |
-| 2 | P2 | **HUD de equipamiento:** iconos de las 2 armas (activa resaltada, munición si es arrojadiza) y del escudo. Hoy solo se ve en el inventario. | `Sistema_Armas_y_Escudo.md` |
+| 2 | P2 | **HUD de equipamiento:** falta la munición de las arrojadizas y la posición definitiva. Ya hay un placeholder con el arma activa y el escudo bajo el icono del inventario (`equipment_hud.gd`). | `Sistema_Armas_y_Escudo.md` |
 | 3 | P2 | **Diseño definitivo del HUD:** lugar fijo de cada elemento (esquinas, slots, inventario, barra de accesos). Sesión de diseño; va después de las armas (decisión de Diego, 13 Oct). | — |
 | 4 | P2 | **Armas y escudos reales:** datos y arte de las armas del juego (hoy solo hay la Espada de Madera y los ítems `test_*`). | — |
 | 5 | P2 | **Game Over / Victoria** como nivel propio. | Decisión de Diego (5 Oct) |

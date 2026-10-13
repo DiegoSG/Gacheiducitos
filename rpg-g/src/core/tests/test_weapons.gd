@@ -148,6 +148,13 @@ func _run_checks() -> void:
 	slots.use_slot(1)
 	_check(Inventory.get_equipped_id(Inventory.SLOT_SHIELD) == "iron_shield" and slots.get_slot(1) == "wooden_shield", "los escudos también se intercambian")
 
+	# --- HUD de equipo ---
+	var hud: EquipmentHud = _player.get_node("PlayerHUD/EquipmentHud")
+	_check(hud._weapon_icon.texture == Inventory.get_active_weapon().icon, "el HUD muestra el arma activa")
+	_check(hud._shield_icon.texture == ItemDatabase.get_item("iron_shield").icon, "el HUD muestra el escudo equipado")
+	Inventory.unequip(Inventory.SLOT_SHIELD)
+	_check(hud._shield_icon.texture == null and hud._shield_placeholder.visible, "sin escudo el HUD muestra la casilla vacía")
+
 	# --- Slot rápido: consumible que se agota ---
 	Inventory.add_item("red_potion", 2)
 	slots.assign(2, "red_potion")
