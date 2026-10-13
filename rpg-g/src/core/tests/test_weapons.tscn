@@ -1,76 +1,97 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://i8xw4kej6n0a"]
 
-[ext_resource type="Script" path="res://src/core/tests/test_weapons.gd" id="1_test"]
-[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="2_player"]
-[ext_resource type="PackedScene" path="res://src/overworld/npcs/dummy_npc.tscn" id="3_dummy"]
-[ext_resource type="PackedScene" path="res://src/overworld/enemies/generic_enemy.tscn" id="4_enemy"]
-[ext_resource type="PackedScene" path="res://src/overworld/interactables/pickup_item.tscn" id="5_pickup"]
-[ext_resource type="Resource" path="res://data/items/wooden_sword.tres" id="6_sword"]
+[ext_resource type="Script" uid="uid://bividvtiycppl" path="res://src/core/tests/test_weapons.gd" id="1_test"]
+[ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://de6b37r8ps5c0" path="res://src/overworld/npcs/dummy_npc.tscn" id="3_dummy"]
+[ext_resource type="PackedScene" uid="uid://crllyay0snx0b" path="res://src/overworld/enemies/generic_enemy.tscn" id="4_enemy"]
+[ext_resource type="PackedScene" uid="uid://ckyt3sc6keqdu" path="res://src/overworld/interactables/pickup_item.tscn" id="5_pickup"]
+[ext_resource type="Resource" uid="uid://dj7er1hirrpj1" path="res://data/items/wooden_sword.tres" id="6_sword"]
 [ext_resource type="Resource" path="res://src/core/tests/items/test_heavy_club.tres" id="7_club"]
 [ext_resource type="Resource" path="res://src/core/tests/items/test_wooden_shield.tres" id="8_shield"]
 [ext_resource type="Resource" path="res://src/core/tests/items/test_half_shield.tres" id="9_half_shield"]
 [ext_resource type="Resource" path="res://data/items/iron_sword.tres" id="10_iron_sword"]
 [ext_resource type="Resource" path="res://data/items/wooden_shield.tres" id="11_wooden_shield"]
 [ext_resource type="Resource" path="res://data/items/iron_shield.tres" id="12_iron_shield"]
-[ext_resource type="Resource" path="res://data/items/red_potion.tres" id="13_red_potion"]
+[ext_resource type="Resource" uid="uid://bxps63a4a2vpn" path="res://data/items/red_potion.tres" id="13_red_potion"]
 
-[node name="TestWeapons" type="Node2D"]
+[node name="TestWeapons" type="Node2D" unique_id=212648481]
 script = ExtResource("1_test")
 test_items = Array[Resource]([ExtResource("7_club"), ExtResource("8_shield"), ExtResource("9_half_shield")])
 
-[node name="Player" parent="." instance=ExtResource("2_player")]
+[node name="Player" parent="." unique_id=1246173598 instance=ExtResource("2_player")]
 position = Vector2(600, 600)
 
-[node name="DummyLeft" parent="." instance=ExtResource("3_dummy")]
+[node name="DummyLeft" parent="." unique_id=306640628 instance=ExtResource("3_dummy")]
 position = Vector2(400, 600)
 
-[node name="DummyUp" parent="." instance=ExtResource("3_dummy")]
+[node name="DummyUp" parent="." unique_id=1914455979 instance=ExtResource("3_dummy")]
 position = Vector2(600, 420)
 
-[node name="GenericEnemy" parent="." instance=ExtResource("4_enemy")]
-position = Vector2(1300, 600)
+[node name="GenericEnemy2" parent="." unique_id=1981586223 instance=ExtResource("4_enemy")]
+position = Vector2(1310, 419)
 
-[node name="PickupSword" parent="." instance=ExtResource("5_pickup")]
+[node name="GenericEnemy3" parent="." unique_id=1825573677 instance=ExtResource("4_enemy")]
+position = Vector2(1361, 729)
+
+[node name="GenericEnemy4" parent="." unique_id=1167352645 instance=ExtResource("4_enemy")]
+position = Vector2(1527, 404)
+
+[node name="GenericEnemy5" parent="." unique_id=2083531345 instance=ExtResource("4_enemy")]
+position = Vector2(1476, 914)
+
+[node name="GenericEnemy6" parent="." unique_id=136387423 instance=ExtResource("4_enemy")]
+position = Vector2(1793, 256)
+
+[node name="GenericEnemy7" parent="." unique_id=1179053969 instance=ExtResource("4_enemy")]
+position = Vector2(1776, 673)
+
+[node name="GenericEnemy8" parent="." unique_id=596766779 instance=ExtResource("4_enemy")]
+position = Vector2(1722, 983)
+
+[node name="GenericEnemy" parent="." unique_id=803196660 instance=ExtResource("4_enemy")]
+position = Vector2(1585, 730)
+
+[node name="PickupSword" parent="." unique_id=1464652672 instance=ExtResource("5_pickup")]
 position = Vector2(500, 780)
 item_data = ExtResource("6_sword")
 
-[node name="PickupClub" parent="." instance=ExtResource("5_pickup")]
+[node name="PickupClub" parent="." unique_id=974565445 instance=ExtResource("5_pickup")]
 position = Vector2(600, 780)
 item_data = ExtResource("7_club")
 
-[node name="PickupShield" parent="." instance=ExtResource("5_pickup")]
+[node name="PickupShield" parent="." unique_id=1319412843 instance=ExtResource("5_pickup")]
 position = Vector2(700, 780)
 item_data = ExtResource("8_shield")
 
-[node name="PickupHalfShield" parent="." instance=ExtResource("5_pickup")]
+[node name="PickupHalfShield" parent="." unique_id=1773791103 instance=ExtResource("5_pickup")]
 position = Vector2(800, 780)
 item_data = ExtResource("9_half_shield")
 
-[node name="PickupIronSword" parent="." instance=ExtResource("5_pickup")]
+[node name="PickupIronSword" parent="." unique_id=484089601 instance=ExtResource("5_pickup")]
 position = Vector2(500, 880)
 item_data = ExtResource("10_iron_sword")
 
-[node name="PickupWoodenShield" parent="." instance=ExtResource("5_pickup")]
+[node name="PickupWoodenShield" parent="." unique_id=1676225485 instance=ExtResource("5_pickup")]
 position = Vector2(600, 880)
 item_data = ExtResource("11_wooden_shield")
 
-[node name="PickupIronShield" parent="." instance=ExtResource("5_pickup")]
+[node name="PickupIronShield" parent="." unique_id=857599909 instance=ExtResource("5_pickup")]
 position = Vector2(700, 880)
 item_data = ExtResource("12_iron_shield")
 
-[node name="PickupRedPotion" parent="." instance=ExtResource("5_pickup")]
+[node name="PickupRedPotion" parent="." unique_id=224672363 instance=ExtResource("5_pickup")]
 position = Vector2(800, 880)
 item_data = ExtResource("13_red_potion")
 custom_amount = 2
 
-[node name="ResultLabel" type="Label" parent="."]
+[node name="ResultLabel" type="Label" parent="." unique_id=1618935280]
 unique_name_in_owner = true
 offset_left = 40.0
 offset_top = 20.0
 offset_right = 900.0
 offset_bottom = 50.0
 
-[node name="Instructions" type="Label" parent="."]
+[node name="Instructions" type="Label" parent="." unique_id=1498336367]
 offset_left = 40.0
 offset_top = 60.0
 offset_right = 1400.0
