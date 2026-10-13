@@ -25,7 +25,9 @@ Las tareas van en tandas, de la más simple a la más grande. Cada tanda empieza
 | 2.4 | Sonido posicional | `AudioManager.play_sfx_at(id, pos)` con pool de `AudioStreamPlayer2D`; usarlo en enemigos y objetos del mundo. |
 | 2.5 | Borrar ítems `test_*` | Solo si `test_status_effects.tscn` deja de usarlos o se mueven a una carpeta de tests. |
 
-## Tanda 3 — Necesitan una decisión tuya (Diseño)
+## Tanda 3 — Necesitan una decisión tuya (Diseño) · ✅ decidida el 13 Oct
+
+Decisiones: 3.1 volumen y pantalla completa · 3.2 el HUD se diseña después de las armas · 3.3 sonidos provisionales · 3.4 no se agrega.
 
 | # | Tarea | Qué falta decidir |
 |---|---|---|
@@ -36,7 +38,7 @@ Las tareas van en tandas, de la más simple a la más grande. Cada tanda empieza
 
 ## Tanda 4 — Fase 2.6, combate (grandes, una propuesta cada una)
 
-Orden por dependencias: **Equipamiento** (2 slots de arma + escudo, `Sistema_Armas_y_Escudo.md`) → **Escudo completo** (`ShieldData`, ángulo, porcentaje) → **Efecto real de los 4 slots** → **HUD de equipamiento** (después de 3.2) → **Cambio rápido de armas y hotbar**.
+Orden por dependencias: ~~**Equipamiento**~~ → ~~**Escudo completo**~~ → ~~**Efecto real de los 4 slots**~~ (✅ 13 Oct, `test_weapons.tscn`) → **Armas arrojadizas** → **HUD de equipamiento** (después de 3.2) → **Cambio rápido de armas y hotbar**.
 
 ## Tanda 5 — Contenido y más adelante
 

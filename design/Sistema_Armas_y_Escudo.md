@@ -2,9 +2,9 @@
 
 **Fecha:** 29 de Septiembre, 2026
 **Proyecto:** RPG-G (Godot 4.6)
-**Estado:** Diseño aprobado — implementado solo el escudo proxy; equipamiento y armas pendientes (Fase 2.6 en `Roadmap.md`).
-**Avance:** Escudo PROXY implementado (`src/overworld/player/components/shield_component.gd`, prueba `src/overworld/player/tests/test_shield.tscn`): bloqueo total en 360° (daño, knockback y estados), sin movimiento mientras se bloquea, arco placeholder. Pendiente: `ShieldData`, `coverage_angle`, `block_percent` y requerir escudo equipado.
-
+**Estado:** Diseño aprobado — implementados equipamiento (2 armas + escudo), `WeaponData`, `ShieldData` y sus componentes (13 Oct). Pendiente: armas arrojadizas (`ThrowableData`, `ThrowComponent`, proyectil) y HUD de equipamiento.
+**Prueba:** `src/core/tests/test_weapons.tscn` (comprobaciones automáticas al abrirla y pickups para probar a mano).
+**Notas de implementación:** `try_block` se separó en `covers_hit(attack_direction)` y `absorb(damage)`; la UI del inventario muestra el equipo como filas `[Arma 1 / Arma 2 / Escudo]` (Enter equipa o desequipa) hasta que exista el diseño del HUD. `weapon_prev` / `weapon_next`: Q / R, rueda del ratón y RB (LB ya es el escudo).
 ---
 
 ## 1. Visión General

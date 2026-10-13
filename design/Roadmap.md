@@ -16,18 +16,17 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 
 | # | Pri | Tarea | Ref |
 |---|---|---|---|
-| 1 | P2 | **Menú de opciones** real (hoy es placeholder dentro de los menús unificados de inicio/pausa, que ya funcionan). | `Controles_y_Input.md` |
+| 1 | P2 | **Menú de opciones** real (hoy es placeholder dentro de los menús unificados de inicio/pausa, que ya funcionan): volumen y pantalla completa (decisión de Diego, 13 Oct). | `Controles_y_Input.md` |
 
 ## 2. Siguiente — Fase 2.6: Combate y Equipamiento
 
 | # | Pri | Tarea | Ref |
 |---|---|---|---|
-| 1 | P2 | **Equipamiento:** 2 slots de arma (cuerpo a cuerpo o arrojadiza, una activa; atacar con arrojadiza = lanzar) + escudo, asignables desde el inventario. Las armas no se mejoran, solo se cambian. | `Sistema_Armas_y_Escudo.md` |
-| 2 | P2 | **Escudo completo:** `ShieldData`, `coverage_angle`, `block_percent` y requerir escudo equipado (hoy es un proxy de 360°). | `TODO(escudo)` en `shield_component.gd:55` |
-| 3 | P2 | **Efecto real de los 4 slots rápidos** (cambiar arma, cambiar escudo, consumir poción). Entrada, HUD y asignación desde el inventario ya están. | `Controles_y_Input.md` |
-| 4 | P2 | **HUD de equipamiento:** iconos de las 2 armas (activa resaltada, munición si es arrojadiza) y del escudo. | `Sistema_Armas_y_Escudo.md` |
-| 5 | P2 | **Diseño definitivo del HUD:** lugar fijo de cada elemento (esquinas, slots, inventario, barra de accesos). Sesión de diseño. | — |
-| 6 | P2 | **Game Over / Victoria** como nivel propio. | Decisión de Diego (5 Oct) |
+| 1 | P2 | **Armas arrojadizas:** `ThrowableData`, `ThrowComponent`, `projectile.tscn` y munición desde el inventario (los slots de arma ya las aceptan). | `Sistema_Armas_y_Escudo.md` |
+| 2 | P2 | **HUD de equipamiento:** iconos de las 2 armas (activa resaltada, munición si es arrojadiza) y del escudo. Hoy solo se ve en el inventario. | `Sistema_Armas_y_Escudo.md` |
+| 3 | P2 | **Diseño definitivo del HUD:** lugar fijo de cada elemento (esquinas, slots, inventario, barra de accesos). Sesión de diseño; va después de las armas (decisión de Diego, 13 Oct). | — |
+| 4 | P2 | **Armas y escudos reales:** datos y arte de las armas del juego (hoy solo hay la Espada de Madera y los ítems `test_*`). | — |
+| 5 | P2 | **Game Over / Victoria** como nivel propio. | Decisión de Diego (5 Oct) |
 
 ## 3. Fase 3: Expansión de Contenido
 
@@ -53,12 +52,11 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 ### Controles e input
 - [ ] Cambio rápido de armas sin abrir el inventario.
 - [ ] Hotbar de ítems (consumibles o llaves en el Overworld).
-- [ ] Runner: evaluar desplazamiento lateral con D-Pad izquierda/derecha.
 
 ### Audio
 - [ ] Variantes (varios archivos) por entrada de `AudioEntry`.
 - [ ] Ajustar `cooldown` y `pitch_random` en el catálogo (pasos, tipeo, persecución, golpes).
-- [ ] Ambiente por nivel (`amb_level_XX` vía `SceneMusic`).
+- [ ] Ambiente por nivel (`amb_level_XX` vía `SceneMusic`), con sonidos provisionales (decisión de Diego, 13 Oct).
 
 ### Minijuegos
 - **Excavación:** niveles hechos a mano (pintados en TileMap) además del procedimental · enemigo ciego guiado por sonido y sigilo en túneles · ideas de `misiones/02-excavacion.md` (oxígeno con ventilación, contador de pasos).
@@ -101,6 +99,15 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 - [x] `sfx_enemy_attack_windup` al entrar en rango de ataque y `sfx_player_low_health` al bajar del 25% de vida (sonidos proxy).
 - [x] Sonido posicional `AudioManager.play_sfx_at` en enemigos y dummies.
 - [x] Ítems `test_*` movidos a `src/core/tests/items/` (ya no aparecen en el juego ni en LevelApp).
+
+### Tanda 4 del plan: Equipamiento y Escudo (13 Oct)
+- [x] Equipamiento: 2 slots de arma (una activa, se alterna con `weapon_prev` / `weapon_next`) y 1 de escudo, guardados en la partida (`Inventory.equipped`). Se equipa desde el inventario o un slot rápido.
+- [x] `WeaponData` (daño, cooldown, alcance, knockback, visual y estado) y `WeaponComponent`; sin arma, golpe base.
+- [x] Escudo completo: `ShieldData` con `coverage_angle`, `block_percent`, velocidad al bloquear y estados que detiene; sin escudo no se bloquea.
+- [x] Variables `equip.weapon_1`, `equip.weapon_2`, `equip.shield` y `equip.active`.
+- [x] Los golpes con estado (veneno) vuelven a aplicarlo al jugador: antes los i-frames del mismo golpe lo anulaban.
+- [x] Prueba `src/core/tests/test_weapons.tscn` (reemplaza a `test_shield.tscn`).
+- [x] Tanda 3 decidida: opciones con pantalla completa, HUD después de las armas, ambiente provisional y Runner sin D-Pad lateral.
 
 ### Fase 1: Prototipo
 - [x] Movimiento (grilla 60x60, colisiones, cámara con límites por nivel).

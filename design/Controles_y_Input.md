@@ -2,7 +2,7 @@
 
 **Fecha:** 29 de Septiembre, 2026
 **Proyecto:** RPG-G (Godot 4.6)
-**Estado:** Implementado (esquema unificado, pausa, slots, mapa). Pendiente: efecto real de los slots, menú de opciones y controles táctiles — ver `Roadmap.md`.
+**Estado:** Implementado (esquema unificado, pausa, slots, mapa). Pendiente: menú de opciones y controles táctiles (los slots ya equipan armas y escudos y usan consumibles) — ver `Roadmap.md`.
 
 ---
 
@@ -26,7 +26,7 @@
 | `interact` | E | A | ✕ |
 | `attack` | J / Clic izquierdo | X | ▢ |
 | `shield` (mantener) | K / Clic derecho | LT | L2 |
-| `weapon_prev` / `weapon_next` (alternar arma activa) | Q / R · Rueda del ratón | LB / RB | L1 / R1 |
+| `weapon_prev` / `weapon_next` (alternar arma activa) | Q / R · Rueda del ratón | RB (LB es el escudo) | R1 |
 | `inventory` | I / Tab | Y | △ |
 | `pause` | Esc | Start | Options |
 | `jump` (minijuegos) | Espacio | A | ✕ |
