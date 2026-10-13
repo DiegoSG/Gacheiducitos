@@ -2,6 +2,8 @@
 
 Este documento contiene la lista de funcionalidades y los puntos de control (checks) que deben cumplirse antes de dar una tarea por terminada.
 
+> Las casillas sin marcar de este archivo son históricas. La lista viva de pendientes es `design/Roadmap.md`.
+
 ## 🟢 Core Engine & Overworld (Completado/En proceso)
 - [x] Movimiento 8 direcciones (Referencia: `player.gd`)
 - [x] Cámara con límites por nivel y sincronización dinámica (Referencia: `bounded_camera.gd`)
@@ -262,21 +264,5 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 
 ---
 
-## 📌 Tareas Pendientes: UI/HUD y Vertical Slice
-- [ ] **Diseño y Posicionamiento Definitivo del HUD:**
-  - [ ] Asignar lugares definitivos a todos los elementos del HUD (esquinas, slots, área dedicada del inventario y barra de accesos).
-  - [ ] Menú / Barra de acceso rápido (Hotbar).
-- [ ] **Minijuegos y Overworld:**
-  - [ ] Temas visuales para Trampolín, Smasher y Catcher.
-  - [ ] Editor manual de niveles y enemigos con sigilo en Excavación.
-  - [ ] Animación de salida de portal.
-  - [ ] Construcción de los 2 niveles interconectados para Vertical Slice.
-  - [ ] Plantilla de nivel nueva.
-- [ ] **Combate y Controles (siguiente):**
-  - [ ] Equipamiento: 2 slots de arma (una activa; atacar con arrojadiza = lanzar) + escudo, asignados desde el inventario (`Sistema_Armas_y_Escudo.md`). Las armas no se mejoran, solo se cambian.
-  - [ ] Mapa de controles estándar y joystick (`Controles_y_Input.md`).
-  - [ ] Más adelante: cambio rápido de armas, hotbar de ítems, menú de remapeo.
-- [ ] **Flujo de juego (después):** menú principal, menú de pausa, Game Over.
-- [x] **Sistema de audio:** `AudioManager`, catálogo, `SceneMusic`, `PlaySoundAction`, volumen en Opciones (`design/Sistema_Audio.md`). Falta asignar los archivos de audio.
-- [ ] **Contenido del usuario:** efectos del ítem Antídoto; borrar ítems `test_*` cuando no se necesiten.
-
+## 📌 Tareas Pendientes
+Los pendientes se movieron a `design/Roadmap.md` (lista única, 13 Oct 2026). Este archivo queda como historial de checkpoints y criterios de aceptación.
