@@ -108,6 +108,7 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 - [x] Los golpes con estado (veneno) vuelven a aplicarlo al jugador: antes los i-frames del mismo golpe lo anulaban.
 - [x] Prueba `src/core/tests/test_weapons.tscn` (reemplaza a `test_shield.tscn`).
 - [x] Slots rápidos: un arma o escudo se intercambia con lo equipado (lo que llevabas queda en el slot); un consumible agotado deja el slot vacío (pedido de Diego, 13 Oct).
+- [x] Partida nueva: el jugador empieza con el arma básica (`Inventory.STARTING_WEAPON_ID`, hoy la Espada de Madera) equipada y sin escudo; los saves sin equipo también la reciben.
 - [x] Ítems placeholder para probar: Espada de Hierro, Escudo de Madera y Escudo de Hierro (iconos provisionales).
 - [x] Tanda 3 decidida: opciones con pantalla completa, HUD después de las armas, ambiente provisional y Runner sin D-Pad lateral.
 

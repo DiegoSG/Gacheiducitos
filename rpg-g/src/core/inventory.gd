@@ -14,13 +14,16 @@ const SLOT_WEAPON_1: String = "weapon_1"
 const SLOT_WEAPON_2: String = "weapon_2"
 const SLOT_SHIELD: String = "shield"
 const WEAPON_SLOTS: Array[String] = [SLOT_WEAPON_1, SLOT_WEAPON_2]
+## Arma básica con la que empieza una partida nueva, equipada en Arma 1 (se puede cambiar como cualquier otra).
+## El escudo empieza vacío: sin escudo no se puede bloquear.
+const STARTING_WEAPON_ID: String = "wooden_sword"
 
 # Dictionary to store items: {"item_id": amount}
 var items: Dictionary = {}
 
 ## Slots de equipo: {slot: item_id}. Un arma cuerpo a cuerpo o un escudo equipado sale de `items`
 ## y vuelve al desequiparlo; una arrojadiza se queda en `items` (su cantidad es la munición).
-var equipped: Dictionary = {SLOT_WEAPON_1: "", SLOT_WEAPON_2: "", SLOT_SHIELD: ""}
+var equipped: Dictionary = {SLOT_WEAPON_1: STARTING_WEAPON_ID, SLOT_WEAPON_2: "", SLOT_SHIELD: ""}
 var active_weapon: String = SLOT_WEAPON_1
 
 func add_item(item_id: String, amount: int = 1) -> void:
@@ -204,6 +207,12 @@ func get_owned_count(item_id: String) -> int:
 		count += 1
 	return count
 
+## Equipo inicial para un save sin equipo. Si el inventario ya tenía el arma básica, la usa en vez de duplicarla.
+func _starting_equipment() -> Dictionary:
+	if items.has(STARTING_WEAPON_ID):
+		_change_count(STARTING_WEAPON_ID, -1)
+	return {SLOT_WEAPON_1: STARTING_WEAPON_ID}
+
 func _leaves_inventory(data: ItemData) -> bool:
 	return data == null or data.equipment == null or data.equipment.kind != EquipmentData.Kind.THROWABLE
 
@@ -225,12 +234,13 @@ func create_snapshot() -> Dictionary:
 	}
 
 ## Acepta el formato nuevo y el antiguo (un diccionario plano {item_id: cantidad}, sin equipo).
+## Un snapshot vacío o antiguo arranca con el arma básica equipada, como una partida nueva.
 func restore_snapshot(snapshot: Dictionary) -> void:
 	var is_new_format: bool = snapshot.get("items") is Dictionary and snapshot.has("equipped")
 	items = (snapshot["items"] as Dictionary).duplicate(true) if is_new_format else snapshot.duplicate(true)
 	# Migración de saves antiguos: el oro se guardaba dentro de items; ahora vive solo en PlayerStats
 	items.erase(GOLD_ITEM_ID)
-	var saved_equipped: Dictionary = snapshot.get("equipped", {}) if is_new_format else {}
+	var saved_equipped: Dictionary = snapshot.get("equipped", {}) if is_new_format else _starting_equipment()
 	for slot: String in equipped:
 		var saved_id: String = str(saved_equipped.get(slot, ""))
 		if not saved_id.is_empty() and not slot_accepts(slot, ItemDatabase.get_item(saved_id)):

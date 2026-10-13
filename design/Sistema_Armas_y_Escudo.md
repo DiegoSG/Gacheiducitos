@@ -23,6 +23,7 @@ Reglas:
 - El equipamiento se asigna **desde el inventario**. Lo que no está equipado permanece en el inventario como un ítem más.
 - Las armas **no se mejoran**: solo se cambian por otras.
 - Armas y escudos son **ítems** (`ItemData`) y se obtienen como cualquier ítem (pickup, cofre, recompensa, `ItemAction`).
+- Una partida nueva empieza con el **arma básica** equipada en Arma 1 (`Inventory.STARTING_WEAPON_ID`, hoy `wooden_sword`) y **sin escudo**. El arma básica es un ítem más: se cambia y vuelve al inventario como cualquier otra.
 - Cada slot puede estar vacío. Si el arma activa está vacía, el ataque es el golpe base con `PlayerStats.get_strength()`. Sin escudo no se puede bloquear.
 
 ## 2. Datos (Custom Resources, editables en el Inspector)

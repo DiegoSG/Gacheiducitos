@@ -25,11 +25,20 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	await _run_checks()
 	_reset_state()
+	# Para la prueba a mano: como una partida nueva (arma básica equipada, sin escudo)
+	Inventory.restore_snapshot({})
 	var summary: String = "PASS: equipamiento y escudo" if _failures == 0 else "FAIL: %d comprobaciones fallaron" % _failures
 	print(summary)
 	_result_label.text = summary
 
 func _run_checks() -> void:
+	# --- Partida nueva: arma básica equipada, sin escudo ---
+	Inventory.restore_snapshot({})
+	_check(Inventory.get_equipped_id(Inventory.SLOT_WEAPON_1) == Inventory.STARTING_WEAPON_ID, "una partida nueva empieza con el arma básica equipada")
+	_check(Inventory.get_equipped_id(Inventory.SLOT_SHIELD) == "", "una partida nueva empieza sin escudo")
+	_check(Inventory.get_item_count(Inventory.STARTING_WEAPON_ID) == 0, "el arma básica equipada no aparece en la lista")
+	Inventory.restore_snapshot({SWORD_ID: 1, CLUB_ID: 1})
+	_check(Inventory.get_owned_count(SWORD_ID) == 1, "un save antiguo con la espada no la duplica al equiparla")
 	_reset_state()
 	var weapon: WeaponComponent = _player.get_node("WeaponComponent")
 	var shield: ShieldComponent = _player.get_node("ShieldComponent")
@@ -64,10 +73,8 @@ func _run_checks() -> void:
 	_check(Inventory.equip(SHIELD_ID, Inventory.SLOT_SHIELD), "equipa el escudo")
 	_check(GameVariables.get_var("equip.shield") == SHIELD_ID, "equip.shield refleja el escudo")
 	var snapshot: Dictionary = Inventory.create_snapshot()
-	Inventory.restore_snapshot({})
-	_check(Inventory.get_equipped_id(Inventory.SLOT_SHIELD) == "", "un save sin equipo deja los slots vacíos")
 	Inventory.restore_snapshot({CLUB_ID: 2})
-	_check(Inventory.get_item_count(CLUB_ID) == 2, "lee el formato antiguo de inventario")
+	_check(Inventory.get_item_count(CLUB_ID) == 2 and Inventory.get_equipped_id(Inventory.SLOT_SHIELD) == "", "lee el formato antiguo de inventario")
 	Inventory.restore_snapshot(JSON.parse_string(JSON.stringify(snapshot)))
 	_check(Inventory.get_equipped_id(Inventory.SLOT_WEAPON_1) == SWORD_ID and Inventory.get_equipped_id(Inventory.SLOT_SHIELD) == SHIELD_ID, "restaura el equipo tras pasar por JSON")
 	_check(Inventory.active_weapon == Inventory.SLOT_WEAPON_2, "restaura el arma activa")
@@ -165,9 +172,10 @@ func _run_checks() -> void:
 	for i: int in QuickSlots.SLOT_COUNT:
 		slots.clear_slot(i)
 
+## Inventario y equipo vacíos (sin el arma básica), para que cada bloque empiece igual.
 func _reset_state() -> void:
 	Input.action_release("block")
-	Inventory.restore_snapshot({})
+	Inventory.restore_snapshot({"items": {}, "equipped": {}})
 	PlayerStats.cure_all_statuses()
 	PlayerStats.full_heal()
 	if _player:
