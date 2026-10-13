@@ -6,6 +6,7 @@ extends Node
 ##   pausado (por ejemplo desde un diálogo), suenan como efecto de interfaz.
 ## - Efectos de interfaz: play_ui. Suenan también con el juego pausado (menús, inventario, diálogos).
 ## Un identificador sin sonido asignado no reproduce nada y avisa una sola vez por consola.
+## Cada entrada puede variar el tono (pitch_random) y limitar repeticiones (cooldown).
 ## El volumen de los buses Music y SFX se guarda en user://settings.cfg.
 
 const CATALOG_PATH: String = "res://data/audio/audio_catalog.tres"
@@ -32,6 +33,8 @@ var _duck_tween: Tween = null
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _ui_players: Array[AudioStreamPlayer] = []
 var _warned_ids: Dictionary[StringName, bool] = {}
+## Último instante (ms) en que sonó cada identificador con cooldown.
+var _last_played_ms: Dictionary[StringName, int] = {}
 var _was_paused: bool = false
 
 
@@ -155,9 +158,16 @@ func _play_from_pool(id: StringName, pool: Array[AudioStreamPlayer]) -> void:
 	var entry: AudioEntry = _get_playable_entry(id)
 	if entry == null:
 		return
+	if entry.cooldown > 0.0:
+		var now_ms: int = Time.get_ticks_msec()
+		var last_ms: int = _last_played_ms.get(id, -1000000)
+		if now_ms - last_ms < int(entry.cooldown * 1000.0):
+			return
+		_last_played_ms[id] = now_ms
 	var player: AudioStreamPlayer = _get_free_player(pool)
 	player.stream = entry.stream
 	player.volume_db = entry.volume_db
+	player.pitch_scale = 1.0 + randf_range(-entry.pitch_random, entry.pitch_random)
 	player.play()
 
 ## Devuelve un reproductor libre; si todos están ocupados, reutiliza el primero.
