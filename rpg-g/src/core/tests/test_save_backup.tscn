@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/core/tests/test_save_backup.gd" id="1_test"]
+
+[node name="TestSaveBackup" type="Node"]
+script = ExtResource("1_test")
+
+[node name="ResultLabel" type="Label" parent="."]
+unique_name_in_owner = true
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 640.0
+offset_bottom = 80.0
