@@ -2,6 +2,11 @@
 
 [ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://ewc4cs2gbaqd" path="res://assets/items/icons/red_potion.png" id="2_icon"]
+[ext_resource type="Script" uid="uid://des3f5n5boxxj" path="res://data/resource_types/item_effects/item_effect.gd" id="3_effect"]
+[ext_resource type="Script" uid="uid://d16uy3sjibu42" path="res://data/resource_types/item_effects/cure_status_effect.gd" id="4_cure"]
+
+[sub_resource type="Resource" id="Resource_cure"]
+script = ExtResource("4_cure")
 
 [resource]
 script = ExtResource("1_script")
@@ -10,3 +15,5 @@ name = "Antídoto"
 value = 30
 icon = ExtResource("2_icon")
 description = "Cura el veneno y otros estados alterados."
+consumable = true
+effects = Array[ExtResource("3_effect")]([SubResource("Resource_cure")])
