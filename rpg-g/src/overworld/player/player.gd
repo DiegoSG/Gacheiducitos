@@ -194,7 +194,6 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 		
 	is_invulnerable = true
 	AudioManager.play_sfx(&"sfx_player_hurt")
-	AudioManager.play_sfx(&"sfx_player_invulnerable")
 	
 	# Efecto de I-frames visuales (parpadeo de 1 segundo)
 	var tween: Tween = create_tween()

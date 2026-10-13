@@ -192,7 +192,6 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 		return
 		
 	AudioManager.play_sfx(&"sfx_enemy_hurt")
-	AudioManager.play_sfx(&"sfx_enemy_stunned")
 	is_stunned = true
 	get_tree().create_timer(0.3).timeout.connect(func() -> void: if is_inside_tree(): is_stunned = false)
 	
