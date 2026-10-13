@@ -2,7 +2,6 @@ extends Resource
 class_name ItemData
 
 enum ItemType { CONSUMABLE, EQUIPMENT, QUEST, MATERIAL }
-enum EquipKind { NONE, WEAPON, SHIELD }
 enum ShapeType { CIRCLE, RECTANGLE, CAPSULE }
 enum Rarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY }
 
@@ -48,10 +47,11 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY }
 		emit_changed()
 
 @export_group("Equipo")
-## Subtipo de equipo (solo relevante si type == EQUIPMENT). Decide si puede ir a un slot rápido.
-@export var equip_kind: EquipKind = EquipKind.NONE:
+## Datos de equipo (WeaponData, ShieldData...). Si tiene valor, el ítem se puede equipar
+## en un slot de arma o en el de escudo según su `kind`.
+@export var equipment: EquipmentData:
 	set(new_value):
-		equip_kind = new_value
+		equipment = new_value
 		emit_changed()
 
 @export_group("Consumible")
@@ -102,3 +102,6 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY }
 	set(new_value):
 		collision_offset = new_value
 		emit_changed()
+
+func is_equippable() -> bool:
+	return equipment != null

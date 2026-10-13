@@ -205,7 +205,7 @@ func _on_quick_slot_changed(index: int, item_id: String) -> void:
 		AudioManager.play_ui(&"sfx_hud_slot_changed")
 	_slot_item_ids[index] = item_id
 	var data: ItemData = ItemDatabase.get_item(item_id) if not item_id.is_empty() else null
-	var count: int = Inventory.get_item_count(item_id) if data else 0
+	var count: int = Inventory.get_owned_count(item_id) if data else 0
 	_slot_icons[index].texture = data.icon if data else null
 	_slot_icons[index].modulate.a = 1.0 if count > 0 else 0.35
 	_slot_counts[index].text = ("x%d" % count) if data and data.stackable else ""

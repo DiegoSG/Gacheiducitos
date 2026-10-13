@@ -1,9 +1,9 @@
 extends Node
 class_name QuickSlots
 
-## Componente de slots rápidos (PLACEHOLDER funcional): 4 casillas que guardan un item_id.
-## Consumible: se consume vía Inventory.use_item. Arma/escudo: solo emite equip_requested
-## (el efecto real de equipar se implementará después).
+## Componente de slots rápidos: 4 casillas que guardan un item_id.
+## Consumible: se consume vía Inventory.use_item. Arma/escudo: se equipa (el arma en el slot activo,
+## el escudo en el suyo); si el arma ya está equipada en el otro slot, pasa a ser la activa.
 
 signal slot_changed(index: int, item_id: String)
 signal slot_used(index: int, item_id: String)
@@ -44,9 +44,7 @@ static func can_assign(item_id: String) -> bool:
 		return false
 	if data.type == ItemData.ItemType.CONSUMABLE:
 		return data.consumable
-	if data.type == ItemData.ItemType.EQUIPMENT:
-		return data.equip_kind != ItemData.EquipKind.NONE
-	return false
+	return data.is_equippable()
 
 func get_slot(index: int) -> String:
 	if index < 0 or index >= SLOT_COUNT:
@@ -80,17 +78,22 @@ func clear_slot(index: int) -> void:
 func use_slot(index: int) -> bool:
 	var item_id: String = get_slot(index)
 	var data: ItemData = null if item_id.is_empty() else ItemDatabase.get_item(item_id)
-	if data == null or Inventory.get_item_count(item_id) <= 0:
+	var equipped_slot: String = Inventory.find_equipped_slot(item_id)
+	if data == null or (Inventory.get_item_count(item_id) <= 0 and equipped_slot.is_empty()):
 		AudioManager.play_sfx(&"sfx_slot_empty")
 		return false
-	if data.type == ItemData.ItemType.CONSUMABLE:
+	if data.is_equippable():
+		if not equipped_slot.is_empty() and (equipped_slot == Inventory.SLOT_SHIELD or equipped_slot == Inventory.active_weapon):
+			AudioManager.play_sfx(&"sfx_slot_equip") # ya está puesto: solo feedback
+		elif Inventory.WEAPON_SLOTS.has(equipped_slot):
+			Inventory.set_active_weapon(equipped_slot)
+		elif equipped_slot.is_empty() and not Inventory.equip(item_id, Inventory.default_slot_for(data)):
+			return false
+		equip_requested.emit(index, item_id)
+	elif data.type == ItemData.ItemType.CONSUMABLE:
 		if not Inventory.use_item(item_id):
 			return false
 		AudioManager.play_sfx(&"sfx_slot_use")
-	elif data.type == ItemData.ItemType.EQUIPMENT:
-		AudioManager.play_sfx(&"sfx_slot_equip")
-		print("[QuickSlots] Equipar solicitado (placeholder): slot %d -> %s" % [index + 1, item_id])
-		equip_requested.emit(index, item_id)
 	else:
 		return false
 	slot_used.emit(index, item_id)

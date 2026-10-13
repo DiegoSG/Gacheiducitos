@@ -1,21 +1,27 @@
 extends Node2D
 class_name ShieldComponent
 
-## Escudo PROXY (versión simple, ver design/Sistema_Armas_y_Escudo.md):
-## - Bloquea el 100% del daño, el knockback y los estados alterados mientras está activo.
-## - Cobertura de 360°: aún NO usa coverage_angle ni ShieldData, ni exige un escudo equipado.
+## Escudo (ver design/Sistema_Armas_y_Escudo.md). Los valores salen de un ShieldData:
+## - Sin escudo (`shield_data` vacío) no se puede bloquear.
+## - Solo cubre los golpes que llegan dentro de `coverage_angle`, centrado hacia donde mira el dueño.
+## - Un golpe cubierto pierde `block_percent` de su daño; el knockback se aplica igual.
 ## - El visual es un arco dibujado por código (placeholder, sin asset).
-## No depende del jugador: el dueño decide cuándo bloquear (set_blocking) y hacia dónde mira (set_facing),
-## y consulta try_block() al recibir un golpe.
+## No depende del jugador: el dueño decide cuándo bloquear (set_blocking), hacia dónde mira (set_facing)
+## y consulta covers_hit() / absorb() al recibir un golpe. Sirve igual para enemigos con escudo.
 
 signal block_started
 signal block_ended
 signal hit_blocked(amount_blocked: int)
 
+## Escudo equipado (el jugador lo asigna desde Inventory; un enemigo puede traerlo en la escena).
+@export var shield_data: ShieldData:
+	set(value):
+		shield_data = value
+		if shield_data == null and is_blocking:
+			set_blocking(false)
+		queue_redraw()
 ## Radio del arco placeholder, en px desde el centro del dueño.
 @export var radius: float = 42.0
-## Apertura visual del arco (solo visual; la protección es de 360° en esta versión proxy).
-@export_range(10.0, 360.0) var visual_arc_degrees: float = 120.0
 @export var arc_width: float = 8.0
 @export var color: Color = Color(0.55, 0.75, 1.0, 0.85)
 @export var flash_color: Color = Color(1.0, 1.0, 1.0, 1.0)
@@ -27,11 +33,21 @@ func _ready() -> void:
 	visible = false
 
 func _draw() -> void:
-	# Arco centrado en +X local; la orientación la da `rotation` (set_facing).
-	var half: float = deg_to_rad(visual_arc_degrees) * 0.5
+	if shield_data == null:
+		return
+	# Arco centrado en +X local; la orientación la da `rotation` (set_facing). Muestra la cobertura real.
+	if shield_data.coverage_angle >= 360.0:
+		draw_arc(Vector2.ZERO, radius, 0.0, TAU, 48, color, arc_width, true)
+		return
+	var half: float = deg_to_rad(shield_data.coverage_angle) * 0.5
 	draw_arc(Vector2.ZERO, radius, -half, half, 24, color, arc_width, true)
 
+func has_shield() -> bool:
+	return shield_data != null
+
 func set_blocking(value: bool) -> void:
+	if value and shield_data == null:
+		value = false
 	if is_blocking == value:
 		return
 	is_blocking = value
@@ -51,14 +67,32 @@ func set_facing(direction: Vector2) -> void:
 	if direction != Vector2.ZERO:
 		rotation = direction.angle()
 
-## Devuelve true si el golpe queda bloqueado. PROXY: bloquea desde cualquier dirección.
-## TODO(escudo): comparar attack_direction con la dirección del dueño según coverage_angle de ShieldData.
-func try_block(damage: int, _attack_direction: Vector2) -> bool:
-	if not is_blocking:
+## Multiplicador de velocidad del dueño mientras bloquea (1 si no bloquea).
+func get_speed_multiplier() -> float:
+	return shield_data.move_speed_multiplier if is_blocking and shield_data != null else 1.0
+
+## true si está bloqueando y el golpe llega dentro del ángulo cubierto.
+## `attack_direction` va del atacante hacia el dueño (como lo emite HurtboxComponent).
+func covers_hit(attack_direction: Vector2) -> bool:
+	if not is_blocking or shield_data == null:
 		return false
-	hit_blocked.emit(damage)
+	if shield_data.coverage_angle >= 360.0 or attack_direction == Vector2.ZERO:
+		return true
+	var facing: Vector2 = Vector2.RIGHT.rotated(global_rotation)
+	var to_attacker: Vector2 = -attack_direction.normalized()
+	return absf(rad_to_deg(facing.angle_to(to_attacker))) <= shield_data.coverage_angle * 0.5
+
+## Aplica el porcentaje de bloqueo a un golpe cubierto y devuelve el daño que pasa.
+func absorb(damage: int) -> int:
+	var blocked: int = roundi(damage * shield_data.block_percent / 100.0) if shield_data else 0
+	blocked = clampi(blocked, 0, damage)
+	hit_blocked.emit(blocked)
 	_flash()
-	return true
+	return damage - blocked
+
+## true si el escudo detiene ese estado en un golpe que cubrió.
+func blocks_status(status_id: String) -> bool:
+	return shield_data != null and shield_data.blocks_status(status_id)
 
 func _flash() -> void:
 	if _flash_tween and _flash_tween.is_valid():

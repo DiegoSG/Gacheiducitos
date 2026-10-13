@@ -10,6 +10,7 @@
 
 [ext_resource type="Script" path="res://src/overworld/player/components/quick_slots.gd" id="7_quick_slots"]
 [ext_resource type="Script" path="res://src/overworld/player/components/shield_component.gd" id="8_shield"]
+[ext_resource type="Script" path="res://src/overworld/player/components/weapon_component.gd" id="9_weapon"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(24.5, 53.75)
@@ -59,6 +60,11 @@ visible = false
 position = Vector2(0, 60)
 scale = Vector2(0.1, 0.1)
 texture = ExtResource("3_slash")
+
+[node name="WeaponComponent" type="Node" parent="." unique_id=1900000003 node_paths=PackedStringArray("hitbox", "slash_sprite")]
+script = ExtResource("9_weapon")
+hitbox = NodePath("../HitboxComponent")
+slash_sprite = NodePath("../HitboxComponent/SlashSprite")
 
 [node name="HurtboxComponent" parent="." unique_id=1563591684 instance=ExtResource("4_hurtbox")]
 collision_layer = 4

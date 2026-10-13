@@ -9,9 +9,10 @@ var is_dead: bool = false
 @onready var hitbox_component: HitboxComponent = $HitboxComponent
 @onready var hurtbox_component: HurtboxComponent = $HurtboxComponent
 @onready var sprite: Sprite2D = $Sprite2D
-@onready var slash_sprite: Sprite2D = get_node_or_null("HitboxComponent/SlashSprite")
-## Escudo PROXY: bloqueo total en 360° mientras se mantiene "block" (ver shield_component.gd).
+## Escudo equipado: bloquea según su ShieldData mientras se mantiene "block" (ver shield_component.gd).
 @onready var shield_component: ShieldComponent = $ShieldComponent
+## Arma activa: daño, alcance y cooldown del golpe (ver weapon_component.gd).
+@onready var weapon_component: WeaponComponent = $WeaponComponent
 
 # Texturas canónicas para las 8 orientaciones (usando simetría horizontal flip_h)
 const TEX_DOWN = preload("res://assets/sprites/player_down.png")           # Sur (Frente)
@@ -23,6 +24,10 @@ const TEX_UP = preload("res://assets/sprites/player_up.png")               # Nor
 var is_dialogue_active: bool = false
 var is_attacking: bool = false
 var last_direction: Vector2 = Vector2.DOWN
+## Del último golpe recibido: si lo cubrió el escudo y si llegó fuera de los i-frames.
+## Deciden si el estado que trae el mismo golpe (status_inflicted llega justo después) se aplica.
+var _last_hit_shielded: bool = false
+var _last_hit_outside_iframes: bool = false
 
 const STEP_SOUND_INTERVAL: float = 0.3
 var _step_timer: float = 0.0
@@ -30,11 +35,13 @@ var _step_timer: float = 0.0
 func _ready() -> void:
 	add_to_group("player")
 	
-	if slash_sprite:
-		slash_sprite.visible = false
-	
 	_update_sprite_facing(last_direction)
 	shield_component.set_facing(last_direction)
+	
+	# El equipo vive en Inventory; el jugador solo lo pasa a sus componentes
+	Inventory.equipment_changed.connect(_on_equipment_changed)
+	Inventory.active_weapon_changed.connect(_on_active_weapon_changed)
+	_refresh_equipment()
 	
 	if hurtbox_component:
 		hurtbox_component.hit_received.connect(_on_hit_received)
@@ -53,6 +60,10 @@ func _ready() -> void:
 		DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 
 func _exit_tree() -> void:
+	if Inventory.equipment_changed.is_connected(_on_equipment_changed):
+		Inventory.equipment_changed.disconnect(_on_equipment_changed)
+	if Inventory.active_weapon_changed.is_connected(_on_active_weapon_changed):
+		Inventory.active_weapon_changed.disconnect(_on_active_weapon_changed)
 	if DialogueManager.dialogue_started.is_connected(_on_dialogue_started):
 		DialogueManager.dialogue_started.disconnect(_on_dialogue_started)
 	if DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
@@ -97,12 +108,13 @@ func _physics_process(delta: float) -> void:
 		# Actualizar las 8 orientaciones visuales del jugador
 		_update_sprite_facing(direction)
 		shield_component.set_facing(direction)
-		if shield_component.is_blocking:
+		var shield_multiplier: float = shield_component.get_speed_multiplier()
+		if shield_multiplier <= 0.0:
 			# Con el escudo arriba solo se puede girar, no desplazarse
 			velocity = Vector2.ZERO
 			_step_timer = 0.0
 		else:
-			velocity = direction * speed * PlayerStats.get_speed_multiplier()
+			velocity = direction * speed * PlayerStats.get_speed_multiplier() * shield_multiplier
 			_step_timer -= delta
 			if _step_timer <= 0.0 and not is_attacking:
 				_step_timer = STEP_SOUND_INTERVAL
@@ -171,6 +183,7 @@ func _update_sprite_facing(dir: Vector2) -> void:
 func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: float) -> void:
 	if is_dead:
 		return
+	_last_hit_outside_iframes = not is_invulnerable
 	
 	var tree: SceneTree = get_tree()
 	
@@ -187,10 +200,13 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 		else:
 			is_stunned = false
 
-	# Escudo PROXY: un golpe bloqueado no hace daño ni activa i-frames (el knockback ya se aplicó)
-	if shield_component.try_block(damage, attack_direction):
-		AudioManager.play_sfx(&"sfx_player_block_hit")
-		return
+	# Escudo: un golpe cubierto pierde parte del daño; si no queda nada, no activa i-frames (el knockback ya se aplicó)
+	_last_hit_shielded = shield_component.covers_hit(attack_direction)
+	if _last_hit_shielded:
+		damage = shield_component.absorb(damage)
+		if damage <= 0:
+			AudioManager.play_sfx(&"sfx_player_block_hit")
+			return
 
 	# Si ya está invencible, no resta vida ni reinicia el temporizador de i-frames
 	if is_invulnerable:
@@ -218,9 +234,12 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	else:
 		is_invulnerable = false
 
-## Un golpe inflige un estado alterado: se ignora si esta muerto, invulnerable o bloqueando (igual que el dano).
+## Un golpe inflige un estado alterado: se ignora si esta muerto, si el golpe llegó durante los i-frames
+## o si el escudo lo cubrió y detiene ese estado.
 func _on_status_inflicted(effect: StatusEffectData) -> void:
-	if is_dead or is_invulnerable or shield_component.is_blocking:
+	if is_dead or not _last_hit_outside_iframes:
+		return
+	if _last_hit_shielded and shield_component.blocks_status(effect.id):
 		return
 	AudioManager.play_sfx(&"sfx_status_inflicted")
 	PlayerStats.apply_status(effect)
@@ -236,8 +255,7 @@ func _on_player_died() -> void:
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
 	
-	if hitbox_component:
-		hitbox_component.set_active(false)
+	weapon_component.cancel()
 	if hurtbox_component:
 		hurtbox_component.set_deferred("monitoring", false)
 		hurtbox_component.set_deferred("monitorable", false)
@@ -273,20 +291,10 @@ func _update_blocking() -> void:
 	shield_component.set_blocking(Input.is_action_pressed("block") and not is_attacking)
 
 func attack() -> void:
-	if is_attacking or shield_component.is_blocking:
+	if is_attacking or shield_component.is_blocking or not weapon_component.can_attack():
 		return
 	is_attacking = true
 	AudioManager.play_sfx(&"sfx_player_attack")
-	
-	# Visual sword slash animation & feedback
-	if slash_sprite:
-		slash_sprite.visible = true
-		slash_sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
-		slash_sprite.scale = Vector2(0.06, 0.06)
-		var tween: Tween = create_tween()
-		tween.set_parallel(true)
-		tween.tween_property(slash_sprite, "scale", Vector2(0.13, 0.13), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		tween.tween_property(slash_sprite, "modulate:a", 0.0, 0.15)
 	
 	# Slight lunge of the player sprite
 	if sprite:
@@ -296,19 +304,21 @@ func attack() -> void:
 		lunge_tween.tween_property(sprite, "position", lunge_offset, 0.06)
 		lunge_tween.tween_property(sprite, "position", original_pos, 0.09)
 		
-	# El dano del ataque depende de la fuerza efectiva (base + estados)
-	hitbox_component.damage = PlayerStats.get_strength()
-	# Activar hitbox por un instante
-	hitbox_component.set_active(true)
-	var tree: SceneTree = get_tree()
-	if tree:
-		await tree.create_timer(0.18).timeout
+	# El dano del golpe es la fuerza efectiva (base + estados) + el dano del arma activa
+	await weapon_component.attack(PlayerStats.get_strength())
 	if not is_inside_tree():
 		return
-	hitbox_component.set_active(false)
-	if slash_sprite:
-		slash_sprite.visible = false
 	is_attacking = false
+
+func _on_equipment_changed(_slot: String, _item_id: String) -> void:
+	_refresh_equipment()
+
+func _on_active_weapon_changed(_slot: String) -> void:
+	_refresh_equipment()
+
+func _refresh_equipment() -> void:
+	weapon_component.set_weapon(Inventory.get_active_melee())
+	shield_component.shield_data = Inventory.get_equipped_shield()
 
 # Trasladamos la interacción a _unhandled_input para respetar los CanvasLayer (UI)
 func _unhandled_input(event: InputEvent) -> void:
@@ -331,4 +341,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("attack"):
 		attack()
+		get_viewport().set_input_as_handled()
+
+	if event.is_action_pressed("weapon_prev") or event.is_action_pressed("weapon_next"):
+		# Con dos slots, anterior y siguiente alternan igual
+		Inventory.switch_active_weapon()
 		get_viewport().set_input_as_handled()

@@ -30,3 +30,11 @@ func _load_items_from_dir() -> void:
 # Devuelve un ítem por su ID (null si no existe).
 func get_item(item_id: String) -> ItemData:
 	return _item_cache.get(item_id) as ItemData
+
+## Registra un ítem que no está en ITEMS_DIRECTORY (escenas de prueba). No pisa uno existente.
+func register_item(item: ItemData) -> void:
+	if item == null or item.id.is_empty() or _item_cache.has(item.id):
+		return
+	if not item.resource_path.contains("/tests/"):
+		push_warning("[ItemDatabase] '%s' no está en %s; se registra solo en esta sesión" % [item.id, ITEMS_DIRECTORY])
+	_item_cache[item.id] = item

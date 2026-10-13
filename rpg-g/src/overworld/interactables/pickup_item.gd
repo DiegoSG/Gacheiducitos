@@ -134,6 +134,9 @@ func _on_body_entered(body: Node2D) -> void:
 		# El oro usa el valor del recurso por defecto; el resto de ítems, 1 unidad
 		var default_amount: int = item_data.value if item_data.id == Inventory.GOLD_ITEM_ID else 1
 		var qty: int = custom_amount if custom_amount > 0 else default_amount
+		# Ítems de escenas de prueba (fuera de data/items) se registran al recogerlos
+		if ItemDatabase.get_item(item_data.id) == null:
+			ItemDatabase.register_item(item_data)
 		Inventory.add_item(item_data.id, qty)
 		AudioManager.play_sfx(&"sfx_pickup_gold" if item_data.id == Inventory.GOLD_ITEM_ID else &"sfx_pickup_item")
 		LootFeedbackManager.trigger_toast(item_data, qty)
