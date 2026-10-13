@@ -4,7 +4,7 @@
 **Proyecto:** RPG-G (Godot 4.6)
 **Estado:** Diseño aprobado — implementados equipamiento (2 armas + escudo), `WeaponData`, `ShieldData` y sus componentes (13 Oct). Pendiente: armas arrojadizas (`ThrowableData`, `ThrowComponent`, proyectil) y HUD de equipamiento.
 **Prueba:** `src/core/tests/test_weapons.tscn` (comprobaciones automáticas al abrirla y pickups para probar a mano).
-**Notas de implementación:** `try_block` se separó en `covers_hit(attack_direction)` y `absorb(damage)`; la UI del inventario muestra el equipo como filas `[Arma 1 / Arma 2 / Escudo]` (Enter equipa o desequipa) hasta que exista el diseño del HUD. `weapon_prev` / `weapon_next`: Q / R, rueda del ratón y RB (LB ya es el escudo).
+**Notas de implementación:** `try_block` se separó en `covers_hit(attack_direction)` y `absorb(damage)`; la UI del inventario muestra el equipo como filas `[Arma 1 / Arma 2 / Escudo]` (Enter equipa o desequipa) hasta que exista el diseño del HUD. `weapon_prev` / `weapon_next`: Q / R, rueda del ratón y RB (LB ya es el escudo). Los slots rápidos intercambian: el arma o escudo del slot se equipa y lo que estaba equipado pasa a ese slot.
 ---
 
 ## 1. Visión General

@@ -127,6 +127,37 @@ func _run_checks() -> void:
 	_check(Inventory.get_equipped_id(Inventory.SLOT_SHIELD) == SHIELD_ID, "un escudo en un slot rápido se equipa")
 	slots.clear_slot(0)
 
+	# --- Slot rápido: intercambio con lo equipado ---
+	_reset_state()
+	Inventory.add_item(SWORD_ID)
+	Inventory.add_item("iron_sword")
+	Inventory.equip(SWORD_ID, Inventory.active_weapon)
+	slots.assign(0, "iron_sword")
+	slots.use_slot(0)
+	_check(Inventory.get_equipped_id(Inventory.active_weapon) == "iron_sword", "el slot rápido equipa la espada de hierro")
+	_check(slots.get_slot(0) == SWORD_ID, "la espada que tenías pasa al slot rápido")
+	slots.use_slot(0)
+	_check(Inventory.get_equipped_id(Inventory.active_weapon) == SWORD_ID and slots.get_slot(0) == "iron_sword", "usarlo otra vez las vuelve a intercambiar")
+	Inventory.unequip(Inventory.active_weapon)
+	slots.use_slot(0)
+	_check(Inventory.get_equipped_id(Inventory.active_weapon) == "iron_sword" and slots.get_slot(0) == "", "sin arma equipada el slot queda vacío")
+	Inventory.add_item("wooden_shield")
+	Inventory.add_item("iron_shield")
+	Inventory.equip("wooden_shield", Inventory.SLOT_SHIELD)
+	slots.assign(1, "iron_shield")
+	slots.use_slot(1)
+	_check(Inventory.get_equipped_id(Inventory.SLOT_SHIELD) == "iron_shield" and slots.get_slot(1) == "wooden_shield", "los escudos también se intercambian")
+
+	# --- Slot rápido: consumible que se agota ---
+	Inventory.add_item("red_potion", 2)
+	slots.assign(2, "red_potion")
+	slots.use_slot(2)
+	_check(slots.get_slot(2) == "red_potion" and Inventory.get_item_count("red_potion") == 1, "consume una poción y el slot sigue")
+	slots.use_slot(2)
+	_check(slots.get_slot(2) == "", "al gastar la última poción el slot se vacía")
+	for i: int in QuickSlots.SLOT_COUNT:
+		slots.clear_slot(i)
+
 func _reset_state() -> void:
 	Input.action_release("block")
 	Inventory.restore_snapshot({})

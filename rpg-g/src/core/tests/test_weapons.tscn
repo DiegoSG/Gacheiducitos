@@ -9,6 +9,10 @@
 [ext_resource type="Resource" path="res://src/core/tests/items/test_heavy_club.tres" id="7_club"]
 [ext_resource type="Resource" path="res://src/core/tests/items/test_wooden_shield.tres" id="8_shield"]
 [ext_resource type="Resource" path="res://src/core/tests/items/test_half_shield.tres" id="9_half_shield"]
+[ext_resource type="Resource" path="res://data/items/iron_sword.tres" id="10_iron_sword"]
+[ext_resource type="Resource" path="res://data/items/wooden_shield.tres" id="11_wooden_shield"]
+[ext_resource type="Resource" path="res://data/items/iron_shield.tres" id="12_iron_shield"]
+[ext_resource type="Resource" path="res://data/items/red_potion.tres" id="13_red_potion"]
 
 [node name="TestWeapons" type="Node2D"]
 script = ExtResource("1_test")
@@ -42,6 +46,23 @@ item_data = ExtResource("8_shield")
 position = Vector2(800, 780)
 item_data = ExtResource("9_half_shield")
 
+[node name="PickupIronSword" parent="." instance=ExtResource("5_pickup")]
+position = Vector2(500, 880)
+item_data = ExtResource("10_iron_sword")
+
+[node name="PickupWoodenShield" parent="." instance=ExtResource("5_pickup")]
+position = Vector2(600, 880)
+item_data = ExtResource("11_wooden_shield")
+
+[node name="PickupIronShield" parent="." instance=ExtResource("5_pickup")]
+position = Vector2(700, 880)
+item_data = ExtResource("12_iron_shield")
+
+[node name="PickupRedPotion" parent="." instance=ExtResource("5_pickup")]
+position = Vector2(800, 880)
+item_data = ExtResource("13_red_potion")
+custom_amount = 2
+
 [node name="ResultLabel" type="Label" parent="."]
 unique_name_in_owner = true
 offset_left = 40.0
@@ -57,4 +78,5 @@ offset_bottom = 200.0
 text = "Recoge la espada, el garrote y los dos escudos (abajo). En el inventario (I), Enter o doble clic sobre un arma o escudo lo equipa; sobre una fila [Arma 1 / Arma 2 / Escudo] lo desequipa.
 Q / R / rueda / RB alternan el arma activa (★). Golpea a los muñecos: el garrote pega más fuerte, más ancho y más lento.
 Escudo frontal: mantén L mirando a la araña (derecha); de frente no hace daño, de espaldas sí. Escudo de mitad: cubre todo, deja pasar la mitad y permite moverse lento.
-Sin escudo equipado no se puede bloquear."
+Sin escudo equipado no se puede bloquear.
+Slots rápidos: asigna un arma o escudo con 1-4 en el inventario y púlsalo fuera: se intercambia con lo que llevas. Las pociones se gastan y el slot se vacía al acabarse."

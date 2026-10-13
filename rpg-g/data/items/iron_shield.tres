@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/items/icons/iron_ore.png" id="2_icon"]
+[ext_resource type="Script" path="res://data/resource_types/equipment/shield_data.gd" id="3_shield"]
+
+[sub_resource type="Resource" id="ShieldData_iron_shield"]
+script = ExtResource("3_shield")
+block_percent = 100.0
+coverage_angle = 160.0
+move_speed_multiplier = 0.0
+blocks_statuses = true
+
+[resource]
+script = ExtResource("1_script")
+id = "iron_shield"
+name = "Escudo de Hierro"
+rarity = 1
+value = 280
+icon = ExtResource("2_icon")
+description = "PLACEHOLDER: bloquea el 100% de frente (160°) y los estados, pero no deja moverse. Icono provisional."
+type = 1
+stackable = false
+equipment = SubResource("ShieldData_iron_shield")
