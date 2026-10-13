@@ -30,7 +30,7 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 | 4 | P2 | **HUD de equipamiento:** iconos de las 2 armas (activa resaltada, munición si es arrojadiza) y del escudo. | `Sistema_Armas_y_Escudo.md` |
 | 5 | P2 | **Diseño definitivo del HUD:** lugar fijo de cada elemento (esquinas, slots, inventario, barra de accesos). Sesión de diseño. | — |
 | 6 | P2 | **Game Over / Victoria** como nivel propio. | Decisión de Diego (5 Oct) |
-| 7 | P2 | Contenido: efectos del ítem **Antídoto**; borrar ítems `test_*` cuando ya no se usen. | — |
+| 7 | P2 | Contenido: borrar ítems `test_*` cuando ya no se usen. | — |
 
 ## 3. Fase 3: Expansión de Contenido
 
@@ -59,11 +59,10 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 - [ ] Runner: evaluar desplazamiento lateral con D-Pad izquierda/derecha.
 
 ### Audio
-- [ ] `pitch_random` y variantes por entrada (`AudioEntry`).
-- [ ] Cooldown anti-spam por ID (pasos, tipeo, persecución con varios enemigos).
+- [ ] Variantes (varios archivos) por entrada de `AudioEntry`.
+- [ ] Ajustar `cooldown` y `pitch_random` en el catálogo (pasos, tipeo, persecución, golpes).
 - [ ] Sonido posicional: `AudioManager.play_sfx_at(id, pos)` con pool de `AudioStreamPlayer2D`.
 - [ ] Nuevos IDs: `sfx_enemy_attack_windup`, `amb_level_XX` (ambiente por nivel), `sfx_player_low_health`.
-- [ ] Quitar sonidos dobles del mismo frame (`hurt` + `invulnerable`, `enemy_hurt` + `enemy_stunned`).
 
 ### Minijuegos
 - **Excavación:** niveles hechos a mano (pintados en TileMap) además del procedimental · enemigo ciego guiado por sonido y sigilo en túneles · ideas de `misiones/02-excavacion.md` (oxígeno con ventilación, contador de pasos).
@@ -73,11 +72,9 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 - **Runner:** rutas bifurcadas y plataformas altas · enemigos con regla escudo vs. barricada · fondo que cambia en el recorrido.
 
 ### Guardado y técnico
-- [ ] Backup `.bak` de las partidas guardadas.
 - [ ] Tests headless: los runners de `src/core/tests/` no corren con `--script` (decisión actual: QA manual).
 
 ### Limpieza del repositorio
-- [ ] Cerrar los PR en borrador cuyo contenido ya está en `FirstPlayableTest`: #13 (puertas bloqueadas por enemigos) y #14 (capas de tilemap). Cerrar también #5 (la plantilla ya no hace falta) y #8 (roadmap viejo, reemplazado por este).
 - [ ] Decidir qué hacer con el PR #4 (`JoystickAndControls`, abierto) y mergear `FirstPlayableTest` → `develop` cuando el test esté listo.
 
 ---
@@ -94,6 +91,13 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 - [x] Minijuegos Laberinto y Ritmo: cerrados (no hay código en el repo; quedan fuera del roadmap).
 - [x] DialogueApp: `switch` con otros operadores, señal de `trigger_event` conectada y pendientes de la revisión.
 - [x] Estado actualizado en `Controles_y_Input.md` y `Sistema_Armas_y_Escudo.md`.
+
+### Tanda 1 del plan (13 Oct)
+- [x] Antídoto real con efecto de cura (`CureStatusEffect`, cura todos los estados).
+- [x] Sin sonidos dobles: se quitaron `sfx_player_invulnerable` y `sfx_enemy_stunned` del mismo frame que el daño.
+- [x] `AudioEntry.pitch_random` y `AudioEntry.cooldown` (0 por defecto; botones en `test_audio.tscn`).
+- [x] Backup `.bak` de cada slot y lectura del backup si la partida está dañada (`test_save_backup.tscn`).
+- [x] PR en borrador #5, #8, #13 y #14 cerrados.
 
 ### Fase 1: Prototipo
 - [x] Movimiento (grilla 60x60, colisiones, cámara con límites por nivel).

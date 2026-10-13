@@ -4,7 +4,7 @@
 
 Las tareas van en tandas, de la más simple a la más grande. Cada tanda empieza con una propuesta técnica corta (regla del proyecto) y, una vez aprobada, se implementa, se prueba con su `test_*.tscn` y se commitea. Etiquetas: **Solo** = Claude puede hacerla sin que Diego tenga que decidir ni probar nada a mano; **Revisa** = Diego tiene que probar en Godot o elegir algo; **Diseño** = antes hay que decidir cómo debe ser.
 
-## Tanda 1 — Simples y autónomas (Solo)
+## Tanda 1 — Simples y autónomas (Solo) · ✅ hecha el 13 Oct
 
 | # | Tarea | Qué se hace | Archivos |
 |---|---|---|---|
