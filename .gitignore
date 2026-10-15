@@ -17,3 +17,8 @@ node_modules/
 
 # Claude Code (configuración local por usuario)
 .claude/settings.local.json
+
+# Contenido generado por LevelApp / diálogos de nivel (no versionar)
+rpg-g/src/overworld/dialogues/
+LevelApp/data/levelapp_proyecto.json
+design/Level_Prompts.md

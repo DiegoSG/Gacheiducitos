@@ -1,0 +1,113 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/overworld/components/world_boundary_manager.gd" id="r1_wbm"]
+[ext_resource type="TileSet" path="res://assets/sprites/core_tileset.tres" id="r2_tileset"]
+[ext_resource type="PackedScene" path="res://src/overworld/components/arrival_spawn_point.tscn" id="r3_asp"]
+[ext_resource type="PackedScene" path="res://src/overworld/components/level_portal.tscn" id="r4_portal"]
+[ext_resource type="PackedScene" path="res://src/overworld/enemies/generic_enemy.tscn" id="r5_enemy"]
+[ext_resource type="PackedScene" path="res://src/overworld/npcs/npc_barnaby.tscn" id="r6_npc"]
+[ext_resource type="PackedScene" path="res://src/overworld/interactables/chest.tscn" id="r7_chest"]
+[ext_resource type="PackedScene" path="res://src/overworld/interactables/minigame_interactable.tscn" id="r8_mg"]
+[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="r9_player"]
+[ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="r10_music"]
+
+[node name="Level04" type="Node2D"]
+y_sort_enabled = true
+metadata/levelapp_level = "Level_04"
+
+[node name="WorldBoundaryManager" type="Node2D" parent="."]
+script = ExtResource("r1_wbm")
+width = 3240.0
+height = 1860.0
+
+[node name="Environment" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="GroundLayer" type="TileMapLayer" parent="Environment"]
+z_index = -2
+tile_set = ExtResource("r2_tileset")
+collision_enabled = false
+
+[node name="DetailLayer" type="TileMapLayer" parent="Environment"]
+z_index = -1
+tile_set = ExtResource("r2_tileset")
+collision_enabled = false
+
+[node name="PropsLayer" type="TileMapLayer" parent="Environment"]
+y_sort_enabled = true
+tile_set = ExtResource("r2_tileset")
+
+[node name="OverheadLayer" type="TileMapLayer" parent="Environment"]
+z_index = 10
+tile_set = ExtResource("r2_tileset")
+collision_enabled = false
+
+[node name="SpawnPoints" type="Node2D" parent="."]
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Portals" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="at_M02_win" parent="SpawnPoints" instance=ExtResource("r3_asp")]
+position = Vector2(1650, 1530)
+arrival_id = "at_M02_win"
+
+[node name="P06" parent="Portals" instance=ExtResource("r4_portal")]
+position = Vector2(1650, 30)
+target_level_path = "res://src/overworld/levels/level_03_nuevo.tscn"
+exit_id = "at_P05"
+arrival_id = "at_P06"
+metadata/levelapp_id = "P06"
+
+[node name="SpawnPoint" parent="Portals/P06"]
+position = Vector2(0, 60)
+
+[node name="P07" parent="Portals" instance=ExtResource("r4_portal")]
+position = Vector2(1650, 1830)
+target_level_path = "res://src/overworld/levels/level_06.tscn"
+exit_id = "at_P08"
+arrival_id = "at_P07"
+metadata/levelapp_id = "P07"
+
+[node name="SpawnPoint" parent="Portals/P07"]
+position = Vector2(0, -60)
+
+[node name="P09" parent="Portals" instance=ExtResource("r4_portal")]
+position = Vector2(30, 390)
+target_level_path = "res://src/overworld/levels/level_01_nuevo.tscn"
+exit_id = "at_P10"
+arrival_id = "at_P09"
+metadata/levelapp_id = "P09"
+
+[node name="SpawnPoint" parent="Portals/P09"]
+position = Vector2(60, 0)
+
+[node name="P11" parent="Portals" instance=ExtResource("r4_portal")]
+position = Vector2(30, 1290)
+target_level_path = "res://src/overworld/levels/level_01_nuevo.tscn"
+exit_id = "at_P12"
+arrival_id = "at_P11"
+metadata/levelapp_id = "P11"
+
+[node name="SpawnPoint" parent="Portals/P11"]
+position = Vector2(60, 0)
+
+[node name="E25" parent="Entities" instance=ExtResource("r5_enemy")]
+position = Vector2(2490, 750)
+persistence_id = "level_04_E25"
+metadata/levelapp_enemy_type = ""
+metadata/levelapp_id = "E25"
+
+[node name="E26" parent="Entities" instance=ExtResource("r5_enemy")]
+position = Vector2(750, 810)
+persistence_id = "level_04_E26"
+metadata/levelapp_enemy_type = ""
+metadata/levelapp_id = "E26"
+
+[node name="Player" parent="." instance=ExtResource("r9_player")]
+position = Vector2(1650, 90)
+
+[node name="SceneMusic" type="Node" parent="."]
+script = ExtResource("r10_music")

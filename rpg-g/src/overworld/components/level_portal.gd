@@ -26,6 +26,15 @@ enum Mode {
 		is_active = value
 		_update_visuals()
 
+## Si está marcado, no se puede pasar mientras quede algún enemigo vivo (grupo "enemy") en la escena
+@export var requires_no_enemies: bool = false:
+	set(value):
+		requires_no_enemies = value
+		_update_visuals()
+
+## Texto del globo al intentar pasar con enemigos vivos. Si está vacío se usa el de bloqueo (locked_text).
+@export_multiline var enemies_alive_text: String = ""
+
 @export_group("Cerradura y Llave")
 ## Si la puerta está bloqueada con candado/llave
 @export var is_locked: bool = false:
@@ -104,8 +113,10 @@ var _is_triggered: bool = false
 var _persistence_key: String = ""
 ## Diálogo generado a partir de locked_text (se crea la primera vez que se necesita)
 var _locked_text_resource: Resource = null
-## Zumbido ambiental del portal activo (se crea en runtime solo si hay sonido asignado).
-var _hum_player: AudioStreamPlayer2D = null
+## Diálogo generado a partir de enemies_alive_text
+var _enemies_text_resource: Resource = null
+## Si la última comprobación encontró enemigos vivos (para avisar cuando se despeja la escena)
+var _enemies_blocking: bool = false
 
 ## Palabras/prefijos que Dialogue Manager interpreta como sintaxis al inicio de una línea
 const _DIALOGUE_SYNTAX_PREFIXES: Array[String] = ["- ", "~", "=>", "=<", "#", "%", "if ", "elif ", "else", "do ", "do! ", "set ", "while ", "match ", "when ", "import ", "using "]
@@ -120,29 +131,12 @@ func _ready() -> void:
 		if not body_exited.is_connected(_on_body_exited):
 			body_exited.connect(_on_body_exited)
 		_set_debug_visibility(ArrivalSpawnPoint.debug_visuals_visible)
-		_create_hum_player()
 		_restore_state()
+		if requires_no_enemies:
+			get_tree().node_removed.connect(_on_tree_node_removed)
+			# Diferido: los enemigos se registran en el grupo en su propio _ready
+			call_deferred("_refresh_enemy_block")
 	_update_visuals()
-
-func _create_hum_player() -> void:
-	var entry: AudioEntry = AudioManager.get_playable_entry(&"sfx_portal_hum")
-	if entry == null:
-		return
-	_hum_player = AudioStreamPlayer2D.new()
-	_hum_player.bus = &"SFX"
-	_hum_player.volume_db = entry.volume_db
-	_hum_player.stream = entry.stream
-	add_child(_hum_player)
-
-## El zumbido suena solo mientras es un portal activo y abierto.
-func _update_hum() -> void:
-	if _hum_player == null:
-		return
-	var should_play: bool = mode == Mode.PORTAL and is_active and not is_locked
-	if should_play and not _hum_player.playing:
-		_hum_player.play()
-	elif not should_play and _hum_player.playing:
-		_hum_player.stop()
 
 func _restore_state() -> void:
 	if _persistence_key.is_empty():
@@ -180,14 +174,12 @@ func _update_visuals() -> void:
 		
 	if has_node("DoorSprite"):
 		var door_sprite: Sprite2D = $DoorSprite
-		if not is_active or is_locked:
+		if not is_active or is_locked or _enemies_blocking:
 			door_sprite.texture = locked_texture
 		elif mode == Mode.PORTAL:
 			door_sprite.texture = portal_active_texture
 		else:
 			door_sprite.texture = door_unlocked_texture
-
-	_update_hum()
 
 	if has_node("ExitIdLabel"):
 		$ExitIdLabel.text = exit_id
@@ -224,6 +216,13 @@ func _attempt_traverse() -> void:
 		AudioManager.play_ui(&"sfx_portal_inactive")
 		_show_locked_feedback()
 		return
+
+	if requires_no_enemies:
+		_refresh_enemy_block()
+		if _enemies_blocking:
+			AudioManager.play_ui(&"sfx_door_locked")
+			_show_enemies_feedback()
+			return
 		
 	if is_locked:
 		if key == null or key.id.is_empty() or not Inventory.has_item_amount(key.id, 1):
@@ -258,6 +257,38 @@ func _show_locked_feedback() -> void:
 		if _locked_text_resource == null:
 			_locked_text_resource = DialogueManager.create_resource_from_text(_build_dialogue_from_text(locked_text))
 		DialogueManager.show_dialogue_balloon(_locked_text_resource, "start")
+
+func _show_enemies_feedback() -> void:
+	if enemies_alive_text.strip_edges().is_empty():
+		_show_locked_feedback()
+		return
+	locked.emit()
+	if _enemies_text_resource == null:
+		_enemies_text_resource = DialogueManager.create_resource_from_text(_build_dialogue_from_text(enemies_alive_text))
+	DialogueManager.show_dialogue_balloon(_enemies_text_resource, "start")
+
+## Cuenta los enemigos vivos de la escena (los que ya murieron están en cola de borrado)
+func _count_alive_enemies() -> int:
+	var count: int = 0
+	for enemy: Node in get_tree().get_nodes_in_group("enemy"):
+		if is_instance_valid(enemy) and enemy.is_inside_tree() and not enemy.is_queued_for_deletion():
+			count += 1
+	return count
+
+## Recalcula el bloqueo por enemigos; al despejarse la escena suena el desbloqueo
+func _refresh_enemy_block() -> void:
+	if not is_inside_tree():
+		return
+	var was_blocking: bool = _enemies_blocking
+	_enemies_blocking = requires_no_enemies and _count_alive_enemies() > 0
+	if was_blocking and not _enemies_blocking and is_active and not is_locked:
+		AudioManager.play_sfx(&"sfx_door_unlock")
+	_update_visuals()
+
+func _on_tree_node_removed(node: Node) -> void:
+	# Al salir del árbol el nodo aún figura en el grupo: se comprueba en diferido
+	if node.is_in_group("enemy"):
+		call_deferred("_refresh_enemy_block")
 
 ## Convierte texto plano en un diálogo de un solo título ("start"), escapando la sintaxis
 ## de Dialogue Manager para que el texto se muestre literal (sin personaje ni opciones).
@@ -300,6 +331,11 @@ func _persist_state() -> void:
 	if _persistence_key.is_empty():
 		return
 	WorldStateManager.save_state(_persistence_key, {"is_locked": is_locked, "is_active": is_active})
+
+## El jugador llega a través de este portal: ignora su contacto hasta que salga del área,
+## para que la caminata de salida no lo devuelva al nivel anterior.
+func begin_arrival() -> void:
+	_is_triggered = true
 
 func get_spawn_position() -> Vector2:
 	if has_node("SpawnPoint"):

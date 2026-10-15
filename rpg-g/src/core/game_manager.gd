@@ -7,6 +7,8 @@ signal game_event(event_name: String, event_data: Variant)
 
 const FADER_SCENE: PackedScene = preload("res://src/ui/screen_fader.tscn")
 const DEFAULT_LEVEL_PATH: String = "res://src/overworld/levels/level_01.tscn"
+## Duración (s) de la caminata automática desde el portal hasta su punto de llegada.
+const PORTAL_EXIT_TIME: float = 0.35
 
 var current_scene: Node = null
 var previous_scene_path: String = ""
@@ -181,8 +183,12 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 	_connect_minigame_finished(current_scene)
 	
 	# Posicionar al jugador en el spawn deseado
+	var player: Node2D = null
+	# Destino de la caminata de salida cuando se llega por un portal con SpawnPoint.
+	var exit_walk_target: Vector2 = Vector2.ZERO
+	var has_exit_walk: bool = false
 	if current_scene.has_node("Player"):
-		var player: Node2D = current_scene.get_node("Player") as Node2D
+		player = current_scene.get_node("Player") as Node2D
 		if use_exact:
 			player.global_position = exact_pos
 		elif not spawn_id.is_empty():
@@ -191,7 +197,13 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 			for arrival_node in get_tree().get_nodes_in_group("arrival_points"):
 				if is_instance_valid(arrival_node) and current_scene.is_ancestor_of(arrival_node):
 					if "arrival_id" in arrival_node and str(arrival_node.arrival_id) == str(spawn_id):
-						if arrival_node.has_method("get_spawn_position"):
+						if arrival_node is LevelPortal and arrival_node.global_position.distance_to(arrival_node.get_spawn_position()) > 1.0:
+							# Aparece en el portal y camina hasta el punto de llegada (ver más abajo)
+							arrival_node.begin_arrival()
+							exit_walk_target = arrival_node.get_spawn_position()
+							has_exit_walk = true
+							player.global_position = arrival_node.global_position
+						elif arrival_node.has_method("get_spawn_position"):
 							player.global_position = arrival_node.get_spawn_position()
 						else:
 							player.global_position = arrival_node.global_position
@@ -205,18 +217,30 @@ func change_level(target_level_path: String, spawn_id: String = "", exact_pos: V
 				
 		# Reubicar y reiniciar suavizado de la cámara antes del fade in
 		_snap_scene_cameras(current_scene)
-		player.set_physics_process(true)
-		# TODO: Animación de salida (el personaje aparece en el portal y se desplaza automáticamente hacia el arrival point)
+		if not has_exit_walk:
+			player.set_physics_process(true)
 		
 	# Esperar un fotograma para asentar transformaciones y límites de cámara antes de aclarar pantalla
 	await get_tree().process_frame
 		
 	await fader.fade_in(0.4)
 	fader.queue_free()
+	if has_exit_walk and is_instance_valid(player):
+		await _play_portal_exit(player, exit_walk_target)
 	_is_changing_level = false
 	CheckpointManager.register_level_entry(target_level_path, current_scene, not is_save_load)
 	AudioManager.play_ui(&"sfx_level_loaded")
 	level_changed.emit(target_level_path, spawn_id)
+
+## Mueve al jugador desde el portal hasta su punto de llegada y le devuelve el control.
+func _play_portal_exit(player: Node2D, target: Vector2) -> void:
+	if player.has_method("face_direction"):
+		player.face_direction(player.global_position.direction_to(target))
+	var tween: Tween = player.create_tween()
+	tween.tween_property(player, "global_position", target, PORTAL_EXIT_TIME)
+	await tween.finished
+	if is_instance_valid(player):
+		player.set_physics_process(true)
 
 func _snap_scene_cameras(node: Node) -> void:
 	if node is Camera2D:

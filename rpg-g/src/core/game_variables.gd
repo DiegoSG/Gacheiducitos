@@ -1,6 +1,7 @@
 extends Node
 
-## Almacén global de variables de juego con acceso por ruta ("flag.x", "quest.id", "player.gold", "item.id", "status.id").
+## Almacén global de variables de juego con acceso por ruta ("flag.x", "quest.id", "player.gold", "item.id", "status.id",
+## "equip.weapon_1" / "equip.weapon_2" / "equip.shield" / "equip.active" → id del ítem o "").
 ## Solo las rutas "flag.*" son escribibles; el resto son de solo lectura y reflejan otros sistemas.
 
 signal variable_changed(path: String, value: Variant)
@@ -32,6 +33,8 @@ func _connect_sources() -> void:
 	PlayerStats.gold_changed.connect(_on_gold_changed)
 	PlayerStats.stats_changed.connect(_on_stats_changed)
 	Inventory.inventory_changed.connect(_on_inventory_changed)
+	Inventory.equipment_changed.connect(_on_equipment_changed)
+	Inventory.active_weapon_changed.connect(_on_active_weapon_changed)
 
 func _on_health_changed(current: int, _max_hp: int) -> void:
 	variable_changed.emit("player.health", current)
@@ -44,6 +47,14 @@ func _on_stats_changed() -> void:
 
 func _on_inventory_changed() -> void:
 	variable_changed.emit("item", null)
+
+func _on_equipment_changed(slot: String, item_id: String) -> void:
+	variable_changed.emit("equip." + slot, item_id)
+	if slot == Inventory.active_weapon:
+		variable_changed.emit("equip.active", item_id)
+
+func _on_active_weapon_changed(_slot: String) -> void:
+	variable_changed.emit("equip.active", Inventory.get_equipped_id(Inventory.active_weapon))
 
 # --- API por rutas ---
 
@@ -61,9 +72,19 @@ func get_var(path: String, default: Variant = null) -> Variant:
 		"player":
 			return _get_player_var(sub, default)
 		"item":
-			return Inventory.get_item_count(sub)
+			# Cuenta también lo equipado: equipar la espada no cambia "item.wooden_sword"
+			return Inventory.get_owned_count(sub)
 		"status":
 			return PlayerStats.has_status(sub)
+		"equip":
+			return _get_equip_var(sub, default)
+	return default
+
+func _get_equip_var(slot: String, default: Variant) -> Variant:
+	if slot == "active":
+		return Inventory.get_equipped_id(Inventory.active_weapon)
+	if Inventory.equipped.has(slot):
+		return Inventory.get_equipped_id(slot)
 	return default
 
 func _get_player_var(stat: String, default: Variant) -> Variant:
@@ -97,6 +118,8 @@ func has_var(path: String) -> bool:
 			return sub in ["health", "max_health", "gold", "speed", "strength", "resistance"]
 		"item", "status":
 			return not sub.is_empty()
+		"equip":
+			return sub == "active" or Inventory.equipped.has(sub)
 	return false
 
 func set_var(path: String, value: Variant) -> void:

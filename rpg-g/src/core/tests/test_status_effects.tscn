@@ -3,9 +3,9 @@
 [ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://src/overworld/enemies/generic_enemy.tscn" id="2_enemy"]
 [ext_resource type="PackedScene" path="res://src/overworld/interactables/pickup_item.tscn" id="3_pickup"]
-[ext_resource type="Resource" path="res://data/items/test_poison_vial.tres" id="4_poison"]
-[ext_resource type="Resource" path="res://data/items/test_antidote.tres" id="5_antidote"]
-[ext_resource type="Resource" path="res://data/items/test_speed_boost.tres" id="6_boost"]
+[ext_resource type="Resource" path="res://src/core/tests/items/test_poison_vial.tres" id="4_poison"]
+[ext_resource type="Resource" path="res://src/core/tests/items/test_antidote.tres" id="5_antidote"]
+[ext_resource type="Resource" path="res://src/core/tests/items/test_speed_boost.tres" id="6_boost"]
 
 [node name="TestStatusEffects" type="Node2D"]
 

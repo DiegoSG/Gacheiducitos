@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://fnkkvtl6ahb3" path="res://assets/items/icons/wooden_sword.png" id="2_icon"]
+[ext_resource type="Script" path="res://data/resource_types/equipment/weapon_data.gd" id="3_weapon"]
+
+[sub_resource type="Resource" id="WeaponData_iron_sword"]
+script = ExtResource("3_weapon")
+damage = 2
+cooldown = 0.2
+reach = Vector2(60, 85)
+knockback = 400.0
+
+[resource]
+script = ExtResource("1_script")
+id = "iron_sword"
+name = "Espada de Hierro"
+rarity = 1
+value = 300
+icon = ExtResource("2_icon")
+description = "PLACEHOLDER: +2 de daño, más alcance. Icono provisional (el de la espada de madera)."
+type = 1
+stackable = false
+equipment = SubResource("WeaponData_iron_sword")
