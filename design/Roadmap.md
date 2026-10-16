@@ -8,7 +8,7 @@ Esta es la **única lista de tareas pendientes** del proyecto. Unifica lo que an
 - Los docs de diseño describen **cómo** se hace algo; aquí solo se anota **qué falta** y en qué orden, con un enlace al doc.
 - Prioridad: **P1** = bloquea el hito en curso · **P2** = siguiente hito · **P3** = backlog / cuando haya tiempo.
 
-**Orden de hitos** (decisión de Diego, 16 Oct): **First Playable Test** (ahora) → **Vertical Slice** (hay que armar el juego completo) → Timer y Cronómetro (prioridad alta) → Contenido → Pulido y lanzamiento.
+**Orden de hitos** (decisión de Diego, 16 Oct): **First Playable Test** (ahora) → eventos para armar el juego → **Vertical Slice** (hay que armar el juego completo) → Timer y Cronómetro (prioridad alta) → Contenido → Pulido y lanzamiento.
 
 ---
 
@@ -22,7 +22,18 @@ El sistema base ya está (ver §8); lo que falta es armar el nivel del test. Dec
 | 2 | P2 | **Menú de opciones** real (hoy es placeholder dentro de los menús unificados de inicio/pausa, que ya funcionan): volumen y pantalla completa (decisión de Diego, 13 Oct). | `Controles_y_Input.md` |
 | 3 | P2 | Mergear `FirstPlayableTest` → `develop` cuando el test esté listo, y decidir qué hacer con el PR #4 (`JoystickAndControls`, abierto). | — |
 
-## 2. Siguiente — Vertical Slice (Fase 2.6: Combate y Equipamiento)
+## 2. Antes del Vertical Slice — eventos para armar el juego
+
+Van antes del Vertical Slice (decisión de Diego, 16 Oct). Propuesta técnica: [Propuesta: eventos para armar el juego](https://claude.ai/code/artifact/d5c92625-846d-43cb-9051-7552f843fc6b), pendiente de aprobación. Se prueban en los niveles que ya hay, sin escenas de prueba nuevas.
+
+| # | Pri | Tarea | Ref |
+|---|---|---|---|
+| 1 | P1 | **Enemigos: evento al ser derrotado y drop como acción.** El evento puede ocurrir una sola vez (se guarda). El drop de ítems pasa a ser una acción reutilizable en cualquier parte y unifica el drop normal y el especial (se borra `LootDropComponent`). Los enemigos son la clase base con valores configurables; habrá subclases. | Propuesta |
+| 2 | P1 | **Acción de cámara:** enfocar un punto, volver al jugador y temblor de pantalla. | Propuesta |
+| 3 | P1 | **Mover un NPC o al jugador por un camino** dentro de un trigger. | Propuesta |
+| 4 | P1 | **Tienda:** pantalla como el inventario (no un nivel); el jugador compra y vende (con castigo de precio); precio por defecto `ItemData.value` con override por tienda; artículos con stock (no se repone) o infinitos. | Propuesta |
+
+## 3. Siguiente — Vertical Slice (Fase 2.6: Combate y Equipamiento)
 
 | # | Pri | Tarea | Ref |
 |---|---|---|---|
@@ -35,21 +46,12 @@ El sistema base ya está (ver §8); lo que falta es armar el nivel del test. Dec
 | 7 | P2 | **Niveles del Vertical Slice** armados de punta a punta con su historia. | `Guia_Creacion_Niveles.md` |
 | 8 | P2 | **Jefes:** cada jefe es único, con gameplay propio; `generic_enemy` es solo la clase base. Prioridad media, no se necesita todavía (decisión de Diego, 16 Oct). | — |
 
-## 3. Después del Vertical Slice — prioridad alta
+## 4. Después del Vertical Slice — prioridad alta
 
 To-do; todavía no se implementan (pedido de Diego, 16 Oct).
 
 - [ ] **Evento Timer:** un evento que sea un timer, que dé el tiempo en cuenta regresiva y gatille un evento cuando termina.
 - [ ] **Objeto Cronómetro:** un objeto que active en la UI un cronómetro.
-
-## 4. Con propuesta técnica en revisión (16 Oct)
-
-Eventos que faltan para armar el juego. A Diego le interesan; falta aprobar la propuesta técnica y decidir en qué hito entran.
-
-- [ ] **Evento al derrotar un enemigo:** hoy la muerte de un enemigo solo desbloquea puertas y portales; no gatilla un evento para un `GameTrigger`. Debe poder guardarse que ocurra una sola vez, y analizar si con eso se limpia el código de los enemigos (pedido de Diego, 16 Oct).
-- [ ] **Acción de cámara:** enfocar un punto, volver al jugador y temblor de pantalla.
-- [ ] **Mover un NPC o al jugador por un camino** dentro de un trigger.
-- [ ] **Tienda o mercader:** el oro se gana (`GoldAction`) pero no hay dónde gastarlo.
 
 ## 5. Fase 3: Expansión de Contenido
 
@@ -104,7 +106,7 @@ Eventos que faltan para armar el juego. A Diego le interesan; falta aprobar la p
 
 ### Marcado como hecho por Diego (13 Oct)
 - [x] Archivos de audio asignados en `audio_catalog.tres` (229 entradas con `stream`).
-- [x] 2 niveles de prueba interconectados (el Vertical Slice completo sigue pendiente, ver §2).
+- [x] 2 niveles de prueba interconectados (el Vertical Slice completo sigue pendiente, ver §3).
 - [x] Orden en Z de toda la escena.
 - [x] Plantilla de nivel (cubierta por LevelApp).
 - [x] Menú de remapeo de controles.
