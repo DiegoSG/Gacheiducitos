@@ -1,6 +1,6 @@
 # Hoja de Ruta del Proyecto (Roadmap)
 
-**Actualizado:** 13 de Octubre, 2026 (con las marcas de Diego en el checklist) · rama `FirstPlayableTest`
+**Actualizado:** 16 de Octubre, 2026 (Timer y Cronómetro anotados como to-do) · rama `FirstPlayableTest`
 
 Esta es la **única lista de tareas pendientes** del proyecto. Unifica lo que antes estaba repartido en este archivo, en `Feature_Checklist.md` (sección "Tareas Pendientes" y las features 🟡), en los `TODO` del código, en los docs de diseño (`Sistema_Armas_y_Escudo.md`, `Controles_y_Input.md`, `Capas_y_Orden_Z.md`, `Sistema_Checkpoints_y_Guardado.md`, `Minijuego_*.md`, `misiones/`) y en las revisiones de audio y DialogueApp.
 
@@ -16,7 +16,9 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 
 | # | Pri | Tarea | Ref |
 |---|---|---|---|
-| 1 | P2 | **Menú de opciones** real (hoy es placeholder dentro de los menús unificados de inicio/pausa, que ya funcionan): volumen y pantalla completa (decisión de Diego, 13 Oct). | `Controles_y_Input.md` |
+| 1 | P1 | **Evento Timer:** un evento que sea un timer, que dé el tiempo en cuenta regresiva y gatille un evento cuando termina. Prioridad alta, después del Vertical Slice; to-do, todavía no se implementa (pedido de Diego, 16 Oct). | — |
+| 2 | P1 | **Objeto Cronómetro:** un objeto que active en la UI un cronómetro. Prioridad alta, después del Vertical Slice; to-do, todavía no se implementa (pedido de Diego, 16 Oct). | — |
+| 3 | P2 | **Menú de opciones** real (hoy es placeholder dentro de los menús unificados de inicio/pausa, que ya funcionan): volumen y pantalla completa (decisión de Diego, 13 Oct). | `Controles_y_Input.md` |
 
 ## 2. Siguiente — Fase 2.6: Combate y Equipamiento
 
