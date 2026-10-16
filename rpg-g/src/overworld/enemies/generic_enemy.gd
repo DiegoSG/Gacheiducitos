@@ -23,6 +23,11 @@ extends CharacterBody2D
 ## Distancia (px) que mira hacia adelante para detectar si el camino está bloqueado.
 @export var avoidance_lookahead: float = 24.0
 
+@export_group("Al ser derrotado")
+## Acciones que se ejecutan al morir, con el enemigo como nodo ejecutor (ej. DropLootAction).
+## Corren antes de borrar al enemigo: usar acciones instantáneas (sin esperas).
+@export var on_defeat_actions: Array[ActionResource] = []
+
 @export_group("Persistencia")
 ## Si tiene un valor asignado, su muerte se guarda en WorldStateManager y no vuelve a aparecer.
 ## Si está vacío (""), el estado solo dura mientras el jugador siga en este nivel (clave efímera).
@@ -36,7 +41,6 @@ var _persistence_key: String = ""
 @onready var lose_target_zone: Area2D = get_node_or_null("LoseTargetZone")
 @onready var hitbox_component: HitboxComponent = $HitboxComponent
 @onready var hurtbox_component: HurtboxComponent = $HurtboxComponent
-@onready var loot_drop_component: LootDropComponent = get_node_or_null("LootDropComponent")
 
 var player: CharacterBody2D = null
 
@@ -292,8 +296,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	if current_health <= 0:
 		AudioManager.play_sfx_at(&"sfx_enemy_death", global_position)
 		_persist_death()
-		if loot_drop_component:
-			loot_drop_component.drop_loot()
+		ActionRunner.run(on_defeat_actions, self)
 		call_deferred("queue_free")
 		return
 		

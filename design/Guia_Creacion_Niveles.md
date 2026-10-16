@@ -86,8 +86,12 @@ Para conectar tu nivel con otro mapa o habitación:
 3. En el **Inspector**:
    * **`Speed`**: Velocidad de persecución (defecto `70.0`).
    * **`Max Health`**: Puntos de vida (defecto `3`).
-   * Selecciona el nodo hijo **`LootDropComponent`** para configurar la tabla de recompensas:
-     * En **`Drop Table`**, añade entradas con el recurso `ItemData` y el porcentaje de probabilidad (`Drop Chance` de 0.0 a 1.0).
+   * En **`Al ser derrotado > On Defeat Actions`** está el drop. Por defecto trae dos `DropLootAction`: 5 a 10 monedas siempre, y 2 ítems al azar de una lista de comunes (poción roja, hierba verde, pan, madera, mineral de hierro). Para cambiarlo en un solo enemigo, haz clic derecho en la acción y elige **Make Unique** antes de editar.
+     * **`Entries`**: lista de `LootEntry`, cada una con un `ItemData` (el oro es `gold_coins.tres`), `Chance` (0 a 100 %) y `Min Amount` / `Max Amount`.
+     * **`Drop Count`**: cuántos ítems de la lista suelta como máximo. Los que salen en la tirada se eligen al azar hasta ese número; con `Chance` 100 un ítem sale siempre.
+     * **`Spawn At`**: punto desde donde caen los ítems (por ejemplo un `Marker2D` hijo). Si está vacío, caen desde el pivote del nodo que ejecuta la acción.
+     * **`One Shot`**: suelta una sola vez en toda la partida (ítems especiales). Usa una acción aparte con su `Persistence Id` para no mezclarla con el drop normal.
+   * `DropLootAction` sirve en cualquier lista de acciones (`GameTrigger`, `DialogueEvent`, placas, interruptores), no solo en enemigos.
 
 ### E. NPCs con Diálogo (`SimpleNPC`)
 1. Instancia `res://src/overworld/npcs/npc_barnaby.tscn` (o crea un nodo `Area2D` con script `simple_npc.gd`).
@@ -110,4 +114,4 @@ Para conectar tu nivel con otro mapa o habitación:
 - [ ] ¿Los límites en `WorldBoundaryManager` abarcan todo el área jugable?
 - [ ] ¿Existe al menos un `ArrivalSpawnPoint` con `arrival_id = "start"`?
 - [ ] ¿Todos los portales tienen asignado un `target_level_path` válido y un `arrival_id` coincidente en el destino?
-- [ ] ¿Los enemigos tienen su `LootDropComponent` configurado?
+- [ ] ¿Los enemigos tienen su drop (`DropLootAction`) configurado?

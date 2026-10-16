@@ -24,6 +24,8 @@
 [ext_resource type="PackedScene" uid="uid://ckyt3sc6keqdu" path="res://src/overworld/interactables/pickup_item.tscn" id="14_3bam5"]
 [ext_resource type="Resource" uid="uid://bxps63a4a2vpn" path="res://data/items/red_potion.tres" id="15_fvo0o"]
 [ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="scene_music"]
+[ext_resource type="Script" path="res://src/core/pipeline/actions/drop_loot_action.gd" id="16_drop"]
+[ext_resource type="Script" path="res://data/resource_types/loot_entry.gd" id="17_entry"]
 
 [sub_resource type="Resource" id="Resource_edlbh"]
 script = ExtResource("8_cet0f")
@@ -42,6 +44,52 @@ runner_speed_increase_amount = 25.0
 runner_ammo_initial_distance = 250.0
 runner_ammo_distance_multiplier = 1.5
 metadata/_custom_type_script = "uid://83c224l2dccq"
+
+[sub_resource type="Resource" id="Resource_entry_leather"]
+script = ExtResource("17_entry")
+item = ExtResource("4_bum6v")
+
+[sub_resource type="Resource" id="Resource_drop_leather2"]
+script = ExtResource("16_drop")
+entries = Array[ExtResource("17_entry")]([SubResource("Resource_entry_leather")])
+one_shot = true
+persistence_id = "Leather2"
+
+[sub_resource type="Resource" id="Resource_drop_leather"]
+script = ExtResource("16_drop")
+entries = Array[ExtResource("17_entry")]([SubResource("Resource_entry_leather")])
+one_shot = true
+persistence_id = "Leather"
+
+[sub_resource type="Resource" id="Resource_entry_gold"]
+script = ExtResource("17_entry")
+item = ExtResource("8_n8rv5")
+min_amount = 10
+max_amount = 15
+
+[sub_resource type="Resource" id="Resource_drop_enemy2"]
+script = ExtResource("16_drop")
+entries = Array[ExtResource("17_entry")]([SubResource("Resource_entry_gold")])
+
+[sub_resource type="Resource" id="Resource_entry_bread"]
+script = ExtResource("17_entry")
+item = ExtResource("9_rcb5p")
+chance = 30
+
+[sub_resource type="Resource" id="Resource_entry_iron_key"]
+script = ExtResource("17_entry")
+item = ExtResource("8_edlbh")
+chance = 50
+
+[sub_resource type="Resource" id="Resource_entry_map"]
+script = ExtResource("17_entry")
+item = ExtResource("9_bum6v")
+chance = 70
+
+[sub_resource type="Resource" id="Resource_drop_enemy1"]
+script = ExtResource("16_drop")
+entries = Array[ExtResource("17_entry")]([SubResource("Resource_entry_bread"), SubResource("Resource_entry_iron_key"), SubResource("Resource_entry_map"), SubResource("Resource_entry_gold")])
+drop_count = 4
 
 [node name="TemplateLevel" type="Node2D" unique_id=187744379]
 y_sort_enabled = true
@@ -84,13 +132,7 @@ y_sort_enabled = true
 
 [node name="GenericEnemy2" parent="Entities" unique_id=1981586223 instance=ExtResource("13_3bam5")]
 position = Vector2(1371, 844)
-
-[node name="LootDropComponent" parent="Entities/GenericEnemy2" index="6" unique_id=1603003153]
-unique_item = ExtResource("4_bum6v")
-persistence_id = "Leather2"
-drop_count = 3
-min_coins = 10
-max_coins = 15
+on_defeat_actions = Array[ExtResource("13_s44nc")]([SubResource("Resource_drop_leather2"), SubResource("Resource_drop_enemy2")])
 
 [node name="NPC_Barnaby" parent="Entities" unique_id=1127233890 instance=ExtResource("3_eyghc")]
 position = Vector2(231, 738)
@@ -99,18 +141,7 @@ dialogue_resource = ExtResource("4_s44nc")
 [node name="GenericEnemy" parent="Entities" unique_id=83438673 instance=ExtResource("13_3bam5")]
 position = Vector2(1394, 375)
 persistence_id = "aranita"
-
-[node name="LootDropComponent" parent="Entities/GenericEnemy" index="6" unique_id=1603003153]
-unique_item = ExtResource("4_bum6v")
-persistence_id = "Leather"
-loot_table = Dictionary[ExtResource("6_77vc6"), int]({
-ExtResource("9_rcb5p"): 3,
-ExtResource("8_edlbh"): 5,
-ExtResource("9_bum6v"): 7
-})
-drop_count = 3
-min_coins = 10
-max_coins = 15
+on_defeat_actions = Array[ExtResource("13_s44nc")]([SubResource("Resource_drop_leather"), SubResource("Resource_drop_enemy1")])
 
 [node name="DialogueEvent" parent="Entities" unique_id=1780950499 instance=ExtResource("6_dq17e")]
 position = Vector2(147, 744)
@@ -173,8 +204,6 @@ position = Vector2(326, 566)
 item_data = ExtResource("15_fvo0o")
 persistence_id = "lvl_01_item_8f81566c"
 
-[editable path="Entities/GenericEnemy2"]
-[editable path="Entities/GenericEnemy"]
 [editable path="LevelPortal"]
 
 [node name="SceneMusic" type="Node" parent="."]

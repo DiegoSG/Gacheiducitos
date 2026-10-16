@@ -1,24 +1,39 @@
 # Hoja de Ruta del Proyecto (Roadmap)
 
-**Actualizado:** 13 de Octubre, 2026 (con las marcas de Diego en el checklist) · rama `FirstPlayableTest`
+**Actualizado:** 16 de Octubre, 2026 (hitos reordenados: First Playable Test → Vertical Slice) · rama `FirstPlayableTest`
 
 Esta es la **única lista de tareas pendientes** del proyecto. Unifica lo que antes estaba repartido en este archivo, en `Feature_Checklist.md` (sección "Tareas Pendientes" y las features 🟡), en los `TODO` del código, en los docs de diseño (`Sistema_Armas_y_Escudo.md`, `Controles_y_Input.md`, `Capas_y_Orden_Z.md`, `Sistema_Checkpoints_y_Guardado.md`, `Minijuego_*.md`, `misiones/`) y en las revisiones de audio y DialogueApp.
 
 - `Feature_Checklist.md` queda como **historial** de checkpoints y criterios de aceptación; ya no lleva pendientes.
 - Los docs de diseño describen **cómo** se hace algo; aquí solo se anota **qué falta** y en qué orden, con un enlace al doc.
-- Prioridad: **P1** = bloquea el primer test jugable · **P2** = siguiente fase · **P3** = backlog / cuando haya tiempo.
+- Prioridad: **P1** = bloquea el hito en curso · **P2** = siguiente hito · **P3** = backlog / cuando haya tiempo.
+
+**Orden de hitos** (decisión de Diego, 16 Oct): **First Playable Test** (ahora) → eventos para armar el juego → **Vertical Slice** (hay que armar el juego completo) → Timer y Cronómetro (prioridad alta) → Contenido → Pulido y lanzamiento.
 
 ---
 
-## 1. Ahora — Fase 2.5: Primer Jugable de Test
+## 1. Ahora — First Playable Test (Fase 2.5)
 
-Decisiones ya tomadas: el primer test **no** incluye el sistema completo de armas (va en 2.6); Game Over y pantalla de victoria serán un nivel propio más adelante. Audio, niveles del Vertical Slice, orden en Z y plantilla ya están hechos (ver §6).
+El sistema base ya está (ver §8); lo que falta es armar el nivel del test. Decisiones ya tomadas: el test **no** incluye el sistema completo de armas; Game Over y pantalla de victoria serán un nivel propio más adelante. Audio, orden en Z y plantilla de nivel ya están hechos.
 
 | # | Pri | Tarea | Ref |
 |---|---|---|---|
-| 1 | P2 | **Menú de opciones** real (hoy es placeholder dentro de los menús unificados de inicio/pausa, que ya funcionan): volumen y pantalla completa (decisión de Diego, 13 Oct). | `Controles_y_Input.md` |
+| 1 | P1 | **Armar el nivel del First Playable Test** (lo arma Diego con LevelApp / la guía). | `Guia_Creacion_Niveles.md` |
+| 2 | P2 | **Menú de opciones** real (hoy es placeholder dentro de los menús unificados de inicio/pausa, que ya funcionan): volumen y pantalla completa (decisión de Diego, 13 Oct). | `Controles_y_Input.md` |
+| 3 | P2 | Mergear `FirstPlayableTest` → `develop` cuando el test esté listo, y decidir qué hacer con el PR #4 (`JoystickAndControls`, abierto). | — |
 
-## 2. Siguiente — Fase 2.6: Combate y Equipamiento
+## 2. Antes del Vertical Slice — eventos para armar el juego
+
+Van antes del Vertical Slice (decisión de Diego, 16 Oct). Propuesta técnica: [Propuesta: eventos para armar el juego](https://claude.ai/code/artifact/d5c92625-846d-43cb-9051-7552f843fc6b), pendiente de aprobación. Se prueban en los niveles que ya hay, sin escenas de prueba nuevas.
+
+| # | Pri | Tarea | Ref |
+|---|---|---|---|
+| 1 | P1 | **Enemigos: evento al ser derrotado.** El evento puede ocurrir una sola vez (se guarda). Los enemigos son la clase base con valores configurables; habrá subclases. El drop ya está hecho (§8). | Propuesta |
+| 2 | P1 | **Acción de cámara:** enfocar un punto, volver al jugador y temblor de pantalla. | Propuesta |
+| 3 | P1 | **Mover un NPC o al jugador por un camino** dentro de un trigger. | Propuesta |
+| 4 | P1 | **Tienda:** pantalla como el inventario (no un nivel); el jugador compra y vende (con castigo de precio); precio por defecto `ItemData.value` con override por tienda; artículos con stock (no se repone) o infinitos. | Propuesta |
+
+## 3. Siguiente — Vertical Slice (Fase 2.6: Combate y Equipamiento)
 
 | # | Pri | Tarea | Ref |
 |---|---|---|---|
@@ -27,8 +42,18 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 | 3 | P2 | **Diseño definitivo del HUD:** lugar fijo de cada elemento (esquinas, slots, inventario, barra de accesos). Sesión de diseño; va después de las armas (decisión de Diego, 13 Oct). | — |
 | 4 | P2 | **Armas y escudos reales:** datos y arte de las armas del juego (hoy solo hay la Espada de Madera y los ítems `test_*`). | — |
 | 5 | P2 | **Game Over / Victoria** como nivel propio. | Decisión de Diego (5 Oct) |
+| 6 | P2 | **Historia y guion del juego** (los escribe Diego): `GDD.md` y `Estructura_Narrativa.md` siguen con los campos por completar. | `Estructura_Narrativa.md` |
+| 7 | P2 | **Niveles del Vertical Slice** armados de punta a punta con su historia. | `Guia_Creacion_Niveles.md` |
+| 8 | P2 | **Jefes:** cada jefe es único, con gameplay propio; `generic_enemy` es solo la clase base. Prioridad media, no se necesita todavía (decisión de Diego, 16 Oct). | — |
 
-## 3. Fase 3: Expansión de Contenido
+## 4. Después del Vertical Slice — prioridad alta
+
+To-do; todavía no se implementan (pedido de Diego, 16 Oct).
+
+- [ ] **Evento Timer:** un evento que sea un timer, que dé el tiempo en cuenta regresiva y gatille un evento cuando termina.
+- [ ] **Objeto Cronómetro:** un objeto que active en la UI un cronómetro.
+
+## 5. Fase 3: Expansión de Contenido
 
 - [ ] NPCs y diálogo avanzado (`DialogueManager`), voz distinta por NPC.
 - [ ] Mazmorras y nuevos niveles interconectados.
@@ -38,7 +63,7 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 - [ ] **Misiones de minijuegos** (framework de 4 capas: core loop, modificadores, objetivo con 3 estrellas, gancho narrativo). — `misiones/00-sistema-general.md`
 - [ ] **Sistema de energía** (`energy` / `max_energy` en `PlayerStats` y snapshots; la Poción Azul ya lo menciona). — `Sistema_Checkpoints_y_Guardado.md`
 
-## 4. Fase 4: Pulido y Lanzamiento
+## 6. Fase 4: Pulido y Lanzamiento
 
 - [ ] Corrección de errores y pruebas de integración.
 - [ ] Pulido de UI/UX.
@@ -47,7 +72,11 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 
 ---
 
-## 5. Backlog por área (P3)
+## 7. Backlog por área (P3)
+
+### Presentación (prioridad baja, decisión de Diego, 16 Oct)
+- [ ] Pantalla de título, intro y créditos.
+- [ ] Carteles o ayudas de tutorial para enseñar los controles.
 
 ### Controles e input
 - [ ] Cambio rápido de armas sin abrir el inventario.
@@ -69,15 +98,15 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 - [ ] Tests headless: los runners de `src/core/tests/` no corren con `--script` (decisión actual: QA manual).
 
 ### Limpieza del repositorio
-- [ ] Decidir qué hacer con el PR #4 (`JoystickAndControls`, abierto) y mergear `FirstPlayableTest` → `develop` cuando el test esté listo.
+- [ ] Niveles duplicados en `src/overworld/levels/` (`level_01_nuevo.tscn`, `level_01_nuevo_1.tscn`, `level_02_nuevo*.tscn`, `level_03_nuevo.tscn`): decidir cuáles quedan.
 
 ---
 
-## 6. Hecho
+## 8. Hecho
 
 ### Marcado como hecho por Diego (13 Oct)
 - [x] Archivos de audio asignados en `audio_catalog.tres` (229 entradas con `stream`).
-- [x] Vertical Slice: 2 niveles interconectados.
+- [x] 2 niveles de prueba interconectados (el Vertical Slice completo sigue pendiente, ver §3).
 - [x] Orden en Z de toda la escena.
 - [x] Plantilla de nivel (cubierta por LevelApp).
 - [x] Menú de remapeo de controles.
@@ -99,6 +128,10 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 - [x] `sfx_enemy_attack_windup` al entrar en rango de ataque y `sfx_player_low_health` al bajar del 25% de vida (sonidos proxy).
 - [x] Sonido posicional `AudioManager.play_sfx_at` en enemigos y dummies.
 - [x] Ítems `test_*` movidos a `src/core/tests/items/` (ya no aparecen en el juego ni en LevelApp).
+
+### Drop de ítems como acción (16 Oct)
+- [x] `DropLootAction` + `LootEntry`: lista de ítems (oro incluido) con probabilidad 0-100 % y cantidad mín/máx, `drop_count` ítems como máximo por ejecución, `one_shot` para soltar una sola vez (ítems especiales). Sirve en cualquier lista de acciones.
+- [x] Enemigos: `on_defeat_actions` reemplaza a `LootDropComponent` (borrado). `level_01` migrado con los mismos valores e IDs (`Leather`, `Leather2`); los saves viejos no repiten el ítem especial.
 
 ### Tanda 4 del plan: Equipamiento y Escudo (13 Oct)
 - [x] Equipamiento: arma y escudo equipados, guardados en la partida (`Inventory.equipped`); lo equipado no ocupa lugar en el inventario. Se equipa desde el inventario o un slot rápido; no hay tecla para alternar armas (decisión de Diego, 13 Oct).
