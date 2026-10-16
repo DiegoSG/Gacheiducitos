@@ -23,7 +23,8 @@ extends ActionResource
 @export var persistence_id: String = ""
 
 @export_group("Spawn")
-## Nodo (relativo al que ejecuta la acción) desde donde caen los ítems. Vacío: el propio nodo.
+## Punto desde donde caen los ítems (ej. un Marker2D), relativo al nodo que ejecuta la acción.
+## Vacío: el pivote de ese nodo (el enemigo, el trigger...).
 @export var spawn_at: NodePath = NodePath("")
 @export var pickup_item_scene: PackedScene = preload("res://src/overworld/interactables/pickup_item.tscn")
 ## Radio máximo de dispersión para que los ítems no se amontonen.
