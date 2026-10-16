@@ -1,26 +1,28 @@
 # Hoja de Ruta del Proyecto (Roadmap)
 
-**Actualizado:** 16 de Octubre, 2026 (Timer y Cronómetro anotados como to-do) · rama `FirstPlayableTest`
+**Actualizado:** 16 de Octubre, 2026 (hitos reordenados: First Playable Test → Vertical Slice) · rama `FirstPlayableTest`
 
 Esta es la **única lista de tareas pendientes** del proyecto. Unifica lo que antes estaba repartido en este archivo, en `Feature_Checklist.md` (sección "Tareas Pendientes" y las features 🟡), en los `TODO` del código, en los docs de diseño (`Sistema_Armas_y_Escudo.md`, `Controles_y_Input.md`, `Capas_y_Orden_Z.md`, `Sistema_Checkpoints_y_Guardado.md`, `Minijuego_*.md`, `misiones/`) y en las revisiones de audio y DialogueApp.
 
 - `Feature_Checklist.md` queda como **historial** de checkpoints y criterios de aceptación; ya no lleva pendientes.
 - Los docs de diseño describen **cómo** se hace algo; aquí solo se anota **qué falta** y en qué orden, con un enlace al doc.
-- Prioridad: **P1** = bloquea el primer test jugable · **P2** = siguiente fase · **P3** = backlog / cuando haya tiempo.
+- Prioridad: **P1** = bloquea el hito en curso · **P2** = siguiente hito · **P3** = backlog / cuando haya tiempo.
+
+**Orden de hitos** (decisión de Diego, 16 Oct): **First Playable Test** (ahora) → **Vertical Slice** (hay que armar el juego completo) → Timer y Cronómetro (prioridad alta) → Contenido → Pulido y lanzamiento.
 
 ---
 
-## 1. Ahora — Fase 2.5: Primer Jugable de Test
+## 1. Ahora — First Playable Test (Fase 2.5)
 
-Decisiones ya tomadas: el primer test **no** incluye el sistema completo de armas (va en 2.6); Game Over y pantalla de victoria serán un nivel propio más adelante. Audio, niveles del Vertical Slice, orden en Z y plantilla ya están hechos (ver §6).
+El sistema base ya está (ver §8); lo que falta es armar el nivel del test. Decisiones ya tomadas: el test **no** incluye el sistema completo de armas; Game Over y pantalla de victoria serán un nivel propio más adelante. Audio, orden en Z y plantilla de nivel ya están hechos.
 
 | # | Pri | Tarea | Ref |
 |---|---|---|---|
-| 1 | P1 | **Evento Timer:** un evento que sea un timer, que dé el tiempo en cuenta regresiva y gatille un evento cuando termina. Prioridad alta, después del Vertical Slice; to-do, todavía no se implementa (pedido de Diego, 16 Oct). | — |
-| 2 | P1 | **Objeto Cronómetro:** un objeto que active en la UI un cronómetro. Prioridad alta, después del Vertical Slice; to-do, todavía no se implementa (pedido de Diego, 16 Oct). | — |
-| 3 | P2 | **Menú de opciones** real (hoy es placeholder dentro de los menús unificados de inicio/pausa, que ya funcionan): volumen y pantalla completa (decisión de Diego, 13 Oct). | `Controles_y_Input.md` |
+| 1 | P1 | **Armar el nivel del First Playable Test** (lo arma Diego con LevelApp / la guía). | `Guia_Creacion_Niveles.md` |
+| 2 | P2 | **Menú de opciones** real (hoy es placeholder dentro de los menús unificados de inicio/pausa, que ya funcionan): volumen y pantalla completa (decisión de Diego, 13 Oct). | `Controles_y_Input.md` |
+| 3 | P2 | Mergear `FirstPlayableTest` → `develop` cuando el test esté listo, y decidir qué hacer con el PR #4 (`JoystickAndControls`, abierto). | — |
 
-## 2. Siguiente — Fase 2.6: Combate y Equipamiento
+## 2. Siguiente — Vertical Slice (Fase 2.6: Combate y Equipamiento)
 
 | # | Pri | Tarea | Ref |
 |---|---|---|---|
@@ -29,8 +31,29 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 | 3 | P2 | **Diseño definitivo del HUD:** lugar fijo de cada elemento (esquinas, slots, inventario, barra de accesos). Sesión de diseño; va después de las armas (decisión de Diego, 13 Oct). | — |
 | 4 | P2 | **Armas y escudos reales:** datos y arte de las armas del juego (hoy solo hay la Espada de Madera y los ítems `test_*`). | — |
 | 5 | P2 | **Game Over / Victoria** como nivel propio. | Decisión de Diego (5 Oct) |
+| 6 | P2 | **Historia y guion del juego** (los escribe Diego): `GDD.md` y `Estructura_Narrativa.md` siguen con los campos por completar. | `Estructura_Narrativa.md` |
+| 7 | P2 | **Niveles del Vertical Slice** armados de punta a punta con su historia. | `Guia_Creacion_Niveles.md` |
 
-## 3. Fase 3: Expansión de Contenido
+## 3. Después del Vertical Slice — prioridad alta
+
+To-do; todavía no se implementan (pedido de Diego, 16 Oct).
+
+- [ ] **Evento Timer:** un evento que sea un timer, que dé el tiempo en cuenta regresiva y gatille un evento cuando termina.
+- [ ] **Objeto Cronómetro:** un objeto que active en la UI un cronómetro.
+
+## 4. Por confirmar — eventos que faltan para armar el juego (propuesta de Claude, 16 Oct)
+
+Revisión de las acciones del pipeline (`src/core/pipeline/actions/`) y de los sistemas actuales. Diego decide cuáles entran y en qué hito; las que no, se borran de aquí.
+
+- [ ] **Evento al derrotar enemigos:** hoy la muerte de un enemigo solo desbloquea puertas y portales; no gatilla un evento para un `GameTrigger` (ej. "al morir el jefe, abre el cofre").
+- [ ] **Acción de cámara:** enfocar un punto, volver al jugador y temblor de pantalla, para mostrar qué abrió una palanca o en escenas cortas.
+- [ ] **Mover un NPC o al jugador por un camino** dentro de un trigger (escenas cortas, NPC que se aparta).
+- [ ] **Jefe:** enemigo con más vida y patrones de ataque; hoy solo existe `generic_enemy`.
+- [ ] **Tienda o mercader:** el oro se gana (`GoldAction`) pero no hay dónde gastarlo.
+- [ ] **Pantalla de título, intro y créditos.**
+- [ ] **Carteles o ayudas de tutorial** para enseñar los controles en el primer nivel.
+
+## 5. Fase 3: Expansión de Contenido
 
 - [ ] NPCs y diálogo avanzado (`DialogueManager`), voz distinta por NPC.
 - [ ] Mazmorras y nuevos niveles interconectados.
@@ -40,7 +63,7 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 - [ ] **Misiones de minijuegos** (framework de 4 capas: core loop, modificadores, objetivo con 3 estrellas, gancho narrativo). — `misiones/00-sistema-general.md`
 - [ ] **Sistema de energía** (`energy` / `max_energy` en `PlayerStats` y snapshots; la Poción Azul ya lo menciona). — `Sistema_Checkpoints_y_Guardado.md`
 
-## 4. Fase 4: Pulido y Lanzamiento
+## 6. Fase 4: Pulido y Lanzamiento
 
 - [ ] Corrección de errores y pruebas de integración.
 - [ ] Pulido de UI/UX.
@@ -49,7 +72,7 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 
 ---
 
-## 5. Backlog por área (P3)
+## 7. Backlog por área (P3)
 
 ### Controles e input
 - [ ] Cambio rápido de armas sin abrir el inventario.
@@ -71,15 +94,15 @@ Decisiones ya tomadas: el primer test **no** incluye el sistema completo de arma
 - [ ] Tests headless: los runners de `src/core/tests/` no corren con `--script` (decisión actual: QA manual).
 
 ### Limpieza del repositorio
-- [ ] Decidir qué hacer con el PR #4 (`JoystickAndControls`, abierto) y mergear `FirstPlayableTest` → `develop` cuando el test esté listo.
+- [ ] Niveles duplicados en `src/overworld/levels/` (`level_01_nuevo.tscn`, `level_01_nuevo_1.tscn`, `level_02_nuevo*.tscn`, `level_03_nuevo.tscn`): decidir cuáles quedan.
 
 ---
 
-## 6. Hecho
+## 8. Hecho
 
 ### Marcado como hecho por Diego (13 Oct)
 - [x] Archivos de audio asignados en `audio_catalog.tres` (229 entradas con `stream`).
-- [x] Vertical Slice: 2 niveles interconectados.
+- [x] 2 niveles de prueba interconectados (el Vertical Slice completo sigue pendiente, ver §2).
 - [x] Orden en Z de toda la escena.
 - [x] Plantilla de nivel (cubierta por LevelApp).
 - [x] Menú de remapeo de controles.
