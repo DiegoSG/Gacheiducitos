@@ -33,6 +33,7 @@ El sistema base ya está (ver §8); lo que falta es armar el nivel del test. Dec
 | 5 | P2 | **Game Over / Victoria** como nivel propio. | Decisión de Diego (5 Oct) |
 | 6 | P2 | **Historia y guion del juego** (los escribe Diego): `GDD.md` y `Estructura_Narrativa.md` siguen con los campos por completar. | `Estructura_Narrativa.md` |
 | 7 | P2 | **Niveles del Vertical Slice** armados de punta a punta con su historia. | `Guia_Creacion_Niveles.md` |
+| 8 | P2 | **Jefes:** cada jefe es único, con gameplay propio; `generic_enemy` es solo la clase base. Prioridad media, no se necesita todavía (decisión de Diego, 16 Oct). | — |
 
 ## 3. Después del Vertical Slice — prioridad alta
 
@@ -41,17 +42,14 @@ To-do; todavía no se implementan (pedido de Diego, 16 Oct).
 - [ ] **Evento Timer:** un evento que sea un timer, que dé el tiempo en cuenta regresiva y gatille un evento cuando termina.
 - [ ] **Objeto Cronómetro:** un objeto que active en la UI un cronómetro.
 
-## 4. Por confirmar — eventos que faltan para armar el juego (propuesta de Claude, 16 Oct)
+## 4. Con propuesta técnica en revisión (16 Oct)
 
-Revisión de las acciones del pipeline (`src/core/pipeline/actions/`) y de los sistemas actuales. Diego decide cuáles entran y en qué hito; las que no, se borran de aquí.
+Eventos que faltan para armar el juego. A Diego le interesan; falta aprobar la propuesta técnica y decidir en qué hito entran.
 
-- [ ] **Evento al derrotar enemigos:** hoy la muerte de un enemigo solo desbloquea puertas y portales; no gatilla un evento para un `GameTrigger` (ej. "al morir el jefe, abre el cofre").
-- [ ] **Acción de cámara:** enfocar un punto, volver al jugador y temblor de pantalla, para mostrar qué abrió una palanca o en escenas cortas.
-- [ ] **Mover un NPC o al jugador por un camino** dentro de un trigger (escenas cortas, NPC que se aparta).
-- [ ] **Jefe:** enemigo con más vida y patrones de ataque; hoy solo existe `generic_enemy`.
+- [ ] **Evento al derrotar un enemigo:** hoy la muerte de un enemigo solo desbloquea puertas y portales; no gatilla un evento para un `GameTrigger`. Debe poder guardarse que ocurra una sola vez, y analizar si con eso se limpia el código de los enemigos (pedido de Diego, 16 Oct).
+- [ ] **Acción de cámara:** enfocar un punto, volver al jugador y temblor de pantalla.
+- [ ] **Mover un NPC o al jugador por un camino** dentro de un trigger.
 - [ ] **Tienda o mercader:** el oro se gana (`GoldAction`) pero no hay dónde gastarlo.
-- [ ] **Pantalla de título, intro y créditos.**
-- [ ] **Carteles o ayudas de tutorial** para enseñar los controles en el primer nivel.
 
 ## 5. Fase 3: Expansión de Contenido
 
@@ -73,6 +71,10 @@ Revisión de las acciones del pipeline (`src/core/pipeline/actions/`) y de los s
 ---
 
 ## 7. Backlog por área (P3)
+
+### Presentación (prioridad baja, decisión de Diego, 16 Oct)
+- [ ] Pantalla de título, intro y créditos.
+- [ ] Carteles o ayudas de tutorial para enseñar los controles.
 
 ### Controles e input
 - [ ] Cambio rápido de armas sin abrir el inventario.
