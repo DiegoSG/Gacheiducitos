@@ -28,7 +28,7 @@ Van antes del Vertical Slice (decisión de Diego, 16 Oct). Propuesta técnica: [
 
 | # | Pri | Tarea | Ref |
 |---|---|---|---|
-| 1 | P1 | **Enemigos: evento al ser derrotado y drop como acción.** El evento puede ocurrir una sola vez (se guarda). El drop de ítems pasa a ser una acción reutilizable en cualquier parte y unifica el drop normal y el especial (se borra `LootDropComponent`). Los enemigos son la clase base con valores configurables; habrá subclases. | Propuesta |
+| 1 | P1 | **Enemigos: evento al ser derrotado.** El evento puede ocurrir una sola vez (se guarda). Los enemigos son la clase base con valores configurables; habrá subclases. El drop ya está hecho (§8). | Propuesta |
 | 2 | P1 | **Acción de cámara:** enfocar un punto, volver al jugador y temblor de pantalla. | Propuesta |
 | 3 | P1 | **Mover un NPC o al jugador por un camino** dentro de un trigger. | Propuesta |
 | 4 | P1 | **Tienda:** pantalla como el inventario (no un nivel); el jugador compra y vende (con castigo de precio); precio por defecto `ItemData.value` con override por tienda; artículos con stock (no se repone) o infinitos. | Propuesta |
@@ -128,6 +128,10 @@ To-do; todavía no se implementan (pedido de Diego, 16 Oct).
 - [x] `sfx_enemy_attack_windup` al entrar en rango de ataque y `sfx_player_low_health` al bajar del 25% de vida (sonidos proxy).
 - [x] Sonido posicional `AudioManager.play_sfx_at` en enemigos y dummies.
 - [x] Ítems `test_*` movidos a `src/core/tests/items/` (ya no aparecen en el juego ni en LevelApp).
+
+### Drop de ítems como acción (16 Oct)
+- [x] `DropLootAction` + `LootEntry`: lista de ítems (oro incluido) con probabilidad 0-100 % y cantidad mín/máx, `drop_count` ítems como máximo por ejecución, `one_shot` para soltar una sola vez (ítems especiales). Sirve en cualquier lista de acciones.
+- [x] Enemigos: `on_defeat_actions` reemplaza a `LootDropComponent` (borrado). `level_01` migrado con los mismos valores e IDs (`Leather`, `Leather2`); los saves viejos no repiten el ítem especial.
 
 ### Tanda 4 del plan: Equipamiento y Escudo (13 Oct)
 - [x] Equipamiento: arma y escudo equipados, guardados en la partida (`Inventory.equipped`); lo equipado no ocupa lugar en el inventario. Se equipa desde el inventario o un slot rápido; no hay tecla para alternar armas (decisión de Diego, 13 Oct).

@@ -4,7 +4,21 @@
 [ext_resource type="Texture2D" uid="uid://b44n0qp4bna68" path="res://assets/sprites/spider_enemy.png" id="2_spider"]
 [ext_resource type="PackedScene" path="res://src/core/components/hitbox_component.tscn" id="3_hitbox"]
 [ext_resource type="PackedScene" path="res://src/core/components/hurtbox_component.tscn" id="4_hurtbox"]
-[ext_resource type="PackedScene" path="res://src/core/components/loot_drop_component.tscn" id="5_loot"]
+[ext_resource type="Script" uid="uid://f73vy602pjfk" path="res://src/core/pipeline/action_resource.gd" id="5_action"]
+[ext_resource type="Script" path="res://src/core/pipeline/actions/drop_loot_action.gd" id="6_drop"]
+[ext_resource type="Script" path="res://data/resource_types/loot_entry.gd" id="7_entry"]
+[ext_resource type="Resource" uid="uid://bh4box6poomqx" path="res://data/items/gold_coins.tres" id="8_gold"]
+
+[sub_resource type="Resource" id="Resource_gold_entry"]
+script = ExtResource("7_entry")
+item = ExtResource("8_gold")
+min_amount = 0
+max_amount = 5
+
+[sub_resource type="Resource" id="Resource_default_drop"]
+resource_local_to_scene = true
+script = ExtResource("6_drop")
+entries = Array[ExtResource("7_entry")]([SubResource("Resource_gold_entry")])
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_enemy"]
 size = Vector2(59, 60)
@@ -21,6 +35,7 @@ collision_mask = 1
 motion_mode = 1
 platform_on_leave = 2
 script = ExtResource("1_script")
+on_defeat_actions = Array[ExtResource("5_action")]([SubResource("Resource_default_drop")])
 
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1628491093]
@@ -62,5 +77,3 @@ collision_mask = 2
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LoseTargetZone" unique_id=1294817294]
 visible = false
 shape = SubResource("CircleShape2D_lose")
-
-[node name="LootDropComponent" parent="." unique_id=1603003153 instance=ExtResource("5_loot")]
