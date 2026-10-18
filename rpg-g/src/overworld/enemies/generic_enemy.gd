@@ -23,9 +23,9 @@ extends CharacterBody2D
 ## Distancia (px) que mira hacia adelante para detectar si el camino está bloqueado.
 @export var avoidance_lookahead: float = 24.0
 
-@export_group("Al ser derrotado")
-## Acciones que se ejecutan al morir, con el enemigo como nodo ejecutor (ej. DropLootAction).
-## Corren antes de borrar al enemigo: usar acciones instantáneas (sin esperas).
+@export_group("On Defeat")
+## Actions run on death, with the enemy as the running node (e.g. DropLootAction).
+## They run before the enemy is freed: use instant actions (no waits).
 @export var on_defeat_actions: Array[ActionResource] = []
 
 @export_group("Persistencia")

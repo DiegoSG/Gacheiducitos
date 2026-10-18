@@ -58,7 +58,7 @@ func _init() -> void:
 	print("[PASS] Carga de recursos ItemData verificada.")
 	
 	# ----------------------------------------------------
-	# Test 2: DropLootAction - probabilidad 100 (siempre) vs 0 (nunca)
+	# Test 2: DropLootAction - chance 100 (always) vs 0 (never)
 	# ----------------------------------------------------
 	var owner_node := Node2D.new()
 	owner_node.name = "LootOwner"
@@ -82,9 +82,9 @@ func _init() -> void:
 			d.queue_free()
 		await process_frame
 
-	assert(dropped_always_count == trials, "El ítem con probabilidad 100 debe caer siempre (50/50)")
-	assert(dropped_never_count == 0, "El ítem con probabilidad 0 NUNCA debe caer (0/50)")
-	print("[PASS] Probabilidad 100 (siempre) y 0 (nunca) comprobadas con %d tiradas." % trials)
+	assert(dropped_always_count == trials, "Item with chance 100 must always drop (50/50)")
+	assert(dropped_never_count == 0, "Item with chance 0 must NEVER drop (0/50)")
+	print("[PASS] Chance 100 (always) and 0 (never) checked over %d rolls." % trials)
 
 	# ----------------------------------------------------
 	# Test 3: drop_count
@@ -94,14 +94,14 @@ func _init() -> void:
 
 	for i in range(20):
 		var drops: Array[PickupItem] = action.drop(owner_node)
-		assert(drops.size() == 1, "Con dos ítems seguros y drop_count 1 debe soltar exactamente 1")
+		assert(drops.size() == 1, "With two guaranteed items and drop_count 1 it must drop exactly 1")
 		for d in drops:
 			d.queue_free()
 		await process_frame
-	print("[PASS] Límite de drop_count respetado estrictamente.")
+	print("[PASS] drop_count limit strictly respected.")
 
 	# ----------------------------------------------------
-	# Test 4: one_shot con persistence_id (ítem especial)
+	# Test 4: one_shot with persistence_id (special item)
 	# ----------------------------------------------------
 	var unique_action := DropLootAction.new()
 	unique_action.entries = [_entry(golden_key, 100)]
@@ -111,23 +111,23 @@ func _init() -> void:
 	var spawned_before: int = owner_node.get_parent().get_child_count()
 	unique_action.execute(owner_node)
 	await process_frame
-	assert(wsm.has_state("test_boss_key_drop"), "El estado debe guardarse en WorldStateManager")
-	assert(wsm.load_state("test_boss_key_drop").get("dropped", false) == true, "dropped debe ser true en WSM")
-	assert(owner_node.get_parent().get_child_count() == spawned_before + 1, "Debe soltar la llave la primera vez")
+	assert(wsm.has_state("test_boss_key_drop"), "State must be saved in WorldStateManager")
+	assert(wsm.load_state("test_boss_key_drop").get("dropped", false) == true, "dropped must be true in WSM")
+	assert(owner_node.get_parent().get_child_count() == spawned_before + 1, "Must drop the key the first time")
 
 	unique_action.execute(owner_node)
 	await process_frame
-	assert(owner_node.get_parent().get_child_count() == spawned_before + 1, "No debe volver a soltar el ítem de una sola vez")
+	assert(owner_node.get_parent().get_child_count() == spawned_before + 1, "Must not drop the one-shot item again")
 
 	wsm.save_state("test_legacy_drop", {"unique_dropped": true})
 	unique_action.persistence_id = "test_legacy_drop"
 	unique_action.execute(owner_node)
 	await process_frame
-	assert(owner_node.get_parent().get_child_count() == spawned_before + 1, "Debe respetar la marca de saves del antiguo LootDropComponent")
-	print("[PASS] one_shot verificado, persistido en WorldStateManager y compatible con saves viejos.")
+	assert(owner_node.get_parent().get_child_count() == spawned_before + 1, "Must respect the old LootDropComponent save flag")
+	print("[PASS] one_shot verified, persisted in WorldStateManager and compatible with old saves.")
 
 	# ----------------------------------------------------
-	# Test 5: Cantidades en rango (oro)
+	# Test 5: Amounts within range (gold)
 	# ----------------------------------------------------
 	var coins_entry: LootEntry = _entry(gold_coins, 100)
 	coins_entry.min_amount = 3
@@ -137,16 +137,16 @@ func _init() -> void:
 
 	for i in range(30):
 		var drops: Array[PickupItem] = action.drop(owner_node)
-		assert(drops.size() == 1, "Debe haber 1 drop de monedas")
+		assert(drops.size() == 1, "There must be 1 coin drop")
 		var coin_drop: PickupItem = drops[0]
-		assert(coin_drop.item_data.id == "gold_coins", "El drop debe ser gold_coins")
-		assert(coin_drop.custom_amount >= 3 and coin_drop.custom_amount <= 7, "Monedas fuera de rango [3, 7]")
+		assert(coin_drop.item_data.id == "gold_coins", "The drop must be gold_coins")
+		assert(coin_drop.custom_amount >= 3 and coin_drop.custom_amount <= 7, "Coins out of range [3, 7]")
 		coin_drop.queue_free()
 		await process_frame
-	print("[PASS] Rango de monedas aleatorio [3, 7] verificado.")
+	print("[PASS] Random coin range [3, 7] verified.")
 
 	# ----------------------------------------------------
-	# Test 6: Recolección e Inventario + Monedas (con guardia de animación de drop)
+	# Test 6: Pickup and Inventory + Coins (with drop animation guard)
 	# ----------------------------------------------------
 	var initial_gold: int = ps.gold
 	var mock_player = CharacterBody2D.new()
@@ -156,24 +156,24 @@ func _init() -> void:
 
 	var test_coin_drop: PickupItem = action._spawn_pickup(gold_coins, 15, Vector2.ZERO, root, 0)
 	await process_frame
-	# Fase 1: Durante el drop, can_be_collected es false y no se absorbe prematuramente
-	assert(test_coin_drop.can_be_collected == false, "can_be_collected debe ser false durante la caída")
+	# Phase 1: During the drop, can_be_collected is false and it is not picked up early
+	assert(test_coin_drop.can_be_collected == false, "can_be_collected must be false while falling")
 	test_coin_drop._on_body_entered(mock_player)
-	assert(ps.gold == initial_gold, "No debe sumar monedas antes de terminar el drop")
+	assert(ps.gold == initial_gold, "Must not add coins before the drop finishes")
 
-	# Fase 2: Al aterrizar, se habilita la recolección
+	# Phase 2: On landing, pickup is enabled
 	test_coin_drop._on_drop_animation_finished()
-	assert(test_coin_drop.can_be_collected == true, "can_be_collected debe ser true tras aterrizar")
+	assert(test_coin_drop.can_be_collected == true, "can_be_collected must be true after landing")
 	test_coin_drop._on_body_entered(mock_player)
-	assert(ps.gold == initial_gold + 15, "PlayerStats no sumó la cantidad de monedas correcta tras aterrizar")
+	assert(ps.gold == initial_gold + 15, "PlayerStats did not add the right coin amount after landing")
 
 	var initial_potions: int = inv.get_items().get("red_potion", 0)
 	var test_potion_drop: PickupItem = action._spawn_pickup(red_potion, 2, Vector2.ZERO, root, 0)
 	await process_frame
 	test_potion_drop._on_drop_animation_finished()
 	test_potion_drop._on_body_entered(mock_player)
-	assert(inv.get_items().get("red_potion") == initial_potions + 2, "Inventory no sumó el ítem recogido tras aterrizar")
-	print("[PASS] Drop cinemático sin físicas, guardia de cooldown y recolección verificados.")
+	assert(inv.get_items().get("red_potion") == initial_potions + 2, "Inventory did not add the picked-up item after landing")
+	print("[PASS] Physics-free kinematic drop, cooldown guard and pickup verified.")
 
 	# ----------------------------------------------------
 	# Test 8: InventoryUI con tecla TAB

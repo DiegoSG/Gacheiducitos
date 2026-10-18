@@ -1,49 +1,49 @@
 class_name DropLootAction
 extends ActionResource
 
-## Suelta en el mundo ítems de una lista (oro incluido), cada uno con su probabilidad.
-## Sirve en cualquier lista de acciones: muerte de un enemigo (GenericEnemy.on_defeat_actions),
-## GameTrigger, DialogueEvent, placas, interruptores...
+## Drops items from a list (gold included) into the world, each one with its own chance.
+## Works in any action list: enemy death (GenericEnemy.on_defeat_actions),
+## GameTrigger, DialogueEvent, pressure plates, switches...
 ##
-## En cada ejecución se tira la probabilidad de cada entrada; de las que salen se sueltan
-## como máximo drop_count, al azar. Con probabilidad 100 un ítem sale siempre.
-## Para ítems especiales: una acción aparte con one_shot y persistence_id.
+## Each run rolls every entry's chance; from the ones that pass, at most drop_count
+## are dropped, picked at random. An item with chance 100 always passes.
+## For special items: use a separate action with one_shot and persistence_id.
 
-## Lista de ítems posibles.
+## Possible items.
 @export var entries: Array[LootEntry] = []
-## Cuántos ítems distintos de la lista puede soltar como máximo en cada ejecución.
+## Maximum number of different entries dropped per run.
 @export_range(1, 20) var drop_count: int = 1
 
-@export_group("Repetición")
-## Si es true, suelta una sola vez en toda la partida; si es false, cada vez que se ejecuta.
+@export_group("Repeat")
+## If true, drops only once per save file; if false, every time it runs.
 @export var one_shot: bool = false
-## ID con el que se guarda que ya soltó (solo con one_shot).
-## Vacío: usa el persistence_id del nodo que la ejecuta + "_loot". Si tampoco hay, la marca
-## dura solo mientras el jugador siga en el nivel.
+## ID used to save that it already dropped (only with one_shot).
+## Empty: uses the running node's persistence_id + "_loot". If that is empty too, the flag
+## only lasts while the player stays in the level.
 @export var persistence_id: String = ""
 
 @export_group("Spawn")
-## Punto desde donde caen los ítems (ej. un Marker2D), relativo al nodo que ejecuta la acción.
-## Vacío: el pivote de ese nodo (el enemigo, el trigger...).
+## Point the items drop from (e.g. a Marker2D), relative to the node running the action.
+## Empty: that node's pivot (the enemy, the trigger...).
 @export var spawn_at: NodePath = NodePath("")
 @export var pickup_item_scene: PackedScene = preload("res://src/overworld/interactables/pickup_item.tscn")
-## Radio máximo de dispersión para que los ítems no se amontonen.
+## Maximum scatter radius so items don't pile up.
 @export var scatter_radius: float = 24.0
-## Tiempo que tarda un ítem en caer a su posición antes de poder recogerse.
+## Time an item takes to land before it can be picked up.
 @export var drop_duration: float = 0.45
-## Retraso escalonado entre ítems para que no salgan todos a la vez.
+## Staggered delay between items so they don't all drop at once.
 @export var scatter_delay: float = 0.05
 
-@export_group("Evento (opcional)")
-## Evento global que se dispara si soltó al menos un ítem.
+@export_group("Event (optional)")
+## Global event fired if at least one item was dropped.
 @export var on_dropped_event: String = ""
 
 func get_action_name() -> String:
-	return "DropLootAction (%d entradas, máx %d%s)" % [entries.size(), drop_count, ", una vez" if one_shot else ""]
+	return "DropLootAction (%d entries, max %d%s)" % [entries.size(), drop_count, ", once" if one_shot else ""]
 
 func execute(trigger_node: Node) -> void:
 	if trigger_node == null or not trigger_node.is_inside_tree():
-		push_warning("DropLootAction: el nodo que la ejecuta no está en la escena.")
+		push_warning("DropLootAction: the running node is not in the scene tree.")
 		finished.emit()
 		return
 
@@ -59,7 +59,7 @@ func execute(trigger_node: Node) -> void:
 		emit_game_event(on_dropped_event)
 	finished.emit()
 
-## Tira la lista y crea los PickupItem. Devuelve los ítems creados.
+## Rolls the list and spawns the PickupItems. Returns the spawned items.
 func drop(trigger_node: Node) -> Array[PickupItem]:
 	var spawned: Array[PickupItem] = []
 	var candidates: Array[LootEntry] = []
@@ -106,7 +106,7 @@ func _already_dropped(key: String) -> bool:
 	if not WorldStateManager.has_state(key):
 		return false
 	var data: Dictionary = WorldStateManager.load_state(key)
-	# "unique_dropped" es la marca que guardaba el antiguo LootDropComponent (saves viejos)
+	# "unique_dropped" is the flag saved by the old LootDropComponent (old saves)
 	return data.get("dropped", false) or data.get("unique_dropped", false)
 
 func _spawn_origin(trigger_node: Node) -> Vector2:
@@ -117,7 +117,7 @@ func _spawn_origin(trigger_node: Node) -> Vector2:
 		return (trigger_node as Node2D).global_position
 	return Vector2.ZERO
 
-## Los ítems van al padre del nodo que ejecuta (el nivel), así no desaparecen si ese nodo se borra.
+## Items go to the running node's parent (the level), so they survive if that node is freed.
 func _spawn_parent(trigger_node: Node) -> Node:
 	if trigger_node.get_parent():
 		return trigger_node.get_parent()
