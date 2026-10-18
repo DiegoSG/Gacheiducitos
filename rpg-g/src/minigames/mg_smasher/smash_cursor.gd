@@ -1,14 +1,14 @@
 class_name SmashCursor
 extends Node2D
-## Cursor del Smasher controlado por input (teclado/stick) o por el mouse.
-## Con `interact` (o click izquierdo) golpea al bicho más cercano dentro de
-## `hit_radius`, que es más grande que la mira para que el golpe perdone un poco.
+## Smasher cursor controlled by input (keyboard/stick) or by the mouse.
+## With `interact` (or left click) it hits the nearest bug within
+## `hit_radius`, which is larger than the reticle so the hit is a bit forgiving.
 
-## Velocidad del cursor en píxeles por segundo.
+## Cursor speed in pixels per second.
 @export var speed: float = 700.0
-## Radio de la mira (solo visual).
+## Reticle radius (visual only).
 @export var radius: float = 26.0
-## Radio del impacto. Debe ser mayor que `radius`.
+## Hit radius. Must be greater than `radius`.
 @export var hit_radius: float = 48.0
 @export var color: Color = Color(1.0, 0.9, 0.2, 0.9)
 

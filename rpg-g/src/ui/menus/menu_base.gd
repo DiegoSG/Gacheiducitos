@@ -1,10 +1,10 @@
 class_name MenuBase
 extends Control
 
-## Menú base reutilizable: título + lista vertical de botones.
-## Navegación con ui_up/ui_down (nativa de Control), Confirmar = ui_accept (nativo del Button),
-## Atrás = ui_cancel (emite back_requested). Lo usan inicio, pausa y opciones.
-## Uso: instanciar menu_base.tscn, llamar add_item() y conectar back_requested.
+## Reusable base menu: title + vertical list of buttons.
+## Navigation with ui_up/ui_down (native to Control), Confirm = ui_accept (native to Button),
+## Back = ui_cancel (emits back_requested). Used by the start, pause and options menus.
+## Usage: instantiate menu_base.tscn, call add_item(), and connect back_requested.
 
 signal back_requested
 
@@ -13,7 +13,7 @@ signal back_requested
 @onready var _title_label: Label = %TitleLabel
 @onready var _button_list: VBoxContainer = %ButtonList
 
-## Evita el sonido de foco cuando el foco inicial lo pone focus_first()
+## Avoids the focus sound when the initial focus is set by focus_first()
 var _silence_focus_sound: bool = false
 
 func _ready() -> void:
@@ -26,7 +26,7 @@ func set_title(new_title: String) -> void:
 		_title_label.text = new_title
 		_title_label.visible = not new_title.is_empty()
 
-## Añade un botón a la lista. Una fila deshabilitada no recibe foco.
+## Adds a button to the list. A disabled row does not receive focus.
 func add_item(text: String, action: Callable = Callable(), disabled: bool = false) -> Button:
 	var button: Button = Button.new()
 	button.text = text
@@ -41,7 +41,7 @@ func add_item(text: String, action: Callable = Callable(), disabled: bool = fals
 	_button_list.add_child(button)
 	return button
 
-## Añade una fila con etiqueta y slider (0.0 a 1.0). Izquierda/derecha cambian el valor.
+## Adds a row with a label and slider (0.0 to 1.0). Left/right change the value.
 func add_slider(text: String, value: float, on_changed: Callable) -> HSlider:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.custom_minimum_size = Vector2(240, 40)
@@ -69,7 +69,7 @@ func clear_items() -> void:
 		_button_list.remove_child(child)
 		child.queue_free()
 
-## Da el foco al primer botón habilitado o slider.
+## Gives focus to the first enabled button or slider.
 func focus_first() -> void:
 	for child: Node in _button_list.get_children():
 		var target: Control = _get_focus_target(child)

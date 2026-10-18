@@ -1,14 +1,14 @@
 class_name ConditionSet
 extends Resource
 
-## Conjunto de condiciones combinadas con AND (ALL) u OR (ANY).
+## Set of conditions combined with AND (ALL) or OR (ANY).
 
 enum Mode { ALL, ANY }
 
 @export var conditions: Array[Condition] = []
 @export var mode: Mode = Mode.ALL
 
-## Un conjunto vacío se considera verdadero.
+## An empty set is considered true.
 func evaluate() -> bool:
 	if conditions.is_empty():
 		return true

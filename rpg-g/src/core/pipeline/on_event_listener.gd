@@ -1,7 +1,7 @@
 class_name OnEventListener
 extends Node
 
-## Escucha GameManager.game_event y dispara el GameTrigger padre o indicado.
+## Listens to GameManager.game_event and fires the parent GameTrigger or the one indicated.
 
 @export var listen_for_event: String = ""
 @export var target_trigger: NodePath = NodePath("")
@@ -21,4 +21,4 @@ func _on_game_event(event_name: String, _data: Variant) -> void:
 	if target is GameTrigger:
 		(target as GameTrigger).force_trigger()
 	else:
-		push_warning("OnEventListener '%s': target_trigger no válido." % name)
+		push_warning("OnEventListener '%s': invalid target_trigger." % name)

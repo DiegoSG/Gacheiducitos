@@ -46,16 +46,16 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY }
 		stackable = new_value
 		emit_changed()
 
-@export_group("Equipo")
-## Datos de equipo (WeaponData, ShieldData...). Si tiene valor, el ítem se puede equipar
-## en un slot de arma o en el de escudo según su `kind`.
+@export_group("Equipment")
+## Equipment data (WeaponData, ShieldData...). If set, the item can be equipped
+## in a weapon slot or the shield slot depending on its `kind`.
 @export var equipment: EquipmentData:
 	set(new_value):
 		equipment = new_value
 		emit_changed()
 
-@export_group("Consumible")
-## Si es true, Inventory.use_item aplica los efectos y consume 1 unidad.
+@export_group("Consumable")
+## If true, Inventory.use_item applies the effects and consumes 1 unit.
 @export var consumable: bool = false:
 	set(new_value):
 		consumable = new_value

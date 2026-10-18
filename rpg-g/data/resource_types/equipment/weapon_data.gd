@@ -1,17 +1,17 @@
 extends EquipmentData
 class_name WeaponData
 
-## Arma cuerpo a cuerpo. El daño se suma a PlayerStats.get_strength().
+## Melee weapon. Damage is added to PlayerStats.get_strength().
 
 @export var damage: int = 1
-## Segundos de espera entre ataques (además de la duración del golpe).
+## Seconds to wait between attacks (in addition to the swing duration).
 @export_range(0.0, 3.0, 0.01, "suffix:s") var cooldown: float = 0.0
-## Tamaño de la zona de golpe (ancho x alcance), en px.
+## Size of the hit zone (width x reach), in px.
 @export var reach: Vector2 = Vector2(60, 60)
 @export var knockback: float = 300.0
-## Visual del golpe (si está vacío se usa el del dueño).
+## Hit visual (if empty, the owner's is used).
 @export var slash_texture: Texture2D
-@export_group("Estado alterado")
+@export_group("Status Effect")
 @export var status_effect: StatusEffectData
 @export_range(0, 100) var status_chance: float = 0.0
 

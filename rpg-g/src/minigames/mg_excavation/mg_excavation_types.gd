@@ -1,6 +1,6 @@
 extends Node
 
-# Tipos de tiles para el motor de Supaplex
+# Tile types for the Supaplex engine
 enum TileType {
 	EMPTY,
 	TIERRA,
@@ -17,7 +17,7 @@ enum TileType {
 	BOMB_PICKUP
 }
 
-# Condiciones de victoria para el motor
+# Win conditions for the engine
 enum WinCondition {
 	ALL_COINS,
 	TARGET_AMOUNT,

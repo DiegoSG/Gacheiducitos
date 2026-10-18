@@ -1,6 +1,6 @@
 extends Control
 
-# Referencias a los sliders y labels
+# References to the sliders and labels
 @onready var densidad_tierra_slider = $VBoxContainer/DensidadTierra/Slider
 @onready var densidad_tierra_label = $VBoxContainer/DensidadTierra/Value
 @onready var prob_piedra_slider = $VBoxContainer/ProbPiedra/Slider
@@ -21,13 +21,13 @@ extends Control
 @onready var escala_slider = $VBoxContainer/Escala/Slider
 @onready var escala_label = $VBoxContainer/Escala/Value
 
-# Parámetros de configuración
+# Configuration parameters
 var config = {
 	"densidad_tierra": 0.45,
 	"probabilidad_piedra": 0.15,
 	"num_enemigos": 3,
 	"num_monedas": 10,
-	"win_condition": 0, # 0: Todas, 1: Cantidad, 2: Objeto
+	"win_condition": 0, # 0: All, 1: Amount, 2: Item
 	"target_amount": 5,
 	"tiempo_limite": 180,
 	"seed": -1,
@@ -40,7 +40,7 @@ var config = {
 @onready var rock_logic_check = $VBoxContainer/VisibilidadDebug/RockLogic
 
 func _ready() -> void:
-	# Configurar valores iniciales
+	# Set initial values
 	densidad_tierra_slider.value = config.densidad_tierra
 	prob_piedra_slider.value = config.probabilidad_piedra
 	num_enemigos_slider.value = config.num_enemigos
@@ -54,7 +54,7 @@ func _ready() -> void:
 	rock_logic_check.button_pressed = config.show_rock_logic
 	escala_slider.value = config.escala
 	
-	# Conectar señales
+	# Connect signals
 	densidad_tierra_slider.value_changed.connect(_on_densidad_tierra_changed)
 	prob_piedra_slider.value_changed.connect(_on_prob_piedra_changed)
 	num_enemigos_slider.value_changed.connect(_on_num_enemigos_changed)
@@ -69,7 +69,7 @@ func _ready() -> void:
 	start_button.pressed.connect(_on_start_pressed)
 	exit_button.pressed.connect(_on_exit_pressed)
 	
-	# Actualizar labels
+	# Update labels
 	_update_labels()
 
 func _update_labels() -> void:
@@ -95,7 +95,7 @@ func _on_num_enemigos_changed(value: float) -> void:
 
 func _on_num_monedas_changed(value: float) -> void:
 	config.num_monedas = int(value)
-	# Limitar el target amount al número de monedas
+	# Cap the target amount to the number of coins
 	target_amount_slider.max_value = config.num_monedas
 	if config.target_amount > config.num_monedas:
 		config.target_amount = config.num_monedas
@@ -112,7 +112,7 @@ func _on_target_amount_changed(value: float) -> void:
 	_update_labels()
 
 func _update_target_amount_visibility() -> void:
-	target_amount_container.visible = (config.win_condition == 1) # Cantidad específica
+	target_amount_container.visible = (config.win_condition == 1) # Specific amount
 
 func _on_tiempo_limite_changed(value: float) -> void:
 	config.tiempo_limite = int(value)
@@ -129,19 +129,19 @@ func _on_rock_logic_toggled(button_pressed: bool) -> void:
 	config.show_rock_logic = button_pressed
 
 func _on_start_pressed() -> void:
-	# Obtener seed del input
+	# Get seed from the input
 	var seed_text = seed_input.text.strip_edges()
 	if seed_text.is_empty():
-		config.seed = -1  # Seed aleatorio
+		config.seed = -1  # Random seed
 	else:
 		config.seed = int(seed_text)
 	
-	# Pasar configuración al GameManager
+	# Pass configuration to GameManager
 	GameManager.minigame_config = config
 	
-	# Cargar el minijuego
+	# Load the minigame
 	GameManager.load_minigame("res://src/minigames/mg_excavation/mg_excavation_game.tscn")
 
 func _on_exit_pressed() -> void:
-	# Volver al overworld
+	# Return to the overworld
 	GameManager.return_to_overworld()

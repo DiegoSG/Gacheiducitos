@@ -4,8 +4,8 @@ class_name WorldBoundaryManager
 
 signal bounds_changed(new_bounds: Vector2)
 
-@export_group("Dimensiones del Nivel")
-## Ancho del nivel en píxeles
+@export_group("Level Dimensions")
+## Level width in pixels
 @export var width: float = 3840.0:
 	set(val):
 		width = maxf(val, 60.0)
@@ -15,7 +15,7 @@ signal bounds_changed(new_bounds: Vector2)
 			bounds_changed.emit(level_bounds)
 			_update_camera_bounds()
 
-## Alto del nivel en píxeles
+## Level height in pixels
 @export var height: float = 2160.0:
 	set(val):
 		height = maxf(val, 60.0)
@@ -25,21 +25,21 @@ signal bounds_changed(new_bounds: Vector2)
 			bounds_changed.emit(level_bounds)
 			_update_camera_bounds()
 
-@export_group("Visualización en Editor")
-## Color del marco de límites
+@export_group("Editor Visualization")
+## Color of the boundary frame
 @export var border_color: Color = Color(0.18, 0.75, 1.0, 0.85):
 	set(val):
 		border_color = val
 		queue_redraw()
 
-## Grosor de la línea del marco
+## Thickness of the frame line
 @export var line_width: float = 4.0:
 	set(val):
 		line_width = val
 		queue_redraw()
 
-@export_group("Física")
-## Grosor de los muros de colisión invisibles fuera de la pantalla
+@export_group("Physics")
+## Thickness of the invisible collision walls outside the screen
 @export var margin_thickness: float = 100.0
 
 var level_bounds: Vector2 = Vector2(3840, 2160)
@@ -72,38 +72,38 @@ func _draw() -> void:
 
 	var bounds_rect: Rect2 = Rect2(Vector2.ZERO, level_bounds)
 	
-	# Marco exterior
+	# Outer frame
 	draw_rect(bounds_rect, border_color, false, line_width)
 	
-	# Esquinas decorativas de referencia
+	# Decorative reference corners
 	var corner_len: float = minf(60.0, minf(level_bounds.x, level_bounds.y) * 0.1)
 	var corner_color: Color = Color(1.0, 0.85, 0.2, 0.9)
 	var c_thick: float = line_width + 2.0
 	
-	# Superior Izquierda
+	# Top Left
 	draw_line(Vector2.ZERO, Vector2(corner_len, 0), corner_color, c_thick)
 	draw_line(Vector2.ZERO, Vector2(0, corner_len), corner_color, c_thick)
 	
-	# Superior Derecha
+	# Top Right
 	var top_right: Vector2 = Vector2(level_bounds.x, 0)
 	draw_line(top_right, top_right + Vector2(-corner_len, 0), corner_color, c_thick)
 	draw_line(top_right, top_right + Vector2(0, corner_len), corner_color, c_thick)
 
-	# Inferior Izquierda
+	# Bottom Left
 	var bl: Vector2 = Vector2(0, level_bounds.y)
 	draw_line(bl, bl + Vector2(corner_len, 0), corner_color, c_thick)
 	draw_line(bl, bl + Vector2(0, -corner_len), corner_color, c_thick)
 
-	# Inferior Derecha
+	# Bottom Right
 	var br: Vector2 = level_bounds
 	draw_line(br, br + Vector2(-corner_len, 0), corner_color, c_thick)
 	draw_line(br, br + Vector2(0, -corner_len), corner_color, c_thick)
 	
-	# Información de dimensiones
+	# Dimensions info
 	if Engine.is_editor_hint():
 		var tiles_x: int = int(round(level_bounds.x / 60.0))
 		var tiles_y: int = int(round(level_bounds.y / 60.0))
-		var info_text: String = "Límites de Nivel: %d x %d px (%d x %d tiles de 60px)" % [int(level_bounds.x), int(level_bounds.y), tiles_x, tiles_y]
+		var info_text: String = "Level Bounds: %d x %d px (%d x %d tiles of 60px)" % [int(level_bounds.x), int(level_bounds.y), tiles_x, tiles_y]
 		var font: Font = ThemeDB.fallback_font
 		var font_size: int = 18
 		draw_string(font, Vector2(16, 28), info_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, corner_color)
@@ -131,25 +131,25 @@ func _create_boundaries() -> void:
 	_static_body.collision_mask = 0
 	add_child(_static_body)
 
-	# Borde Izquierdo
+	# Left edge
 	_add_wall_shape(
 		Vector2(-margin_thickness / 2.0, level_bounds.y / 2.0),
 		Vector2(margin_thickness, level_bounds.y + margin_thickness * 2.0)
 	)
 
-	# Borde Derecho
+	# Right edge
 	_add_wall_shape(
 		Vector2(level_bounds.x + margin_thickness / 2.0, level_bounds.y / 2.0),
 		Vector2(margin_thickness, level_bounds.y + margin_thickness * 2.0)
 	)
 
-	# Borde Superior
+	# Top edge
 	_add_wall_shape(
 		Vector2(level_bounds.x / 2.0, -margin_thickness / 2.0),
 		Vector2(level_bounds.x + margin_thickness * 2.0, margin_thickness)
 	)
 
-	# Borde Inferior
+	# Bottom edge
 	_add_wall_shape(
 		Vector2(level_bounds.x / 2.0, level_bounds.y + margin_thickness / 2.0),
 		Vector2(level_bounds.x + margin_thickness * 2.0, margin_thickness)

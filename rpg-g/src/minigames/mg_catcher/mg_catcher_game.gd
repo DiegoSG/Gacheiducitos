@@ -11,7 +11,7 @@ extends MinigameBase
 var base_fall_speed: float = 200.0
 var spawn_rate: float = 1.0
 var max_falling_objects: int = 10
-## Segundos que los objetos que no matan quedan en el suelo antes de desaparecer.
+## Seconds that items that do not kill stay on the floor before disappearing.
 var floor_wait_time: float = 3.0
 var game_mode: String = "TIME"
 var target_value: float = 30.0
@@ -54,7 +54,7 @@ func _ready() -> void:
 	spawn_timer.timeout.connect(_on_spawn_timeout)
 	add_child(spawn_timer)
 	
-	# Floor area a la altura de los pies del jugador
+	# Floor area at the height of the player's feet
 	var floor_area = Area2D.new()
 	floor_area.add_to_group("catcher_floor")
 	var screen_size = get_viewport_rect().size
@@ -97,27 +97,27 @@ func _on_spawn_timeout() -> void:
 	var screen_size = get_viewport_rect().size
 	var spawn_x = randf_range(50, screen_size.x - 50)
 	
-	# Determinar si es un item del pool de inventario o si es crítico
+	# Determine whether this is an item from the inventory pool or a critical one
 	var chosen_item_id: String = ""
 	var is_crit: bool = false
 	var custom_texture: Texture2D = null
 	
 	if not is_bomb:
-		# Evaluar si seleccionamos un item del pool
+		# Evaluate whether we select an item from the pool
 		if not item_pool.is_empty():
 			if item_pool[0] is Dictionary:
 				chosen_item_id = pick_item_from_pool(item_pool)
 				is_crit = _is_pool_entry_critical(chosen_item_id)
 			elif randf() < 0.35:
-				# Si es un Array de Strings (ej. ["blue_potion", "red_potion", "green_herb"])
-				# 35% de probabilidad de que este punto caiga como ítem de inventario
+				# If it is an Array of Strings (e.g. ["blue_potion", "red_potion", "green_herb"])
+				# 35% chance that this point falls as an inventory item
 				chosen_item_id = pick_item_from_pool(item_pool)
 		
-		# Si está explícitamente en la lista de críticos
+		# If it is explicitly in the critical list
 		if not chosen_item_id.is_empty() and critical_item_ids.has(chosen_item_id):
 			is_crit = true
 		elif chosen_item_id.is_empty() and not critical_item_ids.is_empty():
-			# Si no hay pool pero se especificó que los puntos normales son críticos
+			# If there is no pool but normal points were specified as critical
 			if critical_item_ids.has("point"):
 				is_crit = true
 		
@@ -135,7 +135,7 @@ func _on_spawn_timeout() -> void:
 	item.tree_exited.connect(func(): active_objects -= 1)
 	active_objects += 1
 
-## Indica si la entrada del pool (formato Dictionary) con ese id está marcada como crítica.
+## Indicates whether the pool entry (Dictionary format) with that id is marked as critical.
 func _is_pool_entry_critical(entry_id: String) -> bool:
 	if entry_id.is_empty():
 		return false
@@ -146,7 +146,7 @@ func _is_pool_entry_critical(entry_id: String) -> bool:
 
 func _on_item_expired(is_crit: bool) -> void:
 	if is_crit:
-		# Si era un item crítico obligatorio y expiró en el suelo, se pierde vida
+		# If it was a mandatory critical item and expired on the floor, a life is lost
 		AudioManager.play_sfx(&"sfx_catch_miss")
 		_lose_life()
 		_update_ui()

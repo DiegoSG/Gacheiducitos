@@ -13,14 +13,14 @@ extends Control
 @onready var exit_button = $VBoxContainer/ExitButton
 
 var config = {
-	"win_condition": 0, # 0: Altura, 1: Trampolín Especial, 2: Monedas
+	"win_condition": 0, # 0: Height, 1: Special Trampoline, 2: Coins
 	"target_value": 100,
 	"coin_density": 0.3,
 	"special_height": 300
 }
 
 func _ready() -> void:
-	# Conectar señales
+	# Connect signals
 	win_condition_option.item_selected.connect(_on_win_condition_selected)
 	target_value_slider.value_changed.connect(_on_target_value_changed)
 	coin_density_slider.value_changed.connect(_on_coin_density_changed)
@@ -32,15 +32,15 @@ func _ready() -> void:
 
 func _update_ui() -> void:
 	match config.win_condition:
-		0: # Altura
+		0: # Height
 			target_label.text = "Altura Objetivo:"
 			target_value_slider.min_value = 50
 			target_value_slider.max_value = 500
 			target_value_slider.step = 10
 			target_value_container.visible = true
-		1: # Especial
+		1: # Special
 			target_value_container.visible = false
-		2: # Monedas
+		2: # Coins
 			target_label.text = "Num. Monedas:"
 			target_value_slider.min_value = 5
 			target_value_slider.max_value = 50
@@ -54,7 +54,7 @@ func _update_ui() -> void:
 func _on_win_condition_selected(index: int) -> void:
 	config.win_condition = index
 	if index == 0: config.target_value = 100
-	elif index == 1: config.target_value = config.special_height # En modo Especial, target_value es la altura de la plataforma
+	elif index == 1: config.target_value = config.special_height # In Special mode, target_value is the platform height
 	elif index == 2: config.target_value = 10
 	_update_ui()
 

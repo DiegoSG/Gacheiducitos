@@ -15,9 +15,9 @@ func execute(_trigger_node: Node) -> void:
 	# Default behavior is just to finish immediately
 	finished.emit()
 
-## Convierte un texto de configuración al tipo adecuado:
-## true/false/verdadero/falso (sin distinguir mayúsculas) -> bool, entero -> int, decimal -> float,
-## cualquier otro caso -> el String original.
+## Converts a config text to the appropriate type:
+## true/false/verdadero/falso (case-insensitive) -> bool, integer -> int, decimal -> float,
+## any other input -> the original String.
 static func parse_value(text: String) -> Variant:
 	var lowered: String = text.to_lower()
 	if lowered == "true" or lowered == "verdadero":
@@ -30,7 +30,7 @@ static func parse_value(text: String) -> Variant:
 		return text.to_float()
 	return text
 
-## Dispara un evento global vía GameManager.trigger_event. No hace nada si el nombre está vacío.
+## Fires a global event via GameManager.trigger_event. Does nothing if the name is empty.
 func emit_game_event(event_name: String) -> void:
 	if event_name.is_empty():
 		return

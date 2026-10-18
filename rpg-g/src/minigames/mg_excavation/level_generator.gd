@@ -1,9 +1,9 @@
 extends Node2D
 
-# Script para generar niveles procedurales usando Autómatas Celulares
+# Script to generate procedural levels using Cellular Automata
 class_name LevelGenerator
 
-# Referencia al TileType del engine
+# Reference to the engine's TileType
 const MGT = preload("res://src/minigames/mg_excavation/mg_excavation_types.gd")
 const TileType = MGT.TileType
 const WinCondition = MGT.WinCondition
@@ -11,32 +11,32 @@ const WinCondition = MGT.WinCondition
 static func generate_level(width: int, height: int, config: Dictionary) -> Array:
 	var grid: Array = []
 
-	# Obtener parámetros de configuración
+	# Get configuration parameters
 	var densidad_tierra: float = config.get("densidad_tierra", 0.45)
 	var prob_piedra: float = config.get("probabilidad_piedra", 0.15)
 	var seed_value: Variant = config.get("seed", -1)
 	
-	# Configurar seed
+	# Set seed
 	if seed_value != -1:
 		seed(seed_value)
 	
-	# Inicializar grid vacío
+	# Initialize empty grid
 	for y in range(height):
 		var row: Array = []
 		for x in range(width):
 			row.append(TileType.EMPTY)
 		grid.append(row)
 	
-	# Paso 1: Generar ruido inicial (tierra aleatoria)
+	# Step 1: Generate initial noise (random dirt)
 	for y in range(1, height - 1):
 		for x in range(1, width - 1):
 			if randf() < densidad_tierra:
 				grid[y][x] = TileType.TIERRA
 	
-	# Paso 2: Aplicar Autómatas Celulares (suavizado)
+	# Step 2: Apply cellular automata (smoothing)
 	grid = _smooth_cave(grid, width, height, 3)
 	
-	# Paso 3: Colocar bordes de muro irrompible
+	# Step 3: Place unbreakable wall borders
 	for x in range(width):
 		grid[0][x] = TileType.MURO_IRROMPIBLE
 		grid[height - 1][x] = TileType.MURO_IRROMPIBLE
@@ -45,24 +45,24 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 		grid[y][0] = TileType.MURO_IRROMPIBLE
 		grid[y][width - 1] = TileType.MURO_IRROMPIBLE
 	
-	# Paso 4: Asegurar zona de inicio despejada
+	# Step 4: Clear the start area
 	for y in range(1, 4):
 		for x in range(1, 4):
 			grid[y][x] = TileType.EMPTY
 
-	# Paso 5: Colocar piedras y bombas ambientales en zonas con soporte inferior
+	# Step 5: Place rocks and ambient bombs in areas with support below
 	var prob_bomba_ambiental: float = config.get("prob_bomba_ambiental", 0.04)
 	for y in range(3, height - 3):
 		for x in range(3, width - 3):
 			if randf() < prob_piedra:
-				# Solo colocar si hay algo debajo (no flotar en el aire inicialmente)
+				# Only place if there is something below (don't float in mid-air initially)
 				if y < height - 1 and grid[y + 1][x] != TileType.EMPTY:
 					if randf() < prob_bomba_ambiental:
 						grid[y][x] = TileType.BOMBA
 					else:
 						grid[y][x] = TileType.PIEDRA
 	
-	# Paso 6: Colocar monedas (ITEM_RECOMPENSA)
+	# Step 6: Place coins (ITEM_RECOMPENSA)
 	var num_monedas: int = config.get("num_monedas", 10)
 	var empty_or_dirt_spaces: Array = []
 	for y in range(3, height - 3):
@@ -79,7 +79,7 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 		else:
 			num_monedas += 1
 
-	# Paso 6.5: Colocar ítems de inventario y bombas manuales reemplazando tierra visible
+	# Step 6.5: Place inventory items and manual bombs, replacing visible dirt
 	var deliver_items = config.get("deliver_items", false)
 	if deliver_items:
 		var dirt_spaces = []
@@ -89,19 +89,19 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 					dirt_spaces.append(Vector2i(x, y))
 		dirt_spaces.shuffle()
 		
-		# Colocar entre 3 y 6 items de inventario visibles reemplazando tierra
+		# Place 3 to 6 visible inventory items, replacing dirt
 		var num_items_inv = randi_range(3, 6)
 		for i in range(min(num_items_inv, dirt_spaces.size())):
 			var p = dirt_spaces.pop_back()
 			grid[p.y][p.x] = TileType.ITEM_INVENTARIO
 			
-		# Colocar 2-4 pickups de bombas manuales para que el jugador pueda plantar
+		# Place 2-4 manual bomb pickups so the player can plant bombs
 		var num_bomb_pickups = randi_range(2, 4)
 		for i in range(min(num_bomb_pickups, dirt_spaces.size())):
 			var p = dirt_spaces.pop_back()
 			grid[p.y][p.x] = TileType.BOMB_PICKUP
 
-	# Paso 7: Colocar ítem de misión si es necesario
+	# Step 7: Place mission item if needed
 	if config.get("win_condition") == WinCondition.SPECIFIC_ITEM:
 		var mission_item_placed = false
 		for attempt in range(50):
@@ -114,7 +114,7 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 		if not mission_item_placed:
 			grid[3][3] = TileType.ITEM_MISION
 
-	# Paso 7.5: Colocar salida en la zona inferior derecha
+	# Step 7.5: Place exit in the bottom-right area
 	var exit_placed = false
 	for attempt in range(50):
 		var ex = randi_range(width - 10, width - 3)
@@ -127,13 +127,13 @@ static func generate_level(width: int, height: int, config: Dictionary) -> Array
 	if not exit_placed:
 		grid[height - 2][width - 2] = TileType.SALIDA
 	
-	# Paso 8: Validar conectividad (Flood Fill desde inicio)
+	# Step 8: Validate connectivity (flood fill from start)
 	if not _is_reachable(grid, width, height, Vector2i(1, 1)):
 		return generate_level(width, height, config)
 	
 	return grid
 
-# Suavizado usando reglas de autómatas celulares
+# Smoothing using cellular automata rules
 static func _smooth_cave(grid: Array, width: int, height: int, iterations: int) -> Array:
 	for _i in range(iterations):
 		var new_grid = []
@@ -147,8 +147,8 @@ static func _smooth_cave(grid: Array, width: int, height: int, iterations: int) 
 			for x in range(1, width - 1):
 				var wall_count = _count_neighbors(grid, x, y, width, height)
 				
-				# Regla: si hay 5+ vecinos de tierra, convertir en tierra
-				# Si hay 3- vecinos de tierra, convertir en vacío
+				# Rule: if 5+ dirt neighbors, turn into dirt
+				# If 3 or fewer dirt neighbors, turn into empty
 				if wall_count >= 5:
 					new_grid[y][x] = TileType.TIERRA
 				elif wall_count <= 3:
@@ -169,13 +169,13 @@ static func _count_neighbors(grid: Array, x: int, y: int, width: int, height: in
 			var ny = y + dy
 			
 			if nx < 0 or nx >= width or ny < 0 or ny >= height:
-				count += 1 # Bordes cuentan como tierra
+				count += 1 # Borders count as dirt
 			elif grid[ny][nx] == TileType.TIERRA:
 				count += 1
 	
 	return count
 
-# Validar que la salida sea alcanzable desde el inicio usando Flood Fill
+# Validate that the exit is reachable from the start using flood fill
 static func _is_reachable(grid: Array, width: int, height: int, start: Vector2i) -> bool:
 	var visited = {}
 	var queue = [start]
@@ -190,12 +190,12 @@ static func _is_reachable(grid: Array, width: int, height: int, start: Vector2i)
 		
 		visited[key] = true
 		
-		# Verificar si es la salida
+		# Check whether this is the exit
 		if grid[pos.y][pos.x] == TileType.SALIDA:
 			found_exit = true
 			break
 		
-		# Expandir a vecinos caminables
+		# Expand to walkable neighbors
 		for dir in [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]:
 			var next = pos + dir
 			
@@ -203,7 +203,7 @@ static func _is_reachable(grid: Array, width: int, height: int, start: Vector2i)
 				continue
 			
 			var tile = grid[next.y][next.x]
-			# Caminable: EMPTY, TIERRA (excavable), SALIDA
+			# Walkable: EMPTY, TIERRA (diggable), SALIDA
 			if tile == TileType.EMPTY or tile == TileType.TIERRA or tile == TileType.SALIDA:
 				var next_key = str(next.x) + "," + str(next.y)
 				if not visited.has(next_key):

@@ -1,7 +1,7 @@
 extends ItemEffect
 class_name CureStatusEffect
 
-## Si cure_all es true, cura todos los estados; si no, solo el de status_id.
+## If cure_all is true, cures all statuses; otherwise only the one in status_id.
 @export var status_id: String = ""
 @export var cure_all: bool = true
 

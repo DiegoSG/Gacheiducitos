@@ -1,8 +1,8 @@
 extends Resource
 class_name EquipmentData
 
-## Datos base de un equipo (ver design/Sistema_Armas_y_Escudo.md).
-## MELEE y THROWABLE van en los slots de arma; SHIELD en el de escudo.
+## Base data for an equipment item (see design/Sistema_Armas_y_Escudo.md).
+## MELEE and THROWABLE go in the weapon slots; SHIELD goes in the shield slot.
 
 enum Kind { MELEE, THROWABLE, SHIELD }
 

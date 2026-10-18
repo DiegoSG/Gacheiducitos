@@ -1,35 +1,35 @@
 class_name GoldAction
 extends ActionResource
 
-## Acción que añade o sustrae monedas de oro del jugador en PlayerStats.
-## Compatible con el pipeline de GameTrigger, DialogueEvent y OnEventListener.
+## Action that adds or subtracts gold coins from the player in PlayerStats.
+## Compatible with the GameTrigger, DialogueEvent and OnEventListener pipeline.
 
 @export_group("Gold Configuration")
-## Cantidad de oro a sumar o restar
+## Amount of gold to add or subtract
 @export_range(1, 99999) var amount: int = 10
-## Operación: 'add' (sumar oro) o 'remove' (sustracción atómica)
+## Operation: 'add' (add gold) or 'remove' (atomic subtraction)
 @export_enum("add", "remove") var operation: String = "add"
-## Si es true, muestra la notificación toast en el HUD al recibir el oro
+## If true, shows the toast notification on the HUD when receiving the gold
 @export var show_feedback: bool = true
 
-@export_group("Event Triggers (Opcionales)")
-## Evento global disparado vía GameManager.trigger_event si la acción se completa con éxito.
+@export_group("Event Triggers (Optional)")
+## Global event fired via GameManager.trigger_event if the action completes successfully.
 @export var on_success_event: String = ""
-## Evento global disparado vía GameManager.trigger_event si no alcanza el oro para pagar.
+## Global event fired via GameManager.trigger_event if there is not enough gold to pay.
 @export var on_fail_event: String = ""
 
 func get_action_name() -> String:
-	return "GoldAction (%s %d oro)" % [operation, amount]
+	return "GoldAction (%s %d gold)" % [operation, amount]
 
 func execute(trigger_node: Node) -> void:
 	if not trigger_node:
-		push_warning("GoldAction: trigger_node es null.")
+		push_warning("GoldAction: trigger_node is null.")
 		emit_game_event(on_fail_event)
 		finished.emit()
 		return
 
 	if amount <= 0:
-		push_warning("GoldAction: amount debe ser mayor a 0.")
+		push_warning("GoldAction: amount must be greater than 0.")
 		emit_game_event(on_fail_event)
 		finished.emit()
 		return
@@ -45,7 +45,7 @@ func execute(trigger_node: Node) -> void:
 		if PlayerStats.remove_gold(amount):
 			emit_game_event(on_success_event)
 		else:
-			# Fallo: no alcanza el oro (no se descuenta nada)
+			# Failure: not enough gold (nothing is deducted)
 			emit_game_event(on_fail_event)
 
 	finished.emit()

@@ -1,16 +1,16 @@
 extends Control
 
-## Escena de prueba de AudioManager. Asigna tonos generados en memoria a algunos IDs
-## (no modifica el catálogo en disco) y ofrece botones para música, efectos, pausa y volumen.
+## AudioManager test scene. Assigns in-memory generated tones to some IDs
+## (does not modify the catalog on disk) and offers buttons for music, effects, pause and volume.
 
 const TONE_MIX_RATE: int = 22050
 const MUSIC_A_ID: StringName = &"music_level_01"
 const MUSIC_B_ID: StringName = &"music_level_02"
 const SFX_ID: StringName = &"sfx_player_attack"
 const UI_ID: StringName = &"sfx_ui_confirm"
-## Está en el catálogo pero sin sonido: debe quedar en silencio y avisar una vez por consola.
+## In the catalog but with no sound: must stay silent and warn once in the console.
 const UNASSIGNED_ID: StringName = &"sfx_chest_open"
-## No está en el catálogo: debe quedar en silencio y avisar una vez por consola.
+## Not in the catalog: must stay silent and warn once in the console.
 const UNKNOWN_ID: StringName = &"sfx_no_existe"
 
 @onready var _buttons: VBoxContainer = %Buttons
@@ -50,7 +50,7 @@ func _toggle_pause() -> void:
 	else:
 		GameManager.release_pause()
 
-## Cambia la entrada solo en memoria: cada pulsación debe sonar con un tono distinto.
+## Changes the entry in memory only: each press must sound with a different tone.
 func _play_with_pitch_random() -> void:
 	var entry: AudioEntry = AudioManager.get_playable_entry(SFX_ID)
 	if entry == null:
@@ -59,7 +59,7 @@ func _play_with_pitch_random() -> void:
 	entry.cooldown = 0.0
 	AudioManager.play_sfx(SFX_ID)
 
-## Cambia la entrada solo en memoria: pulsando rápido solo suena una vez cada medio segundo.
+## Changes the entry in memory only: pressing quickly only sounds once every half second.
 func _play_with_cooldown() -> void:
 	var entry: AudioEntry = AudioManager.get_playable_entry(SFX_ID)
 	if entry == null:
@@ -92,12 +92,12 @@ func _add_slider(text: String, bus: StringName) -> void:
 	row.add_child(slider)
 	_buttons.add_child(row)
 
-## Asigna en memoria un tono senoidal a la entrada del catálogo.
+## Assigns a sine tone in memory to the catalog entry.
 func _assign_test_tone(id: StringName, frequency: float, duration: float, loop: bool) -> void:
 	var catalog: AudioCatalog = load(AudioManager.CATALOG_PATH) as AudioCatalog
 	var entry: AudioEntry = catalog.get_entry(id) if catalog != null else null
 	if entry == null:
-		push_error("test_audio: falta el ID en el catálogo: %s" % id)
+		push_error("test_audio: ID missing from the catalog: %s" % id)
 		return
 	entry.stream = _make_tone(frequency, duration, loop)
 

@@ -7,7 +7,7 @@ const ENEMY_SCENE = preload("res://src/minigames/mg_runner/mg_runner_enemy.tscn"
 enum WinCondition { DISTANCE = 0, OBJECT = 1 }
 enum CoinPattern { LINE_1, LINE_2, LINE_3, LINE_4, V_SHAPE, V_INVERTED }
 
-# Parámetros configurables
+# Configurable parameters
 @export var win_condition: WinCondition = WinCondition.DISTANCE
 @export var target_value: float = 1500.0
 @export var target_item_id: String = "ancient_map"
@@ -16,22 +16,22 @@ enum CoinPattern { LINE_1, LINE_2, LINE_3, LINE_4, V_SHAPE, V_INVERTED }
 @export var run_speed: float = 380.0
 @export var distance_factor: float = 0.1
 @export var coin_density: float = 0.55
-@export var max_coins: int = -1 # -1 = Sin límite estricto
+@export var max_coins: int = -1 # -1 = No strict limit
 @export var item_spawn_rate: float = 0.25
-@export var item_pool: Array = ["blue_potion", "red_potion", "green_herb"] # Puede ser Array[String] o Array[Dictionary]
+@export var item_pool: Array = ["blue_potion", "red_potion", "green_herb"] # Can be Array[String] or Array[Dictionary]
 
-# Aumento dinámico de velocidad
-@export var speed_increase_interval: float = 200.0 # Cada cuántos metros acelera
-@export var speed_increase_amount: float = 25.0 # Cuánta velocidad suma
+# Dynamic speed increase
+@export var speed_increase_interval: float = 200.0 # Every how many meters it speeds up
+@export var speed_increase_amount: float = 25.0 # How much speed it adds
 var next_speed_increase_dist: float = 200.0
 
-# Spawn de munición creciente
+# Increasing ammo spawn
 @export var ammo_spawn_initial_distance: float = 120.0
 @export var ammo_spawn_distance_multiplier: float = 1.35
 var next_ammo_spawn_distance: float = 120.0
 var ammo_spawn_step: float = 120.0
 
-# Anti-solapamiento: Registro del último X donde se generó un obstáculo/entidad
+# Anti-overlap: records the last X where an obstacle/entity was generated
 var last_spawned_x: float = 0.0
 const MIN_OBSTACLE_SPACING: float = 320.0
 
@@ -43,13 +43,13 @@ var is_playing: bool = false
 var coins_collected: int = 0
 var total_coins_spawned: int = 0
 
-# Control de spawns
+# Spawn control
 var spawn_timer: float = 0.0
 var time_between_spawns: float = 1.6
 var target_spawn_distance: float = 0.0
 var target_object_spawned: bool = false
 
-# Scrolling de suelo
+# Ground scrolling
 var ground_scroll_offset: float = 0.0
 
 @onready var player: MG_RunnerPlayer = $RunnerPlayer
@@ -120,29 +120,29 @@ func _process(delta: float) -> void:
 	if not is_playing:
 		return
 		
-	# Distancia
+	# Distance
 	current_distance += (run_speed * distance_factor) * delta
 	
-	# Comprobar aceleración de velocidad cada X distancia
+	# Check speed acceleration every X distance
 	if current_distance >= next_speed_increase_dist:
 		run_speed += speed_increase_amount
 		next_speed_increase_dist += speed_increase_interval
 		AudioManager.play_sfx(&"sfx_run_speed_up")
 		time_between_spawns = 1.7 * (350.0 / run_speed)
-		# Actualizar velocidad de los objetos ya existentes en pantalla
+		# Update speed of objects already on screen
 		for c in world_objects.get_children():
 			if "speed" in c and not (c is MG_RunnerEnemy):
 				c.speed = run_speed
 			elif c is MG_RunnerEnemy:
 				c.speed = run_speed + 40.0
 	
-	# Comprobar aparición de munición a distancia creciente
+	# Check ammo appearance at increasing distance
 	if current_distance >= next_ammo_spawn_distance:
 		_spawn_ammo_pickup()
 		ammo_spawn_step *= ammo_spawn_distance_multiplier
 		next_ammo_spawn_distance += ammo_spawn_step
 
-	# Scroll visual del suelo
+	# Visual ground scroll
 	ground_scroll_offset = fmod(ground_scroll_offset + (run_speed * delta), 120.0)
 	ground_dashes.position.x = -ground_scroll_offset
 	
@@ -150,7 +150,7 @@ func _process(delta: float) -> void:
 	_check_win_by_distance()
 	_check_spawn_target_object()
 	
-	# Temporizador de olas de obstáculos y pickups
+	# Timer for obstacle and pickup waves
 	spawn_timer -= delta
 	if spawn_timer <= 0.0:
 		_spawn_wave()
@@ -182,7 +182,7 @@ func _spawn_target_pickup() -> void:
 	pickup.is_victory_target = true
 	pickup.item_id = target_item_id
 	pickup.speed = run_speed
-	# Colocar a ras de suelo para que sea recogida fácilmente
+	# Place flush with the ground so it is easy to collect
 	pickup.position = Vector2(SPAWN_X, GROUND_Y - 45.0)
 	pickup.collected.connect(_on_target_pickup_collected)
 	world_objects.add_child(pickup)
@@ -196,7 +196,7 @@ func _spawn_ammo_pickup() -> void:
 	var pickup = PICKUP_SCENE.instantiate() as MG_RunnerPickup
 	pickup.pickup_type = MG_RunnerPickup.PickupType.AMMO
 	pickup.speed = run_speed
-	# Se coloca flotando a altura media/baja
+	# Placed floating at mid/low height
 	pickup.position = Vector2(SPAWN_X + 150.0, GROUND_Y - 55.0)
 	pickup.collected.connect(func(_p) -> void:
 		AudioManager.play_sfx(&"sfx_run_ammo")
@@ -208,22 +208,22 @@ func _spawn_wave() -> void:
 	var roll: float = randf()
 	
 	if roll < 0.38:
-		# Ola de Obstáculo Terrestre (Salto) + monedas en arco seguro
+		# Ground obstacle wave (Jump) + coins in a safe arc
 		_spawn_obstacle(MG_RunnerObstacle.ObstacleType.LOW)
 		if randf() < coin_density and _can_spawn_more_coins():
-			# El arco V_INVERTED acompaña el salto del obstáculo
+			# The V_INVERTED arc follows the obstacle jump
 			_spawn_coin_pattern(CoinPattern.V_INVERTED, SPAWN_X)
 	elif roll < 0.68:
-		# Ola de Obstáculo Aéreo (Agacharse)
+		# Air obstacle wave (Duck)
 		_spawn_obstacle(MG_RunnerObstacle.ObstacleType.HIGH)
 		if randf() < coin_density and _can_spawn_more_coins():
-			# Monedas a ras de suelo colocadas con offset seguro bajo el obstáculo
+			# Coins flush with the ground, placed with a safe offset under the obstacle
 			_spawn_coin_pattern(CoinPattern.LINE_2, SPAWN_X + 60.0)
 	elif roll < 0.82:
-		# Ola de Enemigo frontal
+		# Frontal enemy wave
 		_spawn_enemy()
 	else:
-		# Tramo libre de obstáculos: sólo monedas o items con distancia limpia
+		# Obstacle-free stretch: only coins or items with a clear distance
 		if randf() < item_spawn_rate and not item_pool.is_empty():
 			_spawn_random_item()
 		elif _can_spawn_more_coins():
@@ -266,17 +266,17 @@ func _spawn_coin_pattern(pattern: CoinPattern, base_x: float) -> void:
 			for i in range(4):
 				positions.append(Vector2(i * spacing_x, GROUND_Y - 55.0))
 		CoinPattern.V_SHAPE:
-			# Patrón en V (baja al centro y sube)
+			# V pattern (drops to the center and rises)
 			positions.append(Vector2(0, GROUND_Y - 140.0))
 			positions.append(Vector2(spacing_x, GROUND_Y - 95.0))
 			positions.append(Vector2(spacing_x * 2, GROUND_Y - 35.0))
 			positions.append(Vector2(spacing_x * 3, GROUND_Y - 95.0))
 			positions.append(Vector2(spacing_x * 4, GROUND_Y - 140.0))
 		CoinPattern.V_INVERTED:
-			# Patrón en V Invertida (Arco parabólico limpio sobre obstáculo de suelo)
+			# Inverted V pattern (clean parabolic arc over a ground obstacle)
 			positions.append(Vector2(-spacing_x * 2, GROUND_Y - 50.0))
 			positions.append(Vector2(-spacing_x, GROUND_Y - 110.0))
-			positions.append(Vector2(0, GROUND_Y - 180.0)) # Cima sobre el obstáculo
+			positions.append(Vector2(0, GROUND_Y - 180.0)) # Peak above the obstacle
 			positions.append(Vector2(spacing_x, GROUND_Y - 110.0))
 			positions.append(Vector2(spacing_x * 2, GROUND_Y - 50.0))
 			

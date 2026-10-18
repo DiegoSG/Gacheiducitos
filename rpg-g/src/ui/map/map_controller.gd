@@ -1,7 +1,7 @@
 class_name MapController
 extends Node
 
-## Escucha `map_toggle` y abre/cierra el MapMenu. Instanciar map_controller.tscn en el PlayerHUD.
+## Listens for `map_toggle` and opens/closes the MapMenu. Instantiate map_controller.tscn in the PlayerHUD.
 
 const MAP_MENU_SCENE: PackedScene = preload("res://src/ui/map/map_menu.tscn")
 

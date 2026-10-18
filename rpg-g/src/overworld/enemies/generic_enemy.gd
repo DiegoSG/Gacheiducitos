@@ -8,19 +8,19 @@ extends CharacterBody2D
 @export var return_to_start_position: bool = true
 @export var return_speed: float = 70.0
 @export var attack_damage: int = 1
-## Intervalo (segundos) entre golpes de daño continuo del hitbox
+## Interval (seconds) between continuous damage hits from the hitbox
 @export var attack_rate: float = 0.6
 
-@export_group("Estado alterado")
-## Si es true, sus golpes pueden envenenar al jugador.
+@export_group("Status Effect")
+## If true, its hits can poison the player.
 @export var is_poisonous: bool = false
 @export_range(0, 100) var poison_chance: float = 100.0
 @export var poison_status: StatusEffectData = preload("res://data/status_effects/poison.tres")
 
-@export_group("Esquive de obstáculos")
-## Si es true, rodea paredes y obstáculos en vez de quedarse pegado contra ellos.
+@export_group("Obstacle Avoidance")
+## If true, goes around walls and obstacles instead of sticking to them.
 @export var avoid_obstacles: bool = true
-## Distancia (px) que mira hacia adelante para detectar si el camino está bloqueado.
+## Distance (px) it looks ahead to detect whether the path is blocked.
 @export var avoidance_lookahead: float = 24.0
 
 @export_group("On Defeat")
@@ -28,9 +28,9 @@ extends CharacterBody2D
 ## They run before the enemy is freed: use instant actions (no waits).
 @export var on_defeat_actions: Array[ActionResource] = []
 
-@export_group("Persistencia")
-## Si tiene un valor asignado, su muerte se guarda en WorldStateManager y no vuelve a aparecer.
-## Si está vacío (""), el estado solo dura mientras el jugador siga en este nivel (clave efímera).
+@export_group("Persistence")
+## If it has an assigned value, its death is saved in WorldStateManager and it does not respawn.
+## If empty (""), the state only lasts while the player stays in this level (ephemeral key).
 @export var persistence_id: String = ""
 
 var current_health: int = 3
@@ -59,20 +59,20 @@ var _cooldown_timer: float = 0.0
 
 const CHASE_SOUND_INTERVAL: float = 0.4
 var _chase_sound_timer: float = 0.0
-## Si en el frame anterior ya alcanzaba al jugador (para avisar una sola vez al entrar en rango).
+## Whether it already reached the player in the previous frame (to announce only once when entering range).
 var _was_in_attack_range: bool = false
 
-# Seguimiento de paredes: al chocar, bordea el obstáculo pegado a él (siempre por el mismo lado)
-# hasta tener el camino libre y estar más cerca del objetivo que cuando chocó. Así sale también
-# de esquinas y bolsillos en "U" sin necesitar navegación en el nivel.
-## Grados entre cada dirección que prueba al buscar un hueco.
+# Wall following: on hitting a wall, it circles the obstacle it is touching (always on the same side)
+# until the path is clear and it is closer to the target than when it hit. This also gets it out
+# of corners and U-shaped pockets without needing navigation in the level.
+## Degrees between each direction it tests when looking for a gap.
 const WALL_FOLLOW_STEP_DEGREES: float = 30.0
-## Tiempo máximo bordeando un mismo obstáculo antes de reintentar desde cero (el objetivo puede moverse).
+## Maximum time circling the same obstacle before retrying from scratch (the target may move).
 const WALL_FOLLOW_MAX_TIME: float = 6.0
-## Si apenas avanza durante este tiempo queriendo moverse, prueba a bordear por el otro lado.
+## If it barely advances during this time while trying to move, it tries circling the other side.
 const STUCK_TIME: float = 0.5
 var _is_following_wall: bool = false
-## -1 o 1: lado hacia el que gira para alejarse de la pared que bordea.
+## -1 or 1: side it turns toward to move away from the wall it is circling.
 var _follow_side: int = 1
 var _follow_heading: Vector2 = Vector2.ZERO
 var _follow_hit_distance: float = 0.0
@@ -96,14 +96,14 @@ func _ready() -> void:
 		lose_target_zone.body_entered.connect(_on_lose_target_entered)
 		lose_target_zone.body_exited.connect(_on_lose_target_exited)
 	elif vision_zone:
-		# Fallback de compatibilidad si solo hay una zona
+		# Compatibility fallback if there is only one zone
 		vision_zone.body_exited.connect(_on_lose_target_exited)
 	
 	if hurtbox_component:
 		hurtbox_component.hit_received.connect(_on_hit_received)
 		
 	if hitbox_component:
-		# Configuramos daño configurable y activamos el hitbox permanentemente con daño continuo
+		# Set configurable damage and keep the hitbox permanently active with continuous damage
 		hitbox_component.damage = attack_damage
 		hitbox_component.continuous_damage = true
 		hitbox_component.attack_rate = attack_rate
@@ -126,7 +126,7 @@ func _physics_process(delta: float) -> void:
 				AudioManager.play_sfx_at(&"sfx_enemy_attack_windup", global_position)
 			_was_in_attack_range = in_range
 			if in_range:
-				# Ya alcanza al jugador con su hitbox: se detiene ahí y sigue atacando
+				# Already reaches the player with its hitbox: stops there and keeps attacking
 				velocity = Vector2.ZERO
 			elif player != null:
 				velocity = _steer(player.global_position, delta) * speed
@@ -160,7 +160,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_update_stuck(previous_position, delta)
 
-## Devuelve la dirección (normalizada) para ir hacia `target`, bordeando obstáculos si hace falta.
+## Returns the (normalized) direction toward `target`, circling obstacles if needed.
 func _steer(target: Vector2, delta: float) -> Vector2:
 	var desired: Vector2 = global_position.direction_to(target)
 	if not avoid_obstacles or desired == Vector2.ZERO:
@@ -185,8 +185,8 @@ func _steer(target: Vector2, delta: float) -> Vector2:
 	if not _is_following_wall:
 		return desired
 
-	# Si ya no tiene la pared al costado (pasó una esquina), gira hacia ella para doblarla;
-	# después se aleja de a poco de la pared hasta encontrar hueco.
+	# If it no longer has the wall at its side (it passed a corner), it turns toward it to round it;
+	# then gradually moves away from the wall until it finds a gap.
 	var first: Vector2 = _follow_heading
 	var toward_wall: Vector2 = _follow_heading.rotated(deg_to_rad(-90.0) * _follow_side)
 	if _probe(toward_wall) == null:
@@ -197,14 +197,14 @@ func _steer(target: Vector2, delta: float) -> Vector2:
 		if _probe(candidate) == null:
 			_follow_heading = candidate
 			return candidate
-	# Rodeado por todos lados: deja que move_and_slide deslice lo que pueda.
+	# Surrounded on all sides: lets move_and_slide slide as far as it can.
 	return desired
 
 func _start_wall_follow(desired: Vector2, blocking: KinematicCollision2D, distance: float) -> void:
 	_is_following_wall = true
 	_follow_timer = 0.0
 	_follow_hit_distance = distance
-	# Bordea en el sentido de la pared que más se parezca a la dirección deseada.
+	# Circles in the direction of the wall that most resembles the desired direction.
 	var tangent: Vector2 = desired.orthogonal()
 	if blocking:
 		tangent = blocking.get_normal().orthogonal()
@@ -213,11 +213,11 @@ func _start_wall_follow(desired: Vector2, blocking: KinematicCollision2D, distan
 	_follow_heading = tangent
 	_follow_side = 1 if desired.cross(tangent) >= 0.0 else -1
 
-## Colisión que encontraría al avanzar `avoidance_lookahead` px en `direction` (null si está libre).
+## Collision it would hit advancing `avoidance_lookahead` px in `direction` (null if free).
 func _probe(direction: Vector2) -> KinematicCollision2D:
 	return move_and_collide(direction * avoidance_lookahead, true)
 
-## Si quiere moverse pero casi no avanza (atascado en una esquina), bordea por el otro lado.
+## If it wants to move but barely advances (stuck in a corner), it circles the other way.
 func _update_stuck(previous_position: Vector2, delta: float) -> void:
 	var is_travelling: bool = current_state == State.CHASE or current_state == State.RETURNING
 	if not avoid_obstacles or not is_travelling or not _is_following_wall or velocity.length() < 1.0:
@@ -237,7 +237,7 @@ func _update_stuck(previous_position: Vector2, delta: float) -> void:
 func _exit_tree() -> void:
 	AlertSystem.unregister_pursuer(self)
 
-## true si el hitbox ya solapa el hurtbox del jugador (punto desde el que puede golpearlo).
+## true if the hitbox already overlaps the player's hurtbox (point from which it can hit them).
 func _is_player_in_attack_range() -> bool:
 	if hitbox_component == null:
 		return false
@@ -290,7 +290,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 
 	current_health -= damage
 
-	# Componente físico del empujón
+	# Physics component of the knockback
 	velocity = attack_direction * knockback_force
 	
 	if current_health <= 0:
@@ -308,7 +308,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 		is_invulnerable = true
 		AudioManager.play_sfx_at(&"sfx_enemy_invulnerable", global_position)
 		
-		# Efecto visual de parpadeo temporal (0.2s por loop completo)
+		# Temporary blink visual effect (0.2s per full loop)
 		var blink_time: float = 0.1
 		var loops: int = int(max(1.0, iframe_duration / (blink_time * 2)))
 

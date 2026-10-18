@@ -1,17 +1,17 @@
 extends EquipmentData
 class_name ShieldData
 
-## Escudo: qué parte del daño bloquea, desde qué ángulo y qué estados detiene.
+## Shield: what part of the damage it blocks, from which angle, and which statuses it stops.
 
-## Porcentaje del daño que bloquea un golpe dentro del ángulo cubierto.
+## Percentage of the damage a hit blocks within the covered angle.
 @export_range(0.0, 100.0, 1.0, "suffix:%") var block_percent: float = 100.0
-## Apertura de la cobertura, centrada en la dirección que mira el dueño (360 = todas las direcciones).
+## Coverage arc, centered on the direction the owner faces (360 = all directions).
 @export_range(10.0, 360.0, 1.0, "suffix:°") var coverage_angle: float = 120.0
-## Multiplicador de velocidad mientras se bloquea (0 = solo girar).
+## Movement speed multiplier while blocking (0 = only turn).
 @export_range(0.0, 1.0, 0.05) var move_speed_multiplier: float = 0.0
-## Si protege de estados alterados en los golpes que cubre.
+## Whether it protects from status effects on the hits it covers.
 @export var blocks_statuses: bool = true
-## Estados que bloquea (vacío = todos, si blocks_statuses está activo).
+## Statuses it blocks (empty = all, if blocks_statuses is on).
 @export var blocked_status_ids: Array[String] = []
 
 func _init() -> void:

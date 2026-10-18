@@ -8,41 +8,41 @@ signal locked()
 signal unlocked()
 
 enum Mode {
-	PORTAL, ## Se activa automáticamente al pisar el área
-	DOOR    ## Se activa interactuando con el botón de acción (E / Espacio / A)
+	PORTAL, ## Activates automatically when stepping onto the area
+	DOOR    ## Activates by interacting with the action button (E / Space / A)
 }
 
-@export_group("Tipo de Acceso")
-## Modo de funcionamiento: PORTAL (al contacto) o DOOR (por interacción)
+@export_group("Access Type")
+## Operating mode: PORTAL (on contact) or DOOR (by interaction)
 @export var mode: Mode = Mode.PORTAL:
 	set(value):
 		mode = value
 		_update_collision_layers()
 		_update_visuals()
 
-## Si está activo o deshabilitado por completo (ej. controlado por eventos)
+## Whether it is active or fully disabled (e.g. controlled by events)
 @export var is_active: bool = true:
 	set(value):
 		is_active = value
 		_update_visuals()
 
-## Si está marcado, no se puede pasar mientras quede algún enemigo vivo (grupo "enemy") en la escena
+## If checked, it cannot be passed while any living enemy (group "enemy") remains in the scene
 @export var requires_no_enemies: bool = false:
 	set(value):
 		requires_no_enemies = value
 		_update_visuals()
 
-## Texto del globo al intentar pasar con enemigos vivos. Si está vacío se usa el de bloqueo (locked_text).
+## Balloon text when trying to pass with living enemies. If empty, the lock text (locked_text) is used.
 @export_multiline var enemies_alive_text: String = ""
 
-@export_group("Cerradura y Llave")
-## Si la puerta está bloqueada con candado/llave
+@export_group("Lock and Key")
+## Whether the door is locked with a padlock/key
 @export var is_locked: bool = false:
 	set(value):
 		is_locked = value
 		_update_visuals()
 
-## Objeto/Llave requerida en el Inventario para abrir. Arrastra aquí un ItemData (ej. rusty_key.tres).
+## Item/key required in the Inventory to open. Drag an ItemData here (e.g. rusty_key.tres).
 @export var key: ItemData:
 	set(value):
 		key = value
@@ -50,55 +50,55 @@ enum Mode {
 			is_locked = true
 		_update_visuals()
 
-## Si consume la llave del inventario al abrirse
+## Whether it consumes the key from the inventory when opened
 @export var consume_key: bool = false
 
-## Texto que se muestra en el globo de diálogo al intentar pasar estando cerrada o inactiva.
-## Cada línea es un paso del diálogo. Si hay un locked_dialogue_resource asignado, este tiene prioridad.
+## Text shown in the dialogue balloon when trying to pass while closed or inactive.
+## Each line is one dialogue step. If a locked_dialogue_resource is assigned, it takes priority.
 @export_multiline var locked_text: String = ""
 
-## Recurso de diálogo opcional para el bloqueo (tiene prioridad sobre locked_text)
+## Optional dialogue resource for the lock (takes priority over locked_text)
 @export var locked_dialogue_resource: Resource
 @export var locked_dialogue_title: String = "locked"
 
-## ID único para persistencia del estado is_locked / is_active entre cambios de nivel.
+## Unique ID for persisting the is_locked / is_active state across level changes.
 @export var persistence_id: String = ""
 
 
-@export_group("Configuración de Destino")
+@export_group("Destination Settings")
 @export_file("*.tscn") var target_level_path: String = "":
 	set(value):
 		target_level_path = value
 		update_configuration_warnings()
 
-## ID de salida: ID de llegada al que se conectará en el nivel destino
+## Exit ID: the arrival ID this connects to in the destination level
 @export var exit_id: String = "":
 	set(value):
 		exit_id = value
 		_update_visuals()
 		update_configuration_warnings()
 
-## ID de llegada: Identificador único propio para recibir jugadores que entren a este nivel
+## Arrival ID: its own unique identifier for receiving players who enter this level
 @export var arrival_id: String = "":
 	set(value):
 		arrival_id = value
 		_update_visuals()
 		update_configuration_warnings()
 
-@export_group("Texturas / Visuales")
-## Textura cuando es un portal activo (abierto/vórtice)
+@export_group("Textures / Visuals")
+## Texture when it is an active portal (open/vortex)
 @export var portal_active_texture: Texture2D = preload("res://assets/sprites/door_portal_open.svg"):
 	set(value):
 		portal_active_texture = value
 		_update_visuals()
 
-## Textura cuando es una puerta desbloqueada/normal
+## Texture when it is an unlocked/normal door
 @export var door_unlocked_texture: Texture2D = preload("res://assets/sprites/door_closed.svg"):
 	set(value):
 		door_unlocked_texture = value
 		_update_visuals()
 
-## Textura cuando está bloqueada o desactivada (candado / rejas)
+## Texture when locked or disabled (padlock / bars)
 @export var locked_texture: Texture2D = preload("res://assets/sprites/door_locked.svg"):
 	set(value):
 		locked_texture = value
@@ -111,14 +111,14 @@ enum Mode {
 
 var _is_triggered: bool = false
 var _persistence_key: String = ""
-## Diálogo generado a partir de locked_text (se crea la primera vez que se necesita)
+## Dialogue generated from locked_text (created the first time it is needed)
 var _locked_text_resource: Resource = null
-## Diálogo generado a partir de enemies_alive_text
+## Dialogue generated from enemies_alive_text
 var _enemies_text_resource: Resource = null
-## Si la última comprobación encontró enemigos vivos (para avisar cuando se despeja la escena)
+## Whether the last check found living enemies (to announce when the scene is cleared)
 var _enemies_blocking: bool = false
 
-## Palabras/prefijos que Dialogue Manager interpreta como sintaxis al inicio de una línea
+## Words/prefixes that Dialogue Manager interprets as syntax at the start of a line
 const _DIALOGUE_SYNTAX_PREFIXES: Array[String] = ["- ", "~", "=>", "=<", "#", "%", "if ", "elif ", "else", "do ", "do! ", "set ", "while ", "match ", "when ", "import ", "using "]
 
 func _ready() -> void:
@@ -134,7 +134,7 @@ func _ready() -> void:
 		_restore_state()
 		if requires_no_enemies:
 			get_tree().node_removed.connect(_on_tree_node_removed)
-			# Diferido: los enemigos se registran en el grupo en su propio _ready
+			# Deferred: enemies register in the group in their own _ready
 			call_deferred("_refresh_enemy_block")
 	_update_visuals()
 
@@ -190,13 +190,13 @@ func _update_visuals() -> void:
 		if Engine.is_editor_hint():
 			$SpawnPoint/ArrivalIdLabel.visible = true
 
-## Invocado por ActionableFinder del Player al pulsar botón de interacción (acción interact)
+## Called by the Player's ActionableFinder when the interact button is pressed (interact action)
 func action() -> void:
 	if mode != Mode.DOOR or _is_triggered:
 		return
 	_attempt_traverse()
 
-## Invocado por colisión al entrar
+## Called by collision when entering
 func _on_body_entered(body: Node2D) -> void:
 	if mode != Mode.PORTAL or _is_triggered or Engine.is_editor_hint():
 		return
@@ -204,7 +204,7 @@ func _on_body_entered(body: Node2D) -> void:
 	if body.name == "Player" or body.is_in_group("player"):
 		_attempt_traverse()
 
-## Invocado por colisión al salir (reactiva el trigger para re-ingreso)
+## Called by collision when exiting (re-arms the trigger for re-entry)
 func _on_body_exited(body: Node2D) -> void:
 	if Engine.is_editor_hint():
 		return
@@ -239,7 +239,7 @@ func _attempt_traverse() -> void:
 		unlocked.emit()
 		_persist_state()
 
-	# Puerta/Portal abierto y listo para viajar
+	# Door/portal open and ready to travel
 	_trigger_transition()
 
 func _trigger_transition() -> void:
@@ -267,7 +267,7 @@ func _show_enemies_feedback() -> void:
 		_enemies_text_resource = DialogueManager.create_resource_from_text(_build_dialogue_from_text(enemies_alive_text))
 	DialogueManager.show_dialogue_balloon(_enemies_text_resource, "start")
 
-## Cuenta los enemigos vivos de la escena (los que ya murieron están en cola de borrado)
+## Counts the living enemies in the scene (ones that already died are queued for deletion)
 func _count_alive_enemies() -> int:
 	var count: int = 0
 	for enemy: Node in get_tree().get_nodes_in_group("enemy"):
@@ -275,7 +275,7 @@ func _count_alive_enemies() -> int:
 			count += 1
 	return count
 
-## Recalcula el bloqueo por enemigos; al despejarse la escena suena el desbloqueo
+## Recalculates the enemy block; when the scene clears, the unlock sound plays
 func _refresh_enemy_block() -> void:
 	if not is_inside_tree():
 		return
@@ -286,12 +286,12 @@ func _refresh_enemy_block() -> void:
 	_update_visuals()
 
 func _on_tree_node_removed(node: Node) -> void:
-	# Al salir del árbol el nodo aún figura en el grupo: se comprueba en diferido
+	# When leaving the tree the node is still in the group: checked deferred
 	if node.is_in_group("enemy"):
 		call_deferred("_refresh_enemy_block")
 
-## Convierte texto plano en un diálogo de un solo título ("start"), escapando la sintaxis
-## de Dialogue Manager para que el texto se muestre literal (sin personaje ni opciones).
+## Converts plain text into a single-title dialogue ("start"), escaping the syntax
+## of Dialogue Manager so the text is shown literally (no character or options).
 func _build_dialogue_from_text(text: String) -> String:
 	var out: String = "~ start\n"
 	for raw_line: String in text.split("\n", false):
@@ -301,13 +301,13 @@ func _build_dialogue_from_text(text: String) -> String:
 		line = line.replace(":", "\\:")
 		for prefix: String in _DIALOGUE_SYNTAX_PREFIXES:
 			if line.begins_with(prefix):
-				# Espacio de ancho cero: evita que la línea se interprete como sintaxis
+				# Zero-width space: prevents the line from being interpreted as syntax
 				line = "\u200B" + line
 				break
 		out += line + "\n"
 	return out + "=> END\n"
 
-## Métodos públicos para ser activados por eventos / interruptores
+## Public methods to be triggered by events / switches
 func unlock() -> void:
 	AudioManager.play_sfx(&"sfx_door_unlock")
 	is_locked = false
@@ -332,8 +332,8 @@ func _persist_state() -> void:
 		return
 	WorldStateManager.save_state(_persistence_key, {"is_locked": is_locked, "is_active": is_active})
 
-## El jugador llega a través de este portal: ignora su contacto hasta que salga del área,
-## para que la caminata de salida no lo devuelva al nivel anterior.
+## The player arrives through this portal: ignores its contact until they leave the area,
+## so the exit walk does not send them back to the previous level.
 func begin_arrival() -> void:
 	_is_triggered = true
 
@@ -345,13 +345,13 @@ func get_spawn_position() -> Vector2:
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 	if target_level_path.strip_edges().is_empty():
-		warnings.append("Debe seleccionar un 'target_level_path' (escena destino).")
+		warnings.append("You must select a 'target_level_path' (destination scene).")
 	if exit_id.strip_edges().is_empty():
-		warnings.append("Debe asignar un 'exit_id' que apunte al arrival_id en el nivel destino.")
+		warnings.append("You must assign an 'exit_id' that points to the arrival_id in the destination level.")
 	if arrival_id.strip_edges().is_empty():
-		warnings.append("Debe asignar un 'arrival_id' único para este portal.")
+		warnings.append("You must assign a unique 'arrival_id' to this portal.")
 	else:
 		var root_node: Node = ArrivalSpawnPoint.find_scene_root(self)
 		if root_node and ArrivalSpawnPoint.count_arrival_id(root_node, arrival_id) > 1:
-			warnings.append("Existe otro portal o spawn point con el mismo arrival_id ('%s'). Deben ser únicos." % arrival_id)
+			warnings.append("Another portal or spawn point has the same arrival_id ('%s'). They must be unique." % arrival_id)
 	return warnings

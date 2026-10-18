@@ -1,8 +1,8 @@
 class_name StartMenu
 extends Control
 
-## Menú de inicio (escena principal). Jugar / Continuar / Opciones / Salir.
-## Uso: se configura como run/main_scene (res://src/ui/menus/start_menu.tscn).
+## Start menu (main scene). Play / Continue / Options / Quit.
+## Usage: set as run/main_scene (res://src/ui/menus/start_menu.tscn).
 
 const NEW_GAME_LEVEL: String = "res://src/overworld/levels/level_01.tscn"
 const OPTIONS_SCENE: PackedScene = preload("res://src/ui/menus/options_menu.tscn")
@@ -12,14 +12,14 @@ const OPTIONS_SCENE: PackedScene = preload("res://src/ui/menus/options_menu.tscn
 var _options: OptionsMenu = null
 
 func _ready() -> void:
-	# GameManager libera current_scene al cambiar de nivel; en la escena principal apunta a otro nodo.
+	# GameManager frees current_scene on level change; in the main scene it points to another node.
 	GameManager.current_scene = self
 	_menu.set_title("RPG-G")
 	_build_items()
 	_menu.focus_first()
 
 func _build_items() -> void:
-	# Continuar carga siempre el autoguardado; las partidas manuales se cargan desde Pausa > Guardar.
+	# Continue always loads the autosave; manual saves are loaded from Pause > Save.
 	var autosave_meta: Dictionary = SaveSystem.get_slot_metadata(SaveSystem.AUTOSAVE_SLOT_ID)
 	if autosave_meta.get("exists", false):
 		_menu.add_item("Continuar", _on_continue_pressed)

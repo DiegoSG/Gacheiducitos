@@ -1,14 +1,14 @@
 class_name Condition
 extends Resource
 
-## Comparación de una variable de GameVariables contra un valor. Ej: "flag.puerta_abierta" == true.
+## Comparison of a GameVariables variable against a value. E.g.: "flag.puerta_abierta" == true.
 
 enum Operator { EQUAL, NOT_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL }
 
-## Ruta de la variable (flag.x, quest.id, player.gold, item.id, status.id...)
+## Variable path (flag.x, quest.id, player.gold, item.id, status.id...)
 @export var var_path: String = ""
 @export var operator: Operator = Operator.EQUAL
-## Valor a comparar; se interpreta con ActionResource.parse_value (true/false, números o texto).
+## Value to compare; interpreted with ActionResource.parse_value (true/false, numbers or text).
 @export var value: String = "true"
 
 func evaluate() -> bool:
@@ -22,7 +22,7 @@ func evaluate() -> bool:
 			return _equals(actual, expected, numeric)
 		Operator.NOT_EQUAL:
 			return not _equals(actual, expected, numeric)
-	# Los operadores de orden solo tienen sentido con números
+	# Ordering operators only make sense with numbers
 	if not numeric:
 		return false
 	var a: float = float(actual)

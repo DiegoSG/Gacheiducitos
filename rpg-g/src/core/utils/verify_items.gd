@@ -1,15 +1,15 @@
 extends SceneTree
 
 func _init():
-	print("\n--- Verificando Base de Datos de Ítems ---")
-	
-	# Simular la carga manual si no estamos en el editor con autoloads activos
-	# Pero como este script corre con 'godot -s', podemos cargar el recurso ItemDatabase directamente o buscar archivos.
-	
+	print("\n--- Verifying Item Database ---")
+
+	# Simulate manual loading if we are not in the editor with autoloads active
+	# But since this script runs with 'godot -s', we can load the ItemDatabase resource directly or search for files.
+
 	var data_dir = "res://data/items/"
 	var dir = DirAccess.open(data_dir)
 	if not dir:
-		print("Error: No se pudo abrir el directorio de datos: ", data_dir)
+		print("Error: Could not open the data directory: ", data_dir)
 		quit(1)
 		return
 
@@ -25,14 +25,14 @@ func _init():
 			if item is ItemData:
 				items_found.append(item)
 				if ids.has(item.id):
-					print("ADVERTENCIA: ID duplicado detectado: '", item.id, "' en ", file_name, " y ", ids[item.id])
+					print("WARNING: Duplicate ID detected: '", item.id, "' in ", file_name, " and ", ids[item.id])
 				else:
 					ids[item.id] = file_name
-				print("Cargado: ", item.id, " (", item.name, ") - Raridad: ", item.rarity, " - Valor: ", item.value)
+				print("Loaded: ", item.id, " (", item.name, ") - Rarity: ", item.rarity, " - Value: ", item.value)
 			else:
-				print("Error: El archivo ", file_name, " no es un ItemData válido.")
+				print("Error: File ", file_name, " is not a valid ItemData.")
 		file_name = dir.get_next()
 	
-	print("\nTotal de ítems encontrados: ", items_found.size())
-	print("--- Verificación Completa ---\n")
+	print("\nTotal items found: ", items_found.size())
+	print("--- Verification Complete ---\n")
 	quit()

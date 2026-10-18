@@ -2,7 +2,7 @@
 extends Marker2D
 class_name ArrivalSpawnPoint
 
-## Identificador único de llegada dentro de la escena
+## Unique arrival identifier within the scene
 @export var arrival_id: String = "":
 	set(value):
 		arrival_id = value
@@ -11,7 +11,7 @@ class_name ArrivalSpawnPoint
 
 @onready var arrival_label: Label = $ArrivalIdLabel if has_node("ArrivalIdLabel") else null
 
-## Visibilidad de las etiquetas de debug (F3). Estado único compartido con LevelPortal.
+## Visibility of the debug labels (F3). Single state shared with LevelPortal.
 static var debug_visuals_visible: bool = false
 
 func _ready() -> void:
@@ -19,14 +19,14 @@ func _ready() -> void:
 	_update_visuals()
 	
 	if not Engine.is_editor_hint():
-		# En runtime ocultar por defecto a menos que debug esté activo
+		# At runtime, hide by default unless debug is active
 		_set_debug_visibility(debug_visuals_visible)
 
 func _unhandled_input(event: InputEvent) -> void:
 	handle_debug_input(self, event)
 
-## Procesa F3 para el nodo dado. Al marcar el input como manejado, solo un nodo
-## (el primero en recibirlo) alterna la visibilidad por pulsación.
+## Processes F3 for the given node. When the input is marked as handled, only one node
+## (the first one to receive it) toggles the visibility per press.
 static func handle_debug_input(node: Node, event: InputEvent) -> void:
 	if Engine.is_editor_hint():
 		return
@@ -34,7 +34,7 @@ static func handle_debug_input(node: Node, event: InputEvent) -> void:
 		node.get_viewport().set_input_as_handled()
 		toggle_debug_visuals(node.get_tree())
 
-## Alterna las etiquetas de debug de todos los puntos de llegada (portales y spawn points)
+## Toggles the debug labels of all arrival points (portals and spawn points)
 static func toggle_debug_visuals(tree: SceneTree) -> void:
 	debug_visuals_visible = not debug_visuals_visible
 	for node: Node in tree.get_nodes_in_group("arrival_points"):
@@ -60,14 +60,14 @@ func get_spawn_position() -> Vector2:
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 	if arrival_id.strip_edges().is_empty():
-		warnings.append("El 'arrival_id' está vacío. Debe tener un identificador asignado.")
+		warnings.append("The 'arrival_id' is empty. It must have an identifier assigned.")
 	else:
 		var root_node: Node = find_scene_root(self)
 		if root_node and count_arrival_id(root_node, arrival_id) > 1:
-			warnings.append("Existe otro nodo en esta escena con el mismo arrival_id ('%s'). Los arrival_id deben ser únicos." % arrival_id)
+			warnings.append("Another node in this scene has the same arrival_id ('%s'). arrival_id values must be unique." % arrival_id)
 	return warnings
 
-## Devuelve la raíz de la escena que contiene al nodo (editor: escena editada; runtime: owner o ancestro superior)
+## Returns the root of the scene containing the node (editor: edited scene; runtime: owner or top ancestor)
 static func find_scene_root(node: Node) -> Node:
 	if Engine.is_editor_hint() and node.get_tree() and node.get_tree().edited_scene_root:
 		return node.get_tree().edited_scene_root
@@ -79,7 +79,7 @@ static func find_scene_root(node: Node) -> Node:
 			root_node = root_node.get_parent()
 	return root_node
 
-## Cuenta cuántos nodos bajo 'root' (incluido) declaran el arrival_id dado
+## Counts how many nodes under 'root' (included) declare the given arrival_id
 static func count_arrival_id(root: Node, id: String) -> int:
 	var count: int = 0
 	if "arrival_id" in root and root.arrival_id == id:

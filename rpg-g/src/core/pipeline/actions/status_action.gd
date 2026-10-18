@@ -1,14 +1,14 @@
 class_name StatusAction
 extends ActionResource
 
-## Aplica o cura estados alterados del jugador. Compatible con GameTrigger, DialogueEvent y OnEventListener.
+## Applies or cures the player's status effects. Compatible with GameTrigger, DialogueEvent and OnEventListener.
 
 enum Operation { APPLY, CURE }
 
 @export var operation: Operation = Operation.APPLY
-## Estado a aplicar (APPLY) o a curar por su id (CURE).
+## Status to apply (APPLY) or to cure by its id (CURE).
 @export var status: StatusEffectData = null
-## Solo CURE: si es true, cura todos los estados e ignora 'status'.
+## CURE only: if true, cures all statuses and ignores 'status'.
 @export var cure_all: bool = false
 
 func get_action_name() -> String:
@@ -22,12 +22,12 @@ func execute(_trigger_node: Node) -> void:
 		if status:
 			PlayerStats.apply_status(status)
 		else:
-			push_warning("StatusAction: APPLY sin estado configurado.")
+			push_warning("StatusAction: APPLY with no status configured.")
 	else:
 		if cure_all:
 			PlayerStats.cure_all_statuses()
 		elif status:
 			PlayerStats.cure_status(status.id)
 		else:
-			push_warning("StatusAction: CURE sin estado configurado.")
+			push_warning("StatusAction: CURE with no status configured.")
 	finished.emit()

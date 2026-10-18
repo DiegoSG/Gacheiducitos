@@ -2,7 +2,7 @@
 extends Actionable
 class_name SwitchInteractable
 
-## Interruptor / Palanca interactuable para activar secuencias y compuertas.
+## Interactable switch / lever to trigger sequences and gates.
 
 signal state_changed(is_on: bool)
 signal turned_on()
@@ -13,11 +13,11 @@ signal turned_off()
 		is_on = value
 		_update_visuals()
 
-@export var is_toggleable: bool = true ## Si permite alternar on/off o es de un solo uso
-@export var trigger_actions: Array[ActionResource] = [] ## Acciones a disparar al activarse
-@export var off_actions: Array[ActionResource] = [] ## Acciones al apagarse (si es toggleable)
+@export var is_toggleable: bool = true ## Whether it can be toggled on/off or is single-use
+@export var trigger_actions: Array[ActionResource] = [] ## Actions to run when turned on
+@export var off_actions: Array[ActionResource] = [] ## Actions to run when turned off (if toggleable)
 
-@export_group("Texturas")
+@export_group("Textures")
 @export var texture_off: Texture2D = preload("res://assets/sprites/switch_off.svg"):
 	set(value):
 		texture_off = value
@@ -28,7 +28,7 @@ signal turned_off()
 		texture_on = value
 		_update_visuals()
 
-@export_group("Persistencia")
+@export_group("Persistence")
 @export var persistence_id: String = ""
 
 @onready var sprite: Sprite2D = $Sprite2D if has_node("Sprite2D") else null

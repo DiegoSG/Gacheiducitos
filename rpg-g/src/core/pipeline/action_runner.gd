@@ -1,13 +1,13 @@
 class_name ActionRunner
 extends RefCounted
 
-## Ejecuta una lista de ActionResource en orden respetando wait_to_finish.
-## Punto único de ejecución para GameTrigger, DialogueEvent, PressurePlate y SwitchInteractable.
+## Runs a list of ActionResource in order, respecting wait_to_finish.
+## Single execution point for GameTrigger, DialogueEvent, PressurePlate and SwitchInteractable.
 
-## Ejecuta [param actions] en orden usando [param context] como nodo ejecutor.
-## Si la acción tiene wait_to_finish = true espera a su señal finished antes de continuar;
-## si es false la dispara y pasa a la siguiente sin bloquear.
-## Si el contexto sale del árbol (o se libera) mientras se espera, la secuencia se aborta.
+## Runs [param actions] in order using [param context] as the executing node.
+## If the action has wait_to_finish = true, waits for its finished signal before continuing;
+## if false, fires it and moves on to the next without blocking.
+## If the context leaves the tree (or is freed) while waiting, the sequence is aborted.
 static func run(actions: Array[ActionResource], context: Node) -> void:
 	var is_first: bool = true
 	for act: ActionResource in actions:

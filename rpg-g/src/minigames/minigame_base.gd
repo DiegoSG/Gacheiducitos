@@ -1,16 +1,16 @@
 class_name MinigameBase
 extends Node2D
 
-## Clase base para todos los minijuegos. Estandariza la recolección de recompensas
-## y la comunicación con el GameManager para la transición de regreso.
+## Base class for all minigames. Standardizes reward collection
+## and communication with the GameManager for the return transition.
 
-## Señal emitida al terminar el minijuego.
-## success: true si se cumplió la condición de victoria, false si perdió o abortó.
-## results: Diccionario con datos de la sesión, incluyendo ítems recolectados.
+## Signal emitted when the minigame ends.
+## success: true if the win condition was met, false if lost or aborted.
+## results: Dictionary with session data, including collected items.
 signal game_finished(success: bool, results: Dictionary)
 
-## Diccionario interno para acumular recompensas durante la sesión antes de ganar.
-## Formato: {"item_id": amount}
+## Internal dictionary to accumulate rewards during the session before winning.
+## Format: {"item_id": amount}
 var session_rewards: Dictionary = {}
 var _is_finishing: bool = false
 var _result_ui: CanvasLayer = null
@@ -18,18 +18,18 @@ var _pause_menu: PauseMenu = null
 
 const PAUSE_MENU_SCENE: PackedScene = preload("res://src/ui/menus/pause_menu.tscn")
 
-## Rutas de la textura de moneda (con fallback) y caché compartida entre minijuegos.
+## Coin texture paths (with fallback) and a cache shared between minigames.
 const COIN_TEXTURE_PATH: String = "res://assets/items/icons/coin_v2.png"
 const COIN_TEXTURE_FALLBACK_PATH: String = "res://assets/items/icons/gold_coins.png"
 static var _coin_texture_cache: Texture2D = null
 
-# _notification se ejecuta en toda la jerarquía de scripts; _ready no, porque los minijuegos lo sobrescriben sin super().
+# _notification runs across the whole script hierarchy; _ready does not, because minigames override it without super().
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_READY:
 		AudioManager.play_sfx(&"sfx_mg_start")
 
-## Añade un ítem al buffer local de la sesión.
-## No se añade al inventario real hasta que se llama a finish().
+## Adds an item to the session's local buffer.
+## It is not added to the real inventory until finish() is called.
 func add_reward(item_id: String, amount: int = 1) -> void:
 	if session_rewards.has(item_id):
 		session_rewards[item_id] += amount
@@ -37,21 +37,21 @@ func add_reward(item_id: String, amount: int = 1) -> void:
 		session_rewards[item_id] = amount
 	AudioManager.play_sfx(&"sfx_mg_reward_added")
 
-## Llamar a esta función cuando el minijuego termina (ganar o perder).
+## Call this function when the minigame ends (win or lose).
 func finish(success: bool, skip_screen: bool = false) -> void:
 	if _is_finishing:
 		return
 	_is_finishing = true
 	
-	# Si estamos en modo headless (tests automatizados) o se solicita omitir, finalizar de inmediato
+	# If we are in headless mode (automated tests) or skipping is requested, finish immediately
 	if skip_screen or DisplayServer.get_name() == "headless":
 		_emit_finished(success)
 		return
 		
-	# Se pausa justo después: usa el bus de interfaz para que no se corte
+	# Pause right after: uses the UI bus so it is not cut off
 	AudioManager.play_ui(&"sfx_mg_win" if success else &"sfx_mg_lose")
 
-	# Congelar completamente el juego (físicas, proyectiles, timers, entidades)
+	# Fully freeze the game (physics, projectiles, timers, entities)
 	get_tree().paused = true
 	
 	_show_result_screen(success)
@@ -60,28 +60,28 @@ func _show_result_screen(success: bool) -> void:
 	AudioManager.play_music(&"music_mg_result")
 	AudioManager.play_ui(&"sfx_mg_result_shown")
 	_result_ui = CanvasLayer.new()
-	_result_ui.layer = 120 # Por encima de cualquier UI o HUD de minijuego
+	_result_ui.layer = 120 # Above any minigame UI or HUD
 	_result_ui.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_result_ui)
 	
-	# Control contenedor raíz de pantalla completa que procesa en pausa
+	# Root full-screen container control that processes during pause
 	var root_ctrl: Control = Control.new()
 	root_ctrl.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root_ctrl.process_mode = Node.PROCESS_MODE_ALWAYS
 	_result_ui.add_child(root_ctrl)
 	
-	# Fondo oscuro semi-transparente
+	# Semi-transparent dark backdrop
 	var backdrop: ColorRect = ColorRect.new()
 	backdrop.color = Color(0, 0, 0, 0.8)
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root_ctrl.add_child(backdrop)
 	
-	# Contenedor centrado
+	# Centered container
 	var center: CenterContainer = CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root_ctrl.add_child(center)
 	
-	# Panel contenedor
+	# Container panel
 	var panel: PanelContainer = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(420, 240)
 	center.add_child(panel)
@@ -97,7 +97,7 @@ func _show_result_screen(success: bool) -> void:
 	vbox.add_theme_constant_override("separation", 18)
 	margin.add_child(vbox)
 	
-	# Título de Victoria / Derrota
+	# Win / Lose title
 	var title_label: Label = Label.new()
 	title_label.text = "¡VICTORIA!" if success else "¡DERROTA!"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -105,7 +105,7 @@ func _show_result_screen(success: bool) -> void:
 	title_label.modulate = Color(0.25, 0.95, 0.35) if success else Color(0.95, 0.25, 0.25)
 	vbox.add_child(title_label)
 	
-	# Mensaje descriptivo y desglose de recompensas
+	# Descriptive message and reward breakdown
 	var desc_label: Label = Label.new()
 	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc_label.add_theme_font_size_override("font_size", 16)
@@ -122,7 +122,7 @@ func _show_result_screen(success: bool) -> void:
 		desc_label.text = "No has logrado superar el desafío esta vez.\n¡Inténtalo de nuevo!"
 	vbox.add_child(desc_label)
 	
-	# Botón interactivo para continuar
+	# Interactive button to continue
 	var continue_btn: Button = Button.new()
 	continue_btn.text = "Continuar (Volver al mapa)"
 	continue_btn.custom_minimum_size = Vector2(260, 48)
@@ -131,7 +131,7 @@ func _show_result_screen(success: bool) -> void:
 	vbox.add_child(continue_btn)
 	continue_btn.grab_focus()
 	
-	# Indicador de atajo de teclado
+	# Keyboard shortcut hint
 	var prompt_label: Label = Label.new()
 	prompt_label.text = "O presiona ESPACIO / ENTER para volver"
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -139,8 +139,8 @@ func _show_result_screen(success: bool) -> void:
 	prompt_label.modulate = Color(0.75, 0.75, 0.75)
 	vbox.add_child(prompt_label)
 
-## `pause` durante el minijuego abre el menú de pausa (Reanudar / Opciones / Abandonar).
-## No actúa si el juego ya está pausado por otro sistema ni si el minijuego ya terminó.
+## `pause` during the minigame opens the pause menu (Resume / Options / Abandon).
+## Does nothing if the game is already paused by another system or if the minigame has already ended.
 func _unhandled_input(event: InputEvent) -> void:
 	if _is_finishing or _pause_menu != null or get_tree().paused:
 		return
@@ -153,14 +153,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		_pause_menu.abandon_requested.connect(_on_abandon_requested)
 		add_child(_pause_menu)
 
-## Abandonar cuenta como perder: se descartan los ítems de la partida y se usa el camino de derrota.
+## Abandoning counts as losing: the session's items are discarded and the defeat path is used.
 func _on_abandon_requested() -> void:
 	session_rewards.clear()
 	AudioManager.play_ui(&"sfx_mg_abandon")
 	finish(false)
 
 func _exit_tree() -> void:
-	# Asegurar que el juego nunca quede congelado al salir de la escena
+	# Make sure the game is never left frozen when leaving the scene
 	if get_tree() and get_tree().paused:
 		get_tree().paused = false
 
@@ -177,9 +177,9 @@ func _emit_finished(success: bool) -> void:
 	AudioManager.play_ui(&"sfx_mg_finished")
 	game_finished.emit(success, {"items": session_rewards})
 
-## Elige un id de ítem de un pool. Acepta Array de String (elección uniforme)
-## o Array de Dictionary {"id": String, "chance": float} (probabilidad acumulada).
-## Devuelve "" si no se elige nada (pool vacío o la tirada no cae en ninguna entrada).
+## Picks an item id from a pool. Accepts an Array of String (uniform choice)
+## or an Array of Dictionary {"id": String, "chance": float} (cumulative probability).
+## Returns "" if nothing is picked (empty pool or the roll falls in no entry).
 func pick_item_from_pool(pool: Array) -> String:
 	if pool.is_empty():
 		return ""
@@ -196,7 +196,7 @@ func pick_item_from_pool(pool: Array) -> String:
 		return ""
 	return str(pool[randi() % pool.size()])
 
-## Devuelve el icono del ítem según ItemDatabase, o null si no existe o no tiene icono.
+## Returns the item's icon from ItemDatabase, or null if it does not exist or has no icon.
 static func get_item_icon(item_id: String) -> Texture2D:
 	if item_id.is_empty():
 		return null
@@ -205,7 +205,7 @@ static func get_item_icon(item_id: String) -> Texture2D:
 		return null
 	return data.icon
 
-## Devuelve la textura de la moneda (coin_v2.png con fallback a gold_coins.png), cacheada.
+## Returns the coin texture (coin_v2.png with fallback to gold_coins.png), cached.
 static func get_coin_texture() -> Texture2D:
 	if _coin_texture_cache == null:
 		_coin_texture_cache = load(COIN_TEXTURE_PATH) as Texture2D

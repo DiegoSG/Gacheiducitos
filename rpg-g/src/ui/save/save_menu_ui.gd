@@ -4,7 +4,7 @@ const SaveSlotUI: PackedScene = preload("res://src/ui/save/save_slot_ui.tscn")
 
 @onready var slots_container: VBoxContainer = $MarginContainer/VBoxContainer/SlotsContainer
 
-## Evita el sonido de foco cuando el foco lo pone focus_first()
+## Avoids the focus sound when focus is set by focus_first()
 var _silence_focus_sound: bool = false
 
 func _ready() -> void:
@@ -56,16 +56,16 @@ func refresh() -> void:
 				child.update_view(metadatas[slot_id])
 	_restore_focus_if_lost()
 
-## Al borrar un slot su botón se oculta y el foco se pierde: lo devuelve al primer botón disponible.
+## When a slot is deleted its button is hidden and focus is lost: this returns focus to the first available button.
 func _restore_focus_if_lost() -> void:
 	var owner_control: Control = get_viewport().gui_get_focus_owner()
 	if owner_control != null and is_ancestor_of(owner_control) and owner_control.is_visible_in_tree():
 		return
 	if owner_control != null and not is_ancestor_of(owner_control):
-		return # El foco está en otro menú; no se lo quitamos.
+		return # Focus is in another menu; we do not take it away.
 	focus_first()
 
-## Da el foco al primer botón visible y habilitado de los slots.
+## Gives focus to the first visible and enabled button in the slots.
 func focus_first() -> void:
 	for node: Node in slots_container.find_children("*", "Button", true, false):
 		var button: Button = node as Button

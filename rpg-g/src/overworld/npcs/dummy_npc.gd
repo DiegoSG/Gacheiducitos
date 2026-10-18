@@ -6,7 +6,7 @@ extends CharacterBody2D
 var health: int = 3
 var is_knocked_back: bool = false
 
-# Definimos cuánto se empuja (asumiendo 1 cuadro = 16px)
+# Define how far to push (assuming 1 tile = 16px)
 const KNOCKBACK_DISTANCE = 16.0
 const KNOCKBACK_DURATION = 0.2
 
@@ -27,15 +27,15 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	health -= damage
 	AudioManager.play_sfx_at(&"sfx_dummy_hit", global_position)
 
-	# Efecto visual de daño
+	# Damage visual effect
 	sprite.modulate = Color.RED
 
-	# Aplicar el empuje físico
+	# Apply the physical push
 	var effective_force: float = knockback_force if knockback_force > 0.0 else KNOCKBACK_DISTANCE * 10.0
 	velocity = attack_direction * effective_force
 
 	var tween: Tween = create_tween()
-	# Restaurar el color
+	# Restore the color
 	tween.tween_property(sprite, "modulate", Color.WHITE, KNOCKBACK_DURATION)
 
 	get_tree().create_timer(KNOCKBACK_DURATION).timeout.connect(
@@ -44,7 +44,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 				is_knocked_back = false
 	)
 
-	# Si su salud llega a cero, muere
+	# If health reaches zero, die
 	if health <= 0:
 		AudioManager.play_sfx(&"sfx_dummy_destroyed")
 		queue_free()

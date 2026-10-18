@@ -83,7 +83,7 @@ func _process(delta: float) -> void:
 	# Slightly adjust rotation based on the wave derivative (spider head faces forward)
 	rotation = base_rot - PI / 2.0 + (cos(path_offset * wave_frequency) * wave_amplitude * wave_frequency * 0.5)
 
-## Golpea al bicho. Lo llama SmashCursor (click o `interact`). Ignora golpes repetidos.
+## Hits the bug. Called by SmashCursor (click or `interact`). Ignores repeated hits.
 func smash() -> void:
 	if not is_active:
 		return

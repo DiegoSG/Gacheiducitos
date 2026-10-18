@@ -1,14 +1,14 @@
 extends Node
 
-## Reproduce música y efectos por identificador, buscándolos en el catálogo de audio.
-## - Música: play_music / stop_music, con fundido entre pistas. Se atenúa mientras el juego está pausado.
-## - Efectos de juego: play_sfx. Se cortan cuando el juego se pausa; si se piden con el juego ya
-##   pausado (por ejemplo desde un diálogo), suenan como efecto de interfaz.
-## - Efectos en el mundo: play_sfx_at suena desde una posición (se atenúa con la distancia a la cámara).
-## - Efectos de interfaz: play_ui. Suenan también con el juego pausado (menús, inventario, diálogos).
-## Un identificador sin sonido asignado no reproduce nada y avisa una sola vez por consola.
-## Cada entrada puede variar el tono (pitch_random) y limitar repeticiones (cooldown).
-## El volumen de los buses Music y SFX se guarda en user://settings.cfg.
+## Plays music and effects by identifier, looking them up in the audio catalog.
+## - Music: play_music / stop_music, with a crossfade between tracks. Ducked while the game is paused.
+## - Game effects: play_sfx. Cut off when the game is paused; if requested while the game is already
+##   paused (for example from a dialogue), they play as UI effects.
+## - World effects: play_sfx_at plays from a position (attenuated by distance to the camera).
+## - UI effects: play_ui. They also play while the game is paused (menus, inventory, dialogues).
+## An identifier with no sound assigned plays nothing and warns once in the console.
+## Each entry can vary its pitch (pitch_random) and limit repeats (cooldown).
+## The volume of the Music and SFX buses is saved in user://settings.cfg.
 
 const CATALOG_PATH: String = "res://data/audio/audio_catalog.tres"
 const SETTINGS_PATH: String = "user://settings.cfg"
@@ -18,14 +18,14 @@ const SFX_BUS: StringName = &"SFX"
 const SFX_POOL_SIZE: int = 8
 const UI_POOL_SIZE: int = 8
 const SFX_2D_POOL_SIZE: int = 12
-## Distancia (px) a partir de la cual un efecto posicional deja de oírse.
+## Distance (px) beyond which a positional effect can no longer be heard.
 const SFX_2D_MAX_DISTANCE: float = 900.0
 const DEFAULT_FADE_TIME: float = 0.5
 const SILENT_DB: float = -80.0
-## Atenuación de la música mientras el juego está pausado.
+## Music attenuation while the game is paused.
 const PAUSE_DUCK_DB: float = -10.0
 const PAUSE_DUCK_TIME: float = 0.2
-## Índice del efecto Amplify del bus Music (definido en default_bus_layout.tres).
+## Index of the Amplify effect on the Music bus (defined in default_bus_layout.tres).
 const MUSIC_DUCK_EFFECT_INDEX: int = 0
 
 var _catalog: AudioCatalog = null
@@ -38,7 +38,7 @@ var _sfx_players: Array[AudioStreamPlayer] = []
 var _ui_players: Array[AudioStreamPlayer] = []
 var _sfx_2d_players: Array[AudioStreamPlayer2D] = []
 var _warned_ids: Dictionary[StringName, bool] = {}
-## Último instante (ms) en que sonó cada identificador con cooldown.
+## Last time (ms) each identifier with a cooldown played.
 var _last_played_ms: Dictionary[StringName, int] = {}
 var _was_paused: bool = false
 
@@ -47,7 +47,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_catalog = load(CATALOG_PATH) as AudioCatalog
 	if _catalog == null:
-		push_error("[AudioManager] No se pudo cargar el catálogo: %s" % CATALOG_PATH)
+		push_error("[AudioManager] Could not load the catalog: %s" % CATALOG_PATH)
 
 	for i: int in 2:
 		_music_players.append(_create_player(MUSIC_BUS, Node.PROCESS_MODE_ALWAYS))
@@ -65,17 +65,17 @@ func _ready() -> void:
 
 	load_settings()
 
-# La pausa se detecta por sondeo porque varios sistemas cambian SceneTree.paused directamente.
+# Pause is detected by polling because several systems change SceneTree.paused directly.
 func _process(_delta: float) -> void:
 	var paused: bool = get_tree().paused
 	if paused != _was_paused:
 		_was_paused = paused
 		_on_pause_changed(paused)
 
-# --- Música ---
+# --- Music ---
 
-## Reproduce la música del identificador con fundido. Si ya está sonando, no la reinicia.
-## Un identificador vacío o sin sonido asignado detiene la música actual.
+## Plays the identifier's music with a fade. If it is already playing, it is not restarted.
+## An empty identifier or one with no sound assigned stops the current music.
 func play_music(id: StringName, fade_time: float = DEFAULT_FADE_TIME) -> void:
 	if id == _current_music_id:
 		return
@@ -106,13 +106,13 @@ func stop_music(fade_time: float = DEFAULT_FADE_TIME) -> void:
 func get_current_music_id() -> StringName:
 	return _current_music_id
 
-# --- Efectos ---
+# --- Effects ---
 
-## Efecto de juego: se corta si el juego se pausa.
+## Game effect: cut off if the game is paused.
 func play_sfx(id: StringName) -> void:
 	_play_from_pool(id, _ui_players if get_tree().paused else _sfx_players)
 
-## Efecto de juego que suena desde una posición del mundo. Con el juego pausado suena como interfaz.
+## Game effect that plays from a world position. While the game is paused, it plays as a UI effect.
 func play_sfx_at(id: StringName, world_position: Vector2) -> void:
 	if get_tree().paused:
 		_play_from_pool(id, _ui_players)
@@ -131,18 +131,18 @@ func play_sfx_at(id: StringName, world_position: Vector2) -> void:
 	player.pitch_scale = 1.0 + randf_range(-entry.pitch_random, entry.pitch_random)
 	player.play()
 
-## Efecto de interfaz: suena aunque el juego esté pausado.
+## UI effect: plays even while the game is paused.
 func play_ui(id: StringName) -> void:
 	_play_from_pool(id, _ui_players)
 
-## Entrada con sonido asignado, para nodos que usan su propio reproductor (bucles o sonido
-## posicional). Devuelve null si no hay sonido asignado.
+## Entry with a sound assigned, for nodes that use their own player (loops or positional
+## sound). Returns null if no sound is assigned.
 func get_playable_entry(id: StringName) -> AudioEntry:
 	return _get_playable_entry(id)
 
-# --- Volumen ---
+# --- Volume ---
 
-## Volumen lineal del bus (0.0 a 1.0).
+## Linear bus volume (0.0 to 1.0).
 func get_bus_volume(bus: StringName) -> float:
 	var index: int = AudioServer.get_bus_index(bus)
 	if index < 0:
@@ -152,7 +152,7 @@ func get_bus_volume(bus: StringName) -> float:
 func set_bus_volume(bus: StringName, linear: float) -> void:
 	var index: int = AudioServer.get_bus_index(bus)
 	if index < 0:
-		push_warning("[AudioManager] No existe el bus: %s" % bus)
+		push_warning("[AudioManager] Bus does not exist: %s" % bus)
 		return
 	var clamped: float = clampf(linear, 0.0, 1.0)
 	AudioServer.set_bus_volume_db(index, linear_to_db(clamped))
@@ -160,13 +160,13 @@ func set_bus_volume(bus: StringName, linear: float) -> void:
 
 func save_settings() -> void:
 	var config: ConfigFile = ConfigFile.new()
-	# Se carga primero para no borrar otras secciones que se agreguen al archivo en el futuro.
+	# Load first so other sections added to the file later are not erased.
 	config.load(SETTINGS_PATH)
 	config.set_value(SETTINGS_SECTION, String(MUSIC_BUS), get_bus_volume(MUSIC_BUS))
 	config.set_value(SETTINGS_SECTION, String(SFX_BUS), get_bus_volume(SFX_BUS))
 	var error: Error = config.save(SETTINGS_PATH)
 	if error != OK:
-		push_warning("[AudioManager] No se pudo guardar %s (error %d)" % [SETTINGS_PATH, error])
+		push_warning("[AudioManager] Could not save %s (error %d)" % [SETTINGS_PATH, error])
 
 func load_settings() -> void:
 	var config: ConfigFile = ConfigFile.new()
@@ -176,7 +176,7 @@ func load_settings() -> void:
 		var value: float = float(config.get_value(SETTINGS_SECTION, String(bus), 1.0))
 		set_bus_volume(bus, value)
 
-# --- Internos ---
+# --- Internals ---
 
 func _create_player(bus: StringName, mode: Node.ProcessMode) -> AudioStreamPlayer:
 	var player: AudioStreamPlayer = AudioStreamPlayer.new()
@@ -195,7 +195,7 @@ func _play_from_pool(id: StringName, pool: Array[AudioStreamPlayer]) -> void:
 	player.pitch_scale = 1.0 + randf_range(-entry.pitch_random, entry.pitch_random)
 	player.play()
 
-## Entrada lista para sonar ahora: con sonido asignado y fuera de su cooldown (lo registra).
+## Entry ready to play now: has a sound assigned and is outside its cooldown (records the play).
 func _get_entry_for_play(id: StringName) -> AudioEntry:
 	var entry: AudioEntry = _get_playable_entry(id)
 	if entry == null:
@@ -208,21 +208,21 @@ func _get_entry_for_play(id: StringName) -> AudioEntry:
 		_last_played_ms[id] = now_ms
 	return entry
 
-## Devuelve un reproductor libre; si todos están ocupados, reutiliza el primero.
+## Returns a free player; if all are busy, reuses the first one.
 func _get_free_player(pool: Array[AudioStreamPlayer]) -> AudioStreamPlayer:
 	for player: AudioStreamPlayer in pool:
 		if not player.playing:
 			return player
 	return pool[0]
 
-## Devuelve la entrada si tiene sonido asignado. Avisa una sola vez por identificador.
+## Returns the entry if it has a sound assigned. Warns only once per identifier.
 func _get_playable_entry(id: StringName) -> AudioEntry:
 	var entry: AudioEntry = _catalog.get_entry(id) if _catalog != null else null
 	if entry == null:
-		_warn_once(id, "[AudioManager] Identificador de audio no está en el catálogo: %s" % id)
+		_warn_once(id, "[AudioManager] Audio identifier is not in the catalog: %s" % id)
 		return null
 	if entry.stream == null:
-		_warn_once(id, "[AudioManager] Identificador sin sonido asignado: %s" % id)
+		_warn_once(id, "[AudioManager] Audio identifier has no sound assigned: %s" % id)
 		return null
 	return entry
 

@@ -1,15 +1,15 @@
 class_name HealthAction
 extends ActionResource
 
-## Acción que modifica la salud del jugador en PlayerStats (curación o daño).
-## Compatible con el pipeline de GameTrigger, DialogueEvent y OnEventListener.
+## Action that modifies the player's health in PlayerStats (healing or damage).
+## Compatible with the GameTrigger, DialogueEvent and OnEventListener pipeline.
 
 @export_group("Health Configuration")
-## Si es true, ignora 'amount' y cura al jugador hasta el máximo (max_health).
+## If true, ignores 'amount' and heals the player to the maximum (max_health).
 @export var full_heal: bool = false
-## Cantidad de salud a modificar (si full_heal es false).
-## Valores positivos (+X) curan al jugador.
-## Valores negativos (-X) dañan al jugador.
+## Amount of health to modify (if full_heal is false).
+## Positive values (+X) heal the player.
+## Negative values (-X) damage the player.
 @export var amount: int = 10
 
 func get_action_name() -> String:
@@ -19,7 +19,7 @@ func get_action_name() -> String:
 
 func execute(trigger_node: Node) -> void:
 	if not trigger_node:
-		push_warning("HealthAction: trigger_node es null.")
+		push_warning("HealthAction: trigger_node is null.")
 		finished.emit()
 		return
 

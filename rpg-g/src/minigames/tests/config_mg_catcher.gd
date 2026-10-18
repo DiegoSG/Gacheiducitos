@@ -1,6 +1,6 @@
 extends Control
 
-# Referencias a los sliders y labels
+# References to the sliders and labels
 @onready var fall_speed_slider = $VBoxContainer/FallSpeed/Slider
 @onready var fall_speed_label = $VBoxContainer/FallSpeed/Value
 @onready var spawn_rate_slider = $VBoxContainer/SpawnRate/Slider
@@ -18,7 +18,7 @@ extends Control
 @onready var start_button = $VBoxContainer/StartButton
 @onready var exit_button = $VBoxContainer/ExitButton
 
-# Parámetros de configuración
+# Configuration parameters
 var config = {
 	"base_fall_speed": 200.0,
 	"spawn_rate": 1.0,
@@ -30,7 +30,7 @@ var config = {
 }
 
 func _ready() -> void:
-	# Configurar valores iniciales
+	# Set initial values
 	fall_speed_slider.value = config.base_fall_speed
 	spawn_rate_slider.value = config.spawn_rate
 	max_objects_slider.value = config.max_falling_objects
@@ -39,7 +39,7 @@ func _ready() -> void:
 	target_value_slider.value = config.target_value
 	lives_slider.value = config.lives
 	
-	# Conectar señales
+	# Connect signals
 	fall_speed_slider.value_changed.connect(_on_fall_speed_changed)
 	spawn_rate_slider.value_changed.connect(_on_spawn_rate_changed)
 	max_objects_slider.value_changed.connect(_on_max_objects_changed)

@@ -1,14 +1,14 @@
 class_name PlaySoundAction
 extends ActionResource
 
-## Acción que reproduce un sonido del catálogo de audio (AudioManager).
-## Compatible con el pipeline de GameTrigger, DialogueEvent y OnEventListener.
+## Action that plays a sound from the audio catalog (AudioManager).
+## Compatible with the GameTrigger, DialogueEvent and OnEventListener pipeline.
 
 enum SoundType { SFX, UI, MUSIC }
 
-## Identificador del catálogo (data/audio/audio_catalog.tres).
+## Identifier in the catalog (data/audio/audio_catalog.tres).
 @export var sound_id: StringName = &""
-## SFX: efecto de juego (se corta en pausa). UI: suena en pausa. MUSIC: cambia la música.
+## SFX: game effect (cut when paused). UI: keeps playing when paused. MUSIC: changes the music.
 @export var sound_type: SoundType = SoundType.SFX
 
 func get_action_name() -> String:
@@ -16,7 +16,7 @@ func get_action_name() -> String:
 
 func execute(_trigger_node: Node) -> void:
 	if sound_id.is_empty():
-		push_warning("PlaySoundAction: sound_id está vacío.")
+		push_warning("PlaySoundAction: sound_id is empty.")
 		finished.emit()
 		return
 

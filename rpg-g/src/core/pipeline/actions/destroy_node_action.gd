@@ -1,20 +1,20 @@
 class_name DestroyNodeAction
 extends ActionResource
 
-## Elimina (queue_free) u oculta y deshabilita un nodo del escenario (ej. rocas destructibles, barreras temporales).
+## Removes (queue_free) or hides and disables a node in the level (e.g. breakable rocks, temporary barriers).
 
 enum DestroyMode {
-	QUEUE_FREE,      ## Elimina el nodo de la memoria de forma segura
-	HIDE_AND_DISABLE ## Lo oculta y desactiva sus colisiones sin destruirlo
+	QUEUE_FREE,      ## Safely removes the node from memory
+	HIDE_AND_DISABLE ## Hides it and disables its collisions without destroying it
 }
 
-## Ruta al nodo objetivo
+## Path to the target node
 @export var target_node_path: NodePath
 
-## Modo de destrucción
+## Destruction mode
 @export var mode: DestroyMode = DestroyMode.QUEUE_FREE
 
-## Duración de un desvanecimiento (fade out) antes de destruir/ocultar (0 = instantáneo)
+## Duration of a fade out before destroying/hiding (0 = instant)
 @export var fade_duration: float = 0.0
 
 func get_action_name() -> String:
@@ -22,13 +22,13 @@ func get_action_name() -> String:
 
 func execute(trigger_node: Node) -> void:
 	if target_node_path.is_empty():
-		push_warning("DestroyNodeAction: target_node_path está vacío.")
+		push_warning("DestroyNodeAction: target_node_path is empty.")
 		finished.emit()
 		return
 		
 	var target: Node = trigger_node.get_node_or_null(target_node_path)
 	if not is_instance_valid(target):
-		push_warning("DestroyNodeAction: Nodo no encontrado en %s" % str(target_node_path))
+		push_warning("DestroyNodeAction: Node not found at %s" % str(target_node_path))
 		finished.emit()
 		return
 		

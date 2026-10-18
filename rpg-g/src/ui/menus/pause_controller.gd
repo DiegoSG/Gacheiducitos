@@ -1,9 +1,9 @@
 class_name PauseController
 extends Node
 
-## Escucha la acción `pause` y abre/cierra el menú de pausa del Overworld.
-## Uso: instanciar res://src/ui/menus/pause_controller.tscn (p. ej. hijo del PlayerHUD).
-## No abre el menú si el juego ya está pausado por otro sistema (diálogo, inventario...).
+## Listens for the `pause` action and opens/closes the Overworld pause menu.
+## Usage: instantiate res://src/ui/menus/pause_controller.tscn (e.g. as a child of the PlayerHUD).
+## Does not open the menu if the game is already paused by another system (dialogue, inventory...).
 
 const PAUSE_MENU_SCENE: PackedScene = preload("res://src/ui/menus/pause_menu.tscn")
 

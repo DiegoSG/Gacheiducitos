@@ -9,12 +9,12 @@ var state: State = State.RUNNING
 const GROUND_Y: float = 820.0
 const BULLET_SCENE: PackedScene = preload("res://src/minigames/mg_runner/mg_runner_bullet.tscn")
 
-# Parámetros físicos configurables en Inspector
+# Physics parameters configurable in the Inspector
 @export var jump_velocity: float = -1050.0
 @export var jump_gravity: float = 2400.0
 @export var fast_fall_gravity: float = 4800.0
 
-# Dimensiones en píxeles configurables en Inspector
+# Pixel dimensions configurable in the Inspector
 @export var stand_width: float = 54.0
 @export var stand_height: float = 115.0
 @export var duck_width: float = 76.0
@@ -52,7 +52,7 @@ func _input(event: InputEvent) -> void:
 	if is_dead:
 		return
 
-	# Salto (Espacio, Flechas, WASD y Gamepad ya están mapeados en jump)
+	# Jump (Space, Arrows, WASD and Gamepad are already mapped to jump)
 	if event.is_action_pressed("jump"):
 		try_jump()
 	elif event.is_action_pressed("attack"):
@@ -64,16 +64,16 @@ func try_jump() -> void:
 	if _is_duck_pressed():
 		return
 
-	# Si está en el suelo (con tolerancia de 10px) -> Salta inmediatamente
+	# If on the ground (with 10px tolerance) -> jump immediately
 	if position.y >= GROUND_Y - 10.0:
 		velocity_y = jump_velocity
-		position.y -= 4.0 # Despegar del suelo para iniciar ascenso
+		position.y -= 4.0 # Lift off the ground to start the ascent
 		state = State.JUMPING
 		_jump_buffer = 0.0
 		AudioManager.play_sfx(&"sfx_run_jump")
 		_set_standing_state()
 	else:
-		# En el aire -> Guardar en buffer para saltar tan pronto aterrice
+		# In the air -> buffer the jump so it fires as soon as we land
 		_jump_buffer = 0.18
 
 func _is_duck_pressed() -> bool:
@@ -86,14 +86,14 @@ func _physics_process(delta: float) -> void:
 	var is_on_ground: bool = position.y >= GROUND_Y
 	var wants_duck: bool = _is_duck_pressed()
 
-	# Control de buffer de salto
+	# Jump buffer control
 	if _jump_buffer > 0.0:
 		_jump_buffer -= delta
 		if is_on_ground and not wants_duck:
 			try_jump()
 			return
 
-	# Control de estados en suelo
+	# Ground state handling
 	if is_on_ground and state != State.JUMPING:
 		velocity_y = 0.0
 		position.y = GROUND_Y
@@ -106,13 +106,13 @@ func _physics_process(delta: float) -> void:
 				AudioManager.play_sfx(&"sfx_run_stand")
 				_set_standing_state()
 
-	# Físicas en el aire o durante el salto
+	# Physics in the air or during the jump
 	if not is_on_ground or state == State.JUMPING:
 		var current_gravity = fast_fall_gravity if wants_duck else jump_gravity
 		velocity_y += current_gravity * delta
 		position.y += velocity_y * delta
 
-		# Aterrizaje
+		# Landing
 		if position.y >= GROUND_Y:
 			position.y = GROUND_Y
 			velocity_y = 0.0

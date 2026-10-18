@@ -1,9 +1,9 @@
 extends SceneTree
 
 func _init() -> void:
-	print("\n--- TEST: SISTEMA Y FLUJO DE MINIJUEGOS (FRAMEWORK) ---")
-	
-	# 1. Asegurar singleton Inventory
+	print("\n--- TEST: MINIGAME SYSTEM AND FLOW (FRAMEWORK) ---")
+
+	# 1. Ensure Inventory singleton
 	var inventory = root.get_node_or_null("Inventory")
 	if not inventory:
 		var inv_script = load("res://src/core/inventory.gd")
@@ -12,7 +12,7 @@ func _init() -> void:
 		root.add_child(inventory)
 	inventory.items.clear()
 
-	# 2. Asegurar singleton GameManager
+	# 2. Ensure GameManager singleton
 	var game_manager = root.get_node_or_null("GameManager")
 	if not game_manager:
 		var gm_script = load("res://src/core/game_manager.gd")
@@ -22,26 +22,26 @@ func _init() -> void:
 
 	await process_frame
 
-	# 3. Validar instancia de DummyMinigame y clase MinigameBase
+	# 3. Validate DummyMinigame instance and MinigameBase class
 	var dummy_script = load("res://src/minigames/tests/dummy_minigame.gd")
 	var dummy_scene = load("res://src/minigames/tests/dummy_minigame.tscn")
-	assert(dummy_scene != null, "Error al cargar dummy_minigame.tscn")
+	assert(dummy_scene != null, "Failed to load dummy_minigame.tscn")
 	var dummy: Node2D = dummy_scene.instantiate()
 	root.add_child(dummy)
 	await process_frame
 
-	assert(dummy is MinigameBase, "DummyMinigame debe heredar de MinigameBase")
-	print("[PASS] DummyMinigame hereda correctamente de MinigameBase.")
+	assert(dummy is MinigameBase, "DummyMinigame must inherit from MinigameBase")
+	print("[PASS] DummyMinigame correctly inherits from MinigameBase.")
 
-	# 4. Probar acumulación de recompensas en sesión local
+	# 4. Test reward accumulation in local session
 	dummy.add_reward("blue_potion", 2)
 	dummy.add_reward("gold_coins", 10)
-	assert(dummy.session_rewards["blue_potion"] == 2, "Recompensa de poción azul incorrecta")
-	assert(dummy.session_rewards["gold_coins"] == 10, "Recompensa de monedas incorrecta")
-	assert(not inventory.items.has("blue_potion"), "El inventario global NO debe tener los ítems antes de terminar")
-	print("[PASS] Buffer de recompensas de sesión almacena ítems sin contaminar el inventario prematuramente.")
+	assert(dummy.session_rewards["blue_potion"] == 2, "Blue potion reward incorrect")
+	assert(dummy.session_rewards["gold_coins"] == 10, "Gold coins reward incorrect")
+	assert(not inventory.items.has("blue_potion"), "The global inventory must NOT have the items before finishing")
+	print("[PASS] Session reward buffer stores items without prematurely contaminating the inventory.")
 
-	# 5. Probar MinigameAction configurado
+	# 5. Test configured MinigameAction
 	var action_script = load("res://src/core/pipeline/actions/minigame_action.gd")
 	var action = action_script.new()
 	action.minigame_type = MinigameAction.MinigameType.CUSTOM_SCENE
@@ -56,49 +56,49 @@ func _init() -> void:
 	root.add_child(dummy_trigger)
 	action.execute(dummy_trigger)
 
-	assert(game_manager.minigame_config.get("win_level_path") == "res://src/minigames/tests/test_minigame_flow.tscn", "win_level_path no inyectado")
-	assert(game_manager.minigame_config.get("win_spawn_id") == "spawn_win", "win_spawn_id no inyectado")
-	assert(game_manager.minigame_config.get("lose_spawn_id") == "spawn_lose", "lose_spawn_id no inyectado")
-	print("[PASS] MinigameAction inyecta correctamente las rutas y spawns de victoria/derrota al GameManager.")
+	assert(game_manager.minigame_config.get("win_level_path") == "res://src/minigames/tests/test_minigame_flow.tscn", "win_level_path not injected")
+	assert(game_manager.minigame_config.get("win_spawn_id") == "spawn_win", "win_spawn_id not injected")
+	assert(game_manager.minigame_config.get("lose_spawn_id") == "spawn_lose", "lose_spawn_id not injected")
+	print("[PASS] MinigameAction correctly injects the win/lose paths and spawns into GameManager.")
 
-	# 5.1 Probar MinigameInteractable (GameTrigger en modo INTERACT vía action())
+	# 5.1 Test MinigameInteractable (GameTrigger in INTERACT mode via action())
 	var interactable_scene = load("res://src/overworld/interactables/minigame_interactable.tscn")
-	assert(interactable_scene != null, "minigame_interactable.tscn debe existir")
+	assert(interactable_scene != null, "minigame_interactable.tscn must exist")
 	var interactable = interactable_scene.instantiate()
 	root.add_child(interactable)
-	assert(interactable is GameTrigger, "minigame_interactable debe ser un GameTrigger")
-	assert(interactable.trigger_mode == GameTrigger.TriggerMode.INTERACT, "minigame_interactable debe estar en modo INTERACT")
-	assert(interactable.collision_layer == 16, "minigame_interactable debe estar en layer 16 (interactable)")
+	assert(interactable is GameTrigger, "minigame_interactable must be a GameTrigger")
+	assert(interactable.trigger_mode == GameTrigger.TriggerMode.INTERACT, "minigame_interactable must be in INTERACT mode")
+	assert(interactable.collision_layer == 16, "minigame_interactable must be on layer 16 (interactable)")
 	interactable.actions_if_true.clear()
 	interactable.actions_if_true.append(action)
-	# Simular pulsación de 'E' por parte del jugador (ActionableFinder)
+	# Simulate the player pressing 'E' (ActionableFinder)
 	interactable.action()
 	await process_frame
-	print("[PASS] MinigameInteractable responde a action() y ejecuta MinigameAction vía GameTrigger.")
+	print("[PASS] MinigameInteractable responds to action() and runs MinigameAction via GameTrigger.")
 	interactable.queue_free()
 
-	# 6. Probar finalización con Victoria: transferir ítems y verificar inventario
+	# 6. Test completion with victory: transfer items and verify inventory
 	var win_results = {"items": {"blue_potion": 3, "rusty_key": 1}}
 	game_manager._minigame_win_path = "res://src/minigames/tests/test_minigame_flow.tscn"
 	game_manager._minigame_win_spawn_id = "spawn_win"
 	
-	# Simular complete_minigame
+	# Simulate complete_minigame
 	game_manager.complete_minigame(true, win_results)
 	await process_frame
 
-	assert(inventory.items.get("blue_potion") == 3, "El inventario global debe contener 3 blue_potion tras ganar")
-	assert(inventory.items.get("rusty_key") == 1, "El inventario global debe contener 1 rusty_key tras ganar")
-	print("[PASS] complete_minigame(true) transfiere satisfactoriamente todos los ítems al Inventario Global.")
+	assert(inventory.items.get("blue_potion") == 3, "The global inventory must contain 3 blue_potion after winning")
+	assert(inventory.items.get("rusty_key") == 1, "The global inventory must contain 1 rusty_key after winning")
+	print("[PASS] complete_minigame(true) successfully transfers all items to the Global Inventory.")
 
-	# 7. Validar que test_minigame_flow.tscn contiene los 5 triggers individuales
+	# 7. Verify that test_minigame_flow.tscn contains the 5 individual triggers
 	var flow_scene = load("res://src/minigames/tests/test_minigame_flow.tscn")
-	assert(flow_scene != null, "test_minigame_flow.tscn debe cargar correctamente")
+	assert(flow_scene != null, "test_minigame_flow.tscn must load correctly")
 	var flow_inst = flow_scene.instantiate()
 	root.add_child(flow_inst)
 	await process_frame
 	
 	var triggers_node = flow_inst.get_node_or_null("MinigameTriggers")
-	assert(triggers_node != null, "test_minigame_flow debe tener nodo MinigameTriggers")
+	assert(triggers_node != null, "test_minigame_flow must have a MinigameTriggers node")
 	
 	var expected_triggers = [
 		"Trigger_Catcher",
@@ -109,16 +109,16 @@ func _init() -> void:
 	]
 	for trigger_name in expected_triggers:
 		var trig = triggers_node.get_node_or_null(trigger_name)
-		assert(trig != null, "Falta el trigger '%s' en test_minigame_flow" % trigger_name)
-		assert(trig.actions_if_true.size() > 0, "Trigger '%s' debe tener al menos una acción" % trigger_name)
+		assert(trig != null, "Missing trigger '%s' in test_minigame_flow" % trigger_name)
+		assert(trig.actions_if_true.size() > 0, "Trigger '%s' must have at least one action" % trigger_name)
 		var mg_act = trig.actions_if_true[0]
-		assert(mg_act is MinigameAction, "La acción de '%s' debe ser MinigameAction" % trigger_name)
-		assert(ResourceLoader.exists(mg_act.get_minigame_scene_path()), "La escena '%s' del minijuego debe existir" % mg_act.get_minigame_scene_path())
-	print("[PASS] Los 5 triggers individuales (Catcher, Excavation, Runner, Smasher, Trampolin) verificados en test_minigame_flow.tscn.")
+		assert(mg_act is MinigameAction, "The action of '%s' must be MinigameAction" % trigger_name)
+		assert(ResourceLoader.exists(mg_act.get_minigame_scene_path()), "The minigame scene '%s' must exist" % mg_act.get_minigame_scene_path())
+	print("[PASS] All 5 individual triggers (Catcher, Excavation, Runner, Smasher, Trampolin) verified in test_minigame_flow.tscn.")
 	flow_inst.queue_free()
 
-	# Limpiar
+	# Clean up
 	dummy.queue_free()
 	dummy_trigger.queue_free()
-	print("\n>>> TODOS LOS TESTS DE MINIGAME FRAMEWORK PASARON SATISFACTORIAMENTE (100%) <<<\n")
+	print("\n>>> ALL MINIGAME FRAMEWORK TESTS PASSED SUCCESSFULLY (100%) <<<\n")
 	quit(0)

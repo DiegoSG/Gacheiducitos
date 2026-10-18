@@ -1,28 +1,28 @@
 extends Resource
 class_name StatusEffectData
 
-## Definicion de un estado alterado (veneno, aceleracion, etc.) que PlayerStats aplica al jugador.
-## Reaplicar un estado activo reinicia su duracion.
+## Definition of a status effect (poison, speed boost, etc.) that PlayerStats applies to the player.
+## Reapplying an active status effect resets its duration.
 
 @export var id: String = ""
 @export var display_name: String = ""
 @export var icon: Texture2D
-## Color con el que el HUD tine la vida mientras el estado esta activo.
+## Color the HUD tints health with while the status effect is active.
 @export var hud_color: Color = Color(0.6, 0.2, 0.8, 1.0)
-## Duracion en segundos. 0 = permanente hasta curarlo.
+## Duration in seconds. 0 = permanent until cured.
 @export var duration: float = 0.0
 
-@export_group("Modificadores")
+@export_group("Modifiers")
 @export var speed_multiplier: float = 1.0
-## Bonus a la fuerza (dano de ataque). Puede ser negativo.
+## Strength bonus (attack damage). Can be negative.
 @export var strength_bonus: int = 0
 @export var resistance_bonus: int = 0
 @export var max_health_bonus: int = 0
 
-@export_group("Efecto periodico")
-## Segundos entre ticks. 0 = sin tick.
+@export_group("Periodic Effect")
+## Seconds between ticks. 0 = no tick.
 @export var tick_interval: float = 0.0
-## Vida por tick: negativo = dano, positivo = regeneracion.
+## Health per tick: negative = damage, positive = regeneration.
 @export var health_per_tick: int = 0
-## Si es false, el dano del tick nunca baja la vida de 1.
+## If false, tick damage never reduces health below 1.
 @export var can_kill: bool = true

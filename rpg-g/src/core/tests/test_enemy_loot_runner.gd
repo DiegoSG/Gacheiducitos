@@ -2,9 +2,9 @@ extends SceneTree
 
 
 func _init() -> void:
-	print("\n--- TEST: SISTEMA DE LOOT Y DROPS DE ENEMIGOS + INVENTARIO TAB ---")
+	print("\n--- TEST: ENEMY LOOT AND DROPS SYSTEM + INVENTORY TAB ---")
 	
-	# Inicializar Autoloads necesarios si no existen
+	# Initialize the required Autoloads if they don't exist
 	var nm = root.get_node_or_null("GameVariables")
 	if not nm:
 		var nm_script = load("res://src/core/game_variables.gd")
@@ -53,9 +53,9 @@ func _init() -> void:
 	assert(gold_coins != null, "gold_coins.tres no encontrado")
 	
 	# ----------------------------------------------------
-	# Test 1: Asignación directa de ítems y probabilidades
+	# Test 1: Direct item assignment and probabilities
 	# ----------------------------------------------------
-	print("[PASS] Carga de recursos ItemData verificada.")
+	print("[PASS] ItemData resource loading verified.")
 	
 	# ----------------------------------------------------
 	# Test 2: DropLootAction - chance 100 (always) vs 0 (never)
@@ -176,7 +176,7 @@ func _init() -> void:
 	print("[PASS] Physics-free kinematic drop, cooldown guard and pickup verified.")
 
 	# ----------------------------------------------------
-	# Test 8: InventoryUI con tecla TAB
+	# Test 8: InventoryUI with the TAB key
 	# ----------------------------------------------------
 	var inv_ui_scene = load("res://src/ui/inventory/inventory_ui.tscn")
 	assert(inv_ui_scene != null, "inventory_ui.tscn no pudo ser cargado")
@@ -189,14 +189,14 @@ func _init() -> void:
 	assert(inv_ui.is_open() == true, "toggle_inventory() debe abrir la interfaz")
 	inv_ui.toggle_inventory()
 	assert(inv_ui.is_open() == false, "toggle_inventory() debe cerrar la interfaz")
-	print("[PASS] Toggle de apertura y cierre de InventoryUI (TAB) verificado.")
+	print("[PASS] InventoryUI open/close toggle (TAB) verified.")
 	
-	# Limpieza
+	# Cleanup
 	owner_node.queue_free()
 	mock_player.queue_free()
 	inv_ui.queue_free()
 	
-	print("\n--- TODOS LOS TESTS DE LOOT, DROPS E INVENTARIO PASARON EXITOSAMENTE ---\n")
+	print("\n--- ALL LOOT, DROPS AND INVENTORY TESTS PASSED SUCCESSFULLY ---\n")
 	quit(0)
 
 func _entry(item: ItemData, chance: int) -> LootEntry:

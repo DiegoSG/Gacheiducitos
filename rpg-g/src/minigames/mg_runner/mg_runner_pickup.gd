@@ -5,13 +5,13 @@ signal collected(pickup: MG_RunnerPickup)
 
 enum PickupType { COIN, RANDOM_ITEM, TARGET_OBJECT, AMMO }
 @export var pickup_type: PickupType = PickupType.COIN
-# Literal equivalente a Inventory.GOLD_ITEM_ID (una constante de autoload no sirve como valor por defecto de un @export).
+# Literal equivalent of Inventory.GOLD_ITEM_ID (an autoload constant cannot serve as an @export default value).
 @export var item_id: String = "gold_coins"
 @export var amount: int = 1
 @export var is_victory_target: bool = false
 var speed: float = 380.0
 
-# Tamaños objetivo en píxeles (configurables en inspector)
+# Target sizes in pixels (configurable in the inspector)
 @export var coin_target_size: float = 38.0
 @export var item_target_size: float = 48.0
 @export var target_object_size: float = 68.0
@@ -42,10 +42,10 @@ func _setup_visuals() -> void:
 	elif pickup_type == PickupType.AMMO:
 		if glow:
 			glow.visible = false
-		var ammo_tex: Texture2D = load("res://assets/items/icons/iron_key.png") as Texture2D # o icon.svg coloreado
+		var ammo_tex: Texture2D = load("res://assets/items/icons/iron_key.png") as Texture2D # or colored icon.svg
 		if not ammo_tex:
 			ammo_tex = load("res://icon.svg") as Texture2D
-		sprite.modulate = Color(1.0, 0.4, 0.2) # Resplandor anaranjado de proyectil/munición
+		sprite.modulate = Color(1.0, 0.4, 0.2) # Orange glow for projectile/ammo
 		_apply_texture_and_scale(ammo_tex, ammo_target_size)
 	else:
 		if glow:
@@ -53,13 +53,13 @@ func _setup_visuals() -> void:
 		_load_and_scale_item(item_id, item_target_size)
 
 func _load_and_scale_item(target_id: String, desired_pixel_size: float) -> void:
-	# 1. Intentar obtener el icono desde ItemDatabase
+	# 1. Try to get the icon from ItemDatabase
 	var item_icon: Texture2D = MinigameBase.get_item_icon(target_id)
 	if item_icon:
 		_apply_texture_and_scale(item_icon, desired_pixel_size)
 		return
 			
-	# 2. Intentar cargar desde icono png
+	# 2. Try to load from the png icon
 	var png_path = "res://assets/items/icons/%s.png" % target_id
 	if ResourceLoader.exists(png_path):
 		var tex: Texture2D = load(png_path) as Texture2D
@@ -67,7 +67,7 @@ func _load_and_scale_item(target_id: String, desired_pixel_size: float) -> void:
 			_apply_texture_and_scale(tex, desired_pixel_size)
 			return
 
-	# 3. Fallback a icon.svg
+	# 3. Fallback to icon.svg
 	var fallback_tex: Texture2D = load("res://icon.svg") as Texture2D
 	sprite.modulate = Color(1.0, 0.85, 0.1) if is_victory_target else Color(0.3, 0.7, 1.0)
 	_apply_texture_and_scale(fallback_tex, desired_pixel_size)
@@ -83,7 +83,7 @@ func _apply_texture_and_scale(tex: Texture2D, target_size: float) -> void:
 		_base_scale = Vector2(factor, factor)
 		sprite.scale = _base_scale
 	
-	# Ajustar collider circular para que coincida con el tamaño visual
+	# Adjust the circular collider to match the visual size
 	if collision_shape:
 		var circle = CircleShape2D.new()
 		circle.radius = target_size * 0.5

@@ -7,17 +7,17 @@ const HIT_EFFECT = preload("res://src/core/components/hit_effect.tscn")
 @export var knockback_force: float = 300.0
 @export var continuous_damage: bool = false
 @export var attack_rate: float = 0.6
-@export_group("Estado alterado")
-## Estado que este golpe puede infligir (opcional).
+@export_group("Status Effect")
+## Status this hit can inflict (optional).
 @export var status_effect: StatusEffectData
-## Probabilidad (0-100) de infligir el estado en cada impacto.
+## Chance (0-100) of inflicting the status on each impact.
 @export_range(0, 100) var status_chance: float = 0.0
 
 var _attack_timer: float = 0.0
 
 func _ready() -> void:
 	area_entered.connect(_on_area_entered)
-	# Por defecto, el hitbox está desactivado
+	# By default, the hitbox is disabled
 	set_active(false)
 
 func set_active(active: bool) -> void:
@@ -48,13 +48,13 @@ func _on_area_entered(area: Area2D) -> void:
 			_attack_timer = attack_rate
 
 func _apply_hit(area: HurtboxComponent) -> void:
-	# Calculamos la dirección simplificada desde el padre del hitbox al padre del hurtbox
-	# para que el knockback tenga sentido.
+	# Compute the simplified direction from the hitbox's parent to the hurtbox's parent
+	# so that the knockback makes sense.
 	var attack_direction: Vector2 = (area.global_position - global_position).normalized()
 	var inflicted: StatusEffectData = null
 	if status_effect != null and randf() * 100.0 < status_chance:
 		inflicted = status_effect
-	# El sonido lo elige quien recibe el golpe (daño, bloqueo o nada), no el atacante.
+	# The receiver of the hit picks the sound (damage, block or none), not the attacker.
 	area.take_hit(damage, attack_direction, knockback_force, inflicted)
 
 	var scene_root: Node = get_tree().current_scene if get_tree() else null
