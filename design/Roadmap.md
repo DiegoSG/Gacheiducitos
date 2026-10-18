@@ -8,7 +8,7 @@ Esta es la **única lista de tareas pendientes** del proyecto. Unifica lo que an
 - Los docs de diseño describen **cómo** se hace algo; aquí solo se anota **qué falta** y en qué orden, con un enlace al doc.
 - Prioridad: **P1** = bloquea el hito en curso · **P2** = siguiente hito · **P3** = backlog / cuando haya tiempo.
 
-**Orden de hitos** (decisión de Diego, 16 Oct): **First Playable Test** (ahora) → eventos para armar el juego → **Vertical Slice** (hay que armar el juego completo) → Timer y Cronómetro (prioridad alta) → Contenido → Pulido y lanzamiento.
+**Orden de hitos** (decisión de Diego, 16 Oct): **First Playable Test** (ahora) → eventos para armar el juego → **Vertical Slice** (hay que armar el juego completo) → Timer y Cronómetro (prioridad alta) → Enemy AI and states (medium priority) → Contenido → Pulido y lanzamiento.
 
 ---
 
@@ -46,12 +46,24 @@ Van antes del Vertical Slice (decisión de Diego, 16 Oct). Propuesta técnica: [
 | 7 | P2 | **Niveles del Vertical Slice** armados de punta a punta con su historia. | `Guia_Creacion_Niveles.md` |
 | 8 | P2 | **Jefes:** cada jefe es único, con gameplay propio; `generic_enemy` es solo la clase base. Prioridad media, no se necesita todavía (decisión de Diego, 16 Oct). | — |
 
-## 4. Después del Vertical Slice — prioridad alta
+## 4. Después del Vertical Slice
+
+### Prioridad alta
 
 To-do; todavía no se implementan (pedido de Diego, 16 Oct).
 
 - [ ] **Evento Timer:** un evento que sea un timer, que dé el tiempo en cuenta regresiva y gatille un evento cuando termina.
 - [ ] **Objeto Cronómetro:** un objeto que active en la UI un cronómetro.
+
+### Medium priority
+
+To-do, not implemented yet (Diego's request, 18 Oct). Evaluate everything below as a single task first (design proposal), then start integrating.
+
+- [ ] **Enemy AI and behavior states:** work on enemy intelligence and their states.
+  - **Global alert event:** an event that alerts all enemies at the same time.
+  - **Behavior states:** `IDLE relax`, `IDLE alert`, `chasing`, `walking patrol relax`, `walking patrol alert`, `fighting`.
+  - **Attack types:** support for different attacks: melee, shoot, stunner, freezer, etc.
+  - Ref: `AlertSystem` (`src/core/alert_system.gd`, `PEACE`/`ALERT`) and `generic_enemy.gd` (patrol, detection, chase).
 
 ## 5. Fase 3: Expansión de Contenido
 
