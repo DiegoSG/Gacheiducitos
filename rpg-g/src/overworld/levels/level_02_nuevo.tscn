@@ -1,94 +1,81 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://oc7ktqn1d0q4"]
 
-[ext_resource type="Script" path="res://src/overworld/components/world_boundary_manager.gd" id="r1_wbm"]
-[ext_resource type="TileSet" path="res://assets/sprites/core_tileset.tres" id="r2_tileset"]
-[ext_resource type="PackedScene" path="res://src/overworld/components/arrival_spawn_point.tscn" id="r3_asp"]
-[ext_resource type="PackedScene" path="res://src/overworld/components/level_portal.tscn" id="r4_portal"]
-[ext_resource type="PackedScene" path="res://src/overworld/enemies/generic_enemy.tscn" id="r5_enemy"]
-[ext_resource type="PackedScene" path="res://src/overworld/npcs/npc_barnaby.tscn" id="r6_npc"]
-[ext_resource type="Resource" path="res://src/overworld/dialogues/level_02_n01.dialogue" id="r7_dlg_src_overworld_dialogues_level_02_n01_dialogue"]
-[ext_resource type="PackedScene" path="res://src/overworld/interactables/chest.tscn" id="r8_chest"]
-[ext_resource type="PackedScene" path="res://src/overworld/interactables/minigame_interactable.tscn" id="r9_mg"]
+[ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="r1_wbm"]
+[ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="r2_tileset"]
+[ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="r4_portal"]
+[ext_resource type="PackedScene" uid="uid://627m0vq1pgow" path="res://src/overworld/npcs/npc_barnaby.tscn" id="r6_npc"]
+[ext_resource type="Resource" uid="uid://drbvi1ivh68wy" path="res://src/overworld/dialogues/level_02_n01.dialogue" id="r7_dlg_src_overworld_dialogues_level_02_n01_dialogue"]
 [ext_resource type="PackedScene" path="res://src/overworld/interactables/game_trigger_area.tscn" id="r10_trg_area"]
-[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="r11_player"]
-[ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="r12_music"]
+[ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="r11_player"]
+[ext_resource type="Script" uid="uid://pfhficls41pq" path="res://src/core/components/scene_music.gd" id="r12_music"]
 
-[node name="Level02Nuevo" type="Node2D"]
+[node name="Level02Nuevo" type="Node2D" unique_id=652357180]
 y_sort_enabled = true
 metadata/levelapp_level = "Level_02_nuevo"
 
-[node name="WorldBoundaryManager" type="Node2D" parent="."]
+[node name="WorldBoundaryManager" type="Node2D" parent="." unique_id=1134881353]
 script = ExtResource("r1_wbm")
 width = 2520.0
 height = 2820.0
 
-[node name="Environment" type="Node2D" parent="."]
+[node name="Environment" type="Node2D" parent="." unique_id=137646185]
 y_sort_enabled = true
 
-[node name="GroundLayer" type="TileMapLayer" parent="Environment"]
+[node name="GroundLayer" type="TileMapLayer" parent="Environment" unique_id=1932767448]
 z_index = -2
 tile_set = ExtResource("r2_tileset")
 collision_enabled = false
 
-[node name="DetailLayer" type="TileMapLayer" parent="Environment"]
+[node name="DetailLayer" type="TileMapLayer" parent="Environment" unique_id=1165810663]
 z_index = -1
 tile_set = ExtResource("r2_tileset")
 collision_enabled = false
 
-[node name="PropsLayer" type="TileMapLayer" parent="Environment"]
+[node name="PropsLayer" type="TileMapLayer" parent="Environment" unique_id=1879388413]
 y_sort_enabled = true
 tile_set = ExtResource("r2_tileset")
 
-[node name="OverheadLayer" type="TileMapLayer" parent="Environment"]
+[node name="OverheadLayer" type="TileMapLayer" parent="Environment" unique_id=789183219]
 z_index = 10
 tile_set = ExtResource("r2_tileset")
 collision_enabled = false
 
-[node name="SpawnPoints" type="Node2D" parent="."]
+[node name="SpawnPoints" type="Node2D" parent="." unique_id=996471912]
 
-[node name="Entities" type="Node2D" parent="."]
+[node name="Entities" type="Node2D" parent="." unique_id=1269361147]
 y_sort_enabled = true
 
-[node name="Portals" type="Node2D" parent="."]
+[node name="N01" parent="Entities" unique_id=1809760430 instance=ExtResource("r6_npc")]
+position = Vector2(570, 1110)
+dialogue_resource = ExtResource("r7_dlg_src_overworld_dialogues_level_02_n01_dialogue")
+metadata/levelapp_npc = ""
+metadata/levelapp_id = "N01"
+
+[node name="G01" parent="Entities" unique_id=1482876717 instance=ExtResource("r10_trg_area")]
+position = Vector2(1650, 2370)
+persistence_id = "level_02_nuevo_G01"
+metadata/levelapp_trigger_kind = "area"
+metadata/levelapp_id = "G01"
+
+[node name="Portals" type="Node2D" parent="." unique_id=46880132]
 y_sort_enabled = true
 
-[node name="P01" parent="Portals" instance=ExtResource("r4_portal")]
+[node name="P01" parent="Portals" unique_id=1562847507 instance=ExtResource("r4_portal")]
 position = Vector2(1230, 2790)
 target_level_path = "res://src/overworld/levels/level_01_nuevo.tscn"
 exit_id = "at_P02"
 arrival_id = "at_P01"
 metadata/levelapp_id = "P01"
 
-[node name="SpawnPoint" parent="Portals/P01"]
-position = Vector2(0, -120)
-
-[node name="P03" parent="Portals" instance=ExtResource("r4_portal")]
+[node name="P03" parent="Portals" unique_id=865268656 instance=ExtResource("r4_portal")]
 position = Vector2(2490, 1410)
 target_level_path = "res://src/overworld/levels/level_03_nuevo.tscn"
 exit_id = "at_P04"
 arrival_id = "at_P03"
 metadata/levelapp_id = "P03"
 
-[node name="SpawnPoint" parent="Portals/P03"]
-position = Vector2(-120, 0)
-
-[node name="N01" parent="Entities" instance=ExtResource("r6_npc")]
-position = Vector2(570, 1110)
-dialogue_resource = ExtResource("r7_dlg_src_overworld_dialogues_level_02_n01_dialogue")
-dialogue_start_title = "start"
-metadata/levelapp_npc = ""
-metadata/levelapp_id = "N01"
-
-[node name="G01" parent="Entities" instance=ExtResource("r10_trg_area")]
-position = Vector2(1650, 2370)
-trigger_mode = 0
-one_shot = true
-persistence_id = "level_02_nuevo_G01"
-metadata/levelapp_trigger_kind = "area"
-metadata/levelapp_id = "G01"
-
-[node name="Player" parent="." instance=ExtResource("r11_player")]
+[node name="Player" parent="." unique_id=1662671886 instance=ExtResource("r11_player")]
 position = Vector2(1230, 2670)
 
-[node name="SceneMusic" type="Node" parent="."]
+[node name="SceneMusic" type="Node" parent="." unique_id=1269350547]
 script = ExtResource("r12_music")

@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://cyxjhwjrajlgw"]
+[gd_scene format=3 uid="uid://0evyo8vc0hpv"]
 
 [ext_resource type="Script" uid="uid://cdmyt7x3cb2em" path="res://src/minigames/mg_runner/mg_runner_obstacle.gd" id="6_1lxdd"]
 [ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="r1_wbm"]

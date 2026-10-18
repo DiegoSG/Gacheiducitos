@@ -1,15 +1,83 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dc8hjv3e1xnq6"]
 
-[ext_resource type="Script" path="res://src/overworld/components/world_boundary_manager.gd" id="r1_wbm"]
-[ext_resource type="TileSet" path="res://assets/sprites/core_tileset.tres" id="r2_tileset"]
+[ext_resource type="Script" uid="uid://f73vy602pjfk" path="res://src/core/pipeline/action_resource.gd" id="5_o85n0"]
+[ext_resource type="Script" uid="uid://bi3q0vansigl1" path="res://data/resource_types/loot_entry.gd" id="6_50sxk"]
+[ext_resource type="Resource" uid="uid://bh4box6poomqx" path="res://data/items/gold_coins.tres" id="7_xdb4x"]
+[ext_resource type="PackedScene" uid="uid://ckyt3sc6keqdu" path="res://src/overworld/interactables/pickup_item.tscn" id="8_j4pvo"]
+[ext_resource type="Script" uid="uid://x2yrx5pvvg0r" path="res://src/core/pipeline/actions/drop_loot_action.gd" id="9_yctej"]
+[ext_resource type="Resource" uid="uid://bxps63a4a2vpn" path="res://data/items/red_potion.tres" id="10_rb22f"]
+[ext_resource type="Resource" uid="uid://dsuuhs1xicxgg" path="res://data/items/green_herb.tres" id="11_k2tkb"]
+[ext_resource type="Resource" uid="uid://d2r6q7v2n8y4c" path="res://data/items/bread.tres" id="12_vuilc"]
+[ext_resource type="Resource" uid="uid://dj6dq0grqqoi0" path="res://data/items/wood_log.tres" id="13_kv1oi"]
+[ext_resource type="Resource" uid="uid://ci5cpy6qppnhy" path="res://data/items/iron_ore.tres" id="14_vnsse"]
+[ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="r1_wbm"]
+[ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="r2_tileset"]
 [ext_resource type="PackedScene" path="res://src/overworld/components/arrival_spawn_point.tscn" id="r3_asp"]
-[ext_resource type="PackedScene" path="res://src/overworld/components/level_portal.tscn" id="r4_portal"]
-[ext_resource type="PackedScene" path="res://src/overworld/enemies/generic_enemy.tscn" id="r5_enemy"]
-[ext_resource type="PackedScene" path="res://src/overworld/npcs/npc_barnaby.tscn" id="r6_npc"]
-[ext_resource type="PackedScene" path="res://src/overworld/interactables/chest.tscn" id="r7_chest"]
-[ext_resource type="PackedScene" path="res://src/overworld/interactables/minigame_interactable.tscn" id="r8_mg"]
-[ext_resource type="PackedScene" path="res://src/overworld/player/player.tscn" id="r9_player"]
-[ext_resource type="Script" path="res://src/core/components/scene_music.gd" id="r10_music"]
+[ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="r4_portal"]
+[ext_resource type="PackedScene" uid="uid://crllyay0snx0b" path="res://src/overworld/enemies/generic_enemy.tscn" id="r5_enemy"]
+[ext_resource type="PackedScene" uid="uid://627m0vq1pgow" path="res://src/overworld/npcs/npc_barnaby.tscn" id="r6_npc"]
+[ext_resource type="PackedScene" uid="uid://tkrjy8dnqifu" path="res://src/overworld/interactables/chest.tscn" id="r7_chest"]
+[ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="r9_player"]
+[ext_resource type="Script" uid="uid://pfhficls41pq" path="res://src/core/components/scene_music.gd" id="r10_music"]
+
+[sub_resource type="Resource" id="Resource_gold_entry"]
+script = ExtResource("6_50sxk")
+item = ExtResource("7_xdb4x")
+min_amount = 5
+max_amount = 10
+
+[sub_resource type="Resource" id="Resource_08irw"]
+resource_local_to_scene = true
+script = ExtResource("9_yctej")
+entries = Array[ExtResource("6_50sxk")]([SubResource("Resource_gold_entry")])
+
+[sub_resource type="Resource" id="Resource_entry_red_potion"]
+script = ExtResource("6_50sxk")
+item = ExtResource("10_rb22f")
+
+[sub_resource type="Resource" id="Resource_entry_green_herb"]
+script = ExtResource("6_50sxk")
+item = ExtResource("11_k2tkb")
+
+[sub_resource type="Resource" id="Resource_entry_bread"]
+script = ExtResource("6_50sxk")
+item = ExtResource("12_vuilc")
+
+[sub_resource type="Resource" id="Resource_entry_wood_log"]
+script = ExtResource("6_50sxk")
+item = ExtResource("13_kv1oi")
+
+[sub_resource type="Resource" id="Resource_entry_iron_ore"]
+script = ExtResource("6_50sxk")
+item = ExtResource("14_vnsse")
+
+[sub_resource type="Resource" id="Resource_acrd7"]
+resource_local_to_scene = true
+script = ExtResource("9_yctej")
+entries = Array[ExtResource("6_50sxk")]([SubResource("Resource_entry_red_potion"), SubResource("Resource_entry_green_herb"), SubResource("Resource_entry_bread"), SubResource("Resource_entry_wood_log"), SubResource("Resource_entry_iron_ore")])
+drop_count = 2
+
+[sub_resource type="Resource" id="Resource_ga322"]
+resource_local_to_scene = true
+script = ExtResource("9_yctej")
+entries = Array[ExtResource("6_50sxk")]([SubResource("Resource_gold_entry")])
+
+[sub_resource type="Resource" id="Resource_nhiid"]
+resource_local_to_scene = true
+script = ExtResource("9_yctej")
+entries = Array[ExtResource("6_50sxk")]([SubResource("Resource_entry_red_potion"), SubResource("Resource_entry_green_herb"), SubResource("Resource_entry_bread"), SubResource("Resource_entry_wood_log"), SubResource("Resource_entry_iron_ore")])
+drop_count = 2
+
+[sub_resource type="Resource" id="Resource_f41k8"]
+resource_local_to_scene = true
+script = ExtResource("9_yctej")
+entries = Array[ExtResource("6_50sxk")]([SubResource("Resource_gold_entry")])
+
+[sub_resource type="Resource" id="Resource_nq13i"]
+resource_local_to_scene = true
+script = ExtResource("9_yctej")
+entries = Array[ExtResource("6_50sxk")]([SubResource("Resource_entry_red_potion"), SubResource("Resource_entry_green_herb"), SubResource("Resource_entry_bread"), SubResource("Resource_entry_wood_log"), SubResource("Resource_entry_iron_ore")])
+drop_count = 2
 
 [sub_resource type="RectangleShape2D" id="colshape1"]
 size = Vector2(420, 60)
@@ -17,143 +85,140 @@ size = Vector2(420, 60)
 [sub_resource type="RectangleShape2D" id="colshape2"]
 size = Vector2(420, 60)
 
-[node name="Level01Nuevo1" type="Node2D"]
+[node name="Level01Nuevo1" type="Node2D" unique_id=1039072906]
 y_sort_enabled = true
 metadata/levelapp_level = "Level_01_nuevo_1"
 
-[node name="WorldBoundaryManager" type="Node2D" parent="."]
+[node name="WorldBoundaryManager" type="Node2D" parent="." unique_id=697359715]
 script = ExtResource("r1_wbm")
 width = 540.0
 height = 1020.0
 
-[node name="Environment" type="Node2D" parent="."]
+[node name="Environment" type="Node2D" parent="." unique_id=542961]
 y_sort_enabled = true
 
-[node name="GroundLayer" type="TileMapLayer" parent="Environment"]
+[node name="GroundLayer" type="TileMapLayer" parent="Environment" unique_id=464109107]
 z_index = -2
 tile_set = ExtResource("r2_tileset")
 collision_enabled = false
 
-[node name="DetailLayer" type="TileMapLayer" parent="Environment"]
+[node name="DetailLayer" type="TileMapLayer" parent="Environment" unique_id=829424797]
 z_index = -1
 tile_set = ExtResource("r2_tileset")
 collision_enabled = false
 
-[node name="PropsLayer" type="TileMapLayer" parent="Environment"]
+[node name="PropsLayer" type="TileMapLayer" parent="Environment" unique_id=2086962110]
 y_sort_enabled = true
 tile_set = ExtResource("r2_tileset")
 
-[node name="OverheadLayer" type="TileMapLayer" parent="Environment"]
+[node name="OverheadLayer" type="TileMapLayer" parent="Environment" unique_id=2127835092]
 z_index = 10
 tile_set = ExtResource("r2_tileset")
 collision_enabled = false
 
-[node name="SpawnPoints" type="Node2D" parent="."]
+[node name="SpawnPoints" type="Node2D" parent="." unique_id=42096681]
 
-[node name="Entities" type="Node2D" parent="."]
-y_sort_enabled = true
-
-[node name="Portals" type="Node2D" parent="."]
-y_sort_enabled = true
-
-[node name="Collisions" type="Node2D" parent="."]
-
-[node name="Col_01" type="StaticBody2D" parent="Collisions"]
-position = Vector2(210, 390)
-collision_mask = 0
-metadata/levelapp_id = "Col_01"
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Collisions/Col_01"]
-shape = SubResource("colshape1")
-
-[node name="Col_02" type="StaticBody2D" parent="Collisions"]
-position = Vector2(330, 750)
-collision_mask = 0
-metadata/levelapp_id = "Col_02"
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Collisions/Col_02"]
-shape = SubResource("colshape2")
-
-[node name="start" parent="SpawnPoints" instance=ExtResource("r3_asp")]
+[node name="start" parent="SpawnPoints" unique_id=235865576 instance=ExtResource("r3_asp")]
 position = Vector2(210, 870)
 arrival_id = "start"
 
-[node name="P01" parent="Portals" instance=ExtResource("r4_portal")]
+[node name="Entities" type="Node2D" parent="." unique_id=1146174501]
+y_sort_enabled = true
+
+[node name="E01" parent="Entities" unique_id=1226359984 instance=ExtResource("r5_enemy")]
+position = Vector2(270, 510)
+on_defeat_actions = Array[ExtResource("5_o85n0")]([SubResource("Resource_08irw"), SubResource("Resource_acrd7")])
+persistence_id = "level_01_nuevo_1_E01"
+metadata/levelapp_enemy_type = ""
+metadata/levelapp_id = "E01"
+
+[node name="E02" parent="Entities" unique_id=215176485 instance=ExtResource("r5_enemy")]
+position = Vector2(30, 270)
+on_defeat_actions = Array[ExtResource("5_o85n0")]([SubResource("Resource_ga322"), SubResource("Resource_nhiid")])
+persistence_id = "level_01_nuevo_1_E02"
+metadata/levelapp_enemy_type = ""
+metadata/levelapp_id = "E02"
+
+[node name="E03" parent="Entities" unique_id=1538284964 instance=ExtResource("r5_enemy")]
+position = Vector2(330, 90)
+on_defeat_actions = Array[ExtResource("5_o85n0")]([SubResource("Resource_f41k8"), SubResource("Resource_nq13i")])
+persistence_id = "level_01_nuevo_1_E03"
+metadata/levelapp_enemy_type = ""
+metadata/levelapp_id = "E03"
+
+[node name="N01" parent="Entities" unique_id=110366820 instance=ExtResource("r6_npc")]
+position = Vector2(90, 570)
+dialogue_resource = null
+metadata/levelapp_npc = ""
+metadata/levelapp_id = "N01"
+
+[node name="N02" parent="Entities" unique_id=1522332917 instance=ExtResource("r6_npc")]
+position = Vector2(390, 690)
+dialogue_resource = null
+metadata/levelapp_npc = ""
+metadata/levelapp_id = "N02"
+
+[node name="N03" parent="Entities" unique_id=983129523 instance=ExtResource("r6_npc")]
+position = Vector2(210, 210)
+dialogue_resource = null
+metadata/levelapp_npc = ""
+metadata/levelapp_id = "N03"
+
+[node name="C01" parent="Entities" unique_id=467863027 instance=ExtResource("r7_chest")]
+position = Vector2(90, 750)
+persistence_id = "level_01_nuevo_1_C01"
+metadata/levelapp_contents = ""
+metadata/levelapp_id = "C01"
+
+[node name="C02" parent="Entities" unique_id=1195815212 instance=ExtResource("r7_chest")]
+position = Vector2(270, 990)
+persistence_id = "level_01_nuevo_1_C02"
+metadata/levelapp_contents = ""
+metadata/levelapp_id = "C02"
+
+[node name="C03" parent="Entities" unique_id=617806619 instance=ExtResource("r7_chest")]
+position = Vector2(150, 90)
+persistence_id = "level_01_nuevo_1_C03"
+metadata/levelapp_contents = ""
+metadata/levelapp_id = "C03"
+
+[node name="Portals" type="Node2D" parent="." unique_id=1836460286]
+y_sort_enabled = true
+
+[node name="P01" parent="Portals" unique_id=1925630509 instance=ExtResource("r4_portal")]
 position = Vector2(510, 210)
 target_level_path = "res://src/overworld/levels/level_02_nuevo_1.tscn"
 exit_id = "at_P02"
 arrival_id = "at_P01"
 metadata/levelapp_id = "P01"
 
-[node name="SpawnPoint" parent="Portals/P01"]
-position = Vector2(-60, 0)
-
-[node name="P03" parent="Portals" instance=ExtResource("r4_portal")]
+[node name="P03" parent="Portals" unique_id=2113908266 instance=ExtResource("r4_portal")]
 position = Vector2(510, 870)
 target_level_path = "res://src/overworld/levels/level_02_nuevo_1.tscn"
 exit_id = "at_P04"
 arrival_id = "at_P03"
 metadata/levelapp_id = "P03"
 
-[node name="SpawnPoint" parent="Portals/P03"]
-position = Vector2(-60, 0)
+[node name="Collisions" type="Node2D" parent="." unique_id=399426544]
 
-[node name="E01" parent="Entities" instance=ExtResource("r5_enemy")]
-position = Vector2(270, 510)
-persistence_id = "level_01_nuevo_1_E01"
-metadata/levelapp_enemy_type = ""
-metadata/levelapp_id = "E01"
+[node name="Col_01" type="StaticBody2D" parent="Collisions" unique_id=1479129182]
+position = Vector2(210, 390)
+collision_mask = 0
+metadata/levelapp_id = "Col_01"
 
-[node name="E02" parent="Entities" instance=ExtResource("r5_enemy")]
-position = Vector2(30, 270)
-persistence_id = "level_01_nuevo_1_E02"
-metadata/levelapp_enemy_type = ""
-metadata/levelapp_id = "E02"
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collisions/Col_01" unique_id=1504771673]
+shape = SubResource("colshape1")
 
-[node name="E03" parent="Entities" instance=ExtResource("r5_enemy")]
-position = Vector2(330, 90)
-persistence_id = "level_01_nuevo_1_E03"
-metadata/levelapp_enemy_type = ""
-metadata/levelapp_id = "E03"
+[node name="Col_02" type="StaticBody2D" parent="Collisions" unique_id=2052275771]
+position = Vector2(330, 750)
+collision_mask = 0
+metadata/levelapp_id = "Col_02"
 
-[node name="N01" parent="Entities" instance=ExtResource("r6_npc")]
-position = Vector2(90, 570)
-dialogue_resource = null
-metadata/levelapp_npc = ""
-metadata/levelapp_id = "N01"
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collisions/Col_02" unique_id=1863625367]
+shape = SubResource("colshape2")
 
-[node name="N02" parent="Entities" instance=ExtResource("r6_npc")]
-position = Vector2(390, 690)
-dialogue_resource = null
-metadata/levelapp_npc = ""
-metadata/levelapp_id = "N02"
-
-[node name="N03" parent="Entities" instance=ExtResource("r6_npc")]
-position = Vector2(210, 210)
-dialogue_resource = null
-metadata/levelapp_npc = ""
-metadata/levelapp_id = "N03"
-
-[node name="C01" parent="Entities" instance=ExtResource("r7_chest")]
-position = Vector2(90, 750)
-persistence_id = "level_01_nuevo_1_C01"
-metadata/levelapp_contents = ""
-metadata/levelapp_id = "C01"
-
-[node name="C02" parent="Entities" instance=ExtResource("r7_chest")]
-position = Vector2(270, 990)
-persistence_id = "level_01_nuevo_1_C02"
-metadata/levelapp_contents = ""
-metadata/levelapp_id = "C02"
-
-[node name="C03" parent="Entities" instance=ExtResource("r7_chest")]
-position = Vector2(150, 90)
-persistence_id = "level_01_nuevo_1_C03"
-metadata/levelapp_contents = ""
-metadata/levelapp_id = "C03"
-
-[node name="Player" parent="." instance=ExtResource("r9_player")]
+[node name="Player" parent="." unique_id=700594564 instance=ExtResource("r9_player")]
 position = Vector2(210, 870)
 
-[node name="SceneMusic" type="Node" parent="."]
+[node name="SceneMusic" type="Node" parent="." unique_id=742338995]
 script = ExtResource("r10_music")
