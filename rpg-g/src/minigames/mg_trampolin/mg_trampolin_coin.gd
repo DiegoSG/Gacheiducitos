@@ -8,7 +8,7 @@ signal collected
 @export var coin_scale: float = 0.05
 
 func _ready() -> void:
-	# Usar el icono de oro del proyecto
+	# Use the project's gold coin icon
 	if has_node("Sprite2D"):
 		var sprite: Sprite2D = $Sprite2D
 		sprite.texture = MinigameBase.get_coin_texture()

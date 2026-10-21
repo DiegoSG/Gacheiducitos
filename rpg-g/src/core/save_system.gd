@@ -4,7 +4,7 @@ const SAVE_PATH_AUTO: String = "user://save_auto.json"
 const SAVE_PATH_SLOT_PATTERN: String = "user://save_slot_%d.json"
 const AUTOSAVE_SLOT_ID: int = 0
 const MAX_MANUAL_SLOTS: int = 4
-## Copia de la partida anterior de cada slot; se usa si el archivo principal está dañado.
+## Copy of each slot's previous save; used if the main file is corrupted.
 const BACKUP_SUFFIX: String = ".bak"
 
 signal game_saved(slot_id: int)
@@ -46,13 +46,13 @@ func save_slot(slot_id: int) -> void:
 	if file:
 		file.store_string(JSON.stringify(data, "\t"))
 		file.close()
-		# El autoguardado suena con sfx_save_autosave (CheckpointManager)
+		# Autosave plays sfx_save_autosave (CheckpointManager)
 		if slot_id != AUTOSAVE_SLOT_ID:
 			AudioManager.play_ui(&"sfx_save_done")
 		game_saved.emit(slot_id)
 	else:
 		AudioManager.play_ui(&"sfx_save_error")
-		push_error("[SaveSystem] Error guardando archivo: ", file_path)
+		push_error("[SaveSystem] Error writing file: ", file_path)
 
 func load_slot(slot_id: int) -> void:
 	var data: Dictionary = _read_slot_data(get_slot_path(slot_id))
@@ -62,7 +62,7 @@ func load_slot(slot_id: int) -> void:
 	if data.has("world_state"):
 		WorldStateManager.restore_snapshot(data["world_state"])
 
-	# Retrocompatible: saves antiguos no traen "map_discovery".
+	# Backward compatible: old saves do not have "map_discovery".
 	var discovery: Variant = data.get("map_discovery", {})
 	WorldStateManager.restore_discovery_snapshot(discovery if discovery is Dictionary else {})
 
@@ -72,7 +72,7 @@ func load_slot(slot_id: int) -> void:
 	if data.has("inventory"):
 		Inventory.restore_snapshot(data["inventory"])
 
-	# Retrocompatible: los saves antiguos no traen "quick_slots"
+	# Backward compatible: old saves do not have "quick_slots"
 	QuickSlots.restore_snapshot(data.get("quick_slots", []) as Array)
 
 	if data.has("player_stats"):
@@ -137,24 +137,24 @@ func delete_slot(slot_id: int) -> void:
 			AudioManager.play_ui(&"sfx_save_deleted")
 			game_deleted.emit(slot_id)
 		else:
-			push_error("[SaveSystem] Error al borrar el archivo: ", file_path)
+			push_error("[SaveSystem] Error deleting file: ", file_path)
 
-## Copia el archivo actual del slot a su backup antes de sobrescribirlo.
+## Copies the slot's current file to its backup before overwriting it.
 func _backup_slot_file(file_path: String) -> void:
 	if not FileAccess.file_exists(file_path):
 		return
 	var err: Error = DirAccess.copy_absolute(file_path, file_path + BACKUP_SUFFIX)
 	if err != OK:
-		push_warning("[SaveSystem] No se pudo crear el backup de %s (error %d)" % [file_path, err])
+		push_warning("[SaveSystem] Could not create backup of %s (error %d)" % [file_path, err])
 
-## Lee la partida del slot. Si el archivo principal falta o está dañado, usa el backup.
-## Devuelve un diccionario vacío si ninguno se puede leer.
+## Reads the slot's save. If the main file is missing or corrupted, uses the backup.
+## Returns an empty dictionary if neither can be read.
 func _read_slot_data(file_path: String) -> Dictionary:
 	var data: Dictionary = _parse_save_file(file_path)
 	if data.is_empty():
 		data = _parse_save_file(file_path + BACKUP_SUFFIX)
 		if not data.is_empty():
-			push_warning("[SaveSystem] Partida dañada o ausente, se usó el backup: ", file_path)
+			push_warning("[SaveSystem] Save corrupted or missing, the backup was used: ", file_path)
 	return data
 
 func _parse_save_file(path: String) -> Dictionary:
@@ -162,7 +162,7 @@ func _parse_save_file(path: String) -> Dictionary:
 		return {}
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if not file:
-		push_error("[SaveSystem] No se pudo abrir el archivo: ", path)
+		push_error("[SaveSystem] Could not open file: ", path)
 		return {}
 	var content: String = file.get_as_text()
 	file.close()

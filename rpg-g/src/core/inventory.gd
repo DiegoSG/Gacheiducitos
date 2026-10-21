@@ -1,28 +1,28 @@
 extends Node
 
 signal inventory_changed
-## Cambió lo que hay en un slot de equipo ("" = vacío).
+## Changed what is in an equipment slot ("" = empty).
 signal equipment_changed(slot: String, item_id: String)
-## Cambió cuál de los dos slots de arma está activo.
+## Changed which of the two weapon slots is active.
 signal active_weapon_changed(slot: String)
 
-## Id del "objeto" oro. El oro vive SOLO en PlayerStats.gold; este id se enruta allí
-## y nunca se guarda en `items`.
+## Id of the "item" gold. Gold lives ONLY in PlayerStats.gold; this id is routed there
+## and is never stored in `items`.
 const GOLD_ITEM_ID: String = "gold_coins"
 
 const SLOT_WEAPON_1: String = "weapon_1"
 const SLOT_WEAPON_2: String = "weapon_2"
 const SLOT_SHIELD: String = "shield"
 const WEAPON_SLOTS: Array[String] = [SLOT_WEAPON_1, SLOT_WEAPON_2]
-## Arma básica con la que empieza una partida nueva, equipada en Arma 1 (se puede cambiar como cualquier otra).
-## El escudo empieza vacío: sin escudo no se puede bloquear.
+## Basic weapon a new game starts with, equipped in Weapon 1 (it can be swapped like any other).
+## The shield starts empty: without a shield you cannot block.
 const STARTING_WEAPON_ID: String = "wooden_sword"
 
 # Dictionary to store items: {"item_id": amount}
 var items: Dictionary = {}
 
-## Slots de equipo: {slot: item_id}. Un arma cuerpo a cuerpo o un escudo equipado sale de `items`
-## y vuelve al desequiparlo; una arrojadiza se queda en `items` (su cantidad es la munición).
+## Equipment slots: {slot: item_id}. An equipped melee weapon or shield leaves `items`
+## and returns to it when unequipped; a throwable stays in `items` (its count is the ammo).
 var equipped: Dictionary = {SLOT_WEAPON_1: STARTING_WEAPON_ID, SLOT_WEAPON_2: "", SLOT_SHIELD: ""}
 var active_weapon: String = SLOT_WEAPON_1
 
@@ -39,7 +39,7 @@ func add_item(item_id: String, amount: int = 1) -> void:
 	AudioManager.play_ui(&"sfx_inventory_changed")
 	inventory_changed.emit()
 
-## Atómico: si no hay cantidad suficiente devuelve false y no quita nada.
+## Atomic: if there is not enough quantity, returns false and removes nothing.
 func remove_item(item_id: String, amount: int = 1) -> bool:
 	if item_id.is_empty() or amount <= 0:
 		return false
@@ -49,7 +49,7 @@ func remove_item(item_id: String, amount: int = 1) -> bool:
 
 	if get_owned_count(item_id) < amount:
 		return false
-	# Si solo alcanza contando lo equipado (p. ej. entregar la espada que llevas), se desequipa primero
+	# If it only suffices counting equipped items (e.g. handing over the sword you carry), unequip it first
 	if get_item_count(item_id) < amount:
 		unequip(find_equipped_slot(item_id))
 
@@ -63,7 +63,7 @@ func remove_item(item_id: String, amount: int = 1) -> bool:
 	inventory_changed.emit()
 	return true
 
-## Usa un consumible: aplica cada efecto y consume 1 unidad. Devuelve false si no es consumible o no tiene efectos.
+## Uses a consumable: applies each effect and consumes 1 unit. Returns false if it is not consumable or has no effects.
 func use_item(item_id: String) -> bool:
 	if get_item_count(item_id) <= 0:
 		return false
@@ -81,7 +81,7 @@ func use_item(item_id: String) -> bool:
 	remove_item(item_id, 1)
 	return true
 
-## Copia de los objetos del inventario. Nunca contiene oro.
+## Copy of the inventory items. Never contains gold.
 func get_items() -> Dictionary:
 	return items.duplicate()
 
@@ -95,9 +95,9 @@ func has_item_amount(item_id: String, amount: int) -> bool:
 		return true
 	return get_owned_count(item_id) >= amount
 
-# --- Equipamiento (ver design/Sistema_Armas_y_Escudo.md) ---------------------
+# --- Equipment (see design/Sistema_Armas_y_Escudo.md)---------------------
 
-## true si el ítem puede ir en ese slot según el `kind` de su equipo.
+## true if the item can go in that slot according to its equipment `kind`.
 static func slot_accepts(slot: String, data: ItemData) -> bool:
 	if data == null or data.equipment == null:
 		return false
@@ -107,14 +107,14 @@ static func slot_accepts(slot: String, data: ItemData) -> bool:
 		return data.equipment.is_weapon() and not data.equipment is ShieldData
 	return false
 
-## Slot por defecto para equipar un ítem: el escudo en el suyo; un arma en el slot activo.
+## Default slot to equip an item: the shield in its own; a weapon in the active slot.
 func default_slot_for(data: ItemData) -> String:
 	if data == null or data.equipment == null:
 		return ""
 	return SLOT_SHIELD if data.equipment.kind == EquipmentData.Kind.SHIELD else active_weapon
 
-## Equipa el ítem en el slot. Lo que ocupaba el slot vuelve al inventario; si el ítem ya estaba
-## en el otro slot de arma, los dos se intercambian.
+## Equips the item in the slot. What occupied the slot returns to the inventory; if the item was already
+## in the other weapon slot, the two are swapped.
 func equip(item_id: String, slot: String) -> bool:
 	if not equipped.has(slot):
 		return false
@@ -146,7 +146,7 @@ func equip(item_id: String, slot: String) -> bool:
 	equipment_changed.emit(slot, item_id)
 	return true
 
-## Vacía el slot y devuelve su ítem al inventario.
+## Empties the slot and returns its item to the inventory.
 func unequip(slot: String) -> void:
 	if not equipped.has(slot) or String(equipped[slot]).is_empty():
 		return
@@ -158,7 +158,7 @@ func unequip(slot: String) -> void:
 	inventory_changed.emit()
 	equipment_changed.emit(slot, "")
 
-## Alterna el arma activa entre los dos slots (aunque el otro esté vacío: golpe base).
+## Toggles the active weapon between the two slots (even if the other is empty: base strike).
 func switch_active_weapon() -> void:
 	set_active_weapon(SLOT_WEAPON_2 if active_weapon == SLOT_WEAPON_1 else SLOT_WEAPON_1)
 
@@ -179,7 +179,7 @@ func get_equipped(slot: String) -> ItemData:
 func get_active_weapon() -> ItemData:
 	return get_equipped(active_weapon)
 
-## Arma cuerpo a cuerpo activa, o null (slot vacío o arrojadiza).
+## Active melee weapon, or null (empty slot or throwable).
 func get_active_melee() -> WeaponData:
 	var data: ItemData = get_active_weapon()
 	if data == null or data.equipment.kind != EquipmentData.Kind.MELEE:
@@ -190,7 +190,7 @@ func get_equipped_shield() -> ShieldData:
 	var data: ItemData = get_equipped(SLOT_SHIELD)
 	return data.equipment as ShieldData if data != null else null
 
-## Slot donde está equipado el ítem, o "".
+## Slot where the item is equipped, or "".
 func find_equipped_slot(item_id: String) -> String:
 	if item_id.is_empty():
 		return ""
@@ -199,7 +199,7 @@ func find_equipped_slot(item_id: String) -> String:
 			return slot
 	return ""
 
-## Unidades que tiene el jugador contando las equipadas (para condiciones "item.x").
+## Units the player has, counting equipped ones (for "item.x" conditions).
 func get_owned_count(item_id: String) -> int:
 	var count: int = get_item_count(item_id)
 	var slot: String = find_equipped_slot(item_id)
@@ -207,7 +207,7 @@ func get_owned_count(item_id: String) -> int:
 		count += 1
 	return count
 
-## Equipo inicial para un save sin equipo. Si el inventario ya tenía el arma básica, la usa en vez de duplicarla.
+## Starting equipment for a save without equipment. If the inventory already had the basic weapon, it uses it instead of duplicating it.
 func _starting_equipment() -> Dictionary:
 	if items.has(STARTING_WEAPON_ID):
 		_change_count(STARTING_WEAPON_ID, -1)
@@ -216,7 +216,7 @@ func _starting_equipment() -> Dictionary:
 func _leaves_inventory(data: ItemData) -> bool:
 	return data == null or data.equipment == null or data.equipment.kind != EquipmentData.Kind.THROWABLE
 
-## Suma o resta unidades sin sonido ni señal (las emite quien llama).
+## Adds or removes units without sound or signal (the caller emits them).
 func _change_count(item_id: String, delta: int) -> void:
 	var remaining: int = int(items.get(item_id, 0)) + delta
 	if remaining <= 0:
@@ -224,7 +224,7 @@ func _change_count(item_id: String, delta: int) -> void:
 	else:
 		items[item_id] = remaining
 
-# --- Persistencia ----------------------------------------------------------
+# --- Persistence ----------------------------------------------------------
 
 func create_snapshot() -> Dictionary:
 	return {
@@ -233,19 +233,19 @@ func create_snapshot() -> Dictionary:
 		"active_weapon": active_weapon
 	}
 
-## Acepta el formato nuevo y el antiguo (un diccionario plano {item_id: cantidad}, sin equipo).
-## Un snapshot vacío o antiguo arranca con el arma básica equipada, como una partida nueva.
+## Accepts the new format and the old one (a flat dictionary {item_id: amount}, no equipment).
+## An empty or old snapshot starts with the basic weapon equipped, like a new game.
 func restore_snapshot(snapshot: Dictionary) -> void:
 	var is_new_format: bool = snapshot.get("items") is Dictionary and snapshot.has("equipped")
 	items = (snapshot["items"] as Dictionary).duplicate(true) if is_new_format else snapshot.duplicate(true)
-	# Migración de saves antiguos: el oro se guardaba dentro de items; ahora vive solo en PlayerStats
+	# Migration of old saves: gold used to be stored inside items; now it lives only in PlayerStats
 	items.erase(GOLD_ITEM_ID)
 	var saved_equipped: Dictionary = snapshot.get("equipped", {}) if is_new_format else _starting_equipment()
 	for slot: String in equipped:
 		var saved_id: String = str(saved_equipped.get(slot, ""))
 		if not saved_id.is_empty() and not slot_accepts(slot, ItemDatabase.get_item(saved_id)):
-			# Ítem borrado, renombrado o de una escena de prueba: el slot queda vacío
-			push_warning("[Inventory] Equipo guardado no válido en %s: %s" % [slot, saved_id])
+			# Item deleted, renamed or from a test scene: the slot is left empty
+			push_warning("[Inventory] Saved equipment not valid in %s: %s" % [slot, saved_id])
 			saved_id = ""
 		equipped[slot] = saved_id
 	var saved_active: String = str(snapshot.get("active_weapon", SLOT_WEAPON_1))

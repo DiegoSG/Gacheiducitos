@@ -2,7 +2,7 @@
 class_name MinigameAction
 extends ActionResource
 
-## Inicia un minijuego con ajustes predefinidos e introspección dinámica en el Inspector.
+## Starts a minigame with preset settings and dynamic introspection in the Inspector.
 
 enum MinigameType {
 	RUNNER = 0,
@@ -21,18 +21,18 @@ const MINIGAME_SCENE_PATHS: Dictionary = {
 	MinigameType.TRAMPOLIN: "res://src/minigames/mg_trampolin/mg_trampolin.tscn"
 }
 
-## Selector principal de minijuego
-@export_group("Selección de Minijuego")
+## Main minigame selector
+@export_group("Minigame Selection")
 @export var minigame_type: MinigameType = MinigameType.RUNNER:
 	set(val):
 		minigame_type = val
 		notify_property_list_changed()
 
-## Ruta de escena personalizada (solo si se selecciona CUSTOM_SCENE)
+## Custom scene path (only if CUSTOM_SCENE is selected)
 var custom_scene_path: String = ""
 
-# --- Parámetros específicos de RUNNER ---
-var runner_win_mode: int = 0: # 0: Distancia, 1: Objeto Clave
+# --- RUNNER-specific parameters ---
+var runner_win_mode: int = 0: # 0: Distance, 1: Key Object
 	set(val):
 		runner_win_mode = val
 		notify_property_list_changed()
@@ -48,7 +48,7 @@ var runner_speed_increase_amount: float = 25.0
 var runner_ammo_initial_distance: float = 250.0
 var runner_ammo_distance_multiplier: float = 1.5
 
-# --- Parámetros específicos de CATCHER ---
+# --- CATCHER-specific parameters ---
 var catcher_game_mode: int = 0 # 0: COUNT, 1: TIME
 var catcher_target_value: float = 5.0
 var catcher_lives: int = 3
@@ -59,7 +59,7 @@ var catcher_floor_wait_time: float = 3.0
 var catcher_item_pool: Array[String] = ["blue_potion", "red_potion", "green_herb"]
 var catcher_critical_item_ids: Array[String] = ["falling_bomb", "falling_rock"]
 
-# --- Parámetros específicos de EXCAVATION ---
+# --- EXCAVATION-specific parameters ---
 var excavation_win_condition: int = 0 # 0: ALL_COINS, 1: TARGET_AMOUNT, 2: MISSION_ITEM
 var excavation_target_amount: int = 5
 var excavation_rocks: int = 10
@@ -68,31 +68,31 @@ var excavation_deliver_items: bool = false
 var excavation_initial_bombs: int = 1
 var excavation_item_pool: Array[String] = ["blue_potion", "red_potion", "green_herb"]
 
-# --- Parámetros específicos de SMASHER ---
+# --- SMASHER-specific parameters ---
 var smasher_game_mode: int = 0 # 0: COUNT, 1: TIME
 var smasher_target_value: float = 5.0
 var smasher_initial_speed: float = 150.0
 var smasher_final_speed: float = 350.0
 var smasher_lives: int = 3
 
-# --- Parámetros específicos de TRAMPOLIN ---
-var trampolin_win_condition: int = 1 # 0: ALTURA, 1: ESPECIAL, 2: MONEDAS
+# --- TRAMPOLIN-specific parameters ---
+var trampolin_win_condition: int = 1 # 0: HEIGHT, 1: SPECIAL, 2: COINS
 var trampolin_target_value: float = 5.0
 var trampolin_item_chance: float = 0.25
 var trampolin_item_pool: Array[String] = ["blue_potion", "red_potion", "green_herb"]
 
-# --- Rutas de retorno al Overworld ---
-@export_group("Retorno al Overworld (Victoria)")
+# --- Return paths to the Overworld ---
+@export_group("Return to Overworld (Win)")
 @export_file("*.tscn") var win_level_path: String = ""
 @export var win_spawn_id: String = "spawn_win"
 
-@export_group("Retorno al Overworld (Derrota)")
+@export_group("Return to Overworld (Lose)")
 @export_file("*.tscn") var lose_level_path: String = ""
 @export var lose_spawn_id: String = "spawn_lose"
 
-## Overrides avanzados opcionales: sus claves se fusionan al final de get_built_config()
-## y tienen precedencia sobre los parámetros del minijuego elegido.
-@export_group("Ajustes Avanzados")
+## Optional advanced overrides: their keys are merged at the end of get_built_config()
+## and take precedence over the chosen minigame's parameters.
+@export_group("Advanced Settings")
 @export var config: Dictionary = {}
 
 func _get_property_list() -> Array[Dictionary]:
@@ -116,7 +116,7 @@ func _get_property_list() -> Array[Dictionary]:
 			"name": "runner_win_mode",
 			"type": TYPE_INT,
 			"hint": PROPERTY_HINT_ENUM,
-			"hint_string": "Por Distancia (Metros):0,Por Objeto Clave (Meta):1",
+			"hint_string": "By Distance (Meters):0,By Key Object (Goal):1",
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
 		if runner_win_mode == 0:
@@ -204,7 +204,7 @@ func _get_property_list() -> Array[Dictionary]:
 			"name": "catcher_game_mode",
 			"type": TYPE_INT,
 			"hint": PROPERTY_HINT_ENUM,
-			"hint_string": "Puntos Objetivo (COUNT):0,Sobrevivir Tiempo (TIME):1",
+			"hint_string": "Target Points (COUNT):0,Survive Time (TIME):1",
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
 		list.append({
@@ -266,7 +266,7 @@ func _get_property_list() -> Array[Dictionary]:
 			"name": "excavation_win_condition",
 			"type": TYPE_INT,
 			"hint": PROPERTY_HINT_ENUM,
-			"hint_string": "Todas las Monedas:0,Cantidad Específica:1,Item de Misión:2",
+			"hint_string": "All Coins:0,Specific Amount:1,Mission Item:2",
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
 		list.append({
@@ -319,7 +319,7 @@ func _get_property_list() -> Array[Dictionary]:
 			"name": "smasher_game_mode",
 			"type": TYPE_INT,
 			"hint": PROPERTY_HINT_ENUM,
-			"hint_string": "Dianas Golpeadas (COUNT):0,Tiempo Límite (TIME):1",
+			"hint_string": "Targets Hit (COUNT):0,Time Limit (TIME):1",
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
 		list.append({
@@ -360,7 +360,7 @@ func _get_property_list() -> Array[Dictionary]:
 			"name": "trampolin_win_condition",
 			"type": TYPE_INT,
 			"hint": PROPERTY_HINT_ENUM,
-			"hint_string": "Altura Alcanzada:0,Plataforma Especial:1,Monedas Recolectadas:2",
+			"hint_string": "Height Reached:0,Special Platform:1,Coins Collected:2",
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
 		list.append({
@@ -444,7 +444,7 @@ func get_built_config() -> Dictionary:
 		MinigameType.CUSTOM_SCENE:
 			pass
 
-	# Los overrides avanzados (config) se fusionan una sola vez y tienen precedencia
+	# Advanced overrides (config) are merged once and take precedence
 	c.merge(config, true)
 
 	return c

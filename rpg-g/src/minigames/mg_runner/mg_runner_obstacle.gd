@@ -5,13 +5,13 @@ enum ObstacleType { LOW = 1, HIGH = 2, TALL = 3 }
 @export var obstacle_type: ObstacleType = ObstacleType.LOW
 var speed: float = 380.0
 
-# Dimensiones configurables en inspector
+# Dimensions configurable in the inspector
 @export var low_width: float = 54.0
 @export var low_height: float = 75.0
 
 @export var high_width: float = 64.0
 @export var high_height: float = 60.0
-@export var high_bottom_clearance: float = 62.0 # Espacio libre para pasar agachado
+@export var high_bottom_clearance: float = 62.0 # Free space to pass while crouching
 
 @export var tall_width: float = 54.0
 @export var tall_height: float = 160.0
@@ -31,32 +31,32 @@ func _setup_visuals() -> void:
 
 	match obstacle_type:
 		ObstacleType.LOW:
-			# Obstáculo en suelo (cactus/caja baja) -> Requiere SALTO
+			# Ground obstacle (cactus/low box) -> Requires a JUMP
 			shape.size = Vector2(low_width, low_height)
 			collision_shape.shape = shape
 			collision_shape.position = Vector2(0, -low_height * 0.5)
 			sprite.position = Vector2(0, -low_height * 0.5)
 			sprite.scale = Vector2(low_width / base_w, low_height / base_h)
-			sprite.modulate = Color(0.92, 0.45, 0.15) # Naranja / Madera
+			sprite.modulate = Color(0.92, 0.45, 0.15) # Orange / Wood
 
 		ObstacleType.HIGH:
-			# Obstáculo aéreo suspendido -> Requiere AGACHARSE
+			# Aerial suspended obstacle -> Requires CROUCHING
 			shape.size = Vector2(high_width, high_height)
 			collision_shape.shape = shape
 			var center_y = -(high_bottom_clearance + (high_height * 0.5))
 			collision_shape.position = Vector2(0, center_y)
 			sprite.position = Vector2(0, center_y)
 			sprite.scale = Vector2(high_width / base_w, high_height / base_h)
-			sprite.modulate = Color(0.85, 0.25, 0.85) # Púrpura / Volador
+			sprite.modulate = Color(0.85, 0.25, 0.85) # Purple / Flying
 
 		ObstacleType.TALL:
-			# Muro total -> Requiere DISPARO con bala Z
+			# Full wall -> Requires SHOOTING with the Z bullet
 			shape.size = Vector2(tall_width, tall_height)
 			collision_shape.shape = shape
 			collision_shape.position = Vector2(0, -tall_height * 0.5)
 			sprite.position = Vector2(0, -tall_height * 0.5)
 			sprite.scale = Vector2(tall_width / base_w, tall_height / base_h)
-			sprite.modulate = Color(0.45, 0.5, 0.55) # Gris / Muro
+			sprite.modulate = Color(0.45, 0.5, 0.55) # Gray / Wall
 
 func _process(delta: float) -> void:
 	position.x -= speed * delta

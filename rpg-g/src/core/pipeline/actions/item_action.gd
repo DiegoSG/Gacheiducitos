@@ -1,23 +1,23 @@
 class_name ItemAction
 extends ActionResource
 
-## Acción que añade o remueve ítems del inventario global.
-## Compatible con el pipeline de GameTrigger, DialogueEvent y OnEventListener.
+## Action that adds or removes items from the global inventory.
+## Compatible with the GameTrigger, DialogueEvent and OnEventListener pipeline.
 
 @export_group("Item Configuration")
-## Recurso visual del ítem a añadir o remover
+## Visual resource of the item to add or remove
 @export var item: ItemData = null
-## Cantidad de ítems involucrados
+## Number of items involved
 @export_range(1, 999) var amount: int = 1
-## Operación: 'add' (sumar al inventario) o 'remove' (sustracción atómica)
+## Operation: 'add' (add to inventory) or 'remove' (atomic subtraction)
 @export_enum("add", "remove") var operation: String = "add"
-## Si es true, muestra la notificación toast en el HUD al recibir el ítem
+## If true, shows the toast notification on the HUD when receiving the item
 @export var show_feedback: bool = true
 
-@export_group("Event Triggers (Opcionales)")
-## Evento global disparado vía GameManager.trigger_event si la acción se completa con éxito.
+@export_group("Event Triggers (Optional)")
+## Global event fired via GameManager.trigger_event if the action completes successfully.
 @export var on_success_event: String = ""
-## Evento global disparado vía GameManager.trigger_event si la acción falla (ej. no alcanza la cantidad al remover).
+## Global event fired via GameManager.trigger_event if the action fails (e.g. not enough of the amount when removing).
 @export var on_fail_event: String = ""
 
 func get_action_name() -> String:
@@ -26,13 +26,13 @@ func get_action_name() -> String:
 
 func execute(trigger_node: Node) -> void:
 	if not trigger_node:
-		push_warning("ItemAction: trigger_node es null.")
+		push_warning("ItemAction: trigger_node is null.")
 		emit_game_event(on_fail_event)
 		finished.emit()
 		return
 
 	if not item or item.id.is_empty() or amount <= 0:
-		push_warning("ItemAction: Ítem no configurado o cantidad inválida.")
+		push_warning("ItemAction: Item not configured or invalid amount.")
 		emit_game_event(on_fail_event)
 		finished.emit()
 		return
@@ -43,7 +43,7 @@ func execute(trigger_node: Node) -> void:
 			LootFeedbackManager.trigger_toast(item, amount)
 		emit_game_event(on_success_event)
 	elif operation == "remove":
-		# remove_item es atómico: si no alcanza la cantidad no quita nada y devuelve false
+		# remove_item is atomic: if there is not enough of the amount it removes nothing and returns false
 		if Inventory.remove_item(item.id, amount):
 			emit_game_event(on_success_event)
 		else:

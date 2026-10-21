@@ -15,14 +15,14 @@ func execute(trigger_node: Node) -> void:
 		
 	var t_node: Node = trigger_node.get_node_or_null(target_trigger)
 	if not t_node:
-		push_warning("RunTriggerAction: No se encontró target ", target_trigger)
+		push_warning("RunTriggerAction: target not found: ", target_trigger)
 		finished.emit()
 		return
 
 	if t_node is GameTrigger:
 		(t_node as GameTrigger).force_trigger()
 
-		# NOTA: RunTriggerAction sólo "llama" al otro trigger, no espera a que 
-		# todo el array del otro trigger termine para continuar. Es como apretar un interruptor.
+		# NOTE: RunTriggerAction only "calls" the other trigger; does not wait for 
+		# the other trigger's whole array to finish before continuing. It's like flipping a switch.
 		
 	finished.emit()

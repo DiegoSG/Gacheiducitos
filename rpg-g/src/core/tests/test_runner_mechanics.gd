@@ -4,9 +4,9 @@ const PlayerScript = preload("res://src/minigames/mg_runner/mg_runner_player.gd"
 const PickupScript = preload("res://src/minigames/mg_runner/mg_runner_pickup.gd")
 
 func _init() -> void:
-	print("\n--- TEST: MECÁNICAS DE RUNNER 2D (SIDE-SCROLLER) ---")
+	print("\n--- TEST: RUNNER 2D MECHANICS (SIDE-SCROLLER) ---")
 	
-	# 1. Asegurar autoloads
+	# 1. Ensure autoloads
 	var inventory = root.get_node_or_null("Inventory")
 	if not inventory:
 		var inv_script = load("res://src/core/inventory.gd")
@@ -23,98 +23,98 @@ func _init() -> void:
 
 	await process_frame
 
-	# 2. Cargar escena de RunnerLevel
+	# 2. Load RunnerLevel scene
 	var runner_scene = load("res://src/minigames/mg_runner/mg_runner_level.tscn")
-	assert(runner_scene != null, "mg_runner_level.tscn debe existir y cargar")
+	assert(runner_scene != null, "mg_runner_level.tscn must exist and load")
 	var level = runner_scene.instantiate()
 	root.add_child(level)
 	await process_frame
 
-	assert(level is MinigameBase, "RunnerLevel debe heredar de MinigameBase")
-	print("[PASS] RunnerLevel instanciado e identificado como MinigameBase.")
+	assert(level is MinigameBase, "RunnerLevel must inherit from MinigameBase")
+	print("[PASS] RunnerLevel instantiated and identified as MinigameBase.")
 
-	# 3. Validar Player y estados de colisión de pie vs agachado
+	# 3. Validate Player and standing vs ducking collision states
 	var player = level.get_node_or_null("RunnerPlayer")
-	assert(player != null, "RunnerPlayer debe existir en el nivel")
-	assert(player.stand_collision.disabled == false, "StandCollision debe estar activo de pie")
-	assert(player.duck_collision.disabled == true, "DuckCollision debe estar deshabilitado de pie")
-	print("[PASS] RunnerPlayer inicia en estado RUNNING con collider de pie activo.")
+	assert(player != null, "RunnerPlayer must exist in the level")
+	assert(player.stand_collision.disabled == false, "StandCollision must be active when standing")
+	assert(player.duck_collision.disabled == true, "DuckCollision must be disabled when standing")
+	print("[PASS] RunnerPlayer starts in RUNNING state with the standing collider active.")
 
-	# Simular agachado
+	# Simulate ducking
 	player._set_ducking_state()
-	assert(player.stand_collision.disabled == true, "StandCollision debe deshabilitarse al agacharse")
-	assert(player.duck_collision.disabled == false, "DuckCollision debe habilitarse al agacharse")
-	print("[PASS] RunnerPlayer conmuta limpiamente colisionadores al agacharse.")
+	assert(player.stand_collision.disabled == true, "StandCollision must be disabled when ducking")
+	assert(player.duck_collision.disabled == false, "DuckCollision must be enabled when ducking")
+	print("[PASS] RunnerPlayer cleanly switches colliders when ducking.")
 
-	# Restaurar de pie
+	# Restore standing
 	player._set_standing_state()
-	assert(player.stand_collision.disabled == false, "StandCollision activo tras levantarse")
-	assert(player.duck_collision.disabled == true, "DuckCollision deshabilitado tras levantarse")
-	print("[PASS] RunnerPlayer restaura colisionador de pie correctamente.")
+	assert(player.stand_collision.disabled == false, "StandCollision active after standing up")
+	assert(player.duck_collision.disabled == true, "DuckCollision disabled after standing up")
+	print("[PASS] RunnerPlayer correctly restores the standing collider.")
 
-	# Validar ejecución de salto
+	# Validate jump execution
 	player.try_jump()
-	assert(player.state == player.State.JUMPING, "El jugador debe estar en estado JUMPING tras saltar")
-	assert(player.velocity_y == player.jump_velocity, "velocity_y debe coincidir con jump_velocity")
-	print("[PASS] Ejecución directa de salto (try_jump) validada.")
+	assert(player.state == player.State.JUMPING, "The player must be in JUMPING state after jumping")
+	assert(player.velocity_y == player.jump_velocity, "velocity_y must match jump_velocity")
+	print("[PASS] Direct jump execution (try_jump) validated.")
 
-	# 4. Validar patrones de monedas
+	# 4. Validate coin patterns
 	var world_objects = level.get_node_or_null("WorldObjects")
-	assert(world_objects != null, "WorldObjects debe existir")
+	assert(world_objects != null, "WorldObjects must exist")
 	
-	# Probar patrón V_INVERTED (Arco de salto)
+	# Test V_INVERTED pattern (jump arc)
 	var count_before = world_objects.get_child_count()
 	level._spawn_coin_pattern(level.CoinPattern.V_INVERTED, 1000.0)
 	var spawned_v_inv = world_objects.get_child_count() - count_before
-	assert(spawned_v_inv == 5, "V_INVERTED debe generar exactamente 5 monedas en arco (obtenido: %d)" % spawned_v_inv)
-	print("[PASS] Patrón V_INVERTED genera las 5 monedas parabólicas correctamente.")
+	assert(spawned_v_inv == 5, "V_INVERTED must generate exactly 5 coins in an arc (got: %d)" % spawned_v_inv)
+	print("[PASS] V_INVERTED pattern correctly generates the 5 parabolic coins.")
 
-	# Probar patrón LINE_4
+	# Test LINE_4 pattern
 	count_before = world_objects.get_child_count()
 	level._spawn_coin_pattern(level.CoinPattern.LINE_4, 1000.0)
 	var spawned_line_4 = world_objects.get_child_count() - count_before
-	assert(spawned_line_4 == 4, "LINE_4 debe generar 4 monedas (obtenido: %d)" % spawned_line_4)
-	print("[PASS] Patrón LINE_4 genera 4 monedas en línea correctamente.")
+	assert(spawned_line_4 == 4, "LINE_4 must generate 4 coins (got: %d)" % spawned_line_4)
+	print("[PASS] LINE_4 pattern correctly generates 4 coins in a line.")
 
-	# Probar patrón V_SHAPE
+	# Test V_SHAPE pattern
 	count_before = world_objects.get_child_count()
 	level._spawn_coin_pattern(level.CoinPattern.V_SHAPE, 1000.0)
 	var spawned_v = world_objects.get_child_count() - count_before
-	assert(spawned_v == 5, "V_SHAPE debe generar 5 monedas (obtenido: %d)" % spawned_v)
-	print("[PASS] Patrón V_SHAPE genera 5 monedas en V correctamente.")
+	assert(spawned_v == 5, "V_SHAPE must generate 5 coins (got: %d)" % spawned_v)
+	print("[PASS] V_SHAPE pattern correctly generates 5 coins in a V.")
 
-	# 5. Probar recolección de monedas e items al buffer de recompensas
+	# 5. Test coin and item collection into the reward buffer
 	var initial_coins = level.coins_collected
 	var test_coin = load("res://src/minigames/mg_runner/mg_runner_pickup.tscn").instantiate()
 	test_coin.pickup_type = PickupScript.PickupType.COIN
 	test_coin.item_id = "gold_coins"
 	level.world_objects.add_child(test_coin)
 	level._on_coin_collected(test_coin)
-	assert(level.coins_collected == initial_coins + 1, "coins_collected debe incrementarse")
-	assert(level.session_rewards.get("gold_coins") >= 1, "Debe acumularse gold_coins en session_rewards")
-	print("[PASS] Recolección de monedas incrementa contador y acumula en session_rewards.")
+	assert(level.coins_collected == initial_coins + 1, "coins_collected must increment")
+	assert(level.session_rewards.get("gold_coins") >= 1, "gold_coins must accumulate in session_rewards")
+	print("[PASS] Coin collection increments the counter and accumulates in session_rewards.")
 
-	# Probar recolección de item aleatorio
+	# Test random item collection
 	var test_item = load("res://src/minigames/mg_runner/mg_runner_pickup.tscn").instantiate()
 	test_item.pickup_type = PickupScript.PickupType.RANDOM_ITEM
 	test_item.item_id = "blue_potion"
 	test_item.amount = 2
 	level.world_objects.add_child(test_item)
 	level._on_random_item_collected(test_item)
-	assert(level.session_rewards.get("blue_potion") == 2, "Debe acumularse blue_potion x2 en session_rewards")
-	print("[PASS] Recolección de ítem aleatorio añade el ítem al buffer de sesión.")
+	assert(level.session_rewards.get("blue_potion") == 2, "blue_potion x2 must accumulate in session_rewards")
+	print("[PASS] Random item collection adds the item to the session buffer.")
 
-	# 6. Probar Condición de Victoria: Modo Distancia
+	# 6. Test Win Condition: Distance mode
 	level.win_condition = level.WinCondition.DISTANCE
 	level.target_value = 50.0
 	level.current_distance = 60.0
 	var win_detected = [false]
 	level.game_finished.connect(func(s: bool, _r: Dictionary): if s: win_detected[0] = true)
 	level._check_win_by_distance()
-	assert(win_detected[0] == true, "Alcanzar la distancia meta debe disparar la victoria")
-	print("[PASS] Condición de victoria por Distancia validada con éxito.")
+	assert(win_detected[0] == true, "Reaching the goal distance must trigger the win")
+	print("[PASS] Distance win condition validated successfully.")
 
-	# 7. Probar Condición de Victoria: Modo Objeto Clave
+	# 7. Test Win Condition: Key Object mode
 	level.queue_free()
 	await process_frame
 	
@@ -127,27 +127,27 @@ func _init() -> void:
 
 	level.current_distance = 25.0
 	level._check_spawn_target_object()
-	assert(level.target_object_spawned == true, "El objeto meta debe spawnear al superar el rango")
+	assert(level.target_object_spawned == true, "The goal object must spawn once the range is passed")
 	
-	# Buscar el pickup meta
+	# Find the goal pickup
 	var found_target_pickup = null
 	for child in level.world_objects.get_children():
 		if child is PickupScript and child.is_victory_target:
 			found_target_pickup = child
 			break
-	assert(found_target_pickup != null, "Debe existir un MG_RunnerPickup con is_victory_target = true")
-	assert(found_target_pickup.item_id == "ancient_map", "El item_id debe coincidir con target_item_id")
-	print("[PASS] Objeto clave de victoria spawnea en el mundo con propiedades y visual correcto.")
+	assert(found_target_pickup != null, "A MG_RunnerPickup with is_victory_target = true must exist")
+	assert(found_target_pickup.item_id == "ancient_map", "item_id must match target_item_id")
+	print("[PASS] Key win object spawns in the world with correct properties and visuals.")
 
-	# Simular captura del objeto meta
+	# Simulate capturing the goal object
 	var object_win = [false]
 	level.game_finished.connect(func(s: bool, _r: Dictionary): if s: object_win[0] = true)
 	level._on_target_pickup_collected(found_target_pickup)
-	assert(object_win[0] == true, "Recoger el objeto meta debe completar el juego con victoria")
-	assert(level.session_rewards.get("ancient_map") == 1, "ancient_map debe estar en session_rewards")
-	print("[PASS] Captura del objeto clave otorga la recompensa y concluye con Victoria.")
+	assert(object_win[0] == true, "Collecting the goal object must complete the game with a win")
+	assert(level.session_rewards.get("ancient_map") == 1, "ancient_map must be in session_rewards")
+	print("[PASS] Capturing the key object grants the reward and ends in a win.")
 
-	# Limpiar
+	# Clean up
 	level.queue_free()
-	print("\n>>> TODOS LOS TESTS DE MECÁNICAS DE RUNNER 2D PASARON SATISFACTORIAMENTE (100%) <<<\n")
+	print("\n>>> ALL RUNNER 2D MECHANICS TESTS PASSED SUCCESSFULLY (100%) <<<\n")
 	quit(0)

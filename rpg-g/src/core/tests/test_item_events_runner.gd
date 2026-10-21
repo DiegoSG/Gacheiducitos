@@ -1,6 +1,6 @@
 extends SceneTree
 
-## Runner de pruebas unitarias y de integración para ItemAction, GoldAction y HealthAction.
+## Unit and integration test runner for ItemAction, GoldAction and HealthAction.
 
 const ItemAction = preload("res://src/core/pipeline/actions/item_action.gd")
 const GoldAction = preload("res://src/core/pipeline/actions/gold_action.gd")
@@ -17,7 +17,7 @@ func _init() -> void:
 	print("--- TEST RUNNER: ITEM, GOLD & HEALTH ACTIONS PIPELINE ---")
 	print("=======================================================\n")
 
-	# 1. Configurar Autoloads necesarios en headless
+	# 1. Configure the Autoloads needed in headless mode
 	var inv_script = load("res://src/core/inventory.gd")
 	var inventory: Node = inv_script.new()
 	inventory.name = "Inventory"
@@ -50,13 +50,13 @@ func _init() -> void:
 	var gold_coins: ItemData = item_db.get_item("gold_coins") if item_db else null
 
 	var items_ok: bool = (green_herb != null and red_potion != null and gold_coins != null)
-	_record_result("ItemDatabase: Ítems base cargados correctamente (.tres)", items_ok, "Faltan items en data/items/")
+	_record_result("ItemDatabase: Base items loaded correctly (.tres)", items_ok, "Missing items in data/items/")
 
 	# ====================================================
-	# SECCIÓN ITEM ACTION
+	# ITEM ACTION SECTION
 	# ====================================================
 
-	# Test 2: ItemAction con operation='add'
+	# Test 2: ItemAction with operation='add'
 	inventory.items.clear()
 	var add_action: ItemAction = ItemAction.new()
 	add_action.item = green_herb
@@ -71,9 +71,9 @@ func _init() -> void:
 	add_action.execute(dummy_trigger_node)
 
 	var add_ok: bool = (inventory.items.get("green_herb", 0) == 3 and _action_finished and _last_game_event == "herb_added_event")
-	_record_result("ItemAction (add + success event): Suma ítems y gatilla on_success_event", add_ok, "Fallo al sumar")
+	_record_result("ItemAction (add + success event): Adds items and triggers on_success_event", add_ok, "Failed to add")
 
-	# Test 3: ItemAction sustracción estricta (éxito)
+	# Test 3: ItemAction strict subtraction (success)
 	var remove_action: ItemAction = ItemAction.new()
 	remove_action.item = green_herb
 	remove_action.amount = 2
@@ -86,10 +86,10 @@ func _init() -> void:
 	remove_action.execute(dummy_trigger_node)
 
 	var remove_ok: bool = (inventory.items.get("green_herb", 0) == 1 and _action_finished and _last_game_event == "herb_removed_ok")
-	_record_result("ItemAction (remove éxito atómico): Resta cantidad y dispara on_success_event", remove_ok, "Fallo al restar")
+	_record_result("ItemAction (remove success, atomic): Subtracts amount and triggers on_success_event", remove_ok, "Failed to subtract")
 
-	# Test 4: ItemAction sustracción estricta (fallo por cantidad insuficiente)
-	# Actualmente tiene 1 hierba, le pedimos 5 -> no debe descontar nada y disparar on_fail_event
+	# Test 4: ItemAction strict subtraction (failure due to insufficient amount)
+	# Currently has 1 herb, we ask for 5 -> must not deduct anything and must trigger on_fail_event
 	remove_action.amount = 5
 	remove_action.on_fail_event = "herb_failed_not_enough"
 	_action_finished = false
@@ -98,9 +98,9 @@ func _init() -> void:
 	remove_action.execute(dummy_trigger_node)
 
 	var fail_atomic_ok: bool = (inventory.items.get("green_herb", 0) == 1 and _action_finished and _last_game_event == "herb_failed_not_enough")
-	_record_result("ItemAction (remove fallo atómico): No descuenta si falta cantidad y dispara on_fail_event", fail_atomic_ok, "Descontó indebidamente o no disparó fail")
+	_record_result("ItemAction (remove failure, atomic): Does not deduct if amount is missing and triggers on_fail_event", fail_atomic_ok, "Deducted incorrectly or did not trigger fail")
 
-	# Test 5: ItemAction borde (ítem null)
+	# Test 5: ItemAction edge case (null item)
 	var null_item_action: ItemAction = ItemAction.new()
 	null_item_action.item = null
 	null_item_action.on_fail_event = "null_item_fail"
@@ -110,10 +110,10 @@ func _init() -> void:
 	null_item_action.execute(dummy_trigger_node)
 
 	var null_ok: bool = (_action_finished and _last_game_event == "null_item_fail")
-	_record_result("ItemAction (item null): Dispara on_fail_event y emite finished", null_ok, "No manejó item null")
+	_record_result("ItemAction (null item): Triggers on_fail_event and emits finished", null_ok, "Did not handle null item")
 
 	# ====================================================
-	# SECCIÓN GOLD ACTION
+	# GOLD ACTION SECTION
 	# ====================================================
 	player_stats.gold = 50
 
@@ -130,9 +130,9 @@ func _init() -> void:
 	gold_add.execute(dummy_trigger_node)
 
 	var gold_add_ok: bool = (player_stats.gold == 80 and _action_finished and _last_game_event == "gold_added_success")
-	_record_result("GoldAction (add): Suma oro (50 + 30 = 80) y dispara on_success_event", gold_add_ok, "Fallo al sumar oro")
+	_record_result("GoldAction (add): Adds gold (50 + 30 = 80) and triggers on_success_event", gold_add_ok, "Failed to add gold")
 
-	# Test 7: GoldAction (remove éxito)
+	# Test 7: GoldAction (remove success)
 	var gold_remove: GoldAction = GoldAction.new()
 	gold_remove.amount = 40
 	gold_remove.operation = "remove"
@@ -144,10 +144,10 @@ func _init() -> void:
 	gold_remove.execute(dummy_trigger_node)
 
 	var gold_remove_ok: bool = (player_stats.gold == 40 and _action_finished and _last_game_event == "gold_paid_success")
-	_record_result("GoldAction (remove éxito): Resta oro (80 - 40 = 40) y dispara on_success_event", gold_remove_ok, "Fallo al restar oro")
+	_record_result("GoldAction (remove success): Subtracts gold (80 - 40 = 40) and triggers on_success_event", gold_remove_ok, "Failed to subtract gold")
 
-	# Test 8: GoldAction (remove fallo por oro insuficiente)
-	gold_remove.amount = 100 # tiene 40
+	# Test 8: GoldAction (remove failure due to insufficient gold)
+	gold_remove.amount = 100 # has 40
 	gold_remove.on_fail_event = "gold_broke_fail"
 
 	_action_finished = false
@@ -156,15 +156,15 @@ func _init() -> void:
 	gold_remove.execute(dummy_trigger_node)
 
 	var gold_fail_ok: bool = (player_stats.gold == 40 and _action_finished and _last_game_event == "gold_broke_fail")
-	_record_result("GoldAction (remove fallo atómico): No descuenta si no alcanza y dispara on_fail_event", gold_fail_ok, "Descontó oro indebidamente")
+	_record_result("GoldAction (remove failure, atomic): Does not deduct if not enough and triggers on_fail_event", gold_fail_ok, "Deducted gold incorrectly")
 
 	# ====================================================
-	# SECCIÓN HEALTH ACTION
+	# HEALTH ACTION SECTION
 	# ====================================================
 	player_stats.max_health = 100
 	player_stats.health = 50
 
-	# Test 9: HealthAction daño (-20 HP)
+	# Test 9: HealthAction damage (-20 HP)
 	var health_damage: HealthAction = HealthAction.new()
 	health_damage.amount = -20
 
@@ -173,9 +173,9 @@ func _init() -> void:
 	health_damage.execute(dummy_trigger_node)
 
 	var damage_ok: bool = (player_stats.health == 30 and _action_finished)
-	_record_result("HealthAction (daño con valor negativo): 50 - 20 = 30 HP", damage_ok, "Fallo al dañar")
+	_record_result("HealthAction (damage with negative value): 50 - 20 = 30 HP", damage_ok, "Failed to apply damage")
 
-	# Test 10: HealthAction curación (+40 HP)
+	# Test 10: HealthAction healing (+40 HP)
 	var health_heal: HealthAction = HealthAction.new()
 	health_heal.amount = 40
 
@@ -184,9 +184,9 @@ func _init() -> void:
 	health_heal.execute(dummy_trigger_node)
 
 	var heal_ok: bool = (player_stats.health == 70 and _action_finished)
-	_record_result("HealthAction (curación con valor positivo): 30 + 40 = 70 HP", heal_ok, "Fallo al curar")
+	_record_result("HealthAction (healing with positive value): 30 + 40 = 70 HP", heal_ok, "Failed to heal")
 
-	# Test 11: HealthAction full_heal (restaura al 100%)
+	# Test 11: HealthAction full_heal (restores to 100%)
 	var health_full: HealthAction = HealthAction.new()
 	health_full.full_heal = true
 
@@ -195,10 +195,10 @@ func _init() -> void:
 	health_full.execute(dummy_trigger_node)
 
 	var full_heal_ok: bool = (player_stats.health == 100 and _action_finished)
-	_record_result("HealthAction (full_heal = true): Restaura salud al 100% (100 HP)", full_heal_ok, "No restauró al 100%")
+	_record_result("HealthAction (full_heal = true): Restores health to 100% (100 HP)", full_heal_ok, "Did not restore to 100%")
 
 	# ====================================================
-	# INTEGRACIÓN CON GAMETRIGGER Y DIALOGUEEVENT
+	# INTEGRATION WITH GAMETRIGGER AND DIALOGUEEVENT
 	# ====================================================
 	var trigger: GameTrigger = GameTrigger.new()
 	trigger.name = "TestTrigger"
@@ -217,21 +217,21 @@ func _init() -> void:
 	await process_frame
 
 	var trigger_ok: bool = (inventory.items.get("red_potion", 0) == 2)
-	_record_result("GameTrigger -> ItemAction: Ejecuta adición con recurso ItemData", trigger_ok, "Fallo en GameTrigger")
+	_record_result("GameTrigger -> ItemAction: Runs addition with an ItemData resource", trigger_ok, "Failure in GameTrigger")
 	trigger.queue_free()
 
 	# ----------------------------------------------------
-	# Resumen final
+	# Final summary
 	# ----------------------------------------------------
 	print("\n=======================================================")
-	print("RESULTADOS: %d PASARON | %d FALLARON" % [_passed_count, _failed_count])
+	print("RESULTS: %d PASSED | %d FAILED" % [_passed_count, _failed_count])
 	print("=======================================================")
 
 	if _failed_count == 0:
-		print(">>> TODOS LOS TESTS DE ACCIONES PASARON CON ÉXITO <<<\n")
+		print(">>> ALL ACTION TESTS PASSED SUCCESSFULLY <<<\n")
 		quit(0)
 	else:
-		push_error("AL MENOS UN TEST FALLÓ")
+		push_error("AT LEAST ONE TEST FAILED")
 		quit(1)
 
 func _on_action_finished() -> void:

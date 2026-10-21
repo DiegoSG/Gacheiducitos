@@ -32,7 +32,7 @@ Gacheiducitos/
 │   │   └── resource_types/       # Scripts GDScript que definen Custom Resources (ItemData)
 │   ├── src/                      # Código fuente y escenas del juego
 │   │   ├── core/                 # Infraestructura base y autoloads (GameManager, Inventory, SaveSystem...)
-│   │   │   ├── components/       # Componentes reutilizables (Hitbox, Hurtbox, HitEffect, LootDropComponent)
+│   │   │   ├── components/       # Componentes reutilizables (Hitbox, Hurtbox, HitEffect)
 │   │   │   ├── data/             # Datos generados (narrative_defaults.gd, lo escribe DialogueApp)
 │   │   │   ├── pipeline/         # Sistema de eventos (GameTrigger, ActionRunner, OnEventListener, ActionResource)
 │   │   │   │   └── actions/      # Acciones modulares (MinigameAction, DoorAction, etc.)

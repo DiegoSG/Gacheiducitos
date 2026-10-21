@@ -1,41 +1,41 @@
 class_name GameTrigger
 extends Area2D
 
-## Un trigger general que evalúa variables de juego y ejecuta acciones tanto al entrar, al salir o por interacción.
+## A general trigger that evaluates game variables and runs actions on enter, on exit, or on interaction.
 
 enum TriggerMode {
-	ON_ENTER,        ## Se activa al pisarlo
-	ON_EXIT,         ## Se activa al salir del área
-	ON_ENTER_AND_EXIT, ## Ejecuta una lista al entrar y otra lista distinta al salir
-	INTERACT,        ## Se activa usando el botón de acción estando dentro
-	AUTO_START       ## Se activa automáticamente en cuanto carga la escena
+	ON_ENTER,        ## Activates when stepped on
+	ON_EXIT,         ## Activates when leaving the area
+	ON_ENTER_AND_EXIT, ## Runs one list on enter and a different list on exit
+	INTERACT,        ## Activates with the action button while inside
+	AUTO_START       ## Activates automatically as soon as the scene loads
 }
 
 @export var trigger_mode: TriggerMode = TriggerMode.ON_ENTER
-## En ON_ENTER_AND_EXIT un "uso" es un ciclo completo entrar + salir.
+## In ON_ENTER_AND_EXIT, one "use" is a full enter + exit cycle.
 @export var one_shot: bool = true
-## ID único para persistencia. Si está vacío, el estado solo dura mientras el jugador siga en este nivel (clave efímera).
+## Unique ID for persistence. If empty, the state only lasts while the player stays in this level (ephemeral key).
 @export var persistence_id: String = ""
 
-@export_group("Condición")
-## En ON_ENTER, ON_EXIT, INTERACT, AUTO_START y force_trigger: condición verdadera (o sin condición) ejecuta
-## actions_if_true y falsa ejecuta actions_if_false.
-## En ON_ENTER_AND_EXIT la condición se evalúa solo al entrar: si es falsa no se ejecuta nada
-## (ni al entrar ni al salir).
-## Sin ConditionSet la condición se considera verdadera.
+@export_group("Condition")
+## In ON_ENTER, ON_EXIT, INTERACT, AUTO_START and force_trigger: a true condition (or no condition) runs
+## actions_if_true, and a false one runs actions_if_false.
+## In ON_ENTER_AND_EXIT the condition is only evaluated on enter: if false, nothing runs
+## (neither on enter nor on exit).
+## Without a ConditionSet the condition is considered true.
 @export var conditions: ConditionSet
 
-@export_group("Acciones")
-## Acciones ejecutadas si la condición es verdadera (o no hay condición).
-## En ON_ENTER_AND_EXIT son las acciones de entrada.
+@export_group("Actions")
+## Actions run if the condition is true (or there is no condition).
+## In ON_ENTER_AND_EXIT these are the enter actions.
 @export var actions_if_true: Array[ActionResource] = []
-## Acciones ejecutadas si la condición es falsa.
-## En ON_ENTER_AND_EXIT son las acciones de salida (nunca se ejecuta actions_if_true al salir).
+## Actions run if the condition is false.
+## In ON_ENTER_AND_EXIT these are the exit actions (actions_if_true never runs on exit).
 @export var actions_if_false: Array[ActionResource] = []
 
 var _has_triggered: bool = false
 var _is_running: bool = false
-## Solo ON_ENTER_AND_EXIT: true entre una entrada que ejecutó actions_if_true y su salida correspondiente.
+## ON_ENTER_AND_EXIT only: true between an enter that ran actions_if_true and its matching exit.
 var _cycle_open: bool = false
 var _agents_inside: Array[Node2D] = []
 var _persistence_key: String = ""
@@ -81,13 +81,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			_attempt_trigger()
 
-## Por si se llama directamente al trigger a través de un ActionableFinder manual
+## For when the trigger is called directly through a manual ActionableFinder
 func action() -> void:
 	if trigger_mode != TriggerMode.INTERACT:
 		return
 	_attempt_trigger()
 
-## Permite que cualquier otro nodo (u otra acción) lo dispare a la fuerza
+## Lets any other node (or action) force it to fire
 func force_trigger() -> void:
 	_attempt_trigger()
 
@@ -96,14 +96,14 @@ func _can_trigger() -> bool:
 	if _is_running: return false
 	return true
 
-## Evalúa la condición configurada. Sin ConditionSet devuelve true.
+## Evaluates the configured condition. Without a ConditionSet returns true.
 func _evaluate_condition() -> bool:
 	if conditions == null:
 		return true
 	return conditions.evaluate()
 
-## Disparo estándar (ON_ENTER, ON_EXIT, INTERACT, AUTO_START, force_trigger):
-## condición verdadera o ausente -> actions_if_true, falsa -> actions_if_false.
+## Standard trigger (ON_ENTER, ON_EXIT, INTERACT, AUTO_START, force_trigger):
+## true or absent condition -> actions_if_true, false -> actions_if_false.
 func _attempt_trigger() -> void:
 	if not _can_trigger(): return
 
@@ -116,8 +116,8 @@ func _attempt_trigger() -> void:
 	await ActionRunner.run(array_to_run, self)
 	_is_running = false
 
-## ON_ENTER_AND_EXIT: entrada. Ejecuta actions_if_true si la condición se cumple (o no hay condición);
-## si es falsa no ejecuta nada y no abre el ciclo (la salida tampoco ejecutará nada).
+## ON_ENTER_AND_EXIT: enter. Runs actions_if_true if the condition holds (or there is no condition);
+## if false, runs nothing and does not open the cycle (the exit will not run anything either).
 func _begin_cycle() -> void:
 	if _cycle_open or not _can_trigger(): return
 	if not _evaluate_condition(): return
@@ -127,13 +127,13 @@ func _begin_cycle() -> void:
 	await ActionRunner.run(actions_if_true, self)
 	_is_running = false
 
-## ON_ENTER_AND_EXIT: salida. Solo ejecuta actions_if_false si la entrada abrió el ciclo.
-## Con one_shot, el ciclo completo (entrar + salir) consume el trigger.
+## ON_ENTER_AND_EXIT: exit. Only runs actions_if_false if the enter opened the cycle.
+## With one_shot, the full cycle (enter + exit) consumes the trigger.
 func _end_cycle() -> void:
 	if not _cycle_open: return
 	_cycle_open = false
 
-	# Si las acciones de entrada siguen corriendo, esperar a que terminen antes de las de salida
+	# If the enter actions are still running, wait for them to finish before the exit actions
 	while _is_running:
 		if not is_inside_tree():
 			return

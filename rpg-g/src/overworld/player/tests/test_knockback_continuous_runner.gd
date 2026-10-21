@@ -16,13 +16,13 @@ func _run_tests() -> void:
 	hitbox.knockback_force = 250.0
 	hitbox.continuous_damage = true
 	hitbox.attack_rate = 0.5
-	assert(hitbox.continuous_damage == true, "continuous_damage debe ser true")
-	assert(hitbox.attack_rate == 0.5, "attack_rate debe ser 0.5")
+	assert(hitbox.continuous_damage == true, "continuous_damage must be true")
+	assert(hitbox.attack_rate == 0.5, "attack_rate must be 0.5")
 	passed += 1
-	print("[PASS] HitboxComponent: continuous_damage y attack_rate configurados correctamente")
+	print("[PASS] HitboxComponent: continuous_damage and attack_rate configured correctly")
 	hitbox.free()
 	
-	# Test 2: Player recibe daño y knockback
+	# Test 2: Player takes damage and knockback
 	var player_scene = load("res://src/overworld/player/player.tscn")
 	var player = player_scene.instantiate()
 	root.add_child(player)
@@ -31,42 +31,42 @@ func _run_tests() -> void:
 	stats.max_health = 4
 	stats.health = 4
 	
-	# Primer golpe: vida debe bajar a 3, invulnerable pasa a true, knockback se aplica
+	# First hit: health should drop to 3, invulnerable becomes true, knockback is applied
 	var hurtbox = player.get_node("HurtboxComponent")
 	hurtbox.take_hit(1, Vector2.RIGHT, 400.0)
 	
-	assert(stats.health == 3, "Salud debe ser 3 tras 1 de daño")
-	assert(player.is_invulnerable == true, "Player debe estar invulnerable tras el golpe")
-	assert(player.is_stunned == true, "Player debe estar stuneado/empujado")
-	assert(player.knockback_velocity == Vector2.RIGHT * 400.0, "Knockback velocity debe ser RIGHT * 400")
+	assert(stats.health == 3, "Health must be 3 after 1 damage")
+	assert(player.is_invulnerable == true, "Player must be invulnerable after the hit")
+	assert(player.is_stunned == true, "Player must be stunned/pushed")
+	assert(player.knockback_velocity == Vector2.RIGHT * 400.0, "Knockback velocity must be RIGHT * 400")
 	passed += 1
-	print("[PASS] Player: Primer golpe aplica daño (HP 4->3), activa invulnerabilidad y empuja hacia atras")
+	print("[PASS] Player: First hit deals damage (HP 4->3), activates invulnerability and pushes back")
 	
-	# Test 3: Segundo golpe mientras es invulnerable (NO quita vida, pero SI aplica knockback)
+	# Test 3: Second hit while invulnerable (does NOT remove health, but DOES apply knockback)
 	hurtbox.take_hit(1, Vector2.UP, 350.0)
-	assert(stats.health == 3, "Salud DEBE seguir siendo 3 durante invulnerabilidad")
-	assert(player.is_invulnerable == true, "Player sigue invulnerable")
-	assert(player.knockback_velocity == Vector2.UP * 350.0, "Knockback velocity DEBE actualizarse a UP * 350")
+	assert(stats.health == 3, "Health MUST remain 3 during invulnerability")
+	assert(player.is_invulnerable == true, "Player is still invulnerable")
+	assert(player.knockback_velocity == Vector2.UP * 350.0, "Knockback velocity MUST update to UP * 350")
 	passed += 1
-	print("[PASS] Player: Golpe durante invulnerabilidad NO quita vida pero SI empuja hacia atras")
+	print("[PASS] Player: Hit during invulnerability does NOT remove health but DOES push back")
 	
 	# Test 4: Enemy motion_mode
 	var enemy_scene = load("res://src/overworld/enemies/generic_enemy.tscn")
 	var enemy = enemy_scene.instantiate()
 	root.add_child(enemy)
 	
-	assert(enemy.motion_mode == CharacterBody2D.MOTION_MODE_FLOATING, "Enemy debe ser MOTION_MODE_FLOATING")
-	assert(player.motion_mode == CharacterBody2D.MOTION_MODE_FLOATING, "Player debe ser MOTION_MODE_FLOATING")
+	assert(enemy.motion_mode == CharacterBody2D.MOTION_MODE_FLOATING, "Enemy must be MOTION_MODE_FLOATING")
+	assert(player.motion_mode == CharacterBody2D.MOTION_MODE_FLOATING, "Player must be MOTION_MODE_FLOATING")
 	passed += 1
-	print("[PASS] Enemy & Player: Configurados en MOTION_MODE_FLOATING impidiendo empujar enemigos")
+	print("[PASS] Enemy & Player: Set to MOTION_MODE_FLOATING, preventing enemies from being pushed")
 	
 	player.queue_free()
 	enemy.queue_free()
 	
 	print("\n-------------------------------------------------------")
-	print("RESULTADOS FINALES:")
-	print("  Pruebas superadas: %d" % passed)
-	print("  Pruebas fallidas:  0")
+	print("FINAL RESULTS:")
+	print("  Tests passed: %d" % passed)
+	print("  Tests failed:  0")
 	print("-------------------------------------------------------\n")
-	print(">>> TODOS LOS TESTS DE COMBATE Y KNOCKBACK PASARON AL 100% <<<\n")
+	print(">>> ALL COMBAT AND KNOCKBACK TESTS PASSED AT 100% <<<\n")
 	quit(0)

@@ -1,9 +1,9 @@
 extends CanvasLayer
 class_name LootFeedbackManager
 
-## Gestor global de feedback visual de recompensas e inventario.
-## Muestra notificaciones tipo Toast ([Icono] x N [Nombre]) directamente
-## al lado del icono de inventario (mochila) al recolectar ítems o monedas.
+## Global manager for visual reward and inventory feedback.
+## Shows Toast-style notifications ([Icon] x N [Name]) right next to
+## the inventory icon (backpack) when collecting items or coins.
 
 static var instance: LootFeedbackManager = null
 
@@ -22,7 +22,7 @@ const COLOR_HEALTH_EMPTY: Color = Color(0.25, 0.25, 0.25, 0.4) # Gris apagado
 var _slot_icons: Array[TextureRect] = []
 var _slot_counts: Array[Label] = []
 var _active_toasts: Dictionary = {} # item_id: String -> LootToastItem
-## Último ítem mostrado por slot: el sonido solo suena cuando cambia la asignación, no la cantidad.
+## Last item shown per slot: the sound only plays when the assignment changes, not the amount.
 var _slot_item_ids: Array[String] = []
 var _quick_slots_synced: bool = false
 
@@ -60,7 +60,7 @@ func _refresh_status_ui() -> void:
 	_update_health(PlayerStats.health, PlayerStats.get_max_health())
 	_rebuild_status_row()
 
-## Fila con el nombre de cada estado activo, teñido con su color.
+## Row with the name of each active status, tinted with its color.
 func _rebuild_status_row() -> void:
 	if not status_container:
 		return
@@ -82,7 +82,7 @@ func _update_health(current: int, max_val: int) -> void:
 		return
 		
 	var existing_pips: Array[Node] = health_bar_container.get_children()
-	# Si la cantidad de barritas difiere del max_health, sincronizar cantidad
+	# If the number of pips differs from max_health, sync the count
 	while existing_pips.size() < max_val:
 		var pip: ColorRect = ColorRect.new()
 		pip.custom_minimum_size = Vector2(10, 24)
@@ -93,13 +93,13 @@ func _update_health(current: int, max_val: int) -> void:
 		var last_pip: Node = existing_pips.pop_back()
 		last_pip.queue_free()
 		
-	# Si hay un estado activo, los pips activos se tiñen con el color del ultimo aplicado
+	# If there is an active status, active pips are tinted with the last applied status' color
 	var active_color: Color = COLOR_HEALTH_ACTIVE
 	var last_status: StatusEffectData = PlayerStats.get_last_status()
 	if last_status != null:
 		active_color = last_status.hud_color
 
-	# Actualizar colores activos/apagados
+	# Update active/inactive colors
 	for i in range(existing_pips.size()):
 		var pip: ColorRect = existing_pips[i] as ColorRect
 		if not pip:
@@ -114,15 +114,15 @@ func _update_gold(amount: int) -> void:
 		gold_label.text = str(amount)
 
 
-## API pública única: despliega el toast de loot de un ítem (oro incluido) junto al inventario
-## y anima el icono de la mochila.
+## Single public API: shows the loot toast for an item (gold included) next to the inventory
+## and animates the backpack icon.
 static func trigger_toast(item_data: ItemData, amount: int = 1) -> void:
 	if not instance or not instance.is_inside_tree() or not item_data:
 		return
 	instance.show_toast(item_data, amount)
 	instance._punch_inventory_anchor()
 
-## Despliega o apila una notificación de toast al lado del icono de inventario
+## Shows or stacks a toast notification next to the inventory icon
 func show_toast(item_data: ItemData, amount: int = 1) -> void:
 	if not item_data or amount <= 0:
 		return
@@ -134,13 +134,13 @@ func show_toast(item_data: ItemData, amount: int = 1) -> void:
 			
 	var item_id: String = item_data.id
 	
-	# Si ya existe un toast activo para este ítem y sigue en pantalla, acumular cantidad
+	# If an active toast for this item already exists and is still on screen, accumulate the amount
 	if _active_toasts.has(item_id) and is_instance_valid(_active_toasts[item_id]) and _active_toasts[item_id].is_inside_tree():
 		var existing_toast: LootToastItem = _active_toasts[item_id]
 		existing_toast.add_amount(amount)
 		return
 		
-	# Si no existe, instanciar nuevo toast
+	# If not, instantiate a new toast
 	var toast: LootToastItem = TOAST_SCENE.instantiate() as LootToastItem
 	toast_container.add_child(toast)
 	_active_toasts[item_id] = toast
@@ -161,7 +161,7 @@ func _punch_inventory_anchor() -> void:
 	tween.tween_property(inventory_anchor, "scale", Vector2(1.2, 1.2), 0.08).set_trans(Tween.TRANS_QUAD)
 	tween.tween_property(inventory_anchor, "scale", Vector2(1.0, 1.0), 0.12).set_trans(Tween.TRANS_BOUNCE)
 
-## HUD mínimo de 4 casillas de slots rápidos (placeholder visual).
+## Minimal HUD of 4 quick-slot cells (visual placeholder).
 func _build_quickbar() -> void:
 	if not quickbar_container:
 		return

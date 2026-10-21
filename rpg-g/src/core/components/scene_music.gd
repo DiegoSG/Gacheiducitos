@@ -1,9 +1,9 @@
 class_name SceneMusic
 extends Node
 
-## Reproduce la música de la escena al entrar en ella. Se agrega como hijo de un nivel,
-## minijuego o menú. Con music_id vacío, la escena queda en silencio.
-## Si alert_music_id tiene valor, cambia a esa música mientras el mundo está en alerta.
+## Plays the scene's music when entering it. Added as a child of a level,
+## minigame or menu. With music_id empty, the scene is silent.
+## If alert_music_id has a value, switches to that music while the world is on alert.
 
 @export var music_id: StringName = &""
 @export var alert_music_id: StringName = &""

@@ -1,15 +1,13 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://d3xs1rirxnmyl"]
 
+[ext_resource type="Script" uid="uid://des3f5n5boxxj" path="res://data/resource_types/item_effects/item_effect.gd" id="1_h6rxl"]
 [ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/items/icons/iron_ore.png" id="2_icon"]
-[ext_resource type="Script" path="res://data/resource_types/equipment/shield_data.gd" id="3_shield"]
+[ext_resource type="Texture2D" uid="uid://d4f5vdvvmwidw" path="res://assets/items/icons/iron_ore.png" id="2_icon"]
+[ext_resource type="Script" uid="uid://8twaohhwws2m" path="res://data/resource_types/equipment/shield_data.gd" id="3_shield"]
 
 [sub_resource type="Resource" id="ShieldData_iron_shield"]
 script = ExtResource("3_shield")
-block_percent = 100.0
 coverage_angle = 160.0
-move_speed_multiplier = 0.0
-blocks_statuses = true
 
 [resource]
 script = ExtResource("1_script")

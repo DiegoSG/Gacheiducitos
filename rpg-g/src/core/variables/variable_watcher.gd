@@ -1,15 +1,15 @@
 class_name VariableWatcher
 extends Node
 
-## Vigila un ConditionSet y dispara un GameTrigger en la transición falso -> verdadero.
+## Watches a ConditionSet and fires a GameTrigger on the false -> true transition.
 
 @export var conditions: ConditionSet
-## GameTrigger a disparar con force_trigger(). Vacío = el nodo padre.
+## GameTrigger to fire with force_trigger(). Empty = the parent node.
 @export var target_trigger: NodePath
 @export var one_shot: bool = true
-## Evalúa la condición al entrar en escena (dispara si ya es verdadera).
+## Evaluates the condition on entering the scene (fires if already true).
 @export var check_on_ready: bool = true
-## ID único para recordar entre niveles que ya disparó (solo con one_shot).
+## Unique ID to remember across levels that it already fired (only with one_shot).
 @export var persistence_id: String = ""
 
 var _persistence_key: String = ""
@@ -24,7 +24,7 @@ func _ready() -> void:
 		return
 	GameVariables.variable_changed.connect(_on_variable_changed)
 	if check_on_ready:
-		# Diferido para que el resto de la escena (el trigger objetivo) esté listo
+		# Deferred so the rest of the scene (the target trigger) is ready
 		_last_result = false
 		call_deferred("_evaluate")
 	else:
@@ -49,7 +49,7 @@ func _fire() -> void:
 	var target: Node = get_parent() if target_trigger.is_empty() else get_node_or_null(target_trigger)
 	var trigger: GameTrigger = target as GameTrigger
 	if trigger == null:
-		push_warning("VariableWatcher '%s': el objetivo no es un GameTrigger." % name)
+		push_warning("VariableWatcher '%s': the target is not a GameTrigger." % name)
 		return
 	if one_shot:
 		_has_fired = true

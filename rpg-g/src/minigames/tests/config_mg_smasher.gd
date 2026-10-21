@@ -1,6 +1,6 @@
 extends Control
 
-# Referencias a los sliders y labels
+# References to the sliders and labels
 @onready var initial_speed_slider = $VBoxContainer/InitialSpeed/Slider
 @onready var initial_speed_label = $VBoxContainer/InitialSpeed/Value
 @onready var final_speed_slider = $VBoxContainer/FinalSpeed/Slider
@@ -18,7 +18,7 @@ extends Control
 @onready var start_button = $VBoxContainer/StartButton
 @onready var exit_button = $VBoxContainer/ExitButton
 
-# Parámetros de configuración
+# Configuration parameters
 var config = {
 	"initial_speed": 100.0,
 	"final_speed": 400.0,
@@ -39,7 +39,7 @@ func _ready() -> void:
 	target_value_slider.value = config.target_value
 	lives_slider.value = config.lives
 	
-	# Conectar señales
+	# Connect signals
 	initial_speed_slider.value_changed.connect(_on_initial_speed_changed)
 	final_speed_slider.value_changed.connect(_on_final_speed_changed)
 	spawn_points_slider.value_changed.connect(_on_spawn_points_changed)

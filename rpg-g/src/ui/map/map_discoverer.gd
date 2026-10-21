@@ -1,15 +1,15 @@
 class_name MapDiscoverer
 extends Node
 
-## Descubre celdas del mapa alrededor del jugador.
-## Uso: instanciar como hijo de cualquier nodo (p. ej. PlayerHUD) y asignar `player`
-## (si queda vacío, busca "Player" en GameManager.current_scene).
+## Discovers map cells around the player.
+## Usage: instance as a child of any node (e.g. PlayerHUD) and assign `player`
+## (if empty, looks for "Player" in GameManager.current_scene).
 
-## Radio de descubrimiento en unidades de mundo.
+## Discovery radius in world units.
 @export var radius: float = 300.0
-## Segundos entre descubrimientos.
+## Seconds between discoveries.
 @export var interval: float = 0.25
-## Segundos mínimos entre dos sonidos de zona descubierta (al explorar se descubre casi en cada intervalo).
+## Minimum seconds between two discovered-area sounds (while exploring, discovery happens almost every interval).
 const DISCOVER_SOUND_COOLDOWN: float = 3.0
 
 var player: Node2D
@@ -17,7 +17,7 @@ var player: Node2D
 var _timer: float = 0.0
 var _sound_cooldown: float = 0.0
 
-## Identificador de nivel usado por el mapa: ruta de la escena.
+## Level identifier used by the map: the scene path.
 static func level_id_of(scene: Node) -> StringName:
 	if not is_instance_valid(scene) or scene.scene_file_path.is_empty():
 		return &""

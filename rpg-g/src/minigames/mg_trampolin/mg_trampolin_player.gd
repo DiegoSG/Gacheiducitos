@@ -1,7 +1,7 @@
 extends CharacterBody2D
 class_name MG_TrampolinPlayer
 
-## Emitida al rebotar sobre la plataforma especial (condición de victoria ESPECIAL).
+## Emitted when bouncing on the special platform (SPECIAL win condition).
 signal special_platform_reached
 
 const GRAVITY = 800.0
@@ -9,7 +9,7 @@ const JUMP_FORCE = -600.0
 const MOVE_SPEED = 400.0
 const SIDE_SOUND_INTERVAL: float = 0.3
 
-var game_area_width: float = 600.0 ## El ancho central donde ocurre el juego
+var game_area_width: float = 600.0 ## The central width where the game takes place
 
 @onready var sprite: Sprite2D = $Sprite2D
 
@@ -20,10 +20,10 @@ const TEX_SIDE = preload("res://assets/sprites/player_side.png")
 const TEX_UP = preload("res://assets/sprites/player_up.png")
 
 func _physics_process(delta: float):
-	# Aplicar gravedad
+	# Apply gravity
 	velocity.y += GRAVITY * delta
 	
-	# Movimiento horizontal
+	# Horizontal movement
 	var direction = Input.get_axis("move_left", "move_right")
 	velocity.x = direction * MOVE_SPEED
 	_side_sound_timer = maxf(_side_sound_timer - delta, 0.0)
@@ -45,12 +45,12 @@ func _physics_process(delta: float):
 			sprite.texture = TEX_DOWN
 			sprite.flip_h = false
 	
-	# Mover y detectar colisiones
+	# Move and detect collisions
 	var collision = move_and_collide(velocity * delta)
 	
 	if collision:
 		var collider = collision.get_collider()
-		# Solo rebotar si estamos cayendo y chocamos con la parte superior de algo
+		# Only bounce if we are falling and hit the top of something
 		if velocity.y > 0 and collider.is_in_group("trampolin_platform"):
 			velocity.y = JUMP_FORCE
 			if collider.is_in_group("special_platform"):
@@ -59,7 +59,7 @@ func _physics_process(delta: float):
 			else:
 				AudioManager.play_sfx(&"sfx_tramp_bounce")
 	
-	# Paredes sólidas (bloqueo)
+	# Solid walls (blocking)
 	var half_width = game_area_width / 2.0
 	if global_position.x > half_width:
 		global_position.x = half_width

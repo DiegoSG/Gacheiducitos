@@ -1,10 +1,10 @@
 class_name OptionsMenu
 extends Control
 
-## Menú de opciones. Se abre desde inicio y pausa.
-## Uso: var m: OptionsMenu = preload("res://src/ui/menus/options_menu.tscn").instantiate()
-## parent.add_child(m); m.closed.connect(...). Se cierra con Volver o ui_cancel (emite closed;
-## quien lo abrió lo libera con queue_free()). El volumen se guarda al cerrar.
+## Options menu. Opened from the start screen and pause.
+## Usage: var m: OptionsMenu = preload("res://src/ui/menus/options_menu.tscn").instantiate()
+## parent.add_child(m); m.closed.connect(...). Closes with Back or ui_cancel (emits closed;
+## whoever opened it frees it with queue_free()). The volume is saved on close.
 
 signal closed
 

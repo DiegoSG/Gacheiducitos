@@ -1,57 +1,57 @@
 extends MinigameBase
 class_name MG_ExcavationGame
 
-# Referencia a tipos compartidos
+# Reference to shared types
 const MGT = preload("res://src/minigames/mg_excavation/mg_excavation_types.gd")
 const TileType = MGT.TileType
 const WinCondition = MGT.WinCondition
 
-# Configuración del grid
+# Grid configuration
 const CELL_SIZE: int = 16
 var grid_width: int = 40
 var grid_height: int = 23
 
-# Grid de tiles (Array 2D)
+# Tile grid (2D Array)
 var grid: Array = []
 
-# Referencia al jugador
+# Reference to the player
 var player_grid_pos: Vector2i = Vector2i(1, 1)
 var is_player_dead: bool = false
 
-# Estado de la misión
+# Mission state
 var total_coins: int = 0
 var coins_collected: int = 0
 var mission_item_collected: bool = false
 var current_win_condition: int = WinCondition.ALL_COINS
 var target_coin_amount: int = 0
 
-# Configuración recibida del debug screen
+# Configuration received from the debug screen
 var config: Dictionary = {}
 
-# Sistema de gravedad
+# Gravity system
 var gravity_timer: float = 0.0
-const GRAVITY_TICK: float = 0.12 # Mismo delay que el movimiento del jugador
+const GRAVITY_TICK: float = 0.12 # Same delay as player movement
 
-# Intervalo mínimo entre sonidos de paso
+# Minimum interval between footstep sounds
 const STEP_SOUND_INTERVAL: float = 0.25
 var _step_sound_cooldown: float = 0.0
 
-# Motivo con el que _explode_at encadena la explosión de otras bombas
+# Reason _explode_at uses when chaining the explosion of other bombs
 const CHAIN_EXPLOSION_REASON: String = "EXPLOSIÓN EN CADENA"
 
-# Sistema de movimiento continuo
+# Continuous movement system
 var move_timer: float = 0.0
 const MOVE_DELAY: float = 0.12
 var current_direction: Vector2i = Vector2i.ZERO
 
-# Sistema de empuje de piedras y visuales
+# Rock pushing and visuals system
 var is_pushing_rock: bool = false
-const PUSH_DELAY: float = 0.24 # Mitad de velocidad al empujar
+const PUSH_DELAY: float = 0.24 # Half speed when pushing
 var falling_visuals: Dictionary = {} # "x,y" -> { "visual_pos": Vector2, "rotation": float, "type": int }
-var falling_objects: Dictionary = {} # "x,y" -> true (coordenadas de las que ya venían cayendo)
-var pending_falls: Dictionary = {} # "x,y" -> ticks_remaining (objetos que quieren empezar a caer)
+var falling_objects: Dictionary = {} # "x,y" -> true (coordinates of objects that were already falling)
+var pending_falls: Dictionary = {} # "x,y" -> ticks_remaining (objects that want to start falling)
 
-# Sistema de bombas
+# Bomb system
 var player_bombs_ammo: int = 0
 var space_held_timer: float = 0.0
 const BOMB_PLANT_HOLD_TIME: float = 0.35
@@ -59,24 +59,24 @@ var active_placed_bombs: Array = [] # Array[Dictionary]: [{"pos": Vector2i, "tim
 var deliver_items: bool = false
 var item_pool: Array = []
 
-# Texturas
+# Textures
 var coin_texture: Texture2D = null
 var bomb_texture: Texture2D = null
 var potion_texture: Texture2D = null
 var player_texture: Texture2D = null
 
-# Sistema de interpolación suave
+# Smooth interpolation system
 var visual_player_pos: Vector2 = Vector2.ZERO
 var interp_speed: float = 15.0
 
-# Gestión de inputs refinada
-var input_stack: Array = [] # Lista de direcciones presionadas en orden
+# Refined input handling
+var input_stack: Array = [] # List of pressed directions, in order
 
-# Cámara
+# Camera
 var camera: Camera2D = null
 
 func _ready() -> void:
-	# Textura de moneda compartida (con fallback) desde MinigameBase
+	# Shared coin texture (with fallback) from MinigameBase
 	coin_texture = get_coin_texture()
 	bomb_texture = load("res://assets/items/icons/iron_key.png") as Texture2D
 	potion_texture = load("res://assets/items/icons/blue_potion.png") as Texture2D
@@ -91,23 +91,23 @@ func _ready() -> void:
 	else:
 		item_pool = ["blue_potion", "red_potion", "green_herb"]
 	
-	# Aplicar escala global
+	# Apply global scale
 	var s = config.get("escala", 1.5)
 	self.scale = Vector2(s, s)
 	
 	_initialize_grid()
 	_generate_level()
 	
-	# Inicializar estado de misión desde config
+	# Initialize mission state from config
 	current_win_condition = config.get("win_condition", WinCondition.ALL_COINS)
 	target_coin_amount = config.get("target_amount", 5)
 	_count_total_coins()
 	
-	# Inicializar posiciones visuales
+	# Initialize visual positions
 	visual_player_pos = grid_to_world(player_grid_pos)
 	_initialize_falling_visuals()
 	
-	# Configurar cámara
+	# Set up camera
 	_setup_camera()
 	
 	AudioManager.play_sfx(&"sfx_exc_start")
@@ -118,8 +118,8 @@ func _setup_camera() -> void:
 	add_child(camera)
 	camera.make_current()
 	
-	# Configurar límites de la cámara (2 tiles extra de margen)
-	# Usamos global_position por si el nodo raíz no está en (0,0)
+	# Set camera limits (2 extra tiles of margin)
+	# Uses global_position in case the root node is not at (0,0)
 	var s = self.scale.x
 	var margin = 2 * CELL_SIZE
 	var origin = self.global_position
@@ -129,7 +129,7 @@ func _setup_camera() -> void:
 	camera.limit_right = int(origin.x + (grid_width * CELL_SIZE + margin) * s)
 	camera.limit_bottom = int(origin.y + (grid_height * CELL_SIZE + margin) * s)
 	
-	# Suavizado de la cámara para que no dé tirones con la interpolación
+	# Camera smoothing so it doesn't jerk with the interpolation
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 10.0
 	
@@ -137,8 +137,8 @@ func _setup_camera() -> void:
 
 func _update_camera_position() -> void:
 	if camera:
-		# La posición de la cámara debe ser relativa al mundo global
-		# visual_player_pos está en coordenadas locales del grid
+		# The camera position must be relative to the global world
+		# visual_player_pos is in the grid's local coordinates
 		camera.global_position = self.global_position + (visual_player_pos * self.scale)
 
 func _initialize_falling_visuals() -> void:
@@ -156,14 +156,14 @@ func _initialize_falling_visuals() -> void:
 
 func _process(delta: float) -> void:
 	if is_player_dead:
-		_interpolate_visuals(delta) # Seguir interpolando aunque muera para ver el impacto
+		_interpolate_visuals(delta) # Keep interpolating even when dead so the impact can be seen
 		queue_redraw()
 		return
 
-	# Procesar cuenta regresiva de bombas colocadas por el jugador
+	# Process countdown of bombs placed by the player
 	_update_placed_bombs(delta)
 
-	# Procesar plantado de bomba con espacio sostenido
+	# Process bomb planting while space is held
 	_handle_bomb_planting(delta)
 
 	gravity_timer += delta
@@ -195,7 +195,7 @@ func _try_plant_bomb() -> void:
 	if player_bombs_ammo <= 0:
 		return
 	
-	# Verificar si ya hay una bomba en la posición del jugador
+	# Check whether there is already a bomb at the player's position
 	for b in active_placed_bombs:
 		if b.pos == player_grid_pos:
 			return
@@ -221,7 +221,7 @@ func _update_placed_bombs(delta: float) -> void:
 
 func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 	AudioManager.play_sfx(&"sfx_exc_chain_explosion" if _reason == CHAIN_EXPLOSION_REASON else &"sfx_exc_explosion")
-	# Destruir área de 3x3
+	# Destroy 3x3 area
 	var player_caught = false
 	var chain_explosions: Array[Vector2i] = []
 	
@@ -231,11 +231,11 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 			var ty = center_pos.y + dy
 			if _in_bounds(Vector2i(tx, ty)):
 				var t = grid[ty][tx]
-				# Encadenar si hay otra bomba ambiental
+				# Chain if there is another ambient bomb
 				if (dx != 0 or dy != 0) and t == TileType.BOMBA:
 					chain_explosions.append(Vector2i(tx, ty))
 					
-				# La salida y los bordes indestructibles son inmunes
+				# The exit and indestructible borders are immune
 				if t != TileType.SALIDA and t != TileType.MURO_IRROMPIBLE:
 					grid[ty][tx] = TileType.EMPTY
 					var key = str(tx) + "," + str(ty)
@@ -244,7 +244,7 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 				if player_grid_pos == Vector2i(tx, ty):
 					player_caught = true
 					
-	# Eliminar bombas manuales atrapadas en el radio de la explosión
+	# Remove manual bombs trapped in the explosion radius
 	var remaining_bombs: Array = []
 	for b in active_placed_bombs:
 		if abs(b.pos.x - center_pos.x) <= 1 and abs(b.pos.y - center_pos.y) <= 1:
@@ -255,7 +255,7 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 	
 	queue_redraw()
 	
-	# Ejecutar explosiones en cadena
+	# Run chain explosions
 	for next_bomb in chain_explosions:
 		_explode_at(next_bomb, CHAIN_EXPLOSION_REASON)
 	
@@ -263,11 +263,11 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 		_player_crushed()
 
 func _interpolate_visuals(delta: float) -> void:
-	# Interpolar jugador
+	# Interpolate player
 	var target_player_world = grid_to_world(player_grid_pos)
 	visual_player_pos = visual_player_pos.lerp(target_player_world, interp_speed * delta)
 	
-	# Interpolar piedras y objetos
+	# Interpolate rocks and objects
 	for key in falling_visuals:
 		var data = falling_visuals[key]
 		var coords = key.split(",")
@@ -279,7 +279,7 @@ func _handle_continuous_movement(delta: float) -> void:
 	var direction: Vector2i = Vector2i.ZERO
 	
 	if input_stack.size() > 0:
-		direction = input_stack[-1] # Usar la última tecla presionada
+		direction = input_stack[-1] # Use the last key pressed
 	
 	if direction != current_direction:
 		current_direction = direction
@@ -328,7 +328,7 @@ func _draw():
 	if is_player_dead:
 		draw_rect(Rect2(0, 0, grid_width * CELL_SIZE, grid_height * CELL_SIZE), Color(0.3, 0, 0, 0.3))
 
-	# 1. Fondo base uniforme para todo el nivel (evita "huecos" bajo las piedras)
+	# 1. Uniform base background for the whole level (avoids "gaps" under the rocks)
 	var total_size = Vector2(grid_width * CELL_SIZE, grid_height * CELL_SIZE)
 	draw_rect(Rect2(Vector2.ZERO, total_size), Color(0.1, 0.1, 0.15))
 
@@ -337,16 +337,16 @@ func _draw():
 			var tile = grid[y][x]
 			var pos = Vector2(x * CELL_SIZE, y * CELL_SIZE)
 			
-			# Dibujar cuadrícula sutil
+			# Draw subtle grid
 			draw_rect(Rect2(pos, Vector2(CELL_SIZE, CELL_SIZE)), Color(0, 0, 0, 0.1), false, 1)
 			
 			var color = _get_tile_color(tile)
-			# Solo dibujar el contenido si no es vacío y no es transparente (piedras/jugador se dibujan después)
+			# Only draw content if it is not empty or transparent (rocks/player are drawn later)
 			if color != Color.TRANSPARENT and tile != TileType.EMPTY:
 				draw_rect(Rect2(pos, Vector2(CELL_SIZE, CELL_SIZE)), color)
 				draw_rect(Rect2(pos, Vector2(CELL_SIZE, CELL_SIZE)), Color(0, 0, 0, 0.2), false, 1)
 				
-				# Detalles para pickups que sustituyen tierra
+				# Details for pickups that replace dirt
 				if tile == TileType.BOMB_PICKUP:
 					draw_circle(pos + Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0), CELL_SIZE/3.5, Color(0.05, 0.05, 0.05))
 					draw_circle(pos + Vector2(CELL_SIZE/2.0 + 2, CELL_SIZE/2.0 - 2), 2, Color.RED)
@@ -356,7 +356,7 @@ func _draw():
 					else:
 						draw_circle(pos + Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0), CELL_SIZE/3.0, Color(0.9, 0.4, 0.9))
 	
-	# Dibujar jugador usando posición visual
+	# Draw player using visual position
 	if player_texture:
 		var draw_p = visual_player_pos - Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0)
 		draw_texture_rect(player_texture, Rect2(draw_p, Vector2(CELL_SIZE, CELL_SIZE)), false)
@@ -364,12 +364,12 @@ func _draw():
 		draw_rect(Rect2(visual_player_pos - Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0), Vector2(CELL_SIZE, CELL_SIZE)), Color.YELLOW)
 		draw_circle(visual_player_pos, CELL_SIZE/3.0, Color.ORANGE)
 	
-	# Indicador de plantado de bomba (espacio sostenido)
+	# Bomb planting indicator (space held)
 	if space_held_timer > 0.0 and player_bombs_ammo > 0:
 		var progress = clamp(space_held_timer / BOMB_PLANT_HOLD_TIME, 0.0, 1.0)
 		draw_arc(visual_player_pos, CELL_SIZE * 0.75, 0.0, TAU * progress, 16, Color(1.0, 0.2, 0.2, 0.9), 2.5)
 	
-	# Dibujar piedras y objetos usando posición visual y rotación
+	# Draw rocks and objects using visual position and rotation
 	for key in falling_visuals:
 		var data = falling_visuals[key]
 		var pos = data.visual_pos
@@ -378,10 +378,10 @@ func _draw():
 		draw_set_transform(pos, rot, Vector2.ONE)
 		if data.type == TileType.PIEDRA:
 			draw_rect(Rect2(-CELL_SIZE/2.0 + 1, -CELL_SIZE/2.0 + 1, CELL_SIZE - 2, CELL_SIZE - 2), Color(0.5, 0.5, 0.5))
-			# Detalle para ver la rotación
+			# Detail to show the rotation
 			draw_rect(Rect2(-CELL_SIZE/2.0 + 3, -CELL_SIZE/2.0 + 3, 4, 4), Color(0.7, 0.7, 0.7)) 
 		elif data.type == TileType.BOMBA:
-			# Bomba ambiental (círculo oscuro con mecha)
+			# Ambient bomb (dark circle with fuse)
 			draw_circle(Vector2.ZERO, CELL_SIZE/2.0 - 2, Color(0.1, 0.1, 0.1))
 			draw_circle(Vector2.ZERO, CELL_SIZE/4.0, Color(0.25, 0.25, 0.25))
 			draw_circle(Vector2(0, -CELL_SIZE/3.0), 2.5, Color(1.0, 0.3, 0.1))
@@ -389,7 +389,7 @@ func _draw():
 			draw_texture_rect(coin_texture, Rect2(-CELL_SIZE/2.0, -CELL_SIZE/2.0, CELL_SIZE, CELL_SIZE), false)
 		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 	
-	# Dibujar bombas manuales colocadas por el jugador
+	# Draw manual bombs placed by the player
 	for b in active_placed_bombs:
 		var b_world = grid_to_world(b.pos)
 		var pulse = (sin(Time.get_ticks_msec() * 0.015) + 1.0) * 0.5
@@ -399,7 +399,7 @@ func _draw():
 		var sec_left = str(int(ceil(b.timer)))
 		draw_string(ThemeDB.fallback_font, b_world + Vector2(-3, 4), sec_left, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color.YELLOW)
 	
-	# DEBUG / HUD: Mostrar coordenadas y progreso
+	# DEBUG / HUD: Show coordinates and progress
 	var win_text = ""
 	match current_win_condition:
 		WinCondition.ALL_COINS:
@@ -416,12 +416,12 @@ func _draw():
 	var debug_text = "Player: (" + str(player_grid_pos.x) + "," + str(player_grid_pos.y) + ") | " + hud_text
 	draw_string(ThemeDB.fallback_font, Vector2(10, 20), debug_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
 	
-	# DEBUG: Borde de lógica para el jugador (grid)
+	# DEBUG: Logic border for the player (grid)
 	if config.get("show_player_logic", false):
 		var player_logic_pos = grid_to_world(player_grid_pos) - Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0)
 		draw_rect(Rect2(player_logic_pos, Vector2(CELL_SIZE, CELL_SIZE)), Color.RED, false, 1)
 
-	# DEBUG: Borde de lógica para piedras (escaneando el grid real)
+	# DEBUG: Logic border for rocks (scanning the actual grid)
 	if config.get("show_rock_logic", false):
 		for y in range(grid_height):
 			for x in range(grid_width):
@@ -436,7 +436,7 @@ func _get_tile_color(tile: int) -> Color:
 		TileType.TIERRA:
 			return Color(0.4, 0.3, 0.2)
 		TileType.PIEDRA, TileType.ITEM_RECOMPENSA, TileType.BOMBA:
-			return Color.TRANSPARENT # Se dibuja por separado para rotación y animaciones
+			return Color.TRANSPARENT # Drawn separately for rotation and animations
 		TileType.MURO_IRROMPIBLE:
 			return Color(0.2, 0.2, 0.25)
 		TileType.MURO_ROMPIBLE:
@@ -446,7 +446,7 @@ func _get_tile_color(tile: int) -> Color:
 		TileType.SALIDA:
 			return Color(0.3, 0.6, 0.9)
 		TileType.ITEM_INVENTARIO, TileType.BOMB_PICKUP:
-			return Color(0.4, 0.3, 0.2) # Base de tierra
+			return Color(0.4, 0.3, 0.2) # Dirt base
 		_:
 			return Color.WHITE
 
@@ -463,7 +463,7 @@ func world_to_grid(world_pos: Vector2) -> Vector2i:
 	)
 
 func _input(event):
-	# Mapear acciones a direcciones (move_* o ui_* para compatibilidad con D-Pad)
+	# Map actions to directions (move_* or ui_* for D-Pad compatibility)
 	var dir = Vector2i.ZERO
 	if event.is_action("move_up") or event.is_action("ui_up"): dir = Vector2i(0, -1)
 	elif event.is_action("move_down") or event.is_action("ui_down"): dir = Vector2i(0, 1)
@@ -477,12 +477,12 @@ func _input(event):
 		else:
 			input_stack.erase(dir)
 
-## Indica si una posición de grid está dentro de los límites del nivel.
+## Returns whether a grid position is within the level bounds.
 func _in_bounds(pos: Vector2i) -> bool:
 	return pos.x >= 0 and pos.x < grid_width and pos.y >= 0 and pos.y < grid_height
 
-## Procesa la recogida del contenido de un tile (bomba, ítem de inventario, moneda o ítem de misión).
-## Devuelve true si el tile era recogible; el llamador vacía el tile y mueve al jugador.
+## Processes picking up a tile's content (bomb, inventory item, coin or mission item).
+## Returns true if the tile was collectible; the caller empties the tile and moves the player.
 func _collect_tile(pos: Vector2i, tile: int) -> bool:
 	match tile:
 		TileType.BOMB_PICKUP:
@@ -516,7 +516,7 @@ func _try_move_player(direction: Vector2i) -> void:
 	
 	var target_tile = grid[new_pos.y][new_pos.x]
 	
-	# Intentar empujar piedra o bomba
+	# Try to push rock or bomb
 	if target_tile == TileType.PIEDRA or target_tile == TileType.BOMBA:
 		if _try_push_rock(new_pos, direction):
 			player_grid_pos = new_pos
@@ -528,7 +528,7 @@ func _try_move_player(direction: Vector2i) -> void:
 			AudioManager.play_sfx(&"sfx_exc_push_blocked")
 		return
 	
-	# Movimiento normal
+	# Normal movement
 	is_pushing_rock = false
 	
 	match target_tile:
@@ -561,37 +561,37 @@ func _try_move_player(direction: Vector2i) -> void:
 				AudioManager.play_sfx(&"sfx_exc_exit_blocked")
 
 func _try_push_rock(rock_pos: Vector2i, direction: Vector2i) -> bool:
-	# Solo se pueden empujar horizontalmente
+	# Can only be pushed horizontally
 	if direction.y != 0:
 		return false
 
 	var push_dest: Vector2i = rock_pos + direction
 	
-	# Verificar límites
+	# Check bounds
 	if not _in_bounds(push_dest):
 		return false
 	
-	# Verificar que el destino esté vacío
+	# Check that the destination is empty
 	if grid[push_dest.y][push_dest.x] != TileType.EMPTY:
 		return false
 	
 	var pushed_tile = grid[rock_pos.y][rock_pos.x]
-	# Empujar la piedra o bomba
+	# Push the rock or bomb
 	grid[push_dest.y][push_dest.x] = pushed_tile
 	grid[rock_pos.y][rock_pos.x] = TileType.EMPTY
 
-	# Actualizar rotación visual y transferencia de estado
+	# Update visual rotation and state transfer
 	var old_key = str(rock_pos.x) + "," + str(rock_pos.y)
 	var new_key = str(push_dest.x) + "," + str(push_dest.y)
 
-	# Si por alguna razón no existe el visual, lo inicializamos en la posición vieja
+	# If the visual somehow doesn't exist, initialize it at the old position
 	var data = falling_visuals.get(old_key, {
 		"visual_pos": grid_to_world(rock_pos),
 		"rotation": 0.0,
 		"type": pushed_tile
 	})
 	data.type = pushed_tile
-	data.rotation += PI/2 * direction.x # Girar 90 grados
+	data.rotation += PI/2 * direction.x # Rotate 90 degrees
 	falling_visuals[new_key] = data
 	if new_key != old_key:
 		falling_visuals.erase(old_key)
@@ -629,12 +629,12 @@ func _update_gravity():
 		return
 		
 	var moved = false
-	# Usamos un conjunto para rastrear qué coordenadas ya hemos procesado esta vez
-	# para evitar que una piedra se mueva dos veces en un solo tick (ej: deslizar derecha y luego caer)
+	# Use a set to track which coordinates were already processed this tick
+	# to prevent a rock from moving twice in one tick (e.g. slide right and then fall)
 	var processed_this_tick = {}
 	var next_falling_rocks = {}
 	
-	# Procesar de abajo hacia arriba para que las piedras/objetos caigan naturalmente
+	# Process bottom-up so rocks/objects fall naturally
 	var next_pending_falls = {}
 	
 	for y in range(grid_height - 2, -1, -1):
@@ -647,21 +647,21 @@ func _update_gravity():
 				
 				var was_falling = falling_objects.has(key)
 				
-				# REGLA DE RETARDO (0.1s aprox 1 tick de 0.12s)
+				# DELAY RULE (~0.1s, about 1 tick of 0.12s)
 				if not was_falling:
-					# Verificar si el objeto PODRÍA caer o deslizarse
+					# Check whether the object COULD fall or slide
 					var can_move = _check_if_can_fall_or_slide(x, y, tile)
 					if can_move:
 						if pending_falls.has(key):
 							var ticks = pending_falls[key] - 1
 							if ticks <= 0:
-								# Ya esperó suficiente, proceder a mover
+								# Waited long enough, proceed to move
 								pass 
 							else:
 								next_pending_falls[key] = ticks
 								continue
 						else:
-							# Empezar espera (1 tick de retraso)
+							# Start waiting (1 tick of delay)
 							next_pending_falls[key] = 1
 							continue
 				
@@ -671,13 +671,13 @@ func _update_gravity():
 				
 				if res.moved:
 					moved = true
-					# Marcar la NUEVA posición como procesada para este tick
+					# Mark the NEW position as processed for this tick
 					var new_key = str(res.new_pos.x) + "," + str(res.new_pos.y)
 					processed_this_tick[new_key] = true
 					
-					# Si la bomba explotó en res, el tile ya es EMPTY
+					# If the bomb exploded in res, the tile is already EMPTY
 					if grid[res.new_pos.y][res.new_pos.x] != TileType.EMPTY:
-						# Transferir o actualizar visuales
+						# Transfer or update visuals
 						var visual_data = falling_visuals.get(key, {
 							"visual_pos": grid_to_world(Vector2i(x,y)),
 							"rotation": 0.0,
@@ -691,7 +691,7 @@ func _update_gravity():
 						if new_key != key:
 							falling_visuals.erase(key)
 						
-						# Si se movió hacia abajo, sigue cayendo
+						# If it moved down, it keeps falling
 						if res.new_pos.y > y:
 							next_falling_rocks[new_key] = true
 	
@@ -701,24 +701,24 @@ func _update_gravity():
 		queue_redraw()
 
 func _check_if_can_fall_or_slide(x: int, y: int, _tile_type: int) -> bool:
-	# Regla 1: Caída directa
+	# Rule 1: Direct fall
 	if y + 1 < grid_height:
 		var dest = Vector2i(x, y + 1)
 		if grid[dest.y][dest.x] == TileType.EMPTY and player_grid_pos != dest:
 			return true
 	
-	# Regla 2: Deslizamiento lateral (solo sobre otras piedras, monedas o bombas)
+	# Rule 2: Side slide (only over other rocks, coins or bombs)
 	if y + 1 < grid_height:
 		var below = grid[y + 1][x]
 		if below == TileType.PIEDRA or below == TileType.ITEM_RECOMPENSA or below == TileType.BOMBA:
-			# Probar izquierda
+			# Try left
 			if x > 0:
 				var side = Vector2i(x - 1, y)
 				var dest = Vector2i(x - 1, y + 1)
 				if grid[side.y][side.x] == TileType.EMPTY and player_grid_pos != side:
 					if grid[dest.y][dest.x] == TileType.EMPTY and player_grid_pos != dest:
 						return true
-			# Probar derecha
+			# Try right
 			if x < grid_width - 1:
 				var side = Vector2i(x + 1, y)
 				var dest = Vector2i(x + 1, y + 1)
@@ -730,8 +730,8 @@ func _check_if_can_fall_or_slide(x: int, y: int, _tile_type: int) -> bool:
 func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictionary:
 	var result = {"moved": false, "new_pos": Vector2i(x, y), "rotated": false}
 	
-	# Caso especial BOMBA AMBIENTAL:
-	# Si venía cayendo y el espacio de abajo está bloqueado, golpea y explota en 3x3
+	# Special case AMBIENT BOMB:
+	# If it was falling and the space below is blocked, it hits and explodes in 3x3
 	if tile_type == TileType.BOMBA and was_falling:
 		var below_blocked = (y + 1 >= grid_height) or (grid[y + 1][x] != TileType.EMPTY)
 		if below_blocked:
@@ -744,16 +744,16 @@ func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictio
 			result.moved = true
 			return result
 
-	# Regla 1: Caída directa si hay espacio vacío debajo
+	# Rule 1: Direct fall if there is empty space below
 	if y + 1 < grid_height and grid[y + 1][x] == TileType.EMPTY:
 		var dest = Vector2i(x, y + 1)
 		
-		# REGLA AFINADA: Si NO estaba cayendo, y el jugador está en el destino, 
-		# el jugador la sostiene (no empieza a caer).
+		# FINE-TUNED RULE: If it was NOT falling and the player is at the destination, 
+		# the player holds it (it does not start falling).
 		if not was_falling and player_grid_pos == dest:
 			return result
 		
-		# Si YA estaba cayendo y el jugador está en el camino:
+		# If it WAS already falling and the player is in the way:
 		if player_grid_pos == dest:
 			if tile_type == TileType.BOMBA:
 				grid[y][x] = TileType.EMPTY
@@ -775,15 +775,15 @@ func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictio
 		result.new_pos = dest
 		return result
 	
-	# Regla 2: Deslizamiento lateral (solo sobre otras piedras, monedas o bombas)
+	# Rule 2: Side slide (only over other rocks, coins or bombs)
 	if y + 1 < grid_height:
 		var below = grid[y + 1][x]
 		if below == TileType.PIEDRA or below == TileType.ITEM_RECOMPENSA or below == TileType.BOMBA:
-			# Intentar izquierda
+			# Try left
 			if x > 0:
 				var side = Vector2i(x - 1, y)
 				var dest = Vector2i(x - 1, y + 1)
-				# Verificar que lateral y destino estén vacíos y sin jugador
+				# Check that the side and destination are empty and free of the player
 				if grid[side.y][side.x] == TileType.EMPTY and player_grid_pos != side:
 					if grid[dest.y][dest.x] == TileType.EMPTY and player_grid_pos != dest:
 						grid[dest.y][dest.x] = tile_type
@@ -793,7 +793,7 @@ func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictio
 						result.rotated = true
 						return result
 			
-			# Intentar derecha
+			# Try right
 			if x < grid_width - 1:
 				var side = Vector2i(x + 1, y)
 				var dest = Vector2i(x + 1, y + 1)
@@ -814,10 +814,10 @@ func _player_crushed() -> void:
 	is_player_dead = true
 	AudioManager.play_ui(&"sfx_exc_crushed")
 
-	# Feedback visual inmediato
+	# Immediate visual feedback
 	queue_redraw()
 	
-	# Terminar inmediatamente (o con un frame de delay para ver el impacto)
+	# End immediately (or with a one-frame delay to see the impact)
 	await get_tree().process_frame
 	AudioManager.play_ui(&"sfx_exc_lose")
 	finish(false)

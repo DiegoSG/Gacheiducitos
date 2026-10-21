@@ -1,8 +1,8 @@
 extends Node2D
 
-## Prueba del esquive de obstáculos del enemigo base (generic_enemy).
-## Coloca al enemigo y a un objetivo con paredes en medio y comprueba que lo alcanza.
-## Se ejecuta como escena (necesita los autoloads): imprime [PASS]/[FAIL] y cierra el juego.
+## Tests obstacle avoidance of the base enemy (generic_enemy).
+## Places the enemy and a target with walls in between and checks that it reaches the target.
+## Runs as a scene (needs the autoloads): prints [PASS]/[FAIL] and quits the game.
 
 const ENEMY_SCENE: PackedScene = preload("res://src/overworld/enemies/generic_enemy.tscn")
 const MAX_SECONDS: float = 15.0
@@ -12,32 +12,32 @@ var _passed_count: int = 0
 var _failed_count: int = 0
 
 func _ready() -> void:
-	print("\n--- TEST: ESQUIVE DE OBSTÁCULOS DEL ENEMIGO ---\n")
+	print("\n--- TEST: ENEMY OBSTACLE AVOIDANCE ---\n")
 	await get_tree().process_frame
 
-	# Pared recta entre el enemigo y el objetivo
+	# Straight wall between the enemy and the target
 	var wall: Array[Rect2] = [Rect2(-20, -120, 40, 240)]
-	var reached: bool = await _run_case("pared recta", wall, Vector2(-150, 0), Vector2(150, 0), true)
-	_record_result("Rodea una pared recta y alcanza al objetivo", reached)
+	var reached: bool = await _run_case("straight wall", wall, Vector2(-150, 0), Vector2(150, 0), true)
+	_record_result("Goes around a straight wall and reaches the target", reached)
 
-	# Pared recta, objetivo un poco desviado (la pared desliza hacia un lado)
-	reached = await _run_case("pared con objetivo desviado", wall, Vector2(-150, 30), Vector2(150, -20), true)
-	_record_result("Rodea una pared con el objetivo desviado", reached)
+	# Straight wall, target slightly off to the side (the wall slides to one side)
+	reached = await _run_case("wall with off-center target", wall, Vector2(-150, 30), Vector2(150, -20), true)
+	_record_result("Goes around a wall with the target off to the side", reached)
 
-	# "U" abierta hacia el enemigo: el enemigo entra al bolsillo y tiene que salir
+	# Open "U" facing the enemy: the enemy enters the pocket and has to get out
 	var pocket: Array[Rect2] = [
-		Rect2(40, -120, 40, 240),   # fondo de la U
-		Rect2(-120, -120, 160, 30), # brazo superior
-		Rect2(-120, 90, 160, 30),   # brazo inferior
+		Rect2(40, -120, 40, 240),   # bottom of the U
+		Rect2(-120, -120, 160, 30), # top arm
+		Rect2(-120, 90, 160, 30),   # bottom arm
 	]
-	reached = await _run_case("bolsillo en U", pocket, Vector2(-60, 0), Vector2(250, 0), true)
-	_record_result("Sale de un bolsillo en U y alcanza al objetivo", reached)
+	reached = await _run_case("U-shaped pocket", pocket, Vector2(-60, 0), Vector2(250, 0), true)
+	_record_result("Gets out of a U-shaped pocket and reaches the target", reached)
 
-	# Control: sin esquive se queda pegado a la pared (comportamiento anterior)
-	reached = await _run_case("sin esquive", wall, Vector2(-150, 0), Vector2(150, 0), false)
-	_record_result("Sin esquive se queda pegado (control)", not reached)
+	# Control: without avoidance it sticks to the wall (previous behavior)
+	reached = await _run_case("no avoidance", wall, Vector2(-150, 0), Vector2(150, 0), false)
+	_record_result("Without avoidance it sticks to the wall (control)", not reached)
 
-	print("\nResultado: %d PASS, %d FAIL" % [_passed_count, _failed_count])
+	print("\nResult: %d PASS, %d FAIL" % [_passed_count, _failed_count])
 	get_tree().quit(0 if _failed_count == 0 else 1)
 
 func _run_case(case_name: String, walls: Array[Rect2], enemy_pos: Vector2, target_pos: Vector2, avoid: bool) -> bool:
@@ -56,7 +56,7 @@ func _run_case(case_name: String, walls: Array[Rect2], enemy_pos: Vector2, targe
 		body.add_child(shape)
 		world.add_child(body)
 
-	# Objetivo: cuerpo en la capa del jugador, sin hurtbox (así el enemigo nunca "llega a rango")
+	# Target: body on the player's layer, no hurtbox (so the enemy never "gets in range")
 	var target: CharacterBody2D = CharacterBody2D.new()
 	target.collision_layer = 2
 	target.collision_mask = 0
@@ -68,7 +68,7 @@ func _run_case(case_name: String, walls: Array[Rect2], enemy_pos: Vector2, targe
 	enemy.avoid_obstacles = avoid
 	enemy.cooldown_duration = 0.0
 	world.add_child(enemy)
-	# Desconecta la zona de pérdida de objetivo para que no interfiera con la prueba
+	# Disconnects the lose-target zone so it does not interfere with the test
 	enemy.get_node("LoseTargetZone").monitoring = false
 	enemy.player = target
 	enemy.current_state = enemy.State.CHASE
@@ -81,7 +81,7 @@ func _run_case(case_name: String, walls: Array[Rect2], enemy_pos: Vector2, targe
 		if enemy.global_position.distance_to(target.global_position) <= REACH_DISTANCE:
 			reached = true
 			break
-	print("  [%s] %s en %.2fs, pos final %s" % [case_name, "alcanzó" if reached else "NO alcanzó", elapsed, enemy.global_position.round()])
+	print("  [%s] %s in %.2fs, final pos %s" % [case_name, "reached" if reached else "did NOT reach", elapsed, enemy.global_position.round()])
 
 	world.queue_free()
 	await get_tree().process_frame

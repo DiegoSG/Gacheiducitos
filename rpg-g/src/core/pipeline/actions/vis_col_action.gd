@@ -22,7 +22,7 @@ func execute(trigger_node: Node) -> void:
 		
 	var t_node: Node = trigger_node.get_node_or_null(target_node)
 	if not t_node:
-		push_warning("VisColAction: No se encontró target ", target_node)
+		push_warning("VisColAction: Target not found ", target_node)
 		finished.emit()
 		return
 		
@@ -37,7 +37,7 @@ func execute(trigger_node: Node) -> void:
 	finished.emit()
 
 func _set_collisions_recursive(node: Node, enabled: bool) -> void:
-	# En Godot, las colisiones se apagan poniendo disabled = true
+	# In Godot, collisions are turned off by setting disabled = true
 	if node is CollisionShape2D or node is CollisionPolygon2D:
 		node.set_deferred("disabled", not enabled)
 		

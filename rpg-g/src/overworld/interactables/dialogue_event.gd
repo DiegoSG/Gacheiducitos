@@ -2,8 +2,8 @@
 extends Node2D
 class_name DialogueEvent
 
-## Nodo invisible que ejecuta acciones al recibir un evento remoto
-## desde diálogos vía GameManager.trigger_event("nombre_nodo").
+## Invisible node that runs actions when it receives a remote event
+## from dialogues via GameManager.trigger_event("node_name").
 
 signal event_executed()
 
@@ -59,7 +59,7 @@ func _update_editor_label() -> void:
 func _draw() -> void:
 	if not Engine.is_editor_hint():
 		return
-	# Dibujar icono visual en el editor para que sea localizable
+	# Draw a visual icon in the editor so it can be located
 	draw_circle(Vector2.ZERO, 12.0, Color(0.9, 0.3, 0.1, 0.6))
 	draw_arc(Vector2.ZERO, 14.0, 0, TAU, 32, Color.WHITE, 2.0)
 	var label: String = event_id if not event_id.is_empty() else String(name)

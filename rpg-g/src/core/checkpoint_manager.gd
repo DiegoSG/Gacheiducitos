@@ -13,25 +13,25 @@ func register_level_entry(scene_path: String, scene_node: Node, is_organic: bool
 	if not is_instance_valid(scene_node):
 		return
 		
-	# No registrar checkpoints en minijuegos
+	# Do not register checkpoints in minigames
 	if scene_node is MinigameBase:
 		return
 		
 	var is_same_scene: bool = (scene_path == active_checkpoint_scene_path)
 	
-	# Respaldar estado del mundo al inicio de este nivel (para revertir si muere aquí)
+	# Back up the world state at the start of this level (to revert if the player dies here)
 	level_entry_world_state_snapshot = WorldStateManager.create_snapshot()
 	level_entry_narrative_snapshot = GameVariables.create_snapshot()
 	
-	# Buscar configuración de excepción en la escena
+	# Look for an exception configuration in the scene
 	var exception_config: LevelExceptionConfig = null
-	# find_children ya incluye a los hijos directos
+	# find_children already includes direct children
 	for child: Node in scene_node.find_children("*", "", true, false):
 		if child is LevelExceptionConfig:
 			exception_config = child as LevelExceptionConfig
 			break
 
-	# Actualizar ruta de respawn y spawn_id según si hay excepción o nivel estándar
+	# Update the respawn path and spawn_id depending on whether there is an exception or a standard level
 	if exception_config:
 		active_checkpoint_scene_path = exception_config.respawn_level_path
 		active_checkpoint_spawn_id = exception_config.respawn_spawn_id
@@ -43,7 +43,7 @@ func register_level_entry(scene_path: String, scene_node: Node, is_organic: bool
 	if is_organic:
 		AudioManager.play_ui(&"sfx_checkpoint")
 	
-	# Si no hay excepción (o disable_autosave es false) y es transición orgánica (not is_same_scene), ejecuta autoguardado
+	# If there is no exception (or disable_autosave is false) and it is an organic transition (not is_same_scene), run autosave
 	var should_autosave: bool = is_organic and not is_same_scene
 	if exception_config and exception_config.disable_autosave:
 		should_autosave = false
@@ -76,12 +76,12 @@ func respawn_player() -> void:
 		else:
 			target_scene = GameManager.DEFAULT_LEVEL_PATH
 		
-	# 1. Revertir WorldStateManager y GameVariables al inicio del nivel
+	# 1. Revert WorldStateManager and GameVariables to the start of the level
 	WorldStateManager.restore_snapshot(level_entry_world_state_snapshot)
 	if not level_entry_narrative_snapshot.is_empty():
 		GameVariables.restore_snapshot(level_entry_narrative_snapshot)
 		
-	# 2. Restaurar Stats e Inventario del checkpoint activo
+	# 2. Restore Stats and Inventory from the active checkpoint
 	if active_checkpoint_player_snapshot.has("stats"):
 		PlayerStats.restore_snapshot(active_checkpoint_player_snapshot["stats"])
 	else:
@@ -90,7 +90,7 @@ func respawn_player() -> void:
 	if active_checkpoint_player_snapshot.has("inventory"):
 		Inventory.restore_snapshot(active_checkpoint_player_snapshot["inventory"])
 			
-	# 3. Transicionar a la escena del checkpoint en la posicion de entrada
+	# 3. Transition to the checkpoint scene at the entry position
 	var exact_pos: Vector2 = Vector2.ZERO
 	if active_checkpoint_player_snapshot.has("position"):
 		var p_dict: Dictionary = active_checkpoint_player_snapshot["position"] as Dictionary

@@ -1,9 +1,9 @@
 class_name MapMenu
 extends CanvasLayer
 
-## Menú de mapa del nivel actual. Pausa el juego mientras está abierto.
-## Controles: move_* desplaza, map_zoom_in/out acerca/aleja, map_center centra al jugador,
-## ui_cancel pide cerrar (el MapController también cierra con map_toggle).
+## Map menu for the current level. Pauses the game while open.
+## Controls: move_* pans, map_zoom_in/out zooms in/out, map_center centers on the player,
+## ui_cancel requests close (the MapController also closes with map_toggle).
 
 signal close_requested
 

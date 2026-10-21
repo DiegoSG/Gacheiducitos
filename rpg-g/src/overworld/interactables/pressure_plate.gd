@@ -2,7 +2,7 @@
 extends Area2D
 class_name PressurePlate
 
-## Placa de presión / Trigger interactivo de piso que dispara eventos al entrar y al salir.
+## Pressure plate / floor trigger that fires events when entered and exited.
 
 signal pressed()
 signal released()
@@ -15,16 +15,16 @@ signal state_changed(is_pressed: bool)
 		is_pressed = value
 		_update_visuals()
 
-@export var one_shot: bool = false ## Si se presiona una sola vez y no vuelve a subir
+@export var one_shot: bool = false ## If it is pressed only once and does not come back up
 
-@export_group("Persistencia")
+@export_group("Persistence")
 @export var persistence_id: String = ""
 
-@export_group("Acciones de Eventos")
-@export var on_enter_actions: Array[ActionResource] = [] ## Acciones que se ejecutan al entrar/pisar
-@export var on_exit_actions: Array[ActionResource] = []  ## Acciones que se ejecutan al salir/despresionar
+@export_group("Event Actions")
+@export var on_enter_actions: Array[ActionResource] = [] ## Actions run when entered/stepped on
+@export var on_exit_actions: Array[ActionResource] = []  ## Actions run when exited/released
 
-@export_group("Texturas")
+@export_group("Textures")
 @export var texture_up: Texture2D = preload("res://assets/sprites/pressure_plate.svg"):
 	set(value):
 		texture_up = value

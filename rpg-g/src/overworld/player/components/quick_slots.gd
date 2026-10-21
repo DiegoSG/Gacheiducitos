@@ -1,10 +1,10 @@
 extends Node
 class_name QuickSlots
 
-## Componente de slots rápidos: 4 casillas que guardan un item_id.
-## Consumible: se consume vía Inventory.use_item; al agotarse, el slot se vacía.
-## Arma/escudo: intercambio. El ítem del slot se equipa (el arma en el slot de arma activo, el escudo
-## en el suyo) y lo que estaba equipado ahí pasa a este slot rápido (o lo deja vacío si no había nada).
+## Quick slot component: 4 slots that each store an item_id.
+## Consumable: used via Inventory.use_item; when depleted, the slot is emptied.
+## Weapon/shield: swap. The slot's item gets equipped (the weapon in the active weapon slot, the shield
+## in its own) and whatever was equipped there moves to this quick slot (or is left empty if there was nothing).
 
 signal slot_changed(index: int, item_id: String)
 signal slot_used(index: int, item_id: String)
@@ -12,11 +12,11 @@ signal equip_requested(index: int, item_id: String)
 
 const SLOT_COUNT: int = 4
 
-## Instancia activa (la del Player del nivel actual); HUD e inventario la consultan.
+## Active instance (the one on the current level's Player); HUD and inventory query it.
 static var instance: QuickSlots = null
-## Los datos viven fuera del nodo para sobrevivir al cambio de nivel (el Player se reinstancia).
+## The data lives outside the node so it survives level changes (the Player is re-instantiated).
 static var _slots: Array[String] = ["", "", "", ""]
-## true mientras restore_snapshot reemite slot_changed (al cargar partida), para no sonar.
+## true while restore_snapshot re-emits slot_changed (when loading a save), so it stays silent.
 static var is_restoring: bool = false
 
 func _ready() -> void:
@@ -38,7 +38,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-## Solo armas, escudos y consumibles pueden asignarse (llaves, quest y materiales no).
+## Only weapons, shields and consumables can be assigned (keys, quest and material items cannot).
 static func can_assign(item_id: String) -> bool:
 	var data: ItemData = ItemDatabase.get_item(item_id)
 	if data == null:
@@ -52,11 +52,11 @@ func get_slot(index: int) -> String:
 		return ""
 	return _slots[index]
 
-## Slot que contiene el ítem, o -1.
+## Slot containing the item, or -1.
 func find_slot(item_id: String) -> int:
 	return _slots.find(item_id)
 
-## Asigna el ítem al slot (un ítem ocupa un solo slot). Devuelve false si no es asignable.
+## Assigns the item to the slot (an item occupies only one slot). Returns false if it is not assignable.
 func assign(index: int, item_id: String) -> bool:
 	if index < 0 or index >= SLOT_COUNT or not can_assign(item_id):
 		return false
@@ -91,26 +91,26 @@ func use_slot(index: int) -> bool:
 		if not Inventory.use_item(item_id):
 			return false
 		AudioManager.play_sfx(&"sfx_slot_use")
-		# use_item ya refrescó los slots vía inventory_changed (y vació este si era la última unidad)
+		# use_item already refreshed the slots via inventory_changed (and emptied this one if it was the last unit)
 	else:
 		return false
 	slot_used.emit(index, item_id)
 	return true
 
-## Equipa el ítem del slot y deja en el slot lo que estaba equipado. Devuelve false si no se pudo.
+## Equips the slot's item and leaves whatever was equipped in the slot. Returns false if it failed.
 func _swap_equipment(index: int, item_id: String, data: ItemData, equipped_slot: String) -> bool:
 	var target: String = Inventory.default_slot_for(data)
 	if equipped_slot == target:
-		AudioManager.play_sfx(&"sfx_slot_equip") # ya está puesto: solo feedback
+		AudioManager.play_sfx(&"sfx_slot_equip") # already equipped: feedback only
 		return true
 	if Inventory.WEAPON_SLOTS.has(equipped_slot):
-		# Ya está en el otro slot de arma: solo pasa a ser la activa
+		# Already in the other weapon slot: it just becomes the active one
 		Inventory.set_active_weapon(equipped_slot)
 		return true
 	var previous: String = Inventory.get_equipped_id(target)
 	if not Inventory.equip(item_id, target):
 		return false
-	# Lo que estaba equipado ocupa este slot (sale de otro slot rápido si ya estaba asignado)
+	# What was equipped takes this slot (it leaves another quick slot if it was already assigned)
 	var other: int = _slots.find(previous) if not previous.is_empty() else -1
 	if other != -1 and other != index:
 		_slots[other] = ""
@@ -120,7 +120,7 @@ func _swap_equipment(index: int, item_id: String, data: ItemData, equipped_slot:
 	return true
 
 func _on_inventory_changed() -> void:
-	# Refresca el HUD (cantidades). Un consumible agotado deja su slot vacío; el equipo se queda.
+	# Refreshes the HUD (amounts). A depleted consumable leaves its slot empty; equipment stays.
 	for i: int in SLOT_COUNT:
 		if _is_depleted_consumable(_slots[i]):
 			_slots[i] = ""
@@ -132,7 +132,7 @@ func _is_depleted_consumable(item_id: String) -> bool:
 	var data: ItemData = ItemDatabase.get_item(item_id)
 	return data != null and not data.is_equippable() and Inventory.get_owned_count(item_id) <= 0
 
-# --- Persistencia (retrocompatible: un save sin "quick_slots" deja los slots vacíos) ---
+# --- Persistence (backward compatible: a save without "quick_slots" leaves the slots empty) ---
 
 static func create_snapshot() -> Array:
 	return _slots.duplicate()

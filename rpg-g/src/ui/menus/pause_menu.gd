@@ -1,13 +1,13 @@
 class_name PauseMenu
 extends CanvasLayer
 
-## Menú de pausa. Pide/libera la pausa a GameManager (conteo seguro) y se cierra solo.
-## Uso: var m: PauseMenu = preload("res://src/ui/menus/pause_menu.tscn").instantiate()
-## m.mode = PauseMenu.Mode.MINIGAME (opcional); add_child(m); conectar closed / abandon_requested.
-## Cierra con Reanudar, `pause` o ui_cancel. La pausa se libera ANTES de emitir las señales.
+## Pause menu. Requests/releases the pause from GameManager (safe counting) and closes on its own.
+## Usage: var m: PauseMenu = preload("res://src/ui/menus/pause_menu.tscn").instantiate()
+## m.mode = PauseMenu.Mode.MINIGAME (optional); add_child(m); connect closed / abandon_requested.
+## Closes with Resume, `pause` or ui_cancel. The pause is released BEFORE the signals are emitted.
 
 signal closed
-## Solo en modo MINIGAME: el jugador abandona (cuenta como perder).
+## Only in MINIGAME mode: the player gives up (counts as a loss).
 signal abandon_requested
 
 enum Mode { OVERWORLD, MINIGAME }
@@ -72,7 +72,7 @@ func _abandon() -> void:
 func _exit_to_start() -> void:
 	AudioManager.play_ui(&"sfx_ui_exit_to_start")
 	_menu.hide()
-	_pause_held = false # change_level reinicia el conteo de pausas
+	_pause_held = false # change_level resets the pause count
 	GameManager.change_level(START_MENU_PATH)
 
 func _open_options() -> void:
@@ -89,7 +89,7 @@ func _open_save() -> void:
 	wrapper.add_child(center)
 	center.add_child(save_ui)
 	_show_sub(wrapper)
-	# Primer botón visible y habilitado (el "Guardar" del autoguardado está oculto y no admite foco).
+	# First visible and enabled button (the autosave's "Guardar" is hidden and cannot take focus).
 	save_ui.call("focus_first")
 
 func _show_sub(sub: Control) -> void:
@@ -108,7 +108,7 @@ func _close_sub() -> void:
 	_menu.focus_first()
 
 func _input(event: InputEvent) -> void:
-	# ui_cancel dentro de un submenú sin MenuBase propio (guardado) vuelve al menú de pausa.
+	# ui_cancel inside a submenu without its own MenuBase (save) returns to the pause menu.
 	if _sub != null and event.is_action_pressed("ui_cancel") and not (_sub is OptionsMenu):
 		get_viewport().set_input_as_handled()
 		_close_sub()

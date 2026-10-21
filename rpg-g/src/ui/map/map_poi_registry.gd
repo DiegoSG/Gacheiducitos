@@ -1,8 +1,8 @@
 class_name MapPoiRegistry
 extends RefCounted
 
-## Registro estático de puntos de interés (PLACEHOLDER). No se persiste: las quests
-## deben re-registrarlos al cargar. Se muestran siempre, aunque la zona no esté descubierta.
+## Static registry of points of interest (PLACEHOLDER). Not persisted: quests
+## must re-register them on load. Always shown, even if the area is not discovered.
 
 static var _pois: Dictionary = {}
 
@@ -12,7 +12,7 @@ static func register_poi(poi_id: StringName, level_id: StringName, world_pos: Ve
 static func remove_poi(poi_id: StringName) -> void:
 	_pois.erase(poi_id)
 
-## Devuelve [{poi_id, world_pos, label}] del nivel indicado.
+## Returns [{poi_id, world_pos, label}] for the given level.
 static func get_pois(level_id: StringName) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for poi_id: StringName in _pois.keys():

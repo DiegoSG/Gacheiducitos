@@ -1,21 +1,21 @@
 class_name DoorAction
 extends ActionResource
 
-## Modifica el estado de un LevelPortal en el mapa (bloquear, desbloquear, activar, desactivar).
+## Changes the state of a LevelPortal on the map (lock, unlock, activate, deactivate).
 
 enum DoorOperation {
-	UNLOCK,          ## Desbloquea la puerta (quita el candado)
-	LOCK,            ## Bloquea la puerta con candado
-	ACTIVATE,        ## Habilita el portal/puerta
-	DEACTIVATE,      ## Deshabilita el portal/puerta
-	TOGGLE_LOCK,     ## Alterna entre bloqueada y desbloqueada
-	TOGGLE_ACTIVE    ## Alterna entre activa y desactivada
+	UNLOCK,          ## Unlocks the door (removes the lock)
+	LOCK,            ## Locks the door with a lock
+	ACTIVATE,        ## Enables the portal/door
+	DEACTIVATE,      ## Disables the portal/door
+	TOGGLE_LOCK,     ## Toggles between locked and unlocked
+	TOGGLE_ACTIVE    ## Toggles between active and inactive
 }
 
-## Ruta al nodo LevelPortal a modificar (relativo al trigger o ruta absoluta)
+## Path to the LevelPortal node to modify (relative to the trigger or an absolute path)
 @export var target_door_path: NodePath
 
-## Operación a realizar sobre la puerta
+## Operation to perform on the door
 @export var operation: DoorOperation = DoorOperation.UNLOCK
 
 func get_action_name() -> String:
@@ -23,19 +23,19 @@ func get_action_name() -> String:
 
 func execute(trigger_node: Node) -> void:
 	if target_door_path.is_empty():
-		push_warning("DoorAction: target_door_path está vacío.")
+		push_warning("DoorAction: target_door_path is empty.")
 		finished.emit()
 		return
 
 	var target: Node = trigger_node.get_node_or_null(target_door_path)
 	if not target:
-		push_warning("DoorAction: No se encontró la puerta en la ruta: %s" % str(target_door_path))
+		push_warning("DoorAction: Door not found at path: %s" % str(target_door_path))
 		finished.emit()
 		return
 
 	var portal: LevelPortal = target as LevelPortal
 	if portal == null:
-		push_warning("DoorAction: El nodo objetivo '%s' no es un LevelPortal." % target.name)
+		push_warning("DoorAction: The target node '%s' is not a LevelPortal." % target.name)
 		finished.emit()
 		return
 

@@ -1,7 +1,7 @@
 class_name MapCanvas
 extends Control
 
-## Dibuja la grilla del mapa (arte provisional). No conoce al jugador ni a GameManager.
+## Draws the map grid (placeholder art). Knows nothing about the player or GameManager.
 
 const COLOR_UNKNOWN: Color = Color(0.08, 0.09, 0.12)
 const COLOR_KNOWN: Color = Color(0.72, 0.76, 0.68)

@@ -26,9 +26,9 @@ func _ready() -> void:
 	_create_equipment_label()
 	refresh_ui()
 
-## Con el inventario abierto se intercepta antes que la GUI: la ItemList con foco consumiría
-## la cruceta (ui_up/ui_down), Tab (ui_focus_next) y los dígitos (búsqueda incremental).
-## La navegación de la lista queda en flechas/WASD/stick; la cruceta y 1-4 asignan slots.
+## With the inventory open, input is intercepted before the GUI: the focused ItemList would consume
+## the D-pad (ui_up/ui_down), Tab (ui_focus_next) and the digits (incremental search).
+## List navigation stays on arrows/WASD/stick; the D-pad and 1-4 assign slots.
 func _input(event: InputEvent) -> void:
 	if not is_open():
 		return
@@ -47,7 +47,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		open_inventory()
 		get_viewport().set_input_as_handled()
 
-## Solo teclas y botones del mando: el stick (InputEventJoypadMotion) sigue navegando la lista.
+## Only keys and gamepad buttons: the stick (InputEventJoypadMotion) still navigates the list.
 func _is_slot_assign_event(event: InputEvent, action: String) -> bool:
 	if not (event is InputEventKey or event is InputEventJoypadButton):
 		return false
@@ -79,7 +79,7 @@ func close_inventory() -> void:
 		GameManager.release_pause()
 
 func _exit_tree() -> void:
-	# Si la escena se descarga con el inventario abierto (p. ej. al cargar partida), liberar su pausa
+	# If the scene is unloaded while the inventory is open (e.g. when loading a save), release its pause
 	if is_open():
 		control.visible = false
 		GameManager.release_pause()
@@ -100,8 +100,8 @@ func _on_active_weapon_changed(_slot: String) -> void:
 func refresh_ui() -> void:
 	if not item_list:
 		return
-	# Conserva la fila seleccionada al reconstruir (usar/asignar/equipar refresca la lista).
-	# Se busca por ítem: al equipar, las filas cambian de orden.
+	# Keeps the selected row when rebuilding (using/assigning/equipping refreshes the list).
+	# Looked up by item: when equipping, the rows change order.
 	var selected: PackedInt32Array = item_list.get_selected_items()
 	var previous_index: int = selected[0] if not selected.is_empty() else 0
 	var previous_meta: Variant = item_list.get_item_metadata(previous_index) if not selected.is_empty() else null
@@ -140,7 +140,7 @@ func _fill_list() -> void:
 			
 		item_list.set_item_metadata(idx, item_id)
 
-## Foco en la lista con la primera fila activa: permite navegar sin hacer clic antes.
+## Focus the list with the first row active: allows navigating without clicking first.
 func _focus_list() -> void:
 	if not item_list:
 		return
@@ -167,7 +167,7 @@ func _on_item_activated(index: int) -> void:
 		return
 	Inventory.use_item(id)
 
-## Asigna el ítem seleccionado al slot rápido (solo arma, escudo o consumible).
+## Assigns the selected item to the quick slot (weapon, shield or consumable only).
 func _assign_selected_to_slot(slot_index: int) -> void:
 	var slots: QuickSlots = QuickSlots.instance
 	if not item_list or slots == null:
@@ -212,7 +212,7 @@ func _create_notice_label() -> void:
 	_notice_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(_notice_label)
 
-## Línea fija bajo el título con los 3 slots de equipo (placeholder hasta el diseño del HUD).
+## Fixed line below the title with the 3 equipment slots (placeholder until the HUD design).
 func _create_equipment_label() -> void:
 	var panel: Control = get_node_or_null("Control/Panel") as Control
 	if panel == null or item_list == null:
@@ -231,7 +231,7 @@ func _create_equipment_label() -> void:
 func _update_equipment_label() -> void:
 	if _equipment_label == null:
 		return
-	# Lo equipado no ocupa lugar en la lista: solo se muestra aquí
+	# Equipped items don't take up space in the list: they are only shown here
 	var weapon: ItemData = Inventory.get_active_weapon()
 	var shield: ItemData = Inventory.get_equipped(Inventory.SLOT_SHIELD)
 	_equipment_label.text = "Arma: %s · Escudo: %s" % [weapon.name if weapon else "—", shield.name if shield else "—"]

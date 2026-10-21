@@ -1,14 +1,14 @@
 class_name VariableAction
 extends ActionResource
 
-## Modifica una variable de GameVariables (solo rutas flag.*).
+## Modifies a GameVariables variable (only flag.* paths).
 
 enum Operation { SET, ADD, TOGGLE }
 
-## Ruta de la variable, por ejemplo "flag.puerta_abierta".
+## Variable path, for example "flag.puerta_abierta".
 @export var var_path: String = "flag."
 @export var operation: Operation = Operation.SET
-## SET: valor a asignar (true/false, número o texto). ADD: cantidad a sumar. TOGGLE: se ignora.
+## SET: value to assign (true/false, number or text). ADD: amount to add. TOGGLE: ignored.
 @export var value: String = "true"
 
 func get_action_name() -> String:

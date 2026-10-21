@@ -1,7 +1,7 @@
 extends Resource
 class_name ItemEffect
 
-## Efecto base de un item consumible. Las subclases sobreescriben apply() y describe().
+## Base effect for a consumable item. Subclasses override apply() and describe().
 
 func apply() -> void:
 	pass

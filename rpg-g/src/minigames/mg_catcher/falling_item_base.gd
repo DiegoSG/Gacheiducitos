@@ -17,8 +17,8 @@ var current_speed: float = 200.0
 var is_active: bool = false
 var is_on_floor: bool = false
 var floor_timer: float = 0.0
-## Segundos que un objeto que NO mata se queda en el suelo antes de expirar.
-## Lo fija el minijuego vía setup() (config "floor_wait_time"); más bajo = más difícil.
+## Seconds an item that does NOT kill stays on the floor before expiring.
+## Set by the minigame via setup() (config "floor_wait_time"); lower = harder.
 var floor_wait_time: float = 3.0
 const FLOOR_BLINK_TIME: float = 1.0
 
@@ -44,12 +44,12 @@ func _process(delta: float) -> void:
 	
 	if not is_on_floor:
 		global_position.y += current_speed * delta
-		# Fallback cleanup si se sale demasiado
+		# Fallback cleanup if it drifts too far off-screen
 		if global_position.y > get_viewport_rect().size.y + 200:
 			queue_free()
 	else:
 		floor_timer += delta
-		# Parpadeo en el último segundo (o todo el tiempo si la espera es menor)
+		# Blink during the last second (or the whole time if the wait is shorter)
 		if floor_timer >= floor_wait_time - FLOOR_BLINK_TIME:
 			var blink_rate = 15.0
 			modulate.a = 0.3 if fmod(floor_timer * blink_rate, 2.0) > 1.0 else 1.0
@@ -67,13 +67,13 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 	if area.is_in_group("catcher_floor"):
 		AudioManager.play_sfx(&"sfx_catch_floor_hit")
-		# Lo que mata (bombas) desaparece al tocar el suelo, sin esperar
+		# What kills (bombs) disappears on touching the floor, without waiting
 		if item_type == ItemType.BOMB:
 			hit_floor.emit(item_type)
 			is_active = false
 			queue_free()
 		else:
-			# El objeto de punto/coleccionable se posa en el suelo durante floor_wait_time
+			# Point/collectible item rests on the floor for floor_wait_time
 			if floor_wait_time <= 0.0:
 				hit_floor.emit(item_type)
 				_expire_on_floor()

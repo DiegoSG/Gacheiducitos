@@ -19,7 +19,7 @@ const HEIGHT_SOUND_SCORE_STEP: float = 50.0
 
 @export var cleanup_threshold: float = 300.0
 
-# Configuración y Estado
+# Configuration and State
 var config = {}
 var coins_collected = 0
 var win_condition_met = false
@@ -34,38 +34,38 @@ func _ready() -> void:
 	if config.has("item_pool") and config["item_pool"] is Array:
 		item_pool = config["item_pool"]
 	
-	# Configuración inicial del juego
+	# Initial game setup
 	last_platform_y = get_viewport_rect().size.y - 100.0
 	
-	# Spawn del jugador
+	# Player spawn
 	player = PLAYER_SCENE.instantiate() as MG_TrampolinPlayer
 	add_child(player)
 	player.global_position = Vector2(0, last_platform_y - 50.0)
 	player.special_platform_reached.connect(_on_special_platform_reached)
 	
-	# Centrar cámara en el jugador inicial
+	# Center camera on the initial player
 	camera.make_current()
 	camera.global_position.y = player.global_position.y
 	
-	# Crear base sólida al inicio
+	# Create a solid base at the start
 	spawn_base_floor()
 	
-	# Crear plataformas iniciales hacia arriba
+	# Create initial platforms going up
 	for i in range(12):
 		spawn_platform()
 
 func _process(_delta: float) -> void:
 	if !player: return
 	
-	# La cámara sigue al jugador solo HACIA ARRIBA
+	# The camera follows the player only UPWARD
 	if player.global_position.y < camera.global_position.y:
 		camera.global_position.y = player.global_position.y
 	
-	# Generar nuevas plataformas a medida que subimos
+	# Generate new platforms as we go up
 	if player.global_position.y < last_platform_y + 1200:
 		spawn_platform()
 	
-	# Actualizar Score basado en la altura máxima alcanzada (Y negativa)
+	# Update Score based on the maximum height reached (negative Y)
 	var current_score = floor(-player.global_position.y / 10.0)
 	if current_score > max_score:
 		max_score = current_score
@@ -74,10 +74,10 @@ func _process(_delta: float) -> void:
 			_last_height_sound_score = max_score
 			AudioManager.play_sfx(&"sfx_tramp_height")
 	
-	# Verificar condiciones de victoria
+	# Check win conditions
 	_check_win_conditions()
 		
-	# Limpieza de plataformas y monedas viejas
+	# Clean up old platforms and coins
 	for child in platforms_container.get_children():
 		if child.global_position.y > camera.global_position.y + cleanup_threshold:
 			child.queue_free()
@@ -86,7 +86,7 @@ func _process(_delta: float) -> void:
 		if child.is_in_group("coin") and child.global_position.y > camera.global_position.y + cleanup_threshold:
 			child.queue_free()
 			
-	# Detectar Game Over (caída fuera de cámara)
+	# Detect Game Over (falling off camera)
 	if player.global_position.y > camera.global_position.y + 600:
 		_game_over()
 
@@ -125,24 +125,24 @@ func spawn_platform() -> void:
 	var new_plat: Node2D = PLATFORM_SCENE.instantiate()
 	platforms_container.add_child(new_plat)
 	
-	# Posición aleatoria en el ancho del juego
+	# Random position across the game width
 	var x_pos: float = randf_range(-game_width/2.0 + 40, game_width/2.0 - 40)
 	last_platform_y -= spawn_distance
 	new_plat.global_position = Vector2(x_pos, last_platform_y)
 	
-	# Spawn de items coleccionables sobre la plataforma (siempre apoyados en ella)
+	# Spawn collectible items on the platform (always resting on it)
 	var item_chance = config.get("item_spawn_chance", 0.25)
 	if not item_pool.is_empty() and randf() < item_chance:
 		var chosen_id: String = pick_item_from_pool(item_pool)
 		if not chosen_id.is_empty():
 			_spawn_platform_item(chosen_id, Vector2(x_pos, last_platform_y - 25.0))
 	
-	# Spawn de monedas basado en densidad y patrones aleatorios (flotando en el aire)
+	# Spawn coins based on density and random patterns (floating in the air)
 	var density = config.get("coin_density", 0.3)
 	if randf() < density:
 		_spawn_coin_pattern(last_platform_y - 60.0)
 	
-	# Manejar plataforma especial si es la condición
+	# Handle the special platform if it is the condition
 	if config.get("win_condition") == WinCondition.ESPECIAL and not special_platform_spawned:
 		var target_h = config.get("target_value", 100)
 		var current_h = floor(-last_platform_y / 10.0)

@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bh4box6poomqx"]
 
 [ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://des3f5n5boxxj" path="res://data/resource_types/item_effects/item_effect.gd" id="1_w4c5l"]
 [ext_resource type="Texture2D" uid="uid://boc4i3o1a4rbq" path="res://assets/items/icons/gold_coins.png" id="2_icon"]
 
 [resource]

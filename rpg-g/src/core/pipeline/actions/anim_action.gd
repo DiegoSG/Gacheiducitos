@@ -17,20 +17,20 @@ func get_action_name() -> String:
 
 func execute(trigger_node: Node) -> void:
 	if target_node.is_empty():
-		push_warning("AnimAction: NodePath vacío")
+		push_warning("AnimAction: empty NodePath")
 		finished.emit()
 		return
 
 	var t_node: Node = trigger_node.get_node_or_null(target_node)
 	if not t_node:
-		push_warning("AnimAction: No se encontró el target en path ", target_node)
+		push_warning("AnimAction: Target not found at path ", target_node)
 		finished.emit()
 		return
 		
 	var handled: bool = false
 	AudioManager.play_sfx(&"sfx_anim_action")
 	
-	# Caso 1: AnimationPlayer
+	# Case 1: AnimationPlayer
 	var ap: AnimationPlayer = null
 	if t_node is AnimationPlayer:
 		ap = t_node
@@ -48,7 +48,7 @@ func execute(trigger_node: Node) -> void:
 				ap.animation_finished.connect(_on_anim_finished, CONNECT_ONE_SHOT)
 			return
 
-	# Caso 2: AnimatedSprite2D
+	# Case 2: AnimatedSprite2D
 	var as2d: AnimatedSprite2D = null
 	if t_node is AnimatedSprite2D:
 		as2d = t_node
@@ -58,19 +58,19 @@ func execute(trigger_node: Node) -> void:
 	if as2d and as2d.sprite_frames and as2d.sprite_frames.has_animation(animation_name):
 		handled = true
 		as2d.play(animation_name)
-		# En AnimatedSprite2D el loop de la animación suele venir preconfigurado en los SpriteFrames.
-		# Aca asumimos que si no es loop y es secuencial, esperamos.
+		# On AnimatedSprite2D the animation's loop is usually preconfigured in the SpriteFrames.
+		# Here we assume that if it is not looping and is sequential, we wait.
 		var sf: SpriteFrames = as2d.sprite_frames
 		var is_anim_looping: bool = sf.get_animation_loop(animation_name) if sf.has_animation(animation_name) else false
 		
-		# Forzamos ignorar el wait si la animacion original loopea o si el user marco loop.
+		# We force ignoring the wait if the original animation loops or if the user set loop.
 		if wait_to_finish and not loop and not is_anim_looping:
 			if not as2d.animation_finished.is_connected(_on_anim_finished):
 				as2d.animation_finished.connect(func() -> void: _on_anim_finished(""),CONNECT_ONE_SHOT)
 			return
 
 	if not handled:
-		push_warning("AnimAction: No se pudo reproducir ", animation_name, " en ", target_node)
+		push_warning("AnimAction: Could not play ", animation_name, " on ", target_node)
 
 	finished.emit()
 

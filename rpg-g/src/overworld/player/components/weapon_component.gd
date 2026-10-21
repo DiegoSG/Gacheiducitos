@@ -1,21 +1,21 @@
 extends Node
 class_name WeaponComponent
 
-## Ataque cuerpo a cuerpo con el arma equipada (ver design/Sistema_Armas_y_Escudo.md).
-## Configura el HitboxComponent según el WeaponData (daño, alcance, knockback, estado, visual),
-## lo activa un instante y respeta el cooldown del arma. Sin arma: golpe base con la fuerza.
-## No depende del jugador: el dueño asigna el arma (set_weapon) y llama a attack().
+## Melee attack with the equipped weapon (see design/Sistema_Armas_y_Escudo.md).
+## Configures the HitboxComponent from the WeaponData (damage, reach, knockback, status, visual),
+## activates it briefly and respects the weapon's cooldown. No weapon: base strike with strength.
+## Does not depend on the player: the owner assigns the weapon (set_weapon) and calls attack().
 
 signal attack_started
 signal attack_finished
 
-## Hitbox que golpea. Su primer CollisionShape2D (rectángulo) se redimensiona con `reach`.
+## Hitbox that strikes. Its first CollisionShape2D (rectangle) is resized by `reach`.
 @export var hitbox: HitboxComponent
-## Visual del golpe (opcional).
+## Hit visual (optional).
 @export var slash_sprite: Sprite2D
-## Segundos que el hitbox queda activo.
+## Seconds the hitbox stays active.
 @export var swing_duration: float = 0.18
-## Distancia desde el centro del dueño hasta el borde cercano de la zona de golpe.
+## Distance from the owner's center to the near edge of the strike zone.
 @export var reach_offset: float = 30.0
 
 var weapon: WeaponData = null
@@ -33,7 +33,7 @@ func _ready() -> void:
 		_base_knockback = hitbox.knockback_force
 		var shape_node: CollisionShape2D = _find_shape_node()
 		if shape_node and shape_node.shape is RectangleShape2D:
-			# Copia propia: la forma del .tscn se comparte entre instancias de la escena
+			# Own copy: the .tscn shape is shared between instances of the scene
 			_shape = (shape_node.shape as RectangleShape2D).duplicate()
 			shape_node.shape = _shape
 			_base_reach = _shape.size
@@ -54,11 +54,11 @@ func set_weapon(data: WeaponData) -> void:
 func can_attack() -> bool:
 	return not is_swinging and _cooldown_left <= 0.0
 
-## Daño total de un golpe con la fuerza dada.
+## Total damage of a strike with the given strength.
 func get_damage(strength: int) -> int:
 	return strength + (weapon.damage if weapon else 0)
 
-## Golpea una vez. Espera hasta que el golpe termina (el dueño puede hacer `await`).
+## Strikes once. Waits until the strike ends (the owner may `await` it).
 func attack(strength: int) -> void:
 	if not can_attack() or hitbox == null:
 		return
@@ -80,7 +80,7 @@ func attack(strength: int) -> void:
 	_cooldown_left = weapon.cooldown if weapon else 0.0
 	attack_finished.emit()
 
-## Corta un golpe en curso (muerte, respawn).
+## Cancels a strike in progress (death, respawn).
 func cancel() -> void:
 	if hitbox:
 		hitbox.set_active(false)
@@ -98,7 +98,7 @@ func _play_slash() -> void:
 	tween.tween_property(slash_sprite, "scale", Vector2(0.13, 0.13), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(slash_sprite, "modulate:a", 0.0, 0.15)
 
-## Ajusta el tamaño y la posición de la zona de golpe (y del visual) al alcance del arma.
+## Adjusts the size and position of the strike zone (and visual) to the weapon's reach.
 func _apply_shape() -> void:
 	var reach: Vector2 = weapon.reach if weapon else _base_reach
 	var shape_node: CollisionShape2D = _find_shape_node()

@@ -1,8 +1,8 @@
 extends Node
 
-## Almacén global de variables de juego con acceso por ruta ("flag.x", "quest.id", "player.gold", "item.id", "status.id",
-## "equip.weapon_1" / "equip.weapon_2" / "equip.shield" / "equip.active" → id del ítem o "").
-## Solo las rutas "flag.*" son escribibles; el resto son de solo lectura y reflejan otros sistemas.
+## Global store of game variables, accessed by path ("flag.x", "quest.id", "player.gold", "item.id", "status.id",
+## "equip.weapon_1" / "equip.weapon_2" / "equip.shield" / "equip.active" → item id or "").
+## Only "flag.*" paths are writable; the rest are read-only and mirror other systems.
 
 signal variable_changed(path: String, value: Variant)
 signal quest_started(quest_id: String)
@@ -27,7 +27,7 @@ func _load_defaults() -> void:
 				if not flags.has(key):
 					flags[key] = defaults[key]
 
-## Reemite como variable_changed los cambios de los sistemas de origen.
+## Re-emits source system changes as variable_changed.
 func _connect_sources() -> void:
 	PlayerStats.health_changed.connect(_on_health_changed)
 	PlayerStats.gold_changed.connect(_on_gold_changed)
@@ -56,7 +56,7 @@ func _on_equipment_changed(slot: String, item_id: String) -> void:
 func _on_active_weapon_changed(_slot: String) -> void:
 	variable_changed.emit("equip.active", Inventory.get_equipped_id(Inventory.active_weapon))
 
-# --- API por rutas ---
+# --- Path-based API ---
 
 func get_var(path: String, default: Variant = null) -> Variant:
 	if path.begins_with(FLAG_PREFIX):
@@ -72,7 +72,7 @@ func get_var(path: String, default: Variant = null) -> Variant:
 		"player":
 			return _get_player_var(sub, default)
 		"item":
-			# Cuenta también lo equipado: equipar la espada no cambia "item.wooden_sword"
+			# Also counts equipped items: equipping the sword does not change "item.wooden_sword"
 			return Inventory.get_owned_count(sub)
 		"status":
 			return PlayerStats.has_status(sub)
@@ -134,7 +134,7 @@ func add_var(path: String, amount: float) -> void:
 	var current: Variant = get_var(path, 0)
 	var base: float = float(current) if (current is int or current is float) else 0.0
 	var result: float = base + amount
-	# Mantiene enteros cuando ambos operandos lo son
+	# Keeps integers when both operands are integers
 	if (current == null or current is int) and is_equal_approx(amount, roundf(amount)):
 		set_var(path, int(result))
 	else:
@@ -148,10 +148,10 @@ func toggle_var(path: String) -> void:
 func _is_writable(path: String, caller: String) -> bool:
 	if path.begins_with(FLAG_PREFIX) and path.length() > FLAG_PREFIX.length():
 		return true
-	push_warning("GameVariables.%s: la ruta '%s' no es escribible (solo flag.*)." % [caller, path])
+	push_warning("GameVariables.%s: path '%s' is not writable (only flag.*)." % [caller, path])
 	return false
 
-# --- Misiones ---
+# --- Quests ---
 
 func start_quest(quest_id: String) -> void:
 	if not quests.has(quest_id):

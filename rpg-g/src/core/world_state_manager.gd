@@ -1,14 +1,14 @@
 extends Node
 
-## Emitida cuando se descubre al menos una celda nueva del mapa.
+## Emitted when at least one new map cell is discovered.
 signal discovered_changed(level_id: StringName)
 
-## Tamaño en unidades de mundo de cada celda del mapa (nivel 3840x2160 -> grilla 16x16).
+## World-unit size of each map cell (level 3840x2160 -> 16x16 grid).
 var map_cell_size: Vector2 = Vector2(240.0, 135.0)
 
 var _states: Dictionary = {}
-# Descubrimiento del mapa: level_id (String) -> { Vector2i: true }.
-# Vive fuera de _states a propósito: el respawn NO lo revierte.
+# Map discovery: level_id (String) -> { Vector2i: true }.
+# Lives outside _states on purpose: respawn does NOT revert it.
 var _discovered: Dictionary = {}
 
 func save_state(persistence_id: String, data: Dictionary) -> void:
@@ -45,12 +45,12 @@ func create_snapshot() -> Dictionary:
 func restore_snapshot(snapshot: Dictionary) -> void:
 	_states = snapshot.duplicate(true)
 
-# --- Descubrimiento del mapa ---
+# --- Map discovery ---
 
 func world_to_cell(world_pos: Vector2) -> Vector2i:
 	return Vector2i(floori(world_pos.x / map_cell_size.x), floori(world_pos.y / map_cell_size.y))
 
-## Marca como descubiertas las celdas que toca el círculo (world_pos, radius).
+## Marks as discovered the cells touched by the circle (world_pos, radius).
 func discover_at(level_id: StringName, world_pos: Vector2, radius: float = 0.0) -> void:
 	if level_id == &"":
 		return
@@ -85,7 +85,7 @@ func get_discovered_cells(level_id: StringName) -> Array[Vector2i]:
 func clear_discovery() -> void:
 	_discovered.clear()
 
-## Snapshot propio (formato JSON-safe: { level_id: ["x,y", ...] }). Se guarda en el slot, no en world_state.
+## Own snapshot (JSON-safe format: { level_id: ["x,y", ...] }). Saved in the slot, not in world_state.
 func create_discovery_snapshot() -> Dictionary:
 	var out: Dictionary = {}
 	for level_key: String in _discovered.keys():

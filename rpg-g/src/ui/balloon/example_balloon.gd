@@ -14,22 +14,22 @@ extends CanvasLayer
 ## If all other input is blocked as long as dialogue is shown.
 @export var will_block_other_input: bool = true
 
-## Acción para completar el texto que se está escribiendo y, ya completo, avanzar de línea
+## Action to complete the text being typed and, once complete, advance to the next line
 @export var next_action: StringName = &"ui_accept"
 
-## Acción para completar el texto que se está escribiendo (misma que next_action; ui_cancel queda libre como Atrás)
+## Action to complete the text being typed (same as next_action; ui_cancel stays free as Back)
 @export var skip_action: StringName = &"ui_accept"
 
-## Acción de avance rápido: salta líneas hasta la próxima decisión (respuestas) o el final del diálogo
+## Fast-forward action: skips lines until the next decision (responses) or the end of the dialogue
 @export var fast_forward_action: StringName = &"fast_forward"
 
-## Máximo de líneas que el avance rápido recorre de una vez (evita bucles infinitos)
+## Maximum number of lines fast-forward goes through at once (avoids infinite loops)
 @export var fast_forward_max_lines: int = 256
 
-## Segundos mínimos entre dos sonidos de letra del texto escribiéndose
+## Minimum seconds between two letter sounds while text is being typed
 const TYPE_SOUND_INTERVAL: float = 0.05
 
-## Frames de gracia tras abrir el diálogo en los que se ignora el input (evita que la pulsación que lo abrió avance la primera línea)
+## Grace frames after opening the dialogue during which input is ignored (prevents the press that opened it from advancing the first line)
 @export var open_input_grace_frames: int = 2
 
 ## A sound player for voice lines (if they exist).
@@ -47,13 +47,13 @@ var will_hide_balloon: bool = false
 ## A dictionary to store any ephemeral variables
 var locals: Dictionary = {}
 
-## Frame del proceso a partir del cual se acepta input
+## Process frame from which input is accepted
 var _input_unlock_frame: int = 0
 
-## Evita reentradas mientras corre el avance rápido
+## Prevents re-entry while fast-forward is running
 var _is_fast_forwarding: bool = false
 
-## Segundos que faltan para permitir el siguiente sonido de letra
+## Seconds remaining before the next letter sound is allowed
 var _type_sound_cooldown: float = 0.0
 
 var _locale: String = TranslationServer.get_locale()
@@ -93,7 +93,7 @@ var mutation_cooldown: Timer = Timer.new()
 
 
 func _ready() -> void:
-	# El juego se pausa durante los diálogos; el globo debe seguir funcionando
+	# The game pauses during dialogues; the balloon must keep working
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	balloon.hide()
 	DialogueManager.mutated.connect(_on_mutated)
@@ -127,7 +127,7 @@ func _unhandled_input(_event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
-	## Detect a change of locale and update the current dialogue line to show the new language
+	## Detect a locale change and update the current dialogue line to show the new language
 	if what == NOTIFICATION_TRANSLATION_CHANGED and _locale != TranslationServer.get_locale() and is_instance_valid(dialogue_label):
 		_locale = TranslationServer.get_locale()
 		var visible_ratio: float = dialogue_label.visible_ratio
@@ -179,7 +179,7 @@ func apply_dialogue_line() -> void:
 	if not dialogue_line.text.is_empty():
 		dialogue_label.type_out()
 		await dialogue_label.finished_typing
-		# Si mientras tanto se cambió de línea (p. ej. avance rápido), no seguir con esta
+		# If the line changed in the meantime (e.g. fast-forward), do not continue with this one
 		if dialogue_line != current_line: return
 		AudioManager.play_ui(&"sfx_dialogue_line_done")
 
@@ -212,8 +212,8 @@ func next(next_id: String) -> void:
 	dialogue_line = await dialogue_resource.get_next_dialogue_line(next_id, temporary_game_states)
 
 
-## Avance rápido: recorre las líneas (ejecutando sus mutaciones) hasta la próxima línea con
-## respuestas o el final del diálogo. Nunca salta una decisión del jugador.
+## Fast-forward: goes through the lines (running their mutations) until the next line with
+## responses or the end of the dialogue. Never skips a player decision.
 func fast_forward() -> void:
 	if _is_fast_forwarding or not is_instance_valid(dialogue_line): return
 	_is_fast_forwarding = true
@@ -221,7 +221,7 @@ func fast_forward() -> void:
 	AudioManager.play_ui(&"sfx_dialogue_fast_forward")
 	var line: DialogueLine = dialogue_line
 	var iterations: int = 0
-	# La línea actual ya pide decisión: solo completar su texto
+	# The current line already asks for a decision: only complete its text
 	while line != null and line.responses.size() == 0 and iterations < fast_forward_max_lines:
 		line = await dialogue_resource.get_next_dialogue_line(line.next_id, temporary_game_states)
 		iterations += 1
@@ -232,7 +232,7 @@ func fast_forward() -> void:
 		dialogue_label.skip_typing()
 	else:
 		dialogue_line = line
-		# Si se agotó el tope, el texto sale completo y el jugador sigue con next_action
+		# If the cap was reached, the text is shown in full and the player continues with next_action
 		if line.responses.size() == 0:
 			dialogue_label.skip_typing()
 
@@ -257,13 +257,13 @@ func _on_balloon_gui_input(event: InputEvent) -> void:
 	if Engine.get_process_frames() < _input_unlock_frame or _is_fast_forwarding: return
 	if event is InputEventKey and event.is_echo(): return
 
-	# Avance rápido (no se salta nunca el menú de respuestas)
+	# Fast-forward (the responses menu is never skipped)
 	if event.is_action_pressed(fast_forward_action) and not responses_menu.visible:
 		get_viewport().set_input_as_handled()
 		fast_forward()
 		return
 
-	# Si el texto se está escribiendo, completarlo de golpe
+	# If the text is being typed, complete it at once
 	if dialogue_label.is_typing:
 		var mouse_was_clicked: bool = event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.is_pressed()
 		var skip_button_was_pressed: bool = event.is_action_pressed(skip_action) or event.is_action_pressed(next_action)

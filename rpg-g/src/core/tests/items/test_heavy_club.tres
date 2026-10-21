@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dhrreeyeu43st"]
 
 [ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/items/icons/wood_log.png" id="2_icon"]
-[ext_resource type="Script" path="res://data/resource_types/equipment/weapon_data.gd" id="3_weapon"]
+[ext_resource type="Script" uid="uid://des3f5n5boxxj" path="res://data/resource_types/item_effects/item_effect.gd" id="1_vtyfy"]
+[ext_resource type="Texture2D" uid="uid://r4d478cpta8c" path="res://assets/items/icons/wood_log.png" id="2_icon"]
+[ext_resource type="Script" uid="uid://bd03tg1qqbsg2" path="res://data/resource_types/equipment/weapon_data.gd" id="3_weapon"]
 
 [sub_resource type="Resource" id="WeaponData_test_heavy_club"]
 script = ExtResource("3_weapon")

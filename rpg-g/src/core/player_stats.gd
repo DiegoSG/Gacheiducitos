@@ -8,21 +8,21 @@ signal status_removed(status_id: String)
 signal stats_changed
 
 const MIN_SPEED_MULTIPLIER: float = 0.1
-## Fracción de la vida máxima por debajo de la cual suena el aviso de vida baja.
+## Fraction of max health below which the low-health warning sounds.
 const LOW_HEALTH_RATIO: float = 0.25
 
-## Evita sonidos de HUD al restaurar un snapshot.
+## Prevents HUD sounds when restoring a snapshot.
 var _is_restoring: bool = false
 
-# Los setters son el UNICO lugar que emite health_changed / player_died / gold_changed.
-## Vida maxima BASE (los estados pueden modificarla: ver get_max_health()).
+# The setters are the ONLY place that emits health_changed / player_died / gold_changed.
+## BASE max health (statuses can modify it: see get_max_health()).
 @export var max_health: int = 4:
 	set(value):
 		var prev_max_health: int = max_health
 		max_health = maxi(1, value)
 		if max_health != prev_max_health and not _is_restoring:
 			AudioManager.play_ui(&"sfx_hud_max_health_changed")
-		# Reasignar health pasa por su setter, que emite health_changed con el nuevo maximo
+		# Reassigning health goes through its setter, which emits health_changed with the new max
 		health = health
 
 var health: int = 4:
@@ -45,15 +45,15 @@ var health: int = 4:
 			AudioManager.play_ui(&"sfx_hud_gold_changed")
 		gold_changed.emit(gold)
 
-@export_group("Stats base")
-## Fuerza base = dano del ataque del jugador.
+@export_group("Base Stats")
+## Base strength = player attack damage.
 @export var base_strength: int = 1
-## Resistencia base: resta dano a cada golpe recibido (el minimo resultante es 0).
+## Base resistance: subtracts damage from each hit received (the resulting minimum is 0).
 @export var base_resistance: int = 0
 
-# Estados activos: cada entrada es {"effect": StatusEffectData, "remaining": float, "tick_timer": float}
+# Active statuses: each entry is {"effect": StatusEffectData, "remaining": float, "tick_timer": float}
 var _active: Array[Dictionary] = []
-# Ultimo estado aplicado (para teñir el HUD)
+# Last applied status (to tint the HUD)
 var _last_applied: StatusEffectData = null
 
 func _process(delta: float) -> void:
@@ -74,9 +74,9 @@ func _process(delta: float) -> void:
 	for status_id: String in expired:
 		cure_status(status_id)
 
-# --- Estados ---------------------------------------------------------------
+# --- Statuses ---------------------------------------------------------------
 
-## Aplica un estado. Si ya esta activo, reinicia su duracion.
+## Applies a status. If it is already active, resets its duration.
 func apply_status(effect: StatusEffectData) -> void:
 	if effect == null or effect.id.is_empty():
 		return
@@ -118,7 +118,7 @@ func get_active_statuses() -> Array[StatusEffectData]:
 		result.append(entry["effect"])
 	return result
 
-## Ultimo estado aplicado que sigue activo (null si no hay ninguno).
+## Last applied status that is still active (null if there is none).
 func get_last_status() -> StatusEffectData:
 	return _last_applied
 
@@ -129,11 +129,11 @@ func _find_entry(status_id: String) -> Dictionary:
 	return {}
 
 func _on_stats_modified() -> void:
-	# Reasignar health lo recorta al maximo efectivo y emite health_changed
+	# Reassigning health clamps it to the effective max and emits health_changed
 	health = health
 	stats_changed.emit()
 
-# Dano/curacion periodica de un estado: ignora la resistencia.
+# Periodic damage/healing from a status: ignores resistance.
 func _apply_status_tick(effect: StatusEffectData) -> void:
 	if effect.health_per_tick == 0:
 		return
@@ -143,7 +143,7 @@ func _apply_status_tick(effect: StatusEffectData) -> void:
 		new_health = maxi(new_health, mini(health, 1))
 	health = new_health
 
-# --- Stats efectivas -------------------------------------------------------
+# --- Effective stats -------------------------------------------------------
 
 func get_speed_multiplier() -> float:
 	var result: float = 1.0
@@ -163,21 +163,21 @@ func get_resistance() -> int:
 		result += (entry["effect"] as StatusEffectData).resistance_bonus
 	return result
 
-## Vida maxima efectiva (base + bonus de estados, minimo 1).
+## Effective max health (base + status bonuses, minimum 1).
 func get_max_health() -> int:
 	var result: int = max_health
 	for entry: Dictionary in _active:
 		result += (entry["effect"] as StatusEffectData).max_health_bonus
 	return maxi(result, 1)
 
-# --- Vida y oro ------------------------------------------------------------
+# --- Health and gold ------------------------------------------------------------
 
 func add_gold(amount: int) -> void:
 	if amount <= 0:
 		return
 	gold += amount
 
-## Aplica dano reducido por la resistencia (minimo 0).
+## Applies damage reduced by resistance (minimum 0).
 func take_damage(amount: int) -> void:
 	var final_amount: int = maxi(0, amount - get_resistance())
 	if final_amount <= 0:
@@ -203,14 +203,14 @@ func remove_gold(amount: int) -> bool:
 	return true
 
 
-# --- Persistencia ----------------------------------------------------------
+# --- Persistence ----------------------------------------------------------
 
 func create_snapshot() -> Dictionary:
 	var statuses: Array[Dictionary] = []
 	for entry: Dictionary in _active:
 		var effect: StatusEffectData = entry["effect"]
 		if effect.resource_path.is_empty():
-			continue # Un estado creado en runtime no se puede serializar
+			continue # A status created at runtime cannot be serialized
 		statuses.append({
 			"path": effect.resource_path,
 			"remaining": float(entry["remaining"]),
@@ -226,8 +226,8 @@ func create_snapshot() -> Dictionary:
 func restore_snapshot(snapshot: Dictionary) -> void:
 	if snapshot.is_empty():
 		return
-	# Los estados se restauran primero: afectan al maximo efectivo con el que se recorta la vida.
-	# Si el save es antiguo (sin clave), el jugador queda sin estados.
+	# Statuses are restored first: they affect the effective max used to clamp health.
+	# If the save is old (no key), the player is left with no statuses.
 	_is_restoring = true
 	_active.clear()
 	_last_applied = null
@@ -253,6 +253,6 @@ func restore_snapshot(snapshot: Dictionary) -> void:
 	_is_restoring = false
 	stats_changed.emit()
 
-## true si la vida dada está en zona de aviso (como mínimo 1 punto, aunque la vida máxima sea baja).
+## true if the given health is in the warning zone (at least 1 point, even if max health is low).
 func is_low_health(value: int) -> bool:
 	return value <= maxi(1, floori(get_max_health() * LOW_HEALTH_RATIO))

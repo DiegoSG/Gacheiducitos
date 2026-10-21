@@ -9,23 +9,23 @@ var is_dead: bool = false
 @onready var hitbox_component: HitboxComponent = $HitboxComponent
 @onready var hurtbox_component: HurtboxComponent = $HurtboxComponent
 @onready var sprite: Sprite2D = $Sprite2D
-## Escudo equipado: bloquea según su ShieldData mientras se mantiene "block" (ver shield_component.gd).
+## Equipped shield: blocks according to its ShieldData while "block" is held (see shield_component.gd).
 @onready var shield_component: ShieldComponent = $ShieldComponent
-## Arma activa: daño, alcance y cooldown del golpe (ver weapon_component.gd).
+## Active weapon: hit damage, reach and cooldown (see weapon_component.gd).
 @onready var weapon_component: WeaponComponent = $WeaponComponent
 
-# Texturas canónicas para las 8 orientaciones (usando simetría horizontal flip_h)
-const TEX_DOWN = preload("res://assets/sprites/player_down.png")           # Sur (Frente)
-const TEX_DOWN_SIDE = preload("res://assets/sprites/player_down_side.png") # Sur-Este / Sur-Oeste (Diagonal frente)
-const TEX_SIDE = preload("res://assets/sprites/player_side.png")           # Este / Oeste (Perfil lateral)
-const TEX_UP_SIDE = preload("res://assets/sprites/player_up_side.png")     # Norte-Este / Norte-Oeste (Diagonal espalda)
-const TEX_UP = preload("res://assets/sprites/player_up.png")               # Norte (Espalda)
+# Canonical textures for the 8 orientations (using horizontal flip_h symmetry)
+const TEX_DOWN = preload("res://assets/sprites/player_down.png")           # South (Front)
+const TEX_DOWN_SIDE = preload("res://assets/sprites/player_down_side.png") # South-East / South-West (front diagonal)
+const TEX_SIDE = preload("res://assets/sprites/player_side.png")           # East / West (side profile)
+const TEX_UP_SIDE = preload("res://assets/sprites/player_up_side.png")     # North-East / North-West (back diagonal)
+const TEX_UP = preload("res://assets/sprites/player_up.png")               # North (Back)
 
 var is_dialogue_active: bool = false
 var is_attacking: bool = false
 var last_direction: Vector2 = Vector2.DOWN
-## Del último golpe recibido: si lo cubrió el escudo y si llegó fuera de los i-frames.
-## Deciden si el estado que trae el mismo golpe (status_inflicted llega justo después) se aplica.
+## From the last hit received: whether the shield covered it and whether it arrived outside the i-frames.
+## They decide whether the status carried by the same hit (status_inflicted arrives right after) is applied.
 var _last_hit_shielded: bool = false
 var _last_hit_outside_iframes: bool = false
 
@@ -38,7 +38,7 @@ func _ready() -> void:
 	_update_sprite_facing(last_direction)
 	shield_component.set_facing(last_direction)
 	
-	# El equipo vive en Inventory; el jugador solo lo pasa a sus componentes
+	# Equipment lives in Inventory; the player only passes it to its components
 	Inventory.equipment_changed.connect(_on_equipment_changed)
 	Inventory.active_weapon_changed.connect(_on_active_weapon_changed)
 	_refresh_equipment()
@@ -53,7 +53,7 @@ func _ready() -> void:
 	if not CheckpointManager.player_respawned.is_connected(_on_player_respawned):
 		CheckpointManager.player_respawned.connect(_on_player_respawned)
 	
-	# Conectarse a las señales de Dialogue Manager
+	# Connect to the Dialogue Manager signals
 	if not DialogueManager.dialogue_started.is_connected(_on_dialogue_started):
 		DialogueManager.dialogue_started.connect(_on_dialogue_started)
 	if not DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
@@ -71,10 +71,10 @@ func _exit_tree() -> void:
 
 func _on_dialogue_started(_resource: DialogueResource) -> void:
 	is_dialogue_active = true
-	velocity = Vector2.ZERO # Detenemos al jugador inmediatamente
+	velocity = Vector2.ZERO # Stop the player immediately
 
 func _on_dialogue_ended(_resource: DialogueResource) -> void:
-	# Damos un pequeñísimo delay para no atrapar el mismo input que cerró el diálogo
+	# A very small delay so we don't catch the same input that closed the dialogue
 	var tree: SceneTree = get_tree()
 	if not tree:
 		is_dialogue_active = false
@@ -105,12 +105,12 @@ func _physics_process(delta: float) -> void:
 		actionable_finder.rotation = direction.angle() - PI/2
 		hitbox_component.rotation = direction.angle() - PI/2
 		
-		# Actualizar las 8 orientaciones visuales del jugador
+		# Update the player's 8 visual orientations
 		_update_sprite_facing(direction)
 		shield_component.set_facing(direction)
 		var shield_multiplier: float = shield_component.get_speed_multiplier()
 		if shield_multiplier <= 0.0:
-			# Con el escudo arriba solo se puede girar, no desplazarse
+			# With the shield raised you can only turn, not move
 			velocity = Vector2.ZERO
 			_step_timer = 0.0
 		else:
@@ -128,8 +128,8 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-## Configura la textura y el flip horizontal para las 8 rotaciones posibles
-## Orienta al jugador sin moverlo (por ejemplo, durante la caminata automática al salir de un portal).
+## Sets the texture and horizontal flip for the 8 possible rotations
+## Faces the player without moving it (for example, during the automatic walk when leaving a portal).
 func face_direction(direction: Vector2) -> void:
 	if direction == Vector2.ZERO:
 		return
@@ -141,42 +141,42 @@ func _update_sprite_facing(dir: Vector2) -> void:
 	if not sprite or dir == Vector2.ZERO:
 		return
 		
-	# Ángulo normalizado en grados [0, 360)
-	# 0° = Derecha (Este), 90° = Abajo (Sur), 180° = Izquierda (Oeste), 270° = Arriba (Norte)
+	# Normalized angle in degrees [0, 360)
+	# 0° = Right (East), 90° = Down (South), 180° = Left (West), 270° = Up (North)
 	var deg: float = fposmod(rad_to_deg(dir.angle()), 360.0)
-	
-	# Segmentación de 8 sectores de 45° con centro en los ejes
-	# [337.5 a 22.5]   -> Este (Perfil derecho)
-	# [22.5 a 67.5]    -> Sur-Este (Diagonal frente derecha)
-	# [67.5 a 112.5]   -> Sur (Frente)
-	# [112.5 a 157.5]  -> Sur-Oeste (Diagonal frente izquierda)
-	# [157.5 a 202.5]  -> Oeste (Perfil izquierdo)
-	# [202.5 a 247.5]  -> Norte-Oeste (Diagonal espalda izquierda)
-	# [247.5 a 292.5]  -> Norte (Espalda)
-	# [292.5 a 337.5]  -> Norte-Este (Diagonal espalda derecha)
-	
-	if deg >= 337.5 or deg < 22.5: # ESTE
+
+	# Segmentation into 8 sectors of 45° centered on the axes
+	# [337.5 to 22.5]   -> East (right profile)
+	# [22.5 to 67.5]    -> South-East (right front diagonal)
+	# [67.5 to 112.5]   -> South (Front)
+	# [112.5 to 157.5]  -> South-West (left front diagonal)
+	# [157.5 to 202.5]  -> West (left profile)
+	# [202.5 to 247.5]  -> North-West (left back diagonal)
+	# [247.5 to 292.5]  -> North (Back)
+	# [292.5 to 337.5]  -> North-East (right back diagonal)
+
+	if deg >= 337.5 or deg < 22.5: # EAST
 		sprite.texture = TEX_SIDE
 		sprite.flip_h = false
-	elif deg >= 22.5 and deg < 67.5: # SUR-ESTE
+	elif deg >= 22.5 and deg < 67.5: # SOUTH-EAST
 		sprite.texture = TEX_DOWN_SIDE
 		sprite.flip_h = false
-	elif deg >= 67.5 and deg < 112.5: # SUR (FRENTE)
+	elif deg >= 67.5 and deg < 112.5: # SOUTH (FRONT)
 		sprite.texture = TEX_DOWN
 		sprite.flip_h = false
-	elif deg >= 112.5 and deg < 157.5: # SUR-OESTE
+	elif deg >= 112.5 and deg < 157.5: # SOUTH-WEST
 		sprite.texture = TEX_DOWN_SIDE
 		sprite.flip_h = true
-	elif deg >= 157.5 and deg < 202.5: # OESTE
+	elif deg >= 157.5 and deg < 202.5: # WEST
 		sprite.texture = TEX_SIDE
 		sprite.flip_h = true
-	elif deg >= 202.5 and deg < 247.5: # NORTE-OESTE
+	elif deg >= 202.5 and deg < 247.5: # NORTH-WEST
 		sprite.texture = TEX_UP_SIDE
 		sprite.flip_h = true
-	elif deg >= 247.5 and deg < 292.5: # NORTE (ESPALDA)
+	elif deg >= 247.5 and deg < 292.5: # NORTH (BACK)
 		sprite.texture = TEX_UP
 		sprite.flip_h = false
-	else: # NORTE-ESTE [292.5 a 337.5]
+	else: # NORTH-EAST [292.5 to 337.5]
 		sprite.texture = TEX_UP_SIDE
 		sprite.flip_h = false
 
@@ -187,7 +187,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	
 	var tree: SceneTree = get_tree()
 	
-	# Aplicar siempre knockback físico hacia atrás (también con escudo: el enemigo te empuja)
+	# Always apply physical knockback backwards (also with the shield: the enemy pushes you)
 	if knockback_force > 0:
 		is_stunned = true
 		knockback_velocity = attack_direction * knockback_force
@@ -200,7 +200,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 		else:
 			is_stunned = false
 
-	# Escudo: un golpe cubierto pierde parte del daño; si no queda nada, no activa i-frames (el knockback ya se aplicó)
+	# Shield: a covered hit loses part of its damage; if nothing is left, it does not activate i-frames (knockback was already applied)
 	_last_hit_shielded = shield_component.covers_hit(attack_direction)
 	if _last_hit_shielded:
 		damage = shield_component.absorb(damage)
@@ -208,7 +208,7 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 			AudioManager.play_sfx(&"sfx_player_block_hit")
 			return
 
-	# Si ya está invencible, no resta vida ni reinicia el temporizador de i-frames
+	# If already invulnerable, it does not subtract health or restart the i-frame timer
 	if is_invulnerable:
 		return
 	
@@ -220,9 +220,9 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	is_invulnerable = true
 	AudioManager.play_sfx(&"sfx_player_hurt")
 	
-	# Efecto de I-frames visuales (parpadeo de 1 segundo)
+	# Visual I-frames effect (1-second blink)
 	var tween: Tween = create_tween()
-	tween.set_loops(5) # 5 parpadeos de 0.2s c/u = 1 seg de i-frames
+	tween.set_loops(5) # 5 blinks of 0.2s each = 1 sec of i-frames
 	tween.tween_property(sprite, "modulate:a", 0.2, 0.1)
 	tween.tween_property(sprite, "modulate:a", 1.0, 0.1)
 	
@@ -234,8 +234,8 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	else:
 		is_invulnerable = false
 
-## Un golpe inflige un estado alterado: se ignora si esta muerto, si el golpe llegó durante los i-frames
-## o si el escudo lo cubrió y detiene ese estado.
+## A hit inflicts a status effect: it is ignored if dead, if the hit arrived during the i-frames
+## or if the shield covered it and stops that status.
 func _on_status_inflicted(effect: StatusEffectData) -> void:
 	if is_dead or not _last_hit_outside_iframes:
 		return
@@ -260,13 +260,13 @@ func _on_player_died() -> void:
 		hurtbox_component.set_deferred("monitoring", false)
 		hurtbox_component.set_deferred("monitorable", false)
 		
-	# Feedback visual de muerte (fade/rotación suave)
+	# Visual death feedback (smooth fade/rotation)
 	if sprite:
 		var death_tween: Tween = create_tween()
 		death_tween.tween_property(sprite, "rotation_degrees", 90.0, 0.25)
 		death_tween.parallel().tween_property(sprite, "modulate", Color(0.8, 0.2, 0.2, 0.8), 0.25)
 
-	# Breve pausa para notar la caída antes del fader de respawn
+	# Brief pause to notice the fall before the respawn fader
 	var tree: SceneTree = get_tree()
 	if tree:
 		await tree.create_timer(0.5).timeout
@@ -304,7 +304,7 @@ func attack() -> void:
 		lunge_tween.tween_property(sprite, "position", lunge_offset, 0.06)
 		lunge_tween.tween_property(sprite, "position", original_pos, 0.09)
 		
-	# El dano del golpe es la fuerza efectiva (base + estados) + el dano del arma activa
+	# The hit's damage is the effective strength (base + statuses) + the active weapon's damage
 	await weapon_component.attack(PlayerStats.get_strength())
 	if not is_inside_tree():
 		return
@@ -320,7 +320,7 @@ func _refresh_equipment() -> void:
 	weapon_component.set_weapon(Inventory.get_active_melee())
 	shield_component.shield_data = Inventory.get_equipped_shield()
 
-# Trasladamos la interacción a _unhandled_input para respetar los CanvasLayer (UI)
+# Interaction is handled in _unhandled_input so CanvasLayer (UI) is respected
 func _unhandled_input(event: InputEvent) -> void:
 	if is_dialogue_active or is_dead:
 		shield_component.set_blocking(false)

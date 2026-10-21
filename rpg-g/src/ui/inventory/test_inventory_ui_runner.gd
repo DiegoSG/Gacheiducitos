@@ -1,12 +1,12 @@
 extends Node
 
-## Prueba aislada del inventario: sin menú de guardado, foco en la lista con la primera fila
-## seleccionada al abrir, y la selección se conserva al refrescar.
+## Isolated inventory test: no save menu, focus on the list with the first row
+## selected on open, and the selection is kept on refresh.
 
 @onready var inventory_ui: CanvasLayer = $InventoryUI
 
 func _ready() -> void:
-	print("[TestInventoryUI] Iniciando...")
+	print("[TestInventoryUI] Starting...")
 	var ok: bool = true
 	Inventory.restore_snapshot({})
 	Inventory.add_item("test_item_a", 2)
@@ -14,7 +14,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	if inventory_ui.get_node_or_null("Control/SaveMenuUI") != null:
-		push_error("[TestInventoryUI] El inventario aún contiene SaveMenuUI")
+		push_error("[TestInventoryUI] The inventory still contains SaveMenuUI")
 		ok = false
 
 	inventory_ui.open_inventory()
@@ -22,18 +22,18 @@ func _ready() -> void:
 
 	var item_list: ItemList = inventory_ui.get_node("Control/Panel/ItemList") as ItemList
 	if get_viewport().gui_get_focus_owner() != item_list:
-		push_error("[TestInventoryUI] La lista no tiene el foco al abrir")
+		push_error("[TestInventoryUI] The list does not have focus when opened")
 		ok = false
 	if item_list.get_selected_items() != PackedInt32Array([0]):
-		push_error("[TestInventoryUI] La primera fila no está seleccionada al abrir")
+		push_error("[TestInventoryUI] The first row is not selected when opened")
 		ok = false
 
 	item_list.select(1)
 	inventory_ui.refresh_ui()
 	if item_list.get_selected_items() != PackedInt32Array([1]):
-		push_error("[TestInventoryUI] Se perdió la selección al refrescar")
+		push_error("[TestInventoryUI] Selection was lost on refresh")
 		ok = false
 
 	inventory_ui.close_inventory()
-	print("[TestInventoryUI] ", "Test superado." if ok else "Test FALLIDO.")
+	print("[TestInventoryUI] ", "Test passed." if ok else "Test FAILED.")
 	get_tree().quit(0 if ok else 1)

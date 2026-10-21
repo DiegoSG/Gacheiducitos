@@ -26,7 +26,7 @@ func _connect_boundary_manager() -> void:
 				mgr.bounds_changed.connect(setup_bounds)
 			return
 			
-	# Fallback si no hay WorldBoundaryManager en la escena
+	# Fallback if there is no WorldBoundaryManager in the scene
 	setup_bounds(level_bounds)
 
 func setup_bounds(bounds: Vector2) -> void:

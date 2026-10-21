@@ -1,8 +1,8 @@
 extends VBoxContainer
 class_name EquipmentHud
 
-## HUD de equipo (placeholder visual hasta el diseño definitivo del HUD): dos casillas bajo el
-## icono del inventario con el arma activa y el escudo equipado. Solo lee Inventory.
+## Equipment HUD (visual placeholder until the final HUD design): two slots below the
+## inventory icon showing the active weapon and the equipped shield. Only reads Inventory.
 
 const CELL_SIZE: Vector2 = Vector2(48, 48)
 const EMPTY_ALPHA: float = 0.35
@@ -48,7 +48,7 @@ func _show(icon: TextureRect, placeholder: Label, data: ItemData) -> void:
 	placeholder.visible = data == null or data.icon == null
 	placeholder.modulate.a = EMPTY_ALPHA if data == null else 1.0
 
-## Devuelve [icono, texto de casilla vacía, etiqueta de esquina].
+## Returns [icon, empty-slot text, corner label].
 func _build_cell(empty_glyph: String) -> Array:
 	var cell: PanelContainer = PanelContainer.new()
 	cell.custom_minimum_size = CELL_SIZE

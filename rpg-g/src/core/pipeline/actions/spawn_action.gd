@@ -1,20 +1,20 @@
 class_name SpawnAction
 extends ActionResource
 
-## Instancia (spawnea) una escena en el escenario usando la posición de un objeto de referencia o un marcador.
+## Instantiates (spawns) a scene in the level using the position of a reference object or a marker.
 
-## Escena a spawnear (enemigo, cofre, ítem, efecto, etc.)
+## Scene to spawn (enemy, chest, item, effect, etc.)
 @export var scene_to_spawn: PackedScene
 
-@export_group("Ubicación de Spawn")
-## Nodo de referencia para la posición (Marker2D, Node2D, etc.). Si está asignado, spawnea exactamente en su posición global.
+@export_group("Spawn Location")
+## Reference node for the position (Marker2D, Node2D, etc.). If assigned, spawns exactly at its global position.
 @export var spawn_target_node: NodePath
 
-## Desplazamiento adicional opcional sobre la posición del target o del padre
+## Optional extra offset from the target's or the parent's position
 @export var offset: Vector2 = Vector2.ZERO
 
-@export_group("Jerarquía")
-## Nodo que será el padre de la escena instanciada (opcional). Si está vacío, se agrega al árbol del nivel actual.
+@export_group("Hierarchy")
+## Node that will be the parent of the instantiated scene (optional). If empty, it is added to the current level's tree.
 @export var parent_path: NodePath = ""
 
 func get_action_name() -> String:
@@ -25,7 +25,7 @@ func get_action_name() -> String:
 
 func execute(trigger_node: Node) -> void:
 	if not scene_to_spawn:
-		push_warning("SpawnAction: scene_to_spawn no está asignada.")
+		push_warning("SpawnAction: scene_to_spawn is not assigned.")
 		finished.emit()
 		return
 
@@ -33,20 +33,20 @@ func execute(trigger_node: Node) -> void:
 	if not spawn_target_node.is_empty():
 		target_ref = trigger_node.get_node_or_null(spawn_target_node)
 
-	# Si no se asignó o no se encontró el target_node, usar el trigger_node como posición
+	# If target_node was not assigned or not found, use trigger_node as the position
 	var spawn_pos: Vector2 = Vector2.ZERO
 	if target_ref is Node2D:
 		spawn_pos = (target_ref as Node2D).global_position + offset
 	elif trigger_node is Node2D:
 		spawn_pos = (trigger_node as Node2D).global_position + offset
 
-	# Determinar el padre donde se añadirá
+	# Determine the parent to add it to
 	var parent_node: Node = null
 	if not parent_path.is_empty():
 		parent_node = trigger_node.get_node_or_null(parent_path)
 	
 	if not parent_node:
-		# Añadir a la raíz del nivel / escena actual
+		# Add to the root of the current level / scene
 		parent_node = trigger_node.get_tree().current_scene if trigger_node.get_tree() else trigger_node.get_parent()
 		
 	if parent_node:

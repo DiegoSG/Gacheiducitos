@@ -20,10 +20,10 @@ class_name PickupItem
 @export var custom_amount: int = -1
 @export var drop_animation_duration: float = 0.45
 
-@export_group("Persistencia")
+@export_group("Persistence")
 @export var persistence_id: String = ""
 
-## Control para evitar recolección instantánea mientras el objeto cae/se anima
+## Guard to prevent instant pickup while the item falls/animates
 var can_be_collected: bool = true
 var _pending_start_pos: Vector2 = Vector2.INF
 var _pending_target_pos: Vector2 = Vector2.INF
@@ -41,7 +41,13 @@ var _capsule_radius: float = 10.0
 var _collision_offset: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
-	_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
+	# Runtime drops (no owner, no explicit ID) are not persisted: Godot reuses their
+	# auto-generated names, so a path-based key would match an earlier collected pickup
+	# and free the new one on spawn.
+	if persistence_id.is_empty() and owner == null:
+		_persistence_key = ""
+	else:
+		_persistence_key = PersistenceIdHelper.runtime_key(self, persistence_id)
 	if item_data:
 		if not item_data.changed.is_connected(_sync_with_resource):
 			item_data.changed.connect(_sync_with_resource)
@@ -51,7 +57,7 @@ func _ready() -> void:
 	_update_collision_shape()
 	
 	if not Engine.is_editor_hint():
-		# Restaurar estado: si ya fue recolectado, eliminar inmediatamente
+		# Restore state: if already collected, remove immediately
 		if _is_already_collected():
 			queue_free()
 			return
@@ -131,10 +137,10 @@ func _on_body_entered(body: Node2D) -> void:
 	if not can_be_collected: return
 	
 	if body.is_in_group("player") or body.name == "Player":
-		# El oro usa el valor del recurso por defecto; el resto de ítems, 1 unidad
+		# Gold uses the resource's default value; other items, 1 unit
 		var default_amount: int = item_data.value if item_data.id == Inventory.GOLD_ITEM_ID else 1
 		var qty: int = custom_amount if custom_amount > 0 else default_amount
-		# Ítems de escenas de prueba (fuera de data/items) se registran al recogerlos
+		# Items from test scenes (outside data/items) are registered when picked up
 		if ItemDatabase.get_item(item_data.id) == null:
 			ItemDatabase.register_item(item_data)
 		Inventory.add_item(item_data.id, qty)
@@ -144,7 +150,7 @@ func _on_body_entered(body: Node2D) -> void:
 		_persist_collected()
 		queue_free()
 
-## Inicia una animación matemática (Tween) estilo drop cinematográfico sin físicas
+## Starts a math-based (Tween) cinematic drop animation without physics
 func animate_drop_from(start_pos: Vector2, target_pos: Vector2, duration: float = -1.0) -> void:
 	can_be_collected = false
 	var anim_duration: float = duration if duration > 0.0 else drop_animation_duration
@@ -171,19 +177,19 @@ func _start_drop_tween(start_pos: Vector2, target_pos: Vector2, duration: float)
 	
 	var tween: Tween = create_tween().set_parallel(true)
 	
-	# 1. Desplazamiento en X/Y hacia la posición de destino
+	# 1. Move in X/Y toward the target position
 	tween.tween_property(self, "global_position", target_pos, duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	
 	if sprite:
-		# 2. Fade in rápido al aparecer
+		# 2. Quick fade in on appear
 		tween.tween_property(sprite, "modulate:a", 1.0, duration * 0.25)
 		
-		# 3. Pop-in de escala: 0 -> ligeramente aumentado (1.15x) -> tamaño normal
+		# 3. Scale pop-in: 0 -> slightly enlarged (1.15x) -> normal size
 		var scale_tween: Tween = create_tween()
 		scale_tween.tween_property(sprite, "scale", final_scale * 1.15, duration * 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		scale_tween.tween_property(sprite, "scale", final_scale, duration * 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
 		
-		# 4. Arco parabólico y rebote
+		# 4. Parabolic arc and bounce
 		var jump_height: float = 20.0
 		var jump_tween: Tween = create_tween()
 		jump_tween.tween_property(sprite, "position:y", original_sprite_pos_y - jump_height, duration * 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
@@ -198,7 +204,7 @@ func _on_drop_animation_finished() -> void:
 	if sprite:
 		sprite.scale = _item_scale
 		sprite.modulate.a = 1.0
-	# Si el jugador ya estaba encima al aterrizar, se recoge automáticamente
+	# If the player was already on top when landing, it is picked up automatically
 	if not Engine.is_editor_hint() and is_inside_tree():
 		for body in get_overlapping_bodies():
 			if body.is_in_group("player") or body.name == "Player":

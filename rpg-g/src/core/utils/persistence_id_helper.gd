@@ -2,18 +2,18 @@
 class_name PersistenceIdHelper
 extends RefCounted
 
-## Utilidad estática para generar identificadores únicos, deterministas
-## y reproducibles de persistencia basados en la ruta de escena y jerarquía del nodo.
+## Static utility to generate unique, deterministic
+## and reproducible persistence identifiers based on the scene path and the node's hierarchy.
 ##
-## IMPORTANTE: El ID generado es estable entre ejecuciones porque se basa en
-## la ruta del archivo de escena y la posición jerárquica del nodo (NO en randi()).
+## IMPORTANT: The generated ID is stable across runs because it is based on
+## the scene file path and the node's hierarchical position (NOT on randi()).
 
 
 static func generate_id(node: Node, prefix: String = "") -> String:
 	if not node:
 		return ""
 
-	# 1. Identificador de escena raíz estable (basado en el archivo .tscn)
+	# 1. Stable root scene identifier (based on the .tscn file)
 	var scene_id: String = "scene"
 	var root: Node = node.owner
 	if not root and node.get_tree():
@@ -25,14 +25,14 @@ static func generate_id(node: Node, prefix: String = "") -> String:
 		elif not root.name.is_empty():
 			scene_id = root.name.to_snake_case()
 
-	# 2. Ruta jerárquica estricta dentro de la escena (garantiza unicidad entre hermanos)
+	# 2. Strict hierarchical path within the scene (guarantees uniqueness among siblings)
 	var rel_path: String = ""
 	if root and root != node:
 		rel_path = str(root.get_path_to(node))
 	else:
 		rel_path = str(node.get_path()) if node.is_inside_tree() else str(node.name)
 
-	# 3. Hash MD5 determinista de 8 caracteres (100% reproducible entre ejecuciones)
+	# 3. Deterministic 8-character MD5 hash (100% reproducible across runs)
 	var full_signature: String = "%s:%s" % [scene_id, rel_path]
 	var deterministic_hash: String = full_signature.md5_text().substr(0, 8)
 
@@ -40,12 +40,12 @@ static func generate_id(node: Node, prefix: String = "") -> String:
 	return "%s_%s_%s" % [scene_id, tag, deterministic_hash]
 
 
-## Clave de persistencia a usar en runtime.
-## Si [param explicit_id] tiene valor, el estado es permanente (se guarda en la partida).
-## Si está vacío, devuelve una clave "efímera" basada en la ruta del nodo: el estado dura
-## solo mientras el jugador siga en el nivel (WorldStateManager la limpia al cambiar de nivel).
-## Nunca asignes el resultado a la propiedad exportada persistence_id: en scripts @tool
-## quedaría guardado dentro de la escena.
+## Persistence key to use at runtime.
+## If [param explicit_id] has a value, the state is permanent (saved with the game).
+## If empty, returns an "ephemeral" key based on the node path: the state lasts
+## only while the player stays in the level (WorldStateManager clears it on level change).
+## Never assign the result to the exported persistence_id property: in @tool scripts
+## it would be saved inside the scene.
 static func runtime_key(node: Node, explicit_id: String) -> String:
 	if not explicit_id.is_empty():
 		return explicit_id
