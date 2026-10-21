@@ -129,7 +129,7 @@ To-do, not implemented yet (Diego's request, 18 Oct). Evaluate everything below 
 
 ### Tanda 1 del plan (13 Oct)
 - [x] Antídoto real con efecto de cura (`CureStatusEffect`, cura todos los estados).
-- [x] Sin sonidos dobles: se quitaron `sfx_player_invulnerable` y `sfx_enemy_stunned` del mismo frame que el daño.
+- [x] Sin sonidos dobles: se quitaron `sfx_player_invulnerable`, `sfx_enemy_stunned` y `sfx_enemy_invulnerable` del mismo frame que el daño.
 - [x] `AudioEntry.pitch_random` y `AudioEntry.cooldown` (0 por defecto; botones en `test_audio.tscn`).
 - [x] Backup `.bak` de cada slot y lectura del backup si la partida está dañada (`test_save_backup.tscn`).
 - [x] PR en borrador #5, #8, #13 y #14 cerrados.
