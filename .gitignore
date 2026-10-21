@@ -22,3 +22,7 @@ node_modules/
 rpg-g/src/overworld/dialogues/
 LevelApp/data/levelapp_proyecto.json
 design/Level_Prompts.md
+
+# Firebase deploy cache and DialogueApp local sync state (not versioned)
+.firebase/
+DialogueApp/data/godot_sync_state.json
