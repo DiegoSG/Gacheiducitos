@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusEffectData" format=3]
+
+[ext_resource type="Script" path="res://data/resource_types/status_effect_data.gd" id="1_5txg2"]
+
+[resource]
+script = ExtResource("1_5txg2")
+id = "test_speed_boost"
+display_name = "Acelerado (prueba)"
+hud_color = Color(0.95, 0.85, 0.2, 1)
+duration = 15.0
+speed_multiplier = 1.6
+tick_interval = 5.0
+health_per_tick = -1

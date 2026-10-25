@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://b00gcvs76527q"]
+
+[ext_resource type="Script" uid="uid://cdmyt7x3cb2em" path="res://src/minigames/mg_runner/mg_runner_obstacle.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dk41wealbqck6" path="res://icon.svg" id="2_icon"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_obs"]
+size = Vector2(44, 60)
+
+[node name="RunnerObstacle" type="Area2D" unique_id=74829103]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=12847291]
+position = Vector2(0, -30)
+scale = Vector2(0.35, 0.48)
+texture = ExtResource("2_icon")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=99281740]
+position = Vector2(0, -30)
+shape = SubResource("RectangleShape2D_obs")

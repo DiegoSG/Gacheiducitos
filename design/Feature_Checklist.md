@@ -2,43 +2,264 @@
 
 Este documento contiene la lista de funcionalidades y los puntos de control (checks) que deben cumplirse antes de dar una tarea por terminada.
 
-## 🟢 Core Engine (Completado/En proceso)
+## 🟢 Core Engine & Overworld (Completado/En proceso)
 - [x] Movimiento 8 direcciones (Referencia: `player.gd`)
-- [x] Cámara sin límites (Referencia: `overworld.tscn`)
+- [x] Cámara con límites por nivel y sincronización dinámica (Referencia: `bounded_camera.gd`)
+- [x] Colliders dinámicos y visualización en editor de bordes de nivel (Referencia: `world_boundary_manager.gd`)
+- [x] Manager de transiciones entre niveles con Fade, ArrivalSpawnPoints y LevelPortals (Referencia: `game_manager.gd` / `level_portal.gd` / `arrival_spawn_point.gd`)
+- [x] Estandarización de Grilla 60x60 px (`tileset_60x60.png`, `core_tileset.tres`)
+- [x] Plantilla de nivel limpia y autónoma (`template_level.tscn`) con Player y BoundedCamera integrados
+- [x] Plantilla de prototipado de niveles legacy (`prototype_template.tscn`)
+- [x] Auditoría integral: corrección de fugas de memoria, crashes en corrutinas, tipado estricto y optimización de código
+- [ ] TODO: Animación de salida del portal (el personaje se desplaza desde el portal hacia el punto de llegada / arrival point)
 - [x] Sistema de interacción base (Referencia: `actionable.gd`)
-- [x] Manager de transiciones (Referencia: `game_manager.gd`)
+- [x] Puertas vs Portales: modos `PORTAL` (toque directo) y `DOOR` (interacción manual)
+- [x] Lógica de Candados y Llaves en Puertas: comprobación con `Inventory`, consumo opcional de ítems y retroalimentación/diálogo de bloqueo
+- [x] Estados Dinámicos de Textura: vórtice activo para portales, puerta de madera para puertas abiertas, cadenas y candado para bloqueadas/desactivadas
+- [x] Sistema de Interruptores/Palancas (`SwitchInteractable`) y Activadores de Eventos
+- [x] Placas de Presión y Triggers de Entrada/Salida (`PressurePlate` & `GameTrigger.ON_ENTER_AND_EXIT`)
+- [x] Nuevos Recursos de Pipeline: `DoorAction` (bloquear/desbloquear/activar) y `DestroyNodeAction` (eliminar/desvanecer obstáculos)
+- [x] Sistema de Salud Unificado, Muerte, Checkpoints y Respawn (`PlayerStats`, `CheckpointLevel`, `ArrivalSpawnPoint.RespawnPoint` y reversión de persistencia con `WorldStateManager`)
+
+---
+
+## 📌 Registro de Checkpoints / Milestones
+
+### 🔖 Checkpoint — 28 de Agosto, 2026: *Overworld Core, Portales, Grilla 60x60 y Auditoría Integral*
+- **Sistemas completados y auditados:**
+  1. **Sistema de Portales y Spawns:** `LevelPortal` (salida/llegada) y `ArrivalSpawnPoint` con IDs únicos, validación de duplicados y atajo de debug F3.
+  2. **WorldBoundaryManager & BoundedCamera:** Edición visual de límites en el viewport del editor con `@tool`, redibujado de bordes, sincronización por señal con la cámara y generación de colisiones sólidas en tiempo de ejecución.
+  3. **Grilla Estándar:** Tileset nativo de 60x60 px (`tileset_60x60.png`) con colisiones configuradas en `core_tileset.tres`.
+  4. **Auditoría y Estabilidad:** 34 correcciones aplicadas (fugas de memoria eliminadas, `queue_free()`, protección de reentradas, desconexión de señales huérfanas, tipado fuerte estricto).
+  5. **Batería de Pruebas Automatizadas:** `test_portals_runner.gd`, `test_portals_transition.gd` y `test_camera_bounds_sync.gd` ejecutadas y pasando al 100%.
+
+### 🔖 Checkpoint — 3 de Septiembre, 2026: *Puertas, Eventos Dinámicos, IA Enemiga y Sistema de Loot*
+- **Sistemas completados y auditados:**
+  1. **Puertas y Candados:** `LevelPortal` con modos Portal y Puerta cerrada/bloqueada, requerimiento de llaves desde `Inventory`, consumo opcional y feedback con `DialogueManager`.
+  2. **Interactables y Triggers de Pipeline:** `SwitchInteractable` (palancas persistentes), `PressurePlate` (placas de presión), `DoorAction` y `DestroyNodeAction` conectados a `GameTrigger`.
+  3. **IA de Enemigos en Overworld:** `GenericEnemy` con máquina de estados (Idle, Chasing, Lose Target, Return), alertas globales en `GameManager` (`alert_state_changed`).
+  4. **Sistema de Recompensas y Loot:** `LootDropComponent` para entidades con porcentajes de drop de items y spawn de `PickupItem`.
+  5. **Batería de Pruebas Automatizadas:** `test_doors_and_events_runner.gd`, `test_alert_peace_system_runner.gd` y `test_enemy_loot_runner.gd` ejecutadas y pasando al 100%.
+
+### 🔖 Checkpoint — 3 de Septiembre, 2026: *Framework de Minijuegos, Congelamiento y Retorno Universal*
+- **Sistemas completados y auditados:**
+  1. **Framework y Ciclo de Vida (`MinigameBase`):** Clase base con recolección de recompensas en sesión (`add_reward`), señal desacoplada `game_finished` y congelamiento total de físicas/timers (`get_tree().paused = true`).
+  2. **Feedback Visual de Fin de Partida:** Pantalla desacoplada de Victoria/Derrota (`_result_ui`) con soporte para resoluciones dinámicas, desglose de loot, botón "Continuar" interactivo y atajos (`ESPACIO`, `ENTER`, `ESC`).
+  3. **Integración con Pipeline de Eventos:** Triggers unificados con `GameTrigger` + `MinigameAction` y prefab reutilizable `minigame_interactable.tscn`. Eliminación total de triggers legacy (`minigame_trigger.gd`).
+  4. **Retorno al Overworld y Spawns Condicionales:** `GameManager.complete_minigame()` realiza transferencia oficial de items al `Inventory` y retorno con `ScreenFader` a `win_spawn_id` o `lose_spawn_id`.
+  5. **Nivel de Pruebas Multi-Trigger (`test_minigame_flow.tscn`):** 5 triggers independientes configurados y validados para cada uno de los 5 minijuegos (`Catcher`, `Excavation`, `Runner`, `Smasher`, `Trampolin`).
+  6. **Estructura y Limpieza del Proyecto:** Eliminación de archivos temporales/autosaves, estandarización a `snake_case` y creación de la skill oficial `godot-project-structure`.
+  7. **Batería de Tests Automatizados:** `test_minigame_flow_runner.gd` ejecutada y validando el 100% de los flujos en Godot 4.6 headless.
+
+
+### 🔖 Checkpoint — 13 de Septiembre, 2026: *Ajustes de Minijuegos, Feedback Visual de Loot, Gamepad e Inventario del Jugador*
+- **Sistemas completados y auditados:**
+  1. **Feedback Visual de Loot y HUD del Jugador (`PlayerHUD`):**
+     * Sistema de iconos voladores (`LootFeedbackManager` y `LootFlyIcon`) con trayectoria parabólica/descendente hacia el icono del inventario.
+     * Activación automática al recolectar `PickupItem`, abrir cofres (`chest.gd`) o regresar victorioso de cualquier minijuego.
+     * Desacoplamiento total: `InventoryUI` ahora forma parte del `Player` a través de `PlayerHUD`, pausando el árbol de juego (`get_tree().paused = true`) al abrirse y reanudando al cerrarse.
+  2. **Soporte Nativo de Joystick / Gamepad:**
+     * Mapeo en `project.godot` de Stick Analógico Izquierdo, D-Pad, Botón A (Acción/Salto), Botón B (Cancelar/Agache), Botón X (Ataque), Botón Y (Inventario) y Botón Pause (Start).
+     * Integración total con Overworld (`player.gd`) y minijuegos.
+  3. **Ajustes de Minijuegos:**
+     * **Runner 2D:** Aceleración progresiva configurable (`speed_increase_interval`, `speed_increase_amount`), recarga de munición con distanciamiento progresivo (`ammo_spawn_initial_distance`, `ammo_spawn_distance_multiplier`, +1 bala), pool de ítems y separación inteligente contra solapamientos.
+     * **Catcher:** Retardo de 3.0 segundos en el suelo con parpadeo, recolección al caminar sobre el piso, pérdida de vida al expirar ítems críticos y pool de ítems.
+     * **Trampolín:** Ítems de inventario reposando físicamente sobre plataformas/trampolines (distintos a las monedas aéreas), recolectados por contacto directo.
+     * **Excavación:** Bombas ambientales con gravedad, deslizamiento y empuje horizontal que detonan en 3x3 al impactar suelo, obstáculos o jugador; bombas manuales estáticas colocadas con espacio sostenido (0.35s) con cuenta regresiva de 4s y radio letal de 3x3 que destruye terreno y causa muerte al jugador si se queda dentro; sustitución visible de tierra por ítems de inventario y munición de bomba manual si `deliver_items = true`.
+  4. **Guía de Creación de Niveles Overworld:**
+     * Creada `design/Guia_Creacion_Niveles.md` documentando paso a paso la creación de mapas desde cero usando `prototype_template.tscn` para el Vertical Slice.
 
 ## 🟡 Feature: Minijuego A (Excavación)
 - [x] Generador Procedimental (Autómatas Celulares) (Ref: `Minijuego_Supaplex.md`)
 - [x] Algoritmo de Validación de Conectividad (Flood Fill) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Reglas de "Riesgo vs Recompensa" (Colocación de items) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Perfiles de Nivel (Variación de densidades) (Ref: `Minijuego_Supaplex.md`)
 - [x] Motor de Grid y Lógica de Excavación (Ref: `Minijuego_Supaplex.md`)
 - [x] Gravedad de Piedras (Caída y Deslizamiento) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Sistema de Misión (Contador de Raíces / Rescate de NPC) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Generador de Loot (Monedas, Corazones) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Sistema de Bombas (Colocación y cuenta atrás) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Lógica de Explosión 3x3 (Detección de tiles destructibles) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Tipos de Muro (Irrompible vs Rompible) (Ref: `Minijuego_Supaplex.md`)
-- [ ] IA de Enemigo (Ciego/Sonido) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Lógica de Radio de Ruido (Excavación vs Bomba) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Sistema de Sigilo en Túneles Vacíos (Ref: `Minijuego_Supaplex.md`)
-- [ ] Sistema de Semilla Persistente (Mismo nivel al reintentar) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Temporizador de Nivel y Gestión de Vidas (Ref: `Minijuego_Supaplex.md`)
-- [ ] Mecánica de Trampas de Bloqueo (One-way) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Condición de Salida (Activación de puerta tras objetivo) (Ref: `Minijuego_Supaplex.md`)
-- [ ] Puente de Inventario (Transferencia de items al Overworld) (Ref: `Minijuego_Supaplex.md`)
+- [x] **Elementos Interactivos y Bombas:**
+  - [x] Bombas ambientales con física de gravedad, empuje y detonación 3x3 al impactar.
+  - [x] Bombas manuales con plantado estático (`ui_accept` sostenido 0.35s), cuenta atrás de 4s y explosión letal 3x3.
+  - [x] Tipos de bloque: Muros irrompibles y salida inmune a bombas.
+  - [x] Poblar terreno visible con ítems de inventario y munición de bombas manuales (`deliver_items`).
+- [ ] **Edición Manual de Niveles:**
+  - [ ] Soporte para cargar niveles prediseñados a mano en lugar de sólo procedimental.
+  - [ ] TileMap / Grid de tiles para "pintar" tierra, piedras, muros y objetos directamente desde el editor de Godot.
+- [ ] **Enemigos y Sigilo (Siguiente iteración):**
+  - [ ] IA de Enemigo ciego guiado por sonido (excavación vs explosiones).
+  - [ ] Sistema de sigilo en túneles vacíos.
 
-## 🟡 Feature: Minijuego B (Laberinto)
-- [ ] Shader de Niebla de Guerra / Sistema de Iluminación (Ref: `Minijuego_Laberinto.md`)
-- [ ] Generación de laberinto y cambio de muros fuera de cámara (Ref: `Minijuego_Laberinto.md`)
-- [ ] Sistema de recolección de objetos clave (Ref: `Minijuego_Laberinto.md`)
-- [ ] Lógica de "Bucle Espacial" (Screen Wraparound) (Ref: `Minijuego_Laberinto.md`)
-- [ ] IA de Enemigos (Drenado de luz) (Ref: `Minijuego_Laberinto.md`)
+## 🟢 Feature: Minijuego Runner (Estilo Dino 2D Side-Scroller) (Completado)
+- [x] **Mecánica Core 2D:**
+  - [x] Perspectiva lateral 2D (Side-scroller) con física de salto parabólico (`ui_up`/`ui_accept`/`Espacio`), caída rápida (*fast-fall*) y agache/slide (`ui_down`).
+  - [x] Conmutación limpia de colisionadores (Stand vs Duck) para pasar bajo obstáculos aéreos con legibilidad 100% intuitiva.
+  - [x] Scroll continuo de suelo con indicadores de velocidad y desplazamiento de pista.
+  - [x] Aumento progresivo de velocidad cada X metros (`speed_increase_interval`, `speed_increase_amount`).
+  - [x] Pickups de munición (+1 bala) con distancia creciente progresiva.
+  - [x] Generación procedural de obstáculos terrestres bajos (salto), aéreos suspendidos (agache) y enemigos frontales.
+  - [x] Condiciones de victoria configurables: Por Distancia (`WIN_BY_DISTANCE`) o por Objeto Clave (`WIN_BY_OBJECT`) con rango aleatorio `[min, max]`.
+  - [x] Catálogo y patrones rítmicos de monedas: Líneas de 1, 2, 3 o 4 monedas, patrón en V y patrón en V invertida (arco parabólico de salto).
+  - [x] Anti-solapamiento inteligente para asegurar legibilidad en carrera.
+  - [x] Aparición de ítems aleatorios del pool de inventario con recolección directa hacia `MinigameBase.add_reward()`.
+  - [x] Integración completa con la escena unificada de pruebas `test_minigame_flow.tscn` y suite automatizada `test_runner_mechanics.gd`.
 
-## 🟡 Feature: Minijuego C (Ritmo)
-- [ ] Metrónomo sincronizado (AudioServer BPM) (Ref: `Minijuego_Ritmo.md`)
-- [ ] Buffer de entrada y validación de timing (Ref: `Minijuego_Ritmo.md`)
-- [ ] Validador de secuencias de comandos (Símbolos/Inputs) (Ref: `Minijuego_Ritmo.md`)
-- [ ] Máquina de estados de multiplicadores/power-ups (Ref: `Minijuego_Ritmo.md`)
-- [ ] Feedback visual de pulso y comandos (Ref: `Minijuego_Ritmo.md`)
+## 🟡 Feature: Minijuego Trampolín (Sistema de Temas e Ítems)
+- [x] Ítems de inventario reposando sobre plataformas y trampolines (recolección por contacto físico).
+- [ ] **Sistema de Temas Visuales:**
+  - [ ] Selector/recurso de tema para intercambiar fondos dinámicamente (cielo, noche, espacio, cueva).
+  - [ ] Variaciones de textura/estilo para las plataformas según el tema activo.
+  - [ ] Balance de tipos de plataformas (estáticas, móviles, rebotadoras frágiles).
+
+## 🟡 Feature: Minijuego Smasher (Temas y Puntos de Salida/Entrada)
+- [ ] **Sistema de Temas Visuales:**
+  - [ ] Fondos intercambiables por configuración/recurso.
+  - [ ] Personalización temática de los puntos / dianas a golpear.
+- [ ] **Puntos de Entrada y Salida Configurables:**
+  - [ ] Definición explícita de spawners (puntos de entrada de dianas) y zonas de escape/salida.
+
+## 🟡 Feature: Minijuego Catcher (Temas, Balances y Suelo)
+- [x] Retardo de permanencia de ítems en el suelo (3.0s) con parpadeo visual.
+- [x] Recolección de ítems en el suelo por contacto del jugador.
+- [x] Penalización de vida inmediata al expirar ítems críticos en el suelo.
+- [x] Pool de recompensas de inventario configurable.
+- [ ] **Sistema de Temas Visuales:**
+  - [ ] Fondos intercambiables por configuración/recurso.
+
+## 🟢 Feature: Feedback de Loot, Cofres y Minijuegos (LootToastStack) (Completado)
+- [x] **Notificaciones Tipo Toast al Lado del Inventario (`LootToastStack`):**
+  - [x] Al recoger `PickupItem`, abrir cofre (`chest.gd`) o finalizar minijuego (`MinigameBase.add_reward`), desplegar inmediatamente una fila de toast junto a la mochila.
+  - [x] Estructura visual limpia: `[Icono] x N [Nombre]` con fondo oscuro semi-transparente y bordes redondeados.
+  - [x] Apilamiento dinámico: Ítems idénticos o monedas consecutivas incrementan el contador (`x 1` -> `x 2`) con un scale punch visual y reinician el temporizador a 2.5s sin duplicar filas.
+  - [x] Soporte completo de Monedas de Oro (`gold_coins`) mostrando `[🪙] Monedas de Oro x N` y apilándose automáticamente.
+  - [x] Eliminación de la animación de iconos voladores cruzando la pantalla para evitar polución visual y dar feedback instantáneo.
+  - [x] Temporizador de permanencia de 2.5s con desvanecimiento suave (fade-out de opacidad) y limpieza automática de memoria.
+- [ ] **TODO Diseño de UI (Tarea Asignada para Sesión de Diseño):**
+  - [ ] Asignar lugares definitivos a todos los elementos del HUD (esquinas, slots, área dedicada del inventario y barra de accesos).
+  - [ ] Diseño de menú/barra de acceso rápido (Hotbar / Quick-access).
+
+## 🟢 Feature: Arquitectura de Inventario Unificado y Control de Pausa (Completado)
+- [x] **Desacoplamiento de Niveles e Integración al Player:**
+  - [x] Mover `InventoryUI` para que forme parte del `Player` mediante el componente `PlayerHUD`.
+  - [x] Eliminada la necesidad de instanciar `InventoryUI` a mano en los niveles (limpiado en `overworld.tscn`).
+  - [x] **Pausa de Juego:** Pausar el árbol de nodos (`get_tree().paused = true`) al abrir el inventario (`toggle_inventory()`) y reanudar al cerrar (`process_mode = PROCESS_MODE_ALWAYS` para el menú).
+- [ ] **Menú de Acceso Rápido (Hotbar):** Barra persistente para uso rápido de consumibles o llaves en Overworld (vinculada a la tarea de diseño de UI).
+
+## 🟢 Feature: Soporte Nativo para Joystick / Gamepad (Completado)
+- [x] Mapeo completo en `InputMap` (D-Pad y Stick analógico izquierdo para movimiento de jugador con deadzone).
+- [x] Botones de interacción (Cruz/A para interactuar y saltar, Círculo/B para cancelar y deslizarse, Cuadrado/X para atacar y disparar, Triángulo/Y para inventario, Botón Start para pausar).
+- [x] Soporte en todos los minijuegos y Overworld.
+
+---
+
+## 🎯 Próximo Gran Hito: Vertical Slice & Guía Paso a Paso de Creación de Niveles
+- [x] **Documentación Guía de Creación de Niveles Overworld Paso a Paso:**
+  - [x] Creada `design/Guia_Creacion_Niveles.md` cubriendo la creación desde `prototype_template.tscn`, configuración de colisiones, portales, puertas con llave, cofres, drops de enemigos, triggers de minijuegos y NPCs con diálogos.
+- [ ] Creación manual guiada de dos niveles interconectados como demostración del Vertical Slice (realizada por el usuario siguiendo la guía).
+
+---
+
+## 📌 Milestone: Diseño Técnico de Misiones para Minijuegos (Framework de 4 Capas)
+- [x] **Framework de 4 Capas Documentado (`docs/design/misiones/00-sistema-general.md`):**
+  - [x] Core loop, Modificadores de sesión, Objetivo de misión (3 estrellas) y Gancho narrativo.
+  - [x] Estandarización de `MissionDefinition` con integración a `GameManager`, `NarrativeManager`, `Inventory` e `ItemDatabase`.
+  - [x] Especificación técnica del sistema de feedback visual de loot en HUD (`LootToastStack` junto al icono de inventario, `[Icono] x N`, 2.5s con fade-out).
+- [x] **Documentación Técnica Específica por Minijuego:**
+  - [x] Smasher (`docs/design/misiones/01-smasher.md`): Whack-a-mole, bichos blindados/trampa, misiones de precisión y gaps técnicos identificados.
+  - [x] Excavación (`docs/design/misiones/02-excavacion.md`): Física de rocas/bombas, medidor de oxígeno/pasos, misiones de extracción y rescate.
+  - [x] Runner (`docs/design/misiones/03-runner.md`): Rutas altas/bajas, enemigos con reacción estricta, checkpoints narrativos y escolta.
+  - [x] Catcher (`docs/design/misiones/04-catcher.md`): Viento lateral, contenedor dual, checklist de ingredientes y misiones defensivas.
+  - [x] Trampolín (`docs/design/misiones/05-trampolin.md`): Plataformas móviles/quebradizas/resorte, cumbres fijas y restricciones de ruta.
+
+---
+
+### 🔖 Checkpoint — 14 de Septiembre, 2026: *Integración Visual de Personaje en Minijuegos, Arañas en Smasher y Llaves de Inventario en Portales*
+- **Sistemas y Mejoras Implementadas:**
+  1. **Integración del Nuevo Player en Minijuegos:**
+     - `MG_Catcher`: Reemplazo del placeholder de icono por `player_down.png` y cambio dinámico a `player_side.png` con `flip_h` según el desplazamiento horizontal.
+     - `MG_Runner`: Reemplazo del placeholder por `player_side.png` orientado al frente de carrera, eliminación de tintes de color (`modulate = Color.WHITE`) y ajuste de escala a colisiones de carrera y agache.
+     - `MG_Trampolín`: Integración del nuevo sprite del personaje respondiendo con `player_up.png`, `player_down.png` y `player_side.png` (`flip_h`) según fase de salto y movimiento lateral.
+     - `MG_Excavación`: Renderizado directo de la textura `player_down.png` en la celda del jugador en sustitución de las figuras primitivas.
+  2. **MG_Smasher — Reemplazo de Puntos por Arañas:**
+     - Sustitución de `icon_red.png` por el sprite oficial `spider_enemy.png`.
+     - Calibración de la rotación y orientación angular ($-\pi/2$) para que la cabeza y cuerpo de la araña apunten hacia adelante a lo largo de su trayectoria curva.
+  3. **Sistema de Portales y Puertas con Llave (`LevelPortal`):**
+     - Nueva propiedad `@export var key: ItemData` en inspector para arrastrar y soltar recursos de llave (`.tres`).
+     - Activación automática de `is_locked = true` al asignar un ítem llave.
+     - Soporte para consumo opcional del ítem (`consume_key: bool`) descontando 1 unidad de `Inventory` si está activado, o conservándolo si no.
+     - Actualización visual automática y emisión de señales `unlocked` / `locked`.
+  4. **Resolución de Conflictos de Cámara:**
+     - Eliminación de nodos duplicados obsoletos `Camera2D` bajo `Player` en los niveles del overworld, permitiendo que el `Player` gestione de manera autónoma su propia `BoundedCamera`.### 🔖 Checkpoint — 21 de Septiembre, 2026: *Salud Unificada, Muerte y Respawn con Checkpoints, HUD Retro, Combate Equilibrado y Limpieza de Taxonomía*
+- **Sistemas y Mejoras Implementadas:**
+  1. **Sistema de Salud, Muerte y Checkpoints de Nivel:**
+     - `PlayerStats`: Salud reestructurada a valores enteros (`max_health = 4`, `health = 4`), emisión de `player_died` al llegar a 0. Métodos `create_snapshot()` y `restore_snapshot()`.
+     - `CheckpointLevel`: Componente marcador que define qué nivel actúa como zona segura y punto de control.
+     - `GameManager`: Registro de checkpoints, captura de snapshots de estado al entrar a cada nivel, y secuencia de `respawn_player()` que revierte los cambios del nivel actual en `WorldStateManager` y restaura estadísticas e inventario al checkpoint activo en el spawn `RespawnPoint`.
+     - `Inventory` y `WorldStateManager`: Snapshots y reversión coordinada del estado del mundo y objetos perdidos tras morir.
+  2. **Combate, Knockback e Invulnerabilidad:**
+     - Desacoplamiento de daño y retroceso: El jugador siempre sufre knockback hacia atrás al ser impactado, incluso durante el estado de invulnerabilidad temporal (i-frames).
+     - Daño continuo periódico en colisiones (`continuous_damage` y `attack_rate = 0.6s` en `HitboxComponent`) para que los enemigos continúen atacando si el jugador permanece dentro de su rango.
+     - Inamovilidad de enemigos: Configuración en `CharacterBody2D.MOTION_MODE_FLOATING` para impedir que el jugador empuje físicamente a los enemigos caminando contra ellos.
+     - Daño de enemigos expuesto y configurable (`@export var attack_damage: int = 1`).
+  3. **PlayerHUD Retro (Barritas y Oro):**
+     - Barra de salud dinámica por pips/barritas verticales verdes que se apagan al sufrir daño y se expanden automáticamente si la vida máxima aumenta.
+     - Contador de oro integrado (`🪙 [oro]`) sincronizado por señales en tiempo real.
+  4. **Higiene, Limpieza y Reorganización de Taxonomía:**
+     - Eliminación de niveles sandbox obsoletos; `Lvl01.tscn` establecido como escena principal inicial en `project.godot`.
+     - Purgado de la carpeta `src/shared/`, reubicando componentes a `src/core/components/`, enemigos a `src/overworld/enemies/` y NPCs a `src/overworld/npcs/`.
+     - Eliminación del HUD legacy (`src/ui/hud/`) y scripts obsoletos en `tools/`.
+     - Batería de pruebas automatizadas activas al 100%: `test_death_and_respawn_runner.gd`, `test_knockback_continuous_runner.gd` y `test_player_hud_runner.gd`.
+
+### 🔖 Checkpoint — 22 de Septiembre, 2026: *Modularización de GameManager, Desacoplamiento de Autoloads e Higiene Asíncrona*
+- **Sistemas y Mejoras Implementadas:**
+  1. **Desacoplamiento Modular de `GameManager`:**
+     - `AlertSystem` (`src/core/alert_system.gd`): Extraído como Autoload dedicado para gestión de perseguidores (`_active_pursuers`), estados de paz/alerta (`PEACE`/`ALERT`) y señal `alert_state_changed`.
+     - `CheckpointManager` (`src/core/checkpoint_manager.gd`): Extraído como Autoload dedicado para captura de snapshots de nivel (`register_level_entry`), restauración de estadísticas, inventario y ejecución de `respawn_player()`.
+     - `GameManager` (`src/core/game_manager.gd`): Reducido y enfocado estrictamente a transiciones de escena, orquestación de minijuegos y eventos globales.
+  2. **Resolución de Conflictos de Autoloads e Inferencia de Tipos:**
+     - Eliminación de colisiones `class_name` en singletons de autoload (`GameManager`, `Inventory`, `PlayerStats`, `ItemDatabase`, `NarrativeManager`, `WorldStateManager`, `AlertSystem`, `CheckpointManager`).
+     - Migración transversal de accesos hardcodeados (`get_node_or_null("/root/...")`) a acceso directo inferido (`var stats := PlayerStats`).
+  3. **Correcciones de Concurrencia y Estabilidad Asíncrona:**
+     - Protección contra crashes en temporizadores asíncronos mediante guard `is_instance_valid(self)` en `generic_enemy.gd`, `dummy_npc.gd` y `player.gd`.
+     - Prevención de soft-locks en `GameTrigger` con timeout de 10s y limpieza automática de conexiones con `CONNECT_ONE_SHOT`.
+     - Prevención de colisiones de estado en recursos compartidos duplicando instancias dinámicamente (`act.duplicate()`).
+     - Desacoplamiento mediante señal `game_won` en `mg_trampolin_player.gd`.
+
+### 🔖 Checkpoint — 24 de Septiembre, 2026: *Persistencia Total, Sistema de Slots (4 Manuales + Autosave) y Gestión en Menú Tab*
+- **Sistemas y Mejoras Implementadas:**
+  1. **Persistencia Manual, Autosave y Efímera:**
+     - `SaveSystem`: Soporte para serialización JSON completa (`world_state`, `narrative`, `inventory`, `player_stats`, `level`).
+     - Desacoplamiento de persistencia efímera en `WorldStateManager` con `clear_ephemeral_states()` al cambiar de nivel.
+  2. **Sistema Visual de Múltiples Slots (`SaveMenuUI` & `SaveSlotUI`):**
+     - Integración simétrica en `InventoryUI` al abrir con tecla `TAB` (Save Menu a la izquierda, Inventario a la derecha).
+     - 4 Slots manuales con acciones independientes de Guardar, Cargar y Borrar.
+     - 1 Slot dedicado para el último Autoguardado (solo Cargar).
+     - Previsualización reactiva de metadatos (Ubicación/Nivel, Fecha/Hora, HP actual/máximo y Monedas de Oro).
+     - Borrado seguro de archivos de guardado en `user://` con actualización en tiempo real a `[Ranura Vacía]`.
+     - Corrección preventiva de árbol pausado (`get_tree().paused = false`) al solicitar carga de partida durante la pausa.
+  3. **Lógica Estricta de Autoguardado Orgánico:**
+     - `CheckpointManager`: Calibración del contador de frecuencia (3 puertas) excluyendo boot inicial, cargas de partida, respawn por muerte y retornos de minijuegos.
+  4. **Batería de Pruebas Automatizadas:**
+     - Escena y runner `test_save_slots_menu_runner.gd` para validación de estructura de slots y estado del botón de autosave.
+
+### 🔖 Checkpoint — 25 de Septiembre, 2026: *Autoguardado Orgánico Directo y Excepciones por Nivel (`LevelExceptionConfig`)*
+- **Sistemas y Mejoras Implementadas:**
+  1. **Componente Modular de Excepción de Nivel (`LevelExceptionConfig`):**
+     - Añadido componente para niveles con flags de configuración: `disable_autosave`, `respawn_level_path` y `respawn_spawn_id`.
+     - Especialmente diseñado para salas de Jefes (Bosses) y zonas donde no se deba sobrescribir el autoguardado en disco ni reaparecer dentro de la arena.
+  2. **Refactor de Autoguardado en `CheckpointManager`:**
+     - Eliminación del umbral/contador (`checkpoints_until_autosave` y `_checkpoints_passed_count`).
+     - Autoguardado automático en cada cambio orgánico de nivel salvo que exista excepción activa (`disable_autosave = true`).
+     - Respawn dinámico con `spawn_id` hacia el nivel configurado cuando el jugador muere dentro de una zona de excepción.
+  3. **Higiene y Limpieza de Código:**
+     - Corrección de advertencia `UNUSED_PARAMETER` para `_slot_id` en `save_menu_ui.gd`.
+     - Batería de pruebas automatizadas: `test_level_exception.tscn` / `test_level_exception.gd` (10/10 tests pasados).
+
+---
+
+## 📌 Tareas Pendientes: UI/HUD y Vertical Slice
+- [ ] **Diseño y Posicionamiento Definitivo del HUD:**
+  - [ ] Asignar lugares definitivos a todos los elementos del HUD (esquinas, slots, área dedicada del inventario y barra de accesos).
+  - [ ] Menú / Barra de acceso rápido (Hotbar).
+- [ ] **Minijuegos y Overworld:**
+  - [ ] Temas visuales para Trampolín, Smasher y Catcher.
+  - [ ] Editor manual de niveles y enemigos con sigilo en Excavación.
+  - [ ] Animación de salida de portal.
+  - [ ] Construcción de los 2 niveles interconectados para Vertical Slice.
+

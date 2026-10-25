@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/core/pipeline/game_trigger.gd" id="1_trigger"]
+[ext_resource type="Texture2D" path="res://assets/sprites/icon_blue.png" id="2_icon"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_Interaction"]
+size = Vector2(80, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_Physics"]
+size = Vector2(60, 40)
+
+[node name="MinigameInteractable" type="Area2D"]
+collision_layer = 16
+collision_mask = 2
+script = ExtResource("1_trigger")
+trigger_mode = 3
+one_shot = false
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_icon")
+
+[node name="InteractionArea" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_Interaction")
+
+[node name="ObstacleBody" type="StaticBody2D" parent="."]
+
+[node name="PhysicsCollision" type="CollisionShape2D" parent="ObstacleBody"]
+shape = SubResource("RectangleShape2D_Physics")

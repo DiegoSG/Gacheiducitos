@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bh4box6poomqx"]
+
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://boc4i3o1a4rbq" path="res://assets/items/icons/gold_coins.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = "gold_coins"
+name = "Monedas de Oro"
+value = 50
+icon = ExtResource("2_icon")
+description = "La moneda estándar utilizada en todo el reino."

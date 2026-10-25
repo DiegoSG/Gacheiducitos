@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/ui/inventory/test_inventory_ui_runner.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://inventory_ui_basic" path="res://src/ui/inventory/inventory_ui.tscn" id="2_inventory"]
+
+[node name="TestInventoryUI" type="Node"]
+script = ExtResource("1_script")
+
+[node name="InventoryUI" parent="." instance=ExtResource("2_inventory")]

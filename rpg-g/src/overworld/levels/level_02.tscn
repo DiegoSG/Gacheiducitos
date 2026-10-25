@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://peos64ed3b6n"]
+
+[ext_resource type="Script" uid="uid://d124nfigeyycg" path="res://src/overworld/components/world_boundary_manager.gd" id="1_b2d7p"]
+[ext_resource type="TileSet" uid="uid://3iu6iu1phx5f" path="res://assets/sprites/core_tileset.tres" id="2_ehqxv"]
+[ext_resource type="PackedScene" uid="uid://d1g4k72msu8ab" path="res://src/overworld/components/level_portal.tscn" id="3_0pt0e"]
+[ext_resource type="Script" uid="uid://b24wrgfyi41x2" path="res://src/overworld/components/arrival_spawn_point.gd" id="3_1hs2r"]
+[ext_resource type="PackedScene" uid="uid://be3dgr8tc2bii" path="res://src/overworld/player/player.tscn" id="4_yhaya"]
+
+[node name="TemplateLevel" type="Node2D" unique_id=187744379]
+y_sort_enabled = true
+
+[node name="WorldBoundaryManager" type="Node2D" parent="." unique_id=404598349]
+script = ExtResource("1_b2d7p")
+width = 1920.0
+height = 1080.0
+
+[node name="Environment" type="Node2D" parent="." unique_id=1173616031]
+
+[node name="GroundLayer" type="TileMapLayer" parent="Environment" unique_id=1228967790]
+tile_set = ExtResource("2_ehqxv")
+
+[node name="DetailLayer" type="TileMapLayer" parent="Environment" unique_id=2064264625]
+tile_set = ExtResource("2_ehqxv")
+
+[node name="PropsLayer" type="TileMapLayer" parent="Environment" unique_id=1702730148]
+y_sort_enabled = true
+tile_set = ExtResource("2_ehqxv")
+
+[node name="SpawnPoints" type="Node2D" parent="." unique_id=1674647729]
+position = Vector2(-8, 24)
+
+[node name="ArrivalSpawnPoint" type="Marker2D" parent="SpawnPoints" unique_id=875361763]
+position = Vector2(252, 475)
+script = ExtResource("3_1hs2r")
+arrival_id = "RespawnPoint"
+metadata/_custom_type_script = "uid://b24wrgfyi41x2"
+
+[node name="Entities" type="Node2D" parent="." unique_id=1700418367]
+y_sort_enabled = true
+
+[node name="Portals" type="Node2D" parent="." unique_id=265911282]
+
+[node name="LevelPortal" parent="Portals" unique_id=1271243254 instance=ExtResource("3_0pt0e")]
+position = Vector2(917, 60)
+target_level_path = "uid://c36bmb6bwvii2"
+exit_id = "1"
+arrival_id = "1"
+
+[node name="Player" parent="." unique_id=1441524907 instance=ExtResource("4_yhaya")]
+position = Vector2(122, 130)

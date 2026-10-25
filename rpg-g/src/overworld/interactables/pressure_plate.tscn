@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/overworld/interactables/pressure_plate.gd" id="1_plate"]
+[ext_resource type="Texture2D" path="res://assets/sprites/pressure_plate.svg" id="2_tex"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_trigger"]
+size = Vector2(60, 60)
+
+[node name="PressurePlate" type="Area2D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_plate")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_trigger")

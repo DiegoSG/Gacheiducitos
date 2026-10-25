@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c1q8p5u1m7x3b"]
+
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/items/icons/blue_potion.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = "blue_potion"
+name = "Poción Azul"
+rarity = 0
+value = 50
+icon = ExtResource("2_icon")
+description = "Una poción de color azulado. Restaura energía."
+type = 0
+stackable = true
+item_scale = Vector2(1, 1)
+collision_type = 0
+circle_radius = 16.0
+rectangle_size = Vector2(32, 32)
+capsule_height = 30.0
+capsule_radius = 10.0
+collision_offset = Vector2(0, 0)

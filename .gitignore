@@ -1,0 +1,19 @@
+# Godot ignores
+rpg-g/.godot/
+rpg-g/android/
+
+# Editor and temporary files
+*~
+*.swp
+*.swo
+*.bak
+*.tmp
+.*-autosave.*
+.directory
+.DS_Store
+Thumbs.db
+node_modules/
+
+
+# Claude Code (configuración local por usuario)
+.claude/settings.local.json

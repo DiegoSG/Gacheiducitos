@@ -1,0 +1,14 @@
+~ loot
+
+{{loot_message}}
+=> END
+
+~ empty
+
+El cofre está vacío.
+=> END
+
+~ closed
+
+Has cerrado el cofre.
+=> END

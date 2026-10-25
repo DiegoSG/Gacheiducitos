@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://calufyrq5ej38"]
+
+[ext_resource type="Script" uid="uid://des3f5n5boxxj" path="res://data/resource_types/item_effects/item_effect.gd" id="1_4cqw0"]
+[ext_resource type="Script" uid="uid://ccn1xnjwt8nu5" path="res://data/resource_types/item_effects/apply_status_effect.gd" id="2_g7yio"]
+[ext_resource type="Resource" path="res://data/status_effects/test_speed_boost.tres" id="3_j7gna"]
+[ext_resource type="Texture2D" uid="uid://b41ntyk5vgp7f" path="res://assets/items/icons/bread.png" id="4_u22b3"]
+[ext_resource type="Script" uid="uid://gxnofao3cicd" path="res://data/resource_types/item_data.gd" id="5_n67nq"]
+
+[sub_resource type="Resource" id="Resource_0ah6e"]
+script = ExtResource("2_g7yio")
+status = ExtResource("3_j7gna")
+
+[resource]
+script = ExtResource("5_n67nq")
+id = "test_speed_boost"
+name = "Impulso (test)"
+icon = ExtResource("4_u22b3")
+description = "Placeholder de prueba."
+consumable = true
+effects = Array[ExtResource("1_4cqw0")]([SubResource("Resource_0ah6e")])

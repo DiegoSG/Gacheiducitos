@@ -1,3 +1,14 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Editor and Tooling temporary files
+*~
+*.swp
+*.swo
+*.bak
+*.tmp
+.*-autosave.*
+.directory
+.DS_Store
+Thumbs.db

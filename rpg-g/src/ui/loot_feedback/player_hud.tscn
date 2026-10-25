@@ -1,0 +1,122 @@
+[gd_scene format=3 uid="uid://buh6h4w8o8fef"]
+
+[ext_resource type="Script" uid="uid://o0m7o4iew46s" path="res://src/ui/loot_feedback/loot_feedback_manager.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/inventory/inventory_ui.tscn" id="2_inv_ui"]
+[ext_resource type="PackedScene" path="res://src/ui/menus/pause_controller.tscn" id="3_pause"]
+[ext_resource type="PackedScene" path="res://src/ui/map/map_controller.tscn" id="4_map"]
+[ext_resource type="Script" path="res://src/ui/map/map_discoverer.gd" id="5_disc"]
+
+[node name="PlayerHUD" type="CanvasLayer" unique_id=1848668979]
+layer = 10
+script = ExtResource("1_script")
+
+[node name="TopLeftContainer" type="MarginContainer" parent="." unique_id=1861525280]
+offset_right = 300.0
+offset_bottom = 90.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TopLeftContainer" unique_id=1558803309]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HealthBarContainer" type="HBoxContainer" parent="TopLeftContainer/VBoxContainer" unique_id=36663730]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="StatusContainer" type="HBoxContainer" parent="TopLeftContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GoldContainer" type="HBoxContainer" parent="TopLeftContainer/VBoxContainer" unique_id=720970001]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CoinIcon" type="Label" parent="TopLeftContainer/VBoxContainer/GoldContainer" unique_id=1048349288]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "🪙"
+
+[node name="GoldLabel" type="Label" parent="TopLeftContainer/VBoxContainer/GoldContainer" unique_id=193112491]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "0"
+
+[node name="QuickbarContainer" type="HBoxContainer" parent="." unique_id=1906699606]
+custom_minimum_size = Vector2(300, 48)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -68.0
+offset_right = 150.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
+
+[node name="InventoryAnchor" type="Control" parent="." unique_id=1731602639]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -68.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 68.0
+grow_horizontal = 0
+pivot_offset = Vector2(24, 24)
+
+[node name="Panel" type="Panel" parent="InventoryAnchor" unique_id=55549724]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="InventoryAnchor" unique_id=583022054]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 20
+text = "🎒"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ToastContainer" type="VBoxContainer" parent="." unique_id=712685147]
+custom_minimum_size = Vector2(160, 0)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -320.0
+offset_top = 20.0
+offset_right = -80.0
+offset_bottom = 300.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="FXContainer" type="Control" parent="." unique_id=1501223272]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="InventoryUI" parent="." unique_id=474057248 instance=ExtResource("2_inv_ui")]
+
+[node name="PauseController" parent="." instance=ExtResource("3_pause")]
+
+[node name="MapController" parent="." instance=ExtResource("4_map")]
+
+[node name="MapDiscoverer" type="Node" parent="."]
+script = ExtResource("5_disc")

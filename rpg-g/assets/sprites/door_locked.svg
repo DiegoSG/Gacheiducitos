@@ -1,0 +1,16 @@
+<svg width="80" height="120" viewBox="0 0 80 120" xmlns="http://www.w3.org/2000/svg">
+  <rect x="4" y="4" width="72" height="112" rx="36" ry="36" fill="#2c1b18" stroke="#150d0c" stroke-width="4"/>
+  <rect x="8" y="30" width="64" height="86" fill="#2c1b18"/>
+  <path d="M 12 40 A 28 28 0 0 1 68 40 L 68 112 L 12 112 Z" fill="#422d27" stroke="#2c1b18" stroke-width="3"/>
+  <line x1="30" y1="16" x2="30" y2="112" stroke="#2c1b18" stroke-width="2"/>
+  <line x1="50" y1="16" x2="50" y2="112" stroke="#2c1b18" stroke-width="2"/>
+  <!-- Iron Chains crossing -->
+  <line x1="10" y1="30" x2="70" y2="100" stroke="#7f8c8d" stroke-width="6" stroke-dasharray="6,3"/>
+  <line x1="70" y1="30" x2="10" y2="100" stroke="#7f8c8d" stroke-width="6" stroke-dasharray="6,3"/>
+  <!-- Big Padlock in center -->
+  <path d="M 32 60 A 8 8 0 0 1 48 60 L 48 68 L 32 68 Z" fill="none" stroke="#bdc3c7" stroke-width="4"/>
+  <rect x="26" y="66" width="28" height="24" rx="4" fill="#f1c40f" stroke="#d68910" stroke-width="2"/>
+  <circle cx="40" cy="76" r="3" fill="#7d6608"/>
+  <polygon points="39,76 41,76 42,84 38,84" fill="#7d6608"/>
+  <rect x="0" y="112" width="80" height="8" rx="2" fill="#566573" stroke="#2c3e50" stroke-width="2"/>
+</svg>
