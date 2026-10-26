@@ -306,7 +306,6 @@ func _on_hit_received(damage: int, attack_direction: Vector2, knockback_force: f
 	
 	if has_iframes and iframe_duration > 0.0:
 		is_invulnerable = true
-		AudioManager.play_sfx_at(&"sfx_enemy_invulnerable", global_position)
 		
 		# Temporary blink visual effect (0.2s per full loop)
 		var blink_time: float = 0.1
