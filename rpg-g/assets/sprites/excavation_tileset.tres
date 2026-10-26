@@ -1,11 +1,9 @@
-[gd_resource type="TileSet" load_steps=3 format=3]
+[gd_resource type="TileSet" format=3 uid="uid://c0wrxu5p6lwq5"]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/excavation_tiles_placeholder.png" id="1_exc_tiles"]
+[ext_resource type="Texture2D" uid="uid://csk2hnk1v2r2d" path="res://assets/sprites/excavation_tiles_placeholder.png" id="1_exc_tiles"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_exc"]
 texture = ExtResource("1_exc_tiles")
-0:0/0 = 0
-0:0/0/custom_data_0 = 0
 1:0/0 = 0
 1:0/0/custom_data_0 = 1
 2:0/0 = 0

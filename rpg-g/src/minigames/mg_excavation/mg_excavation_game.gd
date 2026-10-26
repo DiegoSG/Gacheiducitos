@@ -60,7 +60,9 @@ var pending_falls: Dictionary = {} # "x,y" -> ticks_remaining (objects that want
 var player_bombs_ammo: int = 0
 var space_held_timer: float = 0.0
 const BOMB_PLANT_HOLD_TIME: float = 0.35
-var active_placed_bombs: Array = [] # Array[Dictionary]: [{"pos": Vector2i, "timer": 4.0}]
+# Seconds a bomb placed by the player takes to explode
+const PLACED_BOMB_FUSE_TIME: float = 3.0
+var active_placed_bombs: Array = [] # Array[Dictionary]: [{"pos": Vector2i, "timer": float}]
 var deliver_items: bool = false
 var item_pool: Array = []
 # Specific rewards of hand-placed items: Vector2i -> {"id": String, "amount": int}
@@ -238,7 +240,7 @@ func _try_plant_bomb() -> void:
 	player_bombs_ammo -= 1
 	active_placed_bombs.append({
 		"pos": player_grid_pos,
-		"timer": 4.0
+		"timer": PLACED_BOMB_FUSE_TIME
 	})
 	AudioManager.play_sfx(&"sfx_exc_bomb_plant")
 	AudioManager.play_sfx(&"sfx_exc_bomb_fuse")

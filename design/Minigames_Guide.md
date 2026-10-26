@@ -72,7 +72,7 @@ Para colocar un acceso a un minijuego en cualquier nivel del Overworld:
 #### Niveles pintados (editor por TileMap)
 * **`excavation_level_scene`** *(.tscn)*: nivel pintado a mano. Vacío = nivel procedural.
 * Crear una escena con raíz `ExcavationLevel` (`excavation_level.gd`) y un hijo `TileMapLayer` con `res://assets/sprites/excavation_tileset.tres`. Guardarla en `src/minigames/mg_excavation/levels/`.
-* Cada tile se reconoce por el custom data `excavation_tile` (valor de `TileType`): vacío, tierra, piedra, muro irrompible, muro rompible, ítem de misión, moneda, bomba, salida, ítem aleatorio del pool, pickup de bomba e inicio del jugador. Las celdas sin pintar son vacío.
+* Cada tile se reconoce por el custom data `excavation_tile` (valor de `TileType`): tierra, piedra, muro irrompible, muro rompible, ítem de misión, moneda, bomba, salida, ítem aleatorio del pool, pickup de bomba e inicio del jugador. Las celdas sin pintar son vacío.
 * Ítems a mano: nodos `ExcavationItemMarker` (por ejemplo bajo un `Items` en `(0, 0)`) con `item_id` y `amount`; se encajan a la celda y dan exactamente ese ítem.
 * `auto_border` rodea el área pintada con muro irrompible. `item_pool` del nivel reemplaza al de la acción.
 * El nodo raíz muestra warnings: sin inicio, varios inicios, sin salida, salida encerrada por muros irrompibles, markers fuera del área o sin `item_id`.
@@ -96,7 +96,7 @@ Para colocar un acceso a un minijuego en cualquier nivel del Overworld:
 2. **Bombas Manuales (Colocadas por el Jugador):**
    * El jugador recoge pickups de bomba en el mapa para ganar munición.
    * Al mantener presionado `ESPACIO` / `ui_accept` sin moverse (~0.35s), se coloca una bomba estática en la casilla del jugador.
-   * Cuenta regresiva de 4 segundos con pulso visual.
+   * Cuenta regresiva de 3 segundos con pulso visual.
    * **Lethal Radius:** Detona en un área de 3x3 destruyendo rocas y tierra (la salida y muros exteriores son indestructibles). Si el jugador está dentro del radio de 3x3 al explotar, muere aplastado/destruido.
 
 ---
