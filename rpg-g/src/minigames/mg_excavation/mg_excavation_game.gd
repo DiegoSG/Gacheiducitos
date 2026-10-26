@@ -40,6 +40,9 @@ var _step_sound_cooldown: float = 0.0
 
 # Reason _explode_at uses when chaining the explosion of other bombs
 const CHAIN_EXPLOSION_REASON: String = "EXPLOSIÓN EN CADENA"
+# Bombs caught by an explosion detonate after this delay, so chains propagate step by step (Supaplex style)
+const CHAIN_EXPLOSION_DELAY: float = 0.15
+var primed_bombs: Dictionary = {} # Vector2i -> seconds left before an ambient bomb explodes
 
 # Continuous movement system
 var move_timer: float = 0.0
@@ -181,8 +184,9 @@ func _process(delta: float) -> void:
 		queue_redraw()
 		return
 
-	# Process countdown of bombs placed by the player
+	# Process countdown of bombs placed by the player and of bombs caught in a chain
 	_update_placed_bombs(delta)
+	_update_primed_bombs(delta)
 
 	# Process bomb planting while space is held
 	_handle_bomb_planting(delta)
@@ -244,7 +248,6 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 	AudioManager.play_sfx(&"sfx_exc_chain_explosion" if _reason == CHAIN_EXPLOSION_REASON else &"sfx_exc_explosion")
 	# Destroy 3x3 area
 	var player_caught = false
-	var chain_explosions: Array[Vector2i] = []
 	
 	for dy in range(-1, 2):
 		for dx in range(-1, 2):
@@ -252,12 +255,13 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 			var ty = center_pos.y + dy
 			if _in_bounds(Vector2i(tx, ty)):
 				var t = grid[ty][tx]
-				# Chain if there is another ambient bomb
+				# Another ambient bomb is primed instead of destroyed: it explodes after a short delay
 				if (dx != 0 or dy != 0) and t == TileType.BOMBA:
-					chain_explosions.append(Vector2i(tx, ty))
-					
+					var bomb_pos: Vector2i = Vector2i(tx, ty)
+					if not primed_bombs.has(bomb_pos):
+						primed_bombs[bomb_pos] = CHAIN_EXPLOSION_DELAY
 				# The exit and indestructible borders are immune
-				if t != TileType.SALIDA and t != TileType.MURO_IRROMPIBLE:
+				elif t != TileType.SALIDA and t != TileType.MURO_IRROMPIBLE:
 					grid[ty][tx] = TileType.EMPTY
 					var key = str(tx) + "," + str(ty)
 					if falling_visuals.has(key):
@@ -265,23 +269,32 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 				if player_grid_pos == Vector2i(tx, ty):
 					player_caught = true
 					
-	# Remove manual bombs trapped in the explosion radius
-	var remaining_bombs: Array = []
+	# Manual bombs in the radius also join the chain
 	for b in active_placed_bombs:
 		if abs(b.pos.x - center_pos.x) <= 1 and abs(b.pos.y - center_pos.y) <= 1:
-			pass
-		else:
-			remaining_bombs.append(b)
-	active_placed_bombs = remaining_bombs
+			b.timer = minf(b.timer, CHAIN_EXPLOSION_DELAY)
 	
 	queue_redraw()
 	
-	# Run chain explosions
-	for next_bomb in chain_explosions:
-		_explode_at(next_bomb, CHAIN_EXPLOSION_REASON)
-	
 	if player_caught:
 		_player_crushed()
+
+func _update_primed_bombs(delta: float) -> void:
+	for bomb_pos: Vector2i in primed_bombs.keys():
+		if not primed_bombs.has(bomb_pos):
+			continue # Already detonated by another explosion this frame
+		primed_bombs[bomb_pos] -= delta
+		if primed_bombs[bomb_pos] <= 0.0:
+			_detonate_bomb_tile(bomb_pos, CHAIN_EXPLOSION_REASON)
+
+## Removes the ambient bomb at pos from the grid and explodes it.
+func _detonate_bomb_tile(pos: Vector2i, reason: String) -> void:
+	primed_bombs.erase(pos)
+	if grid[pos.y][pos.x] != TileType.BOMBA:
+		return
+	grid[pos.y][pos.x] = TileType.EMPTY
+	falling_visuals.erase(str(pos.x) + "," + str(pos.y))
+	_explode_at(pos, reason)
 
 func _interpolate_visuals(delta: float) -> void:
 	# Interpolate player
@@ -417,8 +430,10 @@ func _draw():
 			# Detail to show the rotation
 			draw_rect(Rect2(-CELL_SIZE/2.0 + 3, -CELL_SIZE/2.0 + 3, 4, 4), Color(0.7, 0.7, 0.7)) 
 		elif data.type == TileType.BOMBA:
-			# Ambient bomb (dark circle with fuse)
-			draw_circle(Vector2.ZERO, CELL_SIZE/2.0 - 2, Color(0.1, 0.1, 0.1))
+			# Ambient bomb (dark circle with fuse), red while primed by a chain
+			var coords = key.split(",")
+			var is_primed: bool = primed_bombs.has(Vector2i(int(coords[0]), int(coords[1])))
+			draw_circle(Vector2.ZERO, CELL_SIZE/2.0 - 2, Color(0.8, 0.1, 0.1) if is_primed else Color(0.1, 0.1, 0.1))
 			draw_circle(Vector2.ZERO, CELL_SIZE/4.0, Color(0.25, 0.25, 0.25))
 			draw_circle(Vector2(0, -CELL_SIZE/3.0), 2.5, Color(1.0, 0.3, 0.1))
 		elif data.type == TileType.ITEM_RECOMPENSA:
@@ -651,6 +666,10 @@ func _try_push_rock(rock_pos: Vector2i, direction: Vector2i) -> bool:
 		return false
 
 	var push_dest: Vector2i = rock_pos + direction
+
+	# A bomb about to explode can no longer be moved
+	if primed_bombs.has(rock_pos):
+		return false
 	
 	# Check bounds
 	if not _in_bounds(push_dest):
@@ -730,6 +749,9 @@ func _update_gravity():
 			if tile == TileType.PIEDRA or tile == TileType.ITEM_RECOMPENSA or tile == TileType.BOMBA:
 				var key = str(x) + "," + str(y)
 				if processed_this_tick.has(key):
+					continue
+				# Bombs about to explode stay in place until they detonate
+				if primed_bombs.has(Vector2i(x, y)):
 					continue
 				
 				var was_falling = falling_objects.has(key)
@@ -830,6 +852,13 @@ func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictio
 			_explode_at(Vector2i(x, y), "BOMBA AMBIENTAL IMPACTO")
 			result.moved = true
 			return result
+
+	# Anything that falls onto an ambient bomb makes it explode (the falling object is caught in the blast)
+	if was_falling and y + 1 < grid_height and grid[y + 1][x] == TileType.BOMBA:
+		AudioManager.play_sfx(&"sfx_exc_bomb_impact")
+		_detonate_bomb_tile(Vector2i(x, y + 1), "OBJETO CAYÓ SOBRE BOMBA")
+		result.moved = true
+		return result
 
 	# Rule 1: Direct fall if there is empty space below
 	if y + 1 < grid_height and grid[y + 1][x] == TileType.EMPTY:

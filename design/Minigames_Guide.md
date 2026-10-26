@@ -91,6 +91,8 @@ Para colocar un acceso a un minijuego en cualquier nivel del Overworld:
    * Tienen la misma física de gravedad y deslizamiento lateral que las piedras.
    * Se pueden empujar horizontalmente si el espacio contiguo está libre.
    * **Impacto:** Al caer y golpear cualquier superficie, obstáculo o al jugador, detonan en una explosión de 3x3 casillas.
+   * **Golpe desde arriba:** cualquier objeto que cae (roca, moneda, bomba) sobre una bomba ambiental la hace explotar.
+   * **Reacción en cadena:** una bomba alcanzada por una explosión no se destruye: queda "cebada" (se ve roja, no cae ni se puede empujar) y explota 0.15s después (`CHAIN_EXPLOSION_DELAY`), así la cadena avanza paso a paso como en Supaplex. Las bombas manuales dentro del radio también se suman a la cadena.
 2. **Bombas Manuales (Colocadas por el Jugador):**
    * El jugador recoge pickups de bomba en el mapa para ganar munición.
    * Al mantener presionado `ESPACIO` / `ui_accept` sin moverse (~0.35s), se coloca una bomba estática en la casilla del jugador.
