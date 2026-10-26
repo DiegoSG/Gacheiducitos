@@ -79,6 +79,10 @@ var input_stack: Array = [] # List of pressed directions, in order
 # Camera
 var camera: Camera2D = null
 
+# HUD on its own CanvasLayer so it stays on screen while the camera scrolls the level
+const HUD_FONT_SIZE: int = 18
+var hud_label: Label = null
+
 func _ready() -> void:
 	# Shared coin texture (with fallback) from MinigameBase
 	coin_texture = get_coin_texture()
@@ -114,6 +118,7 @@ func _ready() -> void:
 	
 	# Set up camera
 	_setup_camera()
+	_setup_hud()
 	
 	AudioManager.play_sfx(&"sfx_exc_start")
 	queue_redraw()
@@ -139,6 +144,17 @@ func _setup_camera() -> void:
 	camera.position_smoothing_speed = 10.0
 	
 	_update_camera_position()
+
+func _setup_hud() -> void:
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HudLayer"
+	add_child(hud_layer)
+	hud_label = Label.new()
+	hud_label.position = Vector2(16, 12)
+	hud_label.add_theme_font_size_override("font_size", HUD_FONT_SIZE)
+	hud_label.add_theme_constant_override("outline_size", 4)
+	hud_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	hud_layer.add_child(hud_label)
 
 func _update_camera_position() -> void:
 	if camera:
@@ -433,7 +449,8 @@ func _draw():
 	
 	var hud_text = "Bombas: %d | " % player_bombs_ammo + win_text
 	var debug_text = "Player: (" + str(player_grid_pos.x) + "," + str(player_grid_pos.y) + ") | " + hud_text
-	draw_string(ThemeDB.fallback_font, Vector2(10, 20), debug_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+	if hud_label:
+		hud_label.text = debug_text
 	
 	# DEBUG: Logic border for the player (grid)
 	if config.get("show_player_logic", false):
