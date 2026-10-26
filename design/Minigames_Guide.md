@@ -67,7 +67,7 @@ Para colocar un acceso a un minijuego en cualquier nivel del Overworld:
 | **`3`** | **Solo Salida** | Llegar a la salida; está abierta desde el inicio. | Salida en el mapa. |
 
 * **`excavation_require_exit`** *(bool, defecto `true`)*: con `true` hay que caminar a la salida después de cumplir el objetivo; con `false` se gana apenas se cumple (sin salida). `Solo Salida` siempre la exige.
-* Si una explosión destruye monedas o el ítem de misión y el objetivo ya no se puede cumplir, se pierde (cuidar las monedas es parte del puzzle). Si `target_amount` supera las monedas del nivel, se limita al total.
+* Las explosiones destruyen monedas y el ítem de misión sin descontarlos: cuidarlos es parte del puzzle. Si el objetivo queda imposible no se pierde automáticamente; el jugador decide rendirse desde la pausa. Si `target_amount` supera las monedas del nivel, se limita al total.
 
 #### Niveles pintados (editor por TileMap)
 * **`excavation_level_scene`** *(.tscn)*: nivel pintado a mano. Vacío = nivel procedural.

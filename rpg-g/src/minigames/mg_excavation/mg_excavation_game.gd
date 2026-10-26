@@ -266,8 +266,6 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 	
 	if player_caught:
 		_player_crushed()
-	else:
-		_fail_if_goal_impossible()
 
 func _interpolate_visuals(delta: float) -> void:
 	# Interpolate player
@@ -559,31 +557,6 @@ func _finish_if_goal_reached() -> void:
 	if not require_exit and _is_win_condition_met():
 		AudioManager.play_ui(&"sfx_exc_exit_open")
 		finish(true)
-
-## Explosions can destroy coins and the mission item; protecting them is part of the puzzle.
-## When the goal can no longer be met, the minigame is lost instead of leaving the player stuck.
-func _fail_if_goal_impossible() -> void:
-	if is_player_dead or _is_win_condition_met():
-		return
-	var possible: bool = true
-	match current_win_condition:
-		WinCondition.ALL_COINS, WinCondition.TARGET_AMOUNT:
-			possible = coins_collected + _count_tiles(TileType.ITEM_RECOMPENSA) >= target_coin_amount
-		WinCondition.SPECIFIC_ITEM:
-			possible = _count_tiles(TileType.ITEM_MISION) > 0
-	if possible:
-		return
-	is_player_dead = true
-	queue_redraw()
-	await get_tree().process_frame
-	AudioManager.play_ui(&"sfx_exc_lose")
-	finish(false)
-
-func _count_tiles(tile_type: int) -> int:
-	var count: int = 0
-	for row in grid:
-		count += row.count(tile_type)
-	return count
 
 func _try_move_player(direction: Vector2i) -> void:
 	var new_pos: Vector2i = player_grid_pos + direction
