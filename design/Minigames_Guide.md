@@ -70,6 +70,8 @@ Para colocar un acceso a un minijuego en cualquier nivel del Overworld:
 * Las explosiones destruyen monedas y el ítem de misión sin descontarlos: cuidarlos es parte del puzzle. Si el objetivo queda imposible no se pierde automáticamente; el jugador decide rendirse desde la pausa. Si `target_amount` supera las monedas del nivel, se limita al total.
 
 #### Niveles pintados (editor por TileMap)
+> Manual completo con la leyenda de íconos: `Editor_Niveles_Excavacion.md`.
+
 * **`excavation_level_scene`** *(.tscn)*: nivel pintado a mano. Vacío = nivel procedural.
 * Crear una escena con raíz `ExcavationLevel` (`excavation_level.gd`) y un hijo `TileMapLayer` con `res://assets/sprites/excavation_tileset.tres`. Guardarla en `src/minigames/mg_excavation/levels/`.
 * Cada tile se reconoce por el custom data `excavation_tile` (valor de `TileType`): tierra, piedra, muro irrompible, muro rompible, ítem de misión, moneda, bomba, salida, ítem aleatorio del pool, pickup de bomba e inicio del jugador. Las celdas sin pintar son vacío.
