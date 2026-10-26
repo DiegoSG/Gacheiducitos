@@ -80,9 +80,10 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
   - [x] Bombas manuales con plantado estático (`ui_accept` sostenido 0.35s), cuenta atrás de 4s y explosión letal 3x3.
   - [x] Tipos de bloque: Muros irrompibles y salida inmune a bombas.
   - [x] Poblar terreno visible con ítems de inventario y munición de bombas manuales (`deliver_items`).
-- [ ] **Edición Manual de Niveles:**
-  - [ ] Soporte para cargar niveles prediseñados a mano en lugar de sólo procedimental.
-  - [ ] TileMap / Grid de tiles para "pintar" tierra, piedras, muros y objetos directamente desde el editor de Godot.
+- [x] **Edición Manual de Niveles** (pendiente QA; ver `Propuesta_Editor_Niveles_Excavacion.md`):
+  - [x] Soporte para cargar niveles prediseñados a mano en lugar de sólo procedimental (`excavation_level_scene`).
+  - [x] TileMap / Grid de tiles para "pintar" tierra, piedras, muros y objetos directamente desde el editor de Godot (`ExcavationLevel` + `excavation_tileset.tres`, ítems a mano con `ExcavationItemMarker`).
+  - [x] Condición de victoria en la acción: monedas, solo salida o ambas (`excavation_require_exit`).
 - [ ] **Enemigos y Sigilo (Siguiente iteración):**
   - [ ] IA de Enemigo ciego guiado por sonido (excavación vs explosiones).
   - [ ] Sistema de sigilo en túneles vacíos.

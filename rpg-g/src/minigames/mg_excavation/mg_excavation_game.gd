@@ -24,6 +24,8 @@ var coins_collected: int = 0
 var mission_item_collected: bool = false
 var current_win_condition: int = WinCondition.ALL_COINS
 var target_coin_amount: int = 0
+# If false, the minigame is won as soon as the goal is met, without walking to the exit
+var require_exit: bool = true
 
 # Configuration received from the debug screen
 var config: Dictionary = {}
@@ -58,6 +60,8 @@ const BOMB_PLANT_HOLD_TIME: float = 0.35
 var active_placed_bombs: Array = [] # Array[Dictionary]: [{"pos": Vector2i, "timer": 4.0}]
 var deliver_items: bool = false
 var item_pool: Array = []
+# Specific rewards of hand-placed items: Vector2i -> {"id": String, "amount": int}
+var cell_items: Dictionary = {}
 
 # Textures
 var coin_texture: Texture2D = null
@@ -95,12 +99,13 @@ func _ready() -> void:
 	var s = config.get("escala", 1.5)
 	self.scale = Vector2(s, s)
 	
-	_initialize_grid()
-	_generate_level()
-	
 	# Initialize mission state from config
 	current_win_condition = config.get("win_condition", WinCondition.ALL_COINS)
 	target_coin_amount = config.get("target_amount", 5)
+	# Reaching the exit is the whole goal of EXIT_ONLY, so it can never be skipped
+	require_exit = config.get("require_exit", true) or current_win_condition == WinCondition.EXIT_ONLY
+
+	_load_level()
 	_count_total_coins()
 	
 	# Initialize visual positions
@@ -210,14 +215,14 @@ func _try_plant_bomb() -> void:
 	queue_redraw()
 
 func _update_placed_bombs(delta: float) -> void:
-	var remaining: Array = []
-	for b in active_placed_bombs:
+	# Iterate over a copy: _explode_at removes the bombs caught in its radius from the real list
+	for b in active_placed_bombs.duplicate():
+		if not active_placed_bombs.has(b):
+			continue
 		b.timer -= delta
 		if b.timer <= 0.0:
+			active_placed_bombs.erase(b)
 			_explode_at(b.pos, "BOMBA MANUAL")
-		else:
-			remaining.append(b)
-	active_placed_bombs = remaining
 
 func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 	AudioManager.play_sfx(&"sfx_exc_chain_explosion" if _reason == CHAIN_EXPLOSION_REASON else &"sfx_exc_explosion")
@@ -261,6 +266,8 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 	
 	if player_caught:
 		_player_crushed()
+	else:
+		_fail_if_goal_impossible()
 
 func _interpolate_visuals(delta: float) -> void:
 	# Interpolate player
@@ -276,6 +283,7 @@ func _interpolate_visuals(delta: float) -> void:
 
 func _handle_continuous_movement(delta: float) -> void:
 	_step_sound_cooldown = maxf(0.0, _step_sound_cooldown - delta)
+	_prune_released_directions()
 	var direction: Vector2i = Vector2i.ZERO
 	
 	if input_stack.size() > 0:
@@ -303,17 +311,24 @@ func _handle_player_action(direction: Vector2i) -> void:
 	else:
 		_try_move_player(direction)
 
-func _initialize_grid() -> void:
-	grid.clear()
-	for y in range(grid_height):
-		var row: Array = []
-		for x in range(grid_width):
-			row.append(TileType.EMPTY)
-		grid.append(row)
+## Loads the painted level from config "level_scene", or generates a procedural one.
+func _load_level() -> void:
+	var data: ExcavationLevelData = null
+	var level_scene: String = str(config.get("level_scene", ""))
+	if not level_scene.is_empty():
+		data = ExcavationLevelLoader.load_scene(level_scene)
+		if data == null:
+			push_warning("MG_ExcavationGame: falling back to a procedural level.")
+	if data == null:
+		data = LevelGenerator.generate_level(grid_width, grid_height, config)
 
-func _generate_level() -> void:
-	var LevelGen = load("res://src/minigames/mg_excavation/level_generator.gd")
-	grid = LevelGen.generate_level(grid_width, grid_height, config)
+	grid = data.grid
+	grid_width = data.size.x
+	grid_height = data.size.y
+	player_grid_pos = data.player_start
+	cell_items = data.cell_items
+	if not data.item_pool.is_empty():
+		item_pool = data.item_pool
 
 func _count_total_coins() -> void:
 	total_coins = 0
@@ -323,11 +338,11 @@ func _count_total_coins() -> void:
 				total_coins += 1
 	if current_win_condition == WinCondition.ALL_COINS:
 		target_coin_amount = total_coins
+	elif current_win_condition == WinCondition.TARGET_AMOUNT and target_coin_amount > total_coins:
+		push_warning("MG_ExcavationGame: target_amount %d is above the %d coins in the level; using %d." % [target_coin_amount, total_coins, total_coins])
+		target_coin_amount = total_coins
 
 func _draw():
-	if is_player_dead:
-		draw_rect(Rect2(0, 0, grid_width * CELL_SIZE, grid_height * CELL_SIZE), Color(0.3, 0, 0, 0.3))
-
 	# 1. Uniform base background for the whole level (avoids "gaps" under the rocks)
 	var total_size = Vector2(grid_width * CELL_SIZE, grid_height * CELL_SIZE)
 	draw_rect(Rect2(Vector2.ZERO, total_size), Color(0.1, 0.1, 0.15))
@@ -399,6 +414,10 @@ func _draw():
 		var sec_left = str(int(ceil(b.timer)))
 		draw_string(ThemeDB.fallback_font, b_world + Vector2(-3, 4), sec_left, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color.YELLOW)
 	
+	# Death tint over the level (drawn after the level so it is not covered)
+	if is_player_dead:
+		draw_rect(Rect2(0, 0, grid_width * CELL_SIZE, grid_height * CELL_SIZE), Color(0.3, 0, 0, 0.3))
+
 	# DEBUG / HUD: Show coordinates and progress
 	var win_text = ""
 	match current_win_condition:
@@ -408,8 +427,10 @@ func _draw():
 			win_text = "Monedas: %d/%d" % [coins_collected, target_coin_amount]
 		WinCondition.SPECIFIC_ITEM:
 			win_text = "Ítem Misión: %s" % ("SÍ" if mission_item_collected else "NO")
+		WinCondition.EXIT_ONLY:
+			win_text = "Llega a la salida"
 	
-	if _is_win_condition_met():
+	if _is_win_condition_met() and require_exit:
 		win_text += " [¡SALIDA ABIERTA!]"
 	
 	var hud_text = "Bombas: %d | " % player_bombs_ammo + win_text
@@ -477,6 +498,24 @@ func _input(event):
 		else:
 			input_stack.erase(dir)
 
+## Drops held directions whose action is no longer pressed. Releases that happen while the
+## tree is paused (pause menu) never reach _input, so the stack is also checked every frame.
+func _prune_released_directions() -> void:
+	for dir in input_stack.duplicate():
+		if not _is_direction_held(dir):
+			input_stack.erase(dir)
+
+func _is_direction_held(dir: Vector2i) -> bool:
+	if dir == Vector2i(0, -1):
+		return Input.is_action_pressed("move_up") or Input.is_action_pressed("ui_up")
+	if dir == Vector2i(0, 1):
+		return Input.is_action_pressed("move_down") or Input.is_action_pressed("ui_down")
+	if dir == Vector2i(-1, 0):
+		return Input.is_action_pressed("move_left") or Input.is_action_pressed("ui_left")
+	if dir == Vector2i(1, 0):
+		return Input.is_action_pressed("move_right") or Input.is_action_pressed("ui_right")
+	return false
+
 ## Returns whether a grid position is within the level bounds.
 func _in_bounds(pos: Vector2i) -> bool:
 	return pos.x >= 0 and pos.x < grid_width and pos.y >= 0 and pos.y < grid_height
@@ -490,10 +529,16 @@ func _collect_tile(pos: Vector2i, tile: int) -> bool:
 			AudioManager.play_sfx(&"sfx_exc_bomb_pickup")
 		TileType.ITEM_INVENTARIO:
 			var item_id: String = Inventory.GOLD_ITEM_ID
-			if item_pool.size() > 0:
+			var item_amount: int = 1
+			if cell_items.has(pos):
+				# Hand-placed item with a specific reward
+				item_id = str(cell_items[pos].get("id", item_id))
+				item_amount = int(cell_items[pos].get("amount", 1))
+				cell_items.erase(pos)
+			elif item_pool.size() > 0:
 				item_id = str(item_pool[randi() % item_pool.size()])
 			AudioManager.play_sfx(&"sfx_exc_item")
-			add_reward(item_id, 1)
+			add_reward(item_id, item_amount)
 		TileType.ITEM_RECOMPENSA:
 			AudioManager.play_sfx(&"sfx_exc_coin")
 			add_reward(Inventory.GOLD_ITEM_ID, 1)
@@ -506,7 +551,39 @@ func _collect_tile(pos: Vector2i, tile: int) -> bool:
 			AudioManager.play_sfx(&"sfx_exc_quest_item")
 		_:
 			return false
+	_finish_if_goal_reached()
 	return true
+
+## Without require_exit, meeting the goal wins the minigame right away.
+func _finish_if_goal_reached() -> void:
+	if not require_exit and _is_win_condition_met():
+		AudioManager.play_ui(&"sfx_exc_exit_open")
+		finish(true)
+
+## Explosions can destroy coins and the mission item; protecting them is part of the puzzle.
+## When the goal can no longer be met, the minigame is lost instead of leaving the player stuck.
+func _fail_if_goal_impossible() -> void:
+	if is_player_dead or _is_win_condition_met():
+		return
+	var possible: bool = true
+	match current_win_condition:
+		WinCondition.ALL_COINS, WinCondition.TARGET_AMOUNT:
+			possible = coins_collected + _count_tiles(TileType.ITEM_RECOMPENSA) >= target_coin_amount
+		WinCondition.SPECIFIC_ITEM:
+			possible = _count_tiles(TileType.ITEM_MISION) > 0
+	if possible:
+		return
+	is_player_dead = true
+	queue_redraw()
+	await get_tree().process_frame
+	AudioManager.play_ui(&"sfx_exc_lose")
+	finish(false)
+
+func _count_tiles(tile_type: int) -> int:
+	var count: int = 0
+	for row in grid:
+		count += row.count(tile_type)
+	return count
 
 func _try_move_player(direction: Vector2i) -> void:
 	var new_pos: Vector2i = player_grid_pos + direction
@@ -622,6 +699,8 @@ func _is_win_condition_met() -> bool:
 			return coins_collected >= target_coin_amount
 		WinCondition.SPECIFIC_ITEM:
 			return mission_item_collected
+		WinCondition.EXIT_ONLY:
+			return true
 	return false
 
 func _update_gravity():

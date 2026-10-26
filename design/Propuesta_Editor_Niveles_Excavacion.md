@@ -1,6 +1,7 @@
 # Propuesta: Editor de niveles por TileMap para el minijuego de Excavación
 
-> Estado: **propuesta, sin implementar**. Rama: `ExcavtionLevelEditor`.
+> Estado: **implementado** (2026-10-26) con las decisiones de la sección 7. Rama: `ExcavtionLevelEditor`.
+> Decisiones: TileMap en Godot; todo lo que cae sobre el jugador lo mata (B9 es diseño); las monedas destruidas no se descuentan y, si el objetivo queda imposible, se pierde; fixes en esta rama.
 > Alcance: cómo se *autora* un nivel. Las mecánicas (gravedad, empuje, bombas, excavación) **no cambian**.
 
 ---

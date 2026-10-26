@@ -64,9 +64,23 @@ Para colocar un acceso a un minijuego en cualquier nivel del Overworld:
 | **`0`** | **Todas las Monedas** | Recolectar el 100% de las monedas generadas en todo el mapa de tierra. | Ninguno (automático). |
 | **`1`** | **Cantidad Específica** | Alcanzar un número determinado de monedas para abrir la salida. | `excavation_target_amount` (ej. `10`). |
 | **`2`** | **Ítem de Misión** | Desenterrar y recoger un ítem de misión especial escondido en el nivel. | Objeto de misión en mapa. |
+| **`3`** | **Solo Salida** | Llegar a la salida; está abierta desde el inicio. | Salida en el mapa. |
+
+* **`excavation_require_exit`** *(bool, defecto `true`)*: con `true` hay que caminar a la salida después de cumplir el objetivo; con `false` se gana apenas se cumple (sin salida). `Solo Salida` siempre la exige.
+* Si una explosión destruye monedas o el ítem de misión y el objetivo ya no se puede cumplir, se pierde (cuidar las monedas es parte del puzzle). Si `target_amount` supera las monedas del nivel, se limita al total.
+
+#### Niveles pintados (editor por TileMap)
+* **`excavation_level_scene`** *(.tscn)*: nivel pintado a mano. Vacío = nivel procedural.
+* Crear una escena con raíz `ExcavationLevel` (`excavation_level.gd`) y un hijo `TileMapLayer` con `res://assets/sprites/excavation_tileset.tres`. Guardarla en `src/minigames/mg_excavation/levels/`.
+* Cada tile se reconoce por el custom data `excavation_tile` (valor de `TileType`): vacío, tierra, piedra, muro irrompible, muro rompible, ítem de misión, moneda, bomba, salida, ítem aleatorio del pool, pickup de bomba e inicio del jugador. Las celdas sin pintar son vacío.
+* Ítems a mano: nodos `ExcavationItemMarker` (por ejemplo bajo un `Items` en `(0, 0)`) con `item_id` y `amount`; se encajan a la celda y dan exactamente ese ítem.
+* `auto_border` rodea el área pintada con muro irrompible. `item_pool` del nivel reemplaza al de la acción.
+* El nodo raíz muestra warnings: sin inicio, varios inicios, sin salida, salida encerrada por muros irrompibles, markers fuera del área o sin `item_id`.
+* El nivel solo define el mapa; la condición de victoria se configura en el `MinigameAction`, así un mismo nivel sirve para varias misiones.
 
 #### Parámetros Configurables del Inspector
-* **`excavation_rocks`** *(int)*: Densidad de rocas y bombas ambientales que caen por gravedad (defecto: `10`).
+* **`excavation_rocks`** *(int, solo procedural)*: porcentaje de probabilidad de roca/bomba ambiental por celda con apoyo (defecto: `10`).
+* **`excavation_coins`** *(int, solo procedural)*: monedas a generar (defecto: `10`).
 * **`excavation_scale`** *(float)*: Multiplicador de escala visual del mapa (defecto: `1.5`).
 * **`excavation_deliver_items`** *(bool)*: Si está activo, reemplaza aleatoriamente algunos bloques de tierra por ítems recolectables visibles del `item_pool` y pickups de bombas manuales.
 * **`excavation_initial_bombs`** *(int)*: Bombas manuales con las que inicia el jugador (defecto: `1`).
