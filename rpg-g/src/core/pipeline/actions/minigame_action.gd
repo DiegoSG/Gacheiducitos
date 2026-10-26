@@ -60,9 +60,15 @@ var catcher_item_pool: Array[String] = ["blue_potion", "red_potion", "green_herb
 var catcher_critical_item_ids: Array[String] = ["falling_bomb", "falling_rock"]
 
 # --- EXCAVATION-specific parameters ---
-var excavation_win_condition: int = 0 # 0: ALL_COINS, 1: TARGET_AMOUNT, 2: MISSION_ITEM
+var excavation_level_scene: String = "": # Empty: procedural level
+	set(val):
+		excavation_level_scene = val
+		notify_property_list_changed()
+var excavation_win_condition: int = 0 # 0: ALL_COINS, 1: TARGET_AMOUNT, 2: MISSION_ITEM, 3: EXIT_ONLY
+var excavation_require_exit: bool = true
 var excavation_target_amount: int = 5
-var excavation_rocks: int = 10
+var excavation_rocks: int = 10 # Percent chance of a rock per supported cell
+var excavation_coins: int = 10
 var excavation_scale: float = 1.5
 var excavation_deliver_items: bool = false
 var excavation_initial_bombs: int = 1
@@ -263,10 +269,22 @@ func _get_property_list() -> Array[Dictionary]:
 			"usage": PROPERTY_USAGE_GROUP
 		})
 		list.append({
+			"name": "excavation_level_scene",
+			"type": TYPE_STRING,
+			"hint": PROPERTY_HINT_FILE,
+			"hint_string": "*.tscn",
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
+		list.append({
 			"name": "excavation_win_condition",
 			"type": TYPE_INT,
 			"hint": PROPERTY_HINT_ENUM,
-			"hint_string": "All Coins:0,Specific Amount:1,Mission Item:2",
+			"hint_string": "All Coins:0,Specific Amount:1,Mission Item:2,Exit Only:3",
+			"usage": PROPERTY_USAGE_DEFAULT
+		})
+		list.append({
+			"name": "excavation_require_exit",
+			"type": TYPE_BOOL,
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
 		list.append({
@@ -276,13 +294,22 @@ func _get_property_list() -> Array[Dictionary]:
 			"hint_string": "1,50,1",
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
-		list.append({
-			"name": "excavation_rocks",
-			"type": TYPE_INT,
-			"hint": PROPERTY_HINT_RANGE,
-			"hint_string": "0,30,1",
-			"usage": PROPERTY_USAGE_DEFAULT
-		})
+		# Procedural-only parameters: a painted level already defines its rocks and coins
+		if excavation_level_scene.is_empty():
+			list.append({
+				"name": "excavation_rocks",
+				"type": TYPE_INT,
+				"hint": PROPERTY_HINT_RANGE,
+				"hint_string": "0,30,1",
+				"usage": PROPERTY_USAGE_DEFAULT
+			})
+			list.append({
+				"name": "excavation_coins",
+				"type": TYPE_INT,
+				"hint": PROPERTY_HINT_RANGE,
+				"hint_string": "1,50,1",
+				"usage": PROPERTY_USAGE_DEFAULT
+			})
 		list.append({
 			"name": "excavation_scale",
 			"type": TYPE_FLOAT,
@@ -424,8 +451,12 @@ func get_built_config() -> Dictionary:
 			c["critical_item_ids"] = catcher_critical_item_ids
 		MinigameType.EXCAVATION:
 			c["win_condition"] = excavation_win_condition
+			c["require_exit"] = excavation_require_exit
 			c["target_amount"] = excavation_target_amount
-			c["rocks"] = excavation_rocks
+			c["probabilidad_piedra"] = excavation_rocks / 100.0
+			c["num_monedas"] = excavation_coins
+			if not excavation_level_scene.is_empty():
+				c["level_scene"] = excavation_level_scene
 			c["escala"] = excavation_scale
 			c["deliver_items"] = excavation_deliver_items
 			c["initial_bombs"] = excavation_initial_bombs

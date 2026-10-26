@@ -13,7 +13,7 @@ El minijuego es un rompecabezas de acción táctica y física de gravedad en una
   * El jugador puede empujar rocas y bombas horizontalmente si la casilla adyacente está libre.
 * **Mecánica de Bombas y Demolición:**
   * *Bombas Ambientales:* Caen con la misma física; al impactar contra el suelo o cualquier obstáculo tras una caída, detonan instantáneamente en un radio de 3x3 casillas.
-  * *Bombas Manuales:* Al mantener presionado `ESPACIO` / `ui_accept` durante ~0.35s sin moverse, el jugador planta una bomba estática con un temporizador de 4 segundos. Detona en 3x3 destruyendo tierra y rocas. Si el jugador no evacúa el radio letal a tiempo, muere en la explosión.
+  * *Bombas Manuales:* Al mantener presionado `ESPACIO` / `ui_accept` durante ~0.35s sin moverse, el jugador planta una bomba estática con un temporizador de 3 segundos. Detona en 3x3 destruyendo tierra y rocas. Si el jugador no evacúa el radio letal a tiempo, muere en la explosión.
 * **Condición de Salida:** Al cumplirse el objetivo (monedas, ítem especial o despeje), se desbloquea la trampilla de salida (`Exit Tile`), a la cual el jugador debe caminar para ganar.
 
 ### Referencia al Código y Escenas Actuales

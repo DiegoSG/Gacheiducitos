@@ -66,7 +66,7 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
      * **Runner 2D:** Aceleración progresiva configurable (`speed_increase_interval`, `speed_increase_amount`), recarga de munición con distanciamiento progresivo (`ammo_spawn_initial_distance`, `ammo_spawn_distance_multiplier`, +1 bala), pool de ítems y separación inteligente contra solapamientos.
      * **Catcher:** Retardo de 3.0 segundos en el suelo con parpadeo, recolección al caminar sobre el piso, pérdida de vida al expirar ítems críticos y pool de ítems.
      * **Trampolín:** Ítems de inventario reposando físicamente sobre plataformas/trampolines (distintos a las monedas aéreas), recolectados por contacto directo.
-     * **Excavación:** Bombas ambientales con gravedad, deslizamiento y empuje horizontal que detonan en 3x3 al impactar suelo, obstáculos o jugador; bombas manuales estáticas colocadas con espacio sostenido (0.35s) con cuenta regresiva de 4s y radio letal de 3x3 que destruye terreno y causa muerte al jugador si se queda dentro; sustitución visible de tierra por ítems de inventario y munición de bomba manual si `deliver_items = true`.
+     * **Excavación:** Bombas ambientales con gravedad, deslizamiento y empuje horizontal que detonan en 3x3 al impactar suelo, obstáculos o jugador; bombas manuales estáticas colocadas con espacio sostenido (0.35s) con cuenta regresiva de 3s y radio letal de 3x3 que destruye terreno y causa muerte al jugador si se queda dentro; sustitución visible de tierra por ítems de inventario y munición de bomba manual si `deliver_items = true`.
   4. **Guía de Creación de Niveles Overworld:**
      * Creada `design/Guia_Creacion_Niveles.md` documentando paso a paso la creación de mapas desde cero usando `prototype_template.tscn` para el Vertical Slice.
 
@@ -77,12 +77,13 @@ Este documento contiene la lista de funcionalidades y los puntos de control (che
 - [x] Gravedad de Piedras (Caída y Deslizamiento) (Ref: `Minijuego_Supaplex.md`)
 - [x] **Elementos Interactivos y Bombas:**
   - [x] Bombas ambientales con física de gravedad, empuje y detonación 3x3 al impactar.
-  - [x] Bombas manuales con plantado estático (`ui_accept` sostenido 0.35s), cuenta atrás de 4s y explosión letal 3x3.
+  - [x] Bombas manuales con plantado estático (`ui_accept` sostenido 0.35s), cuenta atrás de 3s y explosión letal 3x3.
   - [x] Tipos de bloque: Muros irrompibles y salida inmune a bombas.
   - [x] Poblar terreno visible con ítems de inventario y munición de bombas manuales (`deliver_items`).
-- [ ] **Edición Manual de Niveles:**
-  - [ ] Soporte para cargar niveles prediseñados a mano en lugar de sólo procedimental.
-  - [ ] TileMap / Grid de tiles para "pintar" tierra, piedras, muros y objetos directamente desde el editor de Godot.
+- [x] **Edición Manual de Niveles** (pendiente QA; ver `Propuesta_Editor_Niveles_Excavacion.md`):
+  - [x] Soporte para cargar niveles prediseñados a mano en lugar de sólo procedimental (`excavation_level_scene`).
+  - [x] TileMap / Grid de tiles para "pintar" tierra, piedras, muros y objetos directamente desde el editor de Godot (`ExcavationLevel` + `excavation_tileset.tres`, ítems a mano con `ExcavationItemMarker`).
+  - [x] Condición de victoria en la acción: monedas, solo salida o ambas (`excavation_require_exit`).
 - [ ] **Enemigos y Sigilo (Siguiente iteración):**
   - [ ] IA de Enemigo ciego guiado por sonido (excavación vs explosiones).
   - [ ] Sistema de sigilo en túneles vacíos.

@@ -1,0 +1,33 @@
+[gd_resource type="TileSet" format=3 uid="uid://c0wrxu5p6lwq5"]
+
+[ext_resource type="Texture2D" uid="uid://csk2hnk1v2r2d" path="res://assets/sprites/excavation_tiles_placeholder.png" id="1_exc_tiles"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_exc"]
+texture = ExtResource("1_exc_tiles")
+1:0/0 = 0
+1:0/0/custom_data_0 = 1
+2:0/0 = 0
+2:0/0/custom_data_0 = 2
+3:0/0 = 0
+3:0/0/custom_data_0 = 3
+4:0/0 = 0
+4:0/0/custom_data_0 = 4
+5:0/0 = 0
+5:0/0/custom_data_0 = 5
+6:0/0 = 0
+6:0/0/custom_data_0 = 6
+7:0/0 = 0
+7:0/0/custom_data_0 = 7
+8:0/0 = 0
+8:0/0/custom_data_0 = 9
+9:0/0 = 0
+9:0/0/custom_data_0 = 11
+10:0/0 = 0
+10:0/0/custom_data_0 = 12
+11:0/0 = 0
+11:0/0/custom_data_0 = 13
+
+[resource]
+custom_data_layer_0/name = "excavation_tile"
+custom_data_layer_0/type = 2
+sources/0 = SubResource("TileSetAtlasSource_exc")

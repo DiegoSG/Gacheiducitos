@@ -24,6 +24,8 @@ var coins_collected: int = 0
 var mission_item_collected: bool = false
 var current_win_condition: int = WinCondition.ALL_COINS
 var target_coin_amount: int = 0
+# If false, the minigame is won as soon as the goal is met, without walking to the exit
+var require_exit: bool = true
 
 # Configuration received from the debug screen
 var config: Dictionary = {}
@@ -38,6 +40,9 @@ var _step_sound_cooldown: float = 0.0
 
 # Reason _explode_at uses when chaining the explosion of other bombs
 const CHAIN_EXPLOSION_REASON: String = "EXPLOSIÓN EN CADENA"
+# Bombs caught by an explosion detonate after this delay, so chains propagate step by step (Supaplex style)
+const CHAIN_EXPLOSION_DELAY: float = 0.15
+var primed_bombs: Dictionary = {} # Vector2i -> seconds left before an ambient bomb explodes
 
 # Continuous movement system
 var move_timer: float = 0.0
@@ -55,15 +60,26 @@ var pending_falls: Dictionary = {} # "x,y" -> ticks_remaining (objects that want
 var player_bombs_ammo: int = 0
 var space_held_timer: float = 0.0
 const BOMB_PLANT_HOLD_TIME: float = 0.35
-var active_placed_bombs: Array = [] # Array[Dictionary]: [{"pos": Vector2i, "timer": 4.0}]
+# Seconds a bomb placed by the player takes to explode
+const PLACED_BOMB_FUSE_TIME: float = 3.0
+var active_placed_bombs: Array = [] # Array[Dictionary]: [{"pos": Vector2i, "timer": float}]
 var deliver_items: bool = false
 var item_pool: Array = []
+# Specific rewards of hand-placed items: Vector2i -> {"id": String, "amount": int}
+var cell_items: Dictionary = {}
 
 # Textures
 var coin_texture: Texture2D = null
 var bomb_texture: Texture2D = null
 var potion_texture: Texture2D = null
 var player_texture: Texture2D = null
+
+# Explosion effect: a horizontal strip of EXPLOSION_FRAMES square frames, played on every cell of the 3x3 blast
+const EXPLOSION_TEXTURE_PATH: String = "res://assets/sprites/excavation_explosion_placeholder.png"
+const EXPLOSION_FRAMES: int = 4
+const EXPLOSION_FRAME_TIME: float = 0.06
+var explosion_texture: Texture2D = null
+var explosion_effects: Array = [] # Array[Dictionary]: [{"pos": Vector2i, "time": float}]
 
 # Smooth interpolation system
 var visual_player_pos: Vector2 = Vector2.ZERO
@@ -75,11 +91,16 @@ var input_stack: Array = [] # List of pressed directions, in order
 # Camera
 var camera: Camera2D = null
 
+# HUD on its own CanvasLayer so it stays on screen while the camera scrolls the level
+const HUD_FONT_SIZE: int = 18
+var hud_label: Label = null
+
 func _ready() -> void:
 	# Shared coin texture (with fallback) from MinigameBase
 	coin_texture = get_coin_texture()
 	bomb_texture = load("res://assets/items/icons/iron_key.png") as Texture2D
 	potion_texture = load("res://assets/items/icons/blue_potion.png") as Texture2D
+	explosion_texture = load(EXPLOSION_TEXTURE_PATH) as Texture2D
 	player_texture = load("res://assets/sprites/player_down.png") as Texture2D
 
 	config = GameManager.minigame_config
@@ -95,12 +116,13 @@ func _ready() -> void:
 	var s = config.get("escala", 1.5)
 	self.scale = Vector2(s, s)
 	
-	_initialize_grid()
-	_generate_level()
-	
 	# Initialize mission state from config
 	current_win_condition = config.get("win_condition", WinCondition.ALL_COINS)
 	target_coin_amount = config.get("target_amount", 5)
+	# Reaching the exit is the whole goal of EXIT_ONLY, so it can never be skipped
+	require_exit = config.get("require_exit", true) or current_win_condition == WinCondition.EXIT_ONLY
+
+	_load_level()
 	_count_total_coins()
 	
 	# Initialize visual positions
@@ -109,6 +131,7 @@ func _ready() -> void:
 	
 	# Set up camera
 	_setup_camera()
+	_setup_hud()
 	
 	AudioManager.play_sfx(&"sfx_exc_start")
 	queue_redraw()
@@ -135,6 +158,17 @@ func _setup_camera() -> void:
 	
 	_update_camera_position()
 
+func _setup_hud() -> void:
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HudLayer"
+	add_child(hud_layer)
+	hud_label = Label.new()
+	hud_label.position = Vector2(16, 12)
+	hud_label.add_theme_font_size_override("font_size", HUD_FONT_SIZE)
+	hud_label.add_theme_constant_override("outline_size", 4)
+	hud_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	hud_layer.add_child(hud_label)
+
 func _update_camera_position() -> void:
 	if camera:
 		# The camera position must be relative to the global world
@@ -157,11 +191,13 @@ func _initialize_falling_visuals() -> void:
 func _process(delta: float) -> void:
 	if is_player_dead:
 		_interpolate_visuals(delta) # Keep interpolating even when dead so the impact can be seen
+		_update_explosion_effects(delta)
 		queue_redraw()
 		return
 
-	# Process countdown of bombs placed by the player
+	# Process countdown of bombs placed by the player and of bombs caught in a chain
 	_update_placed_bombs(delta)
+	_update_primed_bombs(delta)
 
 	# Process bomb planting while space is held
 	_handle_bomb_planting(delta)
@@ -175,6 +211,7 @@ func _process(delta: float) -> void:
 		_handle_continuous_movement(delta)
 
 	_interpolate_visuals(delta)
+	_update_explosion_effects(delta)
 	_update_camera_position()
 	queue_redraw()
 
@@ -203,40 +240,41 @@ func _try_plant_bomb() -> void:
 	player_bombs_ammo -= 1
 	active_placed_bombs.append({
 		"pos": player_grid_pos,
-		"timer": 4.0
+		"timer": PLACED_BOMB_FUSE_TIME
 	})
 	AudioManager.play_sfx(&"sfx_exc_bomb_plant")
 	AudioManager.play_sfx(&"sfx_exc_bomb_fuse")
 	queue_redraw()
 
 func _update_placed_bombs(delta: float) -> void:
-	var remaining: Array = []
-	for b in active_placed_bombs:
+	# Iterate over a copy: _explode_at removes the bombs caught in its radius from the real list
+	for b in active_placed_bombs.duplicate():
+		if not active_placed_bombs.has(b):
+			continue
 		b.timer -= delta
 		if b.timer <= 0.0:
+			active_placed_bombs.erase(b)
 			_explode_at(b.pos, "BOMBA MANUAL")
-		else:
-			remaining.append(b)
-	active_placed_bombs = remaining
 
 func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 	AudioManager.play_sfx(&"sfx_exc_chain_explosion" if _reason == CHAIN_EXPLOSION_REASON else &"sfx_exc_explosion")
 	# Destroy 3x3 area
 	var player_caught = false
-	var chain_explosions: Array[Vector2i] = []
 	
 	for dy in range(-1, 2):
 		for dx in range(-1, 2):
 			var tx = center_pos.x + dx
 			var ty = center_pos.y + dy
 			if _in_bounds(Vector2i(tx, ty)):
+				explosion_effects.append({"pos": Vector2i(tx, ty), "time": 0.0})
 				var t = grid[ty][tx]
-				# Chain if there is another ambient bomb
+				# Another ambient bomb is primed instead of destroyed: it explodes after a short delay
 				if (dx != 0 or dy != 0) and t == TileType.BOMBA:
-					chain_explosions.append(Vector2i(tx, ty))
-					
+					var bomb_pos: Vector2i = Vector2i(tx, ty)
+					if not primed_bombs.has(bomb_pos):
+						primed_bombs[bomb_pos] = CHAIN_EXPLOSION_DELAY
 				# The exit and indestructible borders are immune
-				if t != TileType.SALIDA and t != TileType.MURO_IRROMPIBLE:
+				elif t != TileType.SALIDA and t != TileType.MURO_IRROMPIBLE:
 					grid[ty][tx] = TileType.EMPTY
 					var key = str(tx) + "," + str(ty)
 					if falling_visuals.has(key):
@@ -244,38 +282,59 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 				if player_grid_pos == Vector2i(tx, ty):
 					player_caught = true
 					
-	# Remove manual bombs trapped in the explosion radius
-	var remaining_bombs: Array = []
+	# Manual bombs in the radius also join the chain
 	for b in active_placed_bombs:
 		if abs(b.pos.x - center_pos.x) <= 1 and abs(b.pos.y - center_pos.y) <= 1:
-			pass
-		else:
-			remaining_bombs.append(b)
-	active_placed_bombs = remaining_bombs
+			b.timer = minf(b.timer, CHAIN_EXPLOSION_DELAY)
 	
 	queue_redraw()
-	
-	# Run chain explosions
-	for next_bomb in chain_explosions:
-		_explode_at(next_bomb, CHAIN_EXPLOSION_REASON)
 	
 	if player_caught:
 		_player_crushed()
 
+func _update_explosion_effects(delta: float) -> void:
+	var duration: float = EXPLOSION_FRAMES * EXPLOSION_FRAME_TIME
+	var remaining: Array = []
+	for fx in explosion_effects:
+		fx.time += delta
+		if fx.time < duration:
+			remaining.append(fx)
+	explosion_effects = remaining
+
+func _update_primed_bombs(delta: float) -> void:
+	for bomb_pos: Vector2i in primed_bombs.keys():
+		if not primed_bombs.has(bomb_pos):
+			continue # Already detonated by another explosion this frame
+		primed_bombs[bomb_pos] -= delta
+		if primed_bombs[bomb_pos] <= 0.0:
+			_detonate_bomb_tile(bomb_pos, CHAIN_EXPLOSION_REASON)
+
+## Removes the ambient bomb at pos from the grid and explodes it.
+func _detonate_bomb_tile(pos: Vector2i, reason: String) -> void:
+	primed_bombs.erase(pos)
+	if grid[pos.y][pos.x] != TileType.BOMBA:
+		return
+	grid[pos.y][pos.x] = TileType.EMPTY
+	falling_visuals.erase(str(pos.x) + "," + str(pos.y))
+	_explode_at(pos, reason)
+
 func _interpolate_visuals(delta: float) -> void:
 	# Interpolate player
 	var target_player_world = grid_to_world(player_grid_pos)
-	visual_player_pos = visual_player_pos.lerp(target_player_world, interp_speed * delta)
+	# Clamped weight: above 1.0 the lerp overshoots and the sprites jump around at low FPS
+	var weight: float = minf(1.0, interp_speed * delta)
+	visual_player_pos = visual_player_pos.lerp(target_player_world, weight)
 	
 	# Interpolate rocks and objects
 	for key in falling_visuals:
 		var data = falling_visuals[key]
 		var coords = key.split(",")
 		var target_world = grid_to_world(Vector2i(int(coords[0]), int(coords[1])))
-		data.visual_pos = data.visual_pos.lerp(target_world, interp_speed * delta)
+		data.visual_pos = data.visual_pos.lerp(target_world, weight)
 
 func _handle_continuous_movement(delta: float) -> void:
 	_step_sound_cooldown = maxf(0.0, _step_sound_cooldown - delta)
+	_prune_released_directions()
 	var direction: Vector2i = Vector2i.ZERO
 	
 	if input_stack.size() > 0:
@@ -303,17 +362,24 @@ func _handle_player_action(direction: Vector2i) -> void:
 	else:
 		_try_move_player(direction)
 
-func _initialize_grid() -> void:
-	grid.clear()
-	for y in range(grid_height):
-		var row: Array = []
-		for x in range(grid_width):
-			row.append(TileType.EMPTY)
-		grid.append(row)
+## Loads the painted level from config "level_scene", or generates a procedural one.
+func _load_level() -> void:
+	var data: ExcavationLevelData = null
+	var level_scene: String = str(config.get("level_scene", ""))
+	if not level_scene.is_empty():
+		data = ExcavationLevelLoader.load_scene(level_scene)
+		if data == null:
+			push_warning("MG_ExcavationGame: falling back to a procedural level.")
+	if data == null:
+		data = LevelGenerator.generate_level(grid_width, grid_height, config)
 
-func _generate_level() -> void:
-	var LevelGen = load("res://src/minigames/mg_excavation/level_generator.gd")
-	grid = LevelGen.generate_level(grid_width, grid_height, config)
+	grid = data.grid
+	grid_width = data.size.x
+	grid_height = data.size.y
+	player_grid_pos = data.player_start
+	cell_items = data.cell_items
+	if not data.item_pool.is_empty():
+		item_pool = data.item_pool
 
 func _count_total_coins() -> void:
 	total_coins = 0
@@ -323,17 +389,19 @@ func _count_total_coins() -> void:
 				total_coins += 1
 	if current_win_condition == WinCondition.ALL_COINS:
 		target_coin_amount = total_coins
+	elif current_win_condition == WinCondition.TARGET_AMOUNT and target_coin_amount > total_coins:
+		push_warning("MG_ExcavationGame: target_amount %d is above the %d coins in the level; using %d." % [target_coin_amount, total_coins, total_coins])
+		target_coin_amount = total_coins
 
 func _draw():
-	if is_player_dead:
-		draw_rect(Rect2(0, 0, grid_width * CELL_SIZE, grid_height * CELL_SIZE), Color(0.3, 0, 0, 0.3))
-
 	# 1. Uniform base background for the whole level (avoids "gaps" under the rocks)
 	var total_size = Vector2(grid_width * CELL_SIZE, grid_height * CELL_SIZE)
 	draw_rect(Rect2(Vector2.ZERO, total_size), Color(0.1, 0.1, 0.15))
 
-	for y in range(grid_height):
-		for x in range(grid_width):
+	# Only the cells inside the camera view are drawn, so big painted levels stay cheap
+	var visible_cells: Rect2i = _get_visible_cell_rect()
+	for y in range(visible_cells.position.y, visible_cells.end.y):
+		for x in range(visible_cells.position.x, visible_cells.end.x):
 			var tile = grid[y][x]
 			var pos = Vector2(x * CELL_SIZE, y * CELL_SIZE)
 			
@@ -370,10 +438,13 @@ func _draw():
 		draw_arc(visual_player_pos, CELL_SIZE * 0.75, 0.0, TAU * progress, 16, Color(1.0, 0.2, 0.2, 0.9), 2.5)
 	
 	# Draw rocks and objects using visual position and rotation
+	var visible_area: Rect2 = Rect2(Vector2(visible_cells.position * CELL_SIZE), Vector2(visible_cells.size * CELL_SIZE))
 	for key in falling_visuals:
 		var data = falling_visuals[key]
 		var pos = data.visual_pos
 		var rot = data.rotation
+		if not visible_area.has_point(pos):
+			continue
 		
 		draw_set_transform(pos, rot, Vector2.ONE)
 		if data.type == TileType.PIEDRA:
@@ -381,8 +452,10 @@ func _draw():
 			# Detail to show the rotation
 			draw_rect(Rect2(-CELL_SIZE/2.0 + 3, -CELL_SIZE/2.0 + 3, 4, 4), Color(0.7, 0.7, 0.7)) 
 		elif data.type == TileType.BOMBA:
-			# Ambient bomb (dark circle with fuse)
-			draw_circle(Vector2.ZERO, CELL_SIZE/2.0 - 2, Color(0.1, 0.1, 0.1))
+			# Ambient bomb (dark circle with fuse), red while primed by a chain
+			var coords = key.split(",")
+			var is_primed: bool = primed_bombs.has(Vector2i(int(coords[0]), int(coords[1])))
+			draw_circle(Vector2.ZERO, CELL_SIZE/2.0 - 2, Color(0.8, 0.1, 0.1) if is_primed else Color(0.1, 0.1, 0.1))
 			draw_circle(Vector2.ZERO, CELL_SIZE/4.0, Color(0.25, 0.25, 0.25))
 			draw_circle(Vector2(0, -CELL_SIZE/3.0), 2.5, Color(1.0, 0.3, 0.1))
 		elif data.type == TileType.ITEM_RECOMPENSA:
@@ -399,6 +472,20 @@ func _draw():
 		var sec_left = str(int(ceil(b.timer)))
 		draw_string(ThemeDB.fallback_font, b_world + Vector2(-3, 4), sec_left, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color.YELLOW)
 	
+	# Explosion animation on each blasted cell
+	for fx in explosion_effects:
+		var fx_rect: Rect2 = Rect2(Vector2(fx.pos * CELL_SIZE), Vector2(CELL_SIZE, CELL_SIZE))
+		if explosion_texture:
+			var frame: int = mini(int(fx.time / EXPLOSION_FRAME_TIME), EXPLOSION_FRAMES - 1)
+			var frame_size: Vector2 = Vector2(explosion_texture.get_width() / float(EXPLOSION_FRAMES), explosion_texture.get_height())
+			draw_texture_rect_region(explosion_texture, fx_rect, Rect2(Vector2(frame * frame_size.x, 0), frame_size))
+		else:
+			draw_rect(fx_rect, Color(1.0, 0.5, 0.1, 0.8))
+
+	# Death tint over the level (drawn after the level so it is not covered)
+	if is_player_dead:
+		draw_rect(Rect2(0, 0, grid_width * CELL_SIZE, grid_height * CELL_SIZE), Color(0.3, 0, 0, 0.3))
+
 	# DEBUG / HUD: Show coordinates and progress
 	var win_text = ""
 	match current_win_condition:
@@ -408,13 +495,16 @@ func _draw():
 			win_text = "Monedas: %d/%d" % [coins_collected, target_coin_amount]
 		WinCondition.SPECIFIC_ITEM:
 			win_text = "Ítem Misión: %s" % ("SÍ" if mission_item_collected else "NO")
+		WinCondition.EXIT_ONLY:
+			win_text = "Llega a la salida"
 	
-	if _is_win_condition_met():
+	if _is_win_condition_met() and require_exit:
 		win_text += " [¡SALIDA ABIERTA!]"
 	
 	var hud_text = "Bombas: %d | " % player_bombs_ammo + win_text
 	var debug_text = "Player: (" + str(player_grid_pos.x) + "," + str(player_grid_pos.y) + ") | " + hud_text
-	draw_string(ThemeDB.fallback_font, Vector2(10, 20), debug_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+	if hud_label:
+		hud_label.text = debug_text
 	
 	# DEBUG: Logic border for the player (grid)
 	if config.get("show_player_logic", false):
@@ -428,6 +518,17 @@ func _draw():
 				if grid[y][x] == TileType.PIEDRA:
 					var rock_logic_pos = grid_to_world(Vector2i(x, y)) - Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0)
 					draw_rect(Rect2(rock_logic_pos, Vector2(CELL_SIZE, CELL_SIZE)), Color.BLUE, false, 1)
+
+## Grid cells covered by the camera view (plus one cell of margin), clamped to the level.
+func _get_visible_cell_rect() -> Rect2i:
+	var full: Rect2i = Rect2i(0, 0, grid_width, grid_height)
+	if camera == null or not is_inside_tree():
+		return full
+	var view_size: Vector2 = get_viewport_rect().size / (scale * camera.zoom)
+	var center: Vector2 = (camera.get_screen_center_position() - global_position) / scale
+	var top_left: Vector2i = Vector2i(((center - view_size / 2.0) / CELL_SIZE).floor()) - Vector2i.ONE
+	var bottom_right: Vector2i = Vector2i(((center + view_size / 2.0) / CELL_SIZE).ceil()) + Vector2i.ONE
+	return full.intersection(Rect2i(top_left, bottom_right - top_left))
 
 func _get_tile_color(tile: int) -> Color:
 	match tile:
@@ -477,6 +578,24 @@ func _input(event):
 		else:
 			input_stack.erase(dir)
 
+## Drops held directions whose action is no longer pressed. Releases that happen while the
+## tree is paused (pause menu) never reach _input, so the stack is also checked every frame.
+func _prune_released_directions() -> void:
+	for dir in input_stack.duplicate():
+		if not _is_direction_held(dir):
+			input_stack.erase(dir)
+
+func _is_direction_held(dir: Vector2i) -> bool:
+	if dir == Vector2i(0, -1):
+		return Input.is_action_pressed("move_up") or Input.is_action_pressed("ui_up")
+	if dir == Vector2i(0, 1):
+		return Input.is_action_pressed("move_down") or Input.is_action_pressed("ui_down")
+	if dir == Vector2i(-1, 0):
+		return Input.is_action_pressed("move_left") or Input.is_action_pressed("ui_left")
+	if dir == Vector2i(1, 0):
+		return Input.is_action_pressed("move_right") or Input.is_action_pressed("ui_right")
+	return false
+
 ## Returns whether a grid position is within the level bounds.
 func _in_bounds(pos: Vector2i) -> bool:
 	return pos.x >= 0 and pos.x < grid_width and pos.y >= 0 and pos.y < grid_height
@@ -490,10 +609,16 @@ func _collect_tile(pos: Vector2i, tile: int) -> bool:
 			AudioManager.play_sfx(&"sfx_exc_bomb_pickup")
 		TileType.ITEM_INVENTARIO:
 			var item_id: String = Inventory.GOLD_ITEM_ID
-			if item_pool.size() > 0:
+			var item_amount: int = 1
+			if cell_items.has(pos):
+				# Hand-placed item with a specific reward
+				item_id = str(cell_items[pos].get("id", item_id))
+				item_amount = int(cell_items[pos].get("amount", 1))
+				cell_items.erase(pos)
+			elif item_pool.size() > 0:
 				item_id = str(item_pool[randi() % item_pool.size()])
 			AudioManager.play_sfx(&"sfx_exc_item")
-			add_reward(item_id, 1)
+			add_reward(item_id, item_amount)
 		TileType.ITEM_RECOMPENSA:
 			AudioManager.play_sfx(&"sfx_exc_coin")
 			add_reward(Inventory.GOLD_ITEM_ID, 1)
@@ -506,7 +631,14 @@ func _collect_tile(pos: Vector2i, tile: int) -> bool:
 			AudioManager.play_sfx(&"sfx_exc_quest_item")
 		_:
 			return false
+	_finish_if_goal_reached()
 	return true
+
+## Without require_exit, meeting the goal wins the minigame right away.
+func _finish_if_goal_reached() -> void:
+	if not require_exit and _is_win_condition_met():
+		AudioManager.play_ui(&"sfx_exc_exit_open")
+		finish(true)
 
 func _try_move_player(direction: Vector2i) -> void:
 	var new_pos: Vector2i = player_grid_pos + direction
@@ -566,6 +698,10 @@ func _try_push_rock(rock_pos: Vector2i, direction: Vector2i) -> bool:
 		return false
 
 	var push_dest: Vector2i = rock_pos + direction
+
+	# A bomb about to explode can no longer be moved
+	if primed_bombs.has(rock_pos):
+		return false
 	
 	# Check bounds
 	if not _in_bounds(push_dest):
@@ -622,6 +758,8 @@ func _is_win_condition_met() -> bool:
 			return coins_collected >= target_coin_amount
 		WinCondition.SPECIFIC_ITEM:
 			return mission_item_collected
+		WinCondition.EXIT_ONLY:
+			return true
 	return false
 
 func _update_gravity():
@@ -643,6 +781,9 @@ func _update_gravity():
 			if tile == TileType.PIEDRA or tile == TileType.ITEM_RECOMPENSA or tile == TileType.BOMBA:
 				var key = str(x) + "," + str(y)
 				if processed_this_tick.has(key):
+					continue
+				# Bombs about to explode stay in place until they detonate
+				if primed_bombs.has(Vector2i(x, y)):
 					continue
 				
 				var was_falling = falling_objects.has(key)
@@ -743,6 +884,13 @@ func _try_fall_rock(x: int, y: int, was_falling: bool, tile_type: int) -> Dictio
 			_explode_at(Vector2i(x, y), "BOMBA AMBIENTAL IMPACTO")
 			result.moved = true
 			return result
+
+	# Anything that falls onto an ambient bomb makes it explode (the falling object is caught in the blast)
+	if was_falling and y + 1 < grid_height and grid[y + 1][x] == TileType.BOMBA:
+		AudioManager.play_sfx(&"sfx_exc_bomb_impact")
+		_detonate_bomb_tile(Vector2i(x, y + 1), "OBJETO CAYÓ SOBRE BOMBA")
+		result.moved = true
+		return result
 
 	# Rule 1: Direct fall if there is empty space below
 	if y + 1 < grid_height and grid[y + 1][x] == TileType.EMPTY:

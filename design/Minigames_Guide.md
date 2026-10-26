@@ -64,9 +64,23 @@ Para colocar un acceso a un minijuego en cualquier nivel del Overworld:
 | **`0`** | **Todas las Monedas** | Recolectar el 100% de las monedas generadas en todo el mapa de tierra. | Ninguno (automático). |
 | **`1`** | **Cantidad Específica** | Alcanzar un número determinado de monedas para abrir la salida. | `excavation_target_amount` (ej. `10`). |
 | **`2`** | **Ítem de Misión** | Desenterrar y recoger un ítem de misión especial escondido en el nivel. | Objeto de misión en mapa. |
+| **`3`** | **Solo Salida** | Llegar a la salida; está abierta desde el inicio. | Salida en el mapa. |
+
+* **`excavation_require_exit`** *(bool, defecto `true`)*: con `true` hay que caminar a la salida después de cumplir el objetivo; con `false` se gana apenas se cumple (sin salida). `Solo Salida` siempre la exige.
+* Las explosiones destruyen monedas y el ítem de misión sin descontarlos: cuidarlos es parte del puzzle. Si el objetivo queda imposible no se pierde automáticamente; el jugador decide rendirse desde la pausa. Si `target_amount` supera las monedas del nivel, se limita al total.
+
+#### Niveles pintados (editor por TileMap)
+* **`excavation_level_scene`** *(.tscn)*: nivel pintado a mano. Vacío = nivel procedural.
+* Crear una escena con raíz `ExcavationLevel` (`excavation_level.gd`) y un hijo `TileMapLayer` con `res://assets/sprites/excavation_tileset.tres`. Guardarla en `src/minigames/mg_excavation/levels/`.
+* Cada tile se reconoce por el custom data `excavation_tile` (valor de `TileType`): tierra, piedra, muro irrompible, muro rompible, ítem de misión, moneda, bomba, salida, ítem aleatorio del pool, pickup de bomba e inicio del jugador. Las celdas sin pintar son vacío.
+* Ítems a mano: nodos `ExcavationItemMarker` (por ejemplo bajo un `Items` en `(0, 0)`) con `item_id` y `amount`; se encajan a la celda y dan exactamente ese ítem.
+* `auto_border` rodea el área pintada con muro irrompible. `item_pool` del nivel reemplaza al de la acción.
+* El nodo raíz muestra warnings: sin inicio, varios inicios, sin salida, salida encerrada por muros irrompibles, markers fuera del área o sin `item_id`.
+* El nivel solo define el mapa; la condición de victoria se configura en el `MinigameAction`, así un mismo nivel sirve para varias misiones.
 
 #### Parámetros Configurables del Inspector
-* **`excavation_rocks`** *(int)*: Densidad de rocas y bombas ambientales que caen por gravedad (defecto: `10`).
+* **`excavation_rocks`** *(int, solo procedural)*: porcentaje de probabilidad de roca/bomba ambiental por celda con apoyo (defecto: `10`).
+* **`excavation_coins`** *(int, solo procedural)*: monedas a generar (defecto: `10`).
 * **`excavation_scale`** *(float)*: Multiplicador de escala visual del mapa (defecto: `1.5`).
 * **`excavation_deliver_items`** *(bool)*: Si está activo, reemplaza aleatoriamente algunos bloques de tierra por ítems recolectables visibles del `item_pool` y pickups de bombas manuales.
 * **`excavation_initial_bombs`** *(int)*: Bombas manuales con las que inicia el jugador (defecto: `1`).
@@ -77,10 +91,12 @@ Para colocar un acceso a un minijuego en cualquier nivel del Overworld:
    * Tienen la misma física de gravedad y deslizamiento lateral que las piedras.
    * Se pueden empujar horizontalmente si el espacio contiguo está libre.
    * **Impacto:** Al caer y golpear cualquier superficie, obstáculo o al jugador, detonan en una explosión de 3x3 casillas.
+   * **Golpe desde arriba:** cualquier objeto que cae (roca, moneda, bomba) sobre una bomba ambiental la hace explotar.
+   * **Reacción en cadena:** una bomba alcanzada por una explosión no se destruye: queda "cebada" (se ve roja, no cae ni se puede empujar) y explota 0.15s después (`CHAIN_EXPLOSION_DELAY`), así la cadena avanza paso a paso como en Supaplex. Las bombas manuales dentro del radio también se suman a la cadena.
 2. **Bombas Manuales (Colocadas por el Jugador):**
    * El jugador recoge pickups de bomba en el mapa para ganar munición.
    * Al mantener presionado `ESPACIO` / `ui_accept` sin moverse (~0.35s), se coloca una bomba estática en la casilla del jugador.
-   * Cuenta regresiva de 4 segundos con pulso visual.
+   * Cuenta regresiva de 3 segundos con pulso visual.
    * **Lethal Radius:** Detona en un área de 3x3 destruyendo rocas y tierra (la salida y muros exteriores son indestructibles). Si el jugador está dentro del radio de 3x3 al explotar, muere aplastado/destruido.
 
 ---
