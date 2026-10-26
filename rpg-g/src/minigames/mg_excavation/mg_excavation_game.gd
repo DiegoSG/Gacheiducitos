@@ -286,14 +286,16 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 func _interpolate_visuals(delta: float) -> void:
 	# Interpolate player
 	var target_player_world = grid_to_world(player_grid_pos)
-	visual_player_pos = visual_player_pos.lerp(target_player_world, interp_speed * delta)
+	# Clamped weight: above 1.0 the lerp overshoots and the sprites jump around at low FPS
+	var weight: float = minf(1.0, interp_speed * delta)
+	visual_player_pos = visual_player_pos.lerp(target_player_world, weight)
 	
 	# Interpolate rocks and objects
 	for key in falling_visuals:
 		var data = falling_visuals[key]
 		var coords = key.split(",")
 		var target_world = grid_to_world(Vector2i(int(coords[0]), int(coords[1])))
-		data.visual_pos = data.visual_pos.lerp(target_world, interp_speed * delta)
+		data.visual_pos = data.visual_pos.lerp(target_world, weight)
 
 func _handle_continuous_movement(delta: float) -> void:
 	_step_sound_cooldown = maxf(0.0, _step_sound_cooldown - delta)
@@ -361,8 +363,10 @@ func _draw():
 	var total_size = Vector2(grid_width * CELL_SIZE, grid_height * CELL_SIZE)
 	draw_rect(Rect2(Vector2.ZERO, total_size), Color(0.1, 0.1, 0.15))
 
-	for y in range(grid_height):
-		for x in range(grid_width):
+	# Only the cells inside the camera view are drawn, so big painted levels stay cheap
+	var visible_cells: Rect2i = _get_visible_cell_rect()
+	for y in range(visible_cells.position.y, visible_cells.end.y):
+		for x in range(visible_cells.position.x, visible_cells.end.x):
 			var tile = grid[y][x]
 			var pos = Vector2(x * CELL_SIZE, y * CELL_SIZE)
 			
@@ -399,10 +403,13 @@ func _draw():
 		draw_arc(visual_player_pos, CELL_SIZE * 0.75, 0.0, TAU * progress, 16, Color(1.0, 0.2, 0.2, 0.9), 2.5)
 	
 	# Draw rocks and objects using visual position and rotation
+	var visible_area: Rect2 = Rect2(Vector2(visible_cells.position * CELL_SIZE), Vector2(visible_cells.size * CELL_SIZE))
 	for key in falling_visuals:
 		var data = falling_visuals[key]
 		var pos = data.visual_pos
 		var rot = data.rotation
+		if not visible_area.has_point(pos):
+			continue
 		
 		draw_set_transform(pos, rot, Vector2.ONE)
 		if data.type == TileType.PIEDRA:
@@ -464,6 +471,17 @@ func _draw():
 				if grid[y][x] == TileType.PIEDRA:
 					var rock_logic_pos = grid_to_world(Vector2i(x, y)) - Vector2(CELL_SIZE/2.0, CELL_SIZE/2.0)
 					draw_rect(Rect2(rock_logic_pos, Vector2(CELL_SIZE, CELL_SIZE)), Color.BLUE, false, 1)
+
+## Grid cells covered by the camera view (plus one cell of margin), clamped to the level.
+func _get_visible_cell_rect() -> Rect2i:
+	var full: Rect2i = Rect2i(0, 0, grid_width, grid_height)
+	if camera == null or not is_inside_tree():
+		return full
+	var view_size: Vector2 = get_viewport_rect().size / (scale * camera.zoom)
+	var center: Vector2 = (camera.get_screen_center_position() - global_position) / scale
+	var top_left: Vector2i = Vector2i(((center - view_size / 2.0) / CELL_SIZE).floor()) - Vector2i.ONE
+	var bottom_right: Vector2i = Vector2i(((center + view_size / 2.0) / CELL_SIZE).ceil()) + Vector2i.ONE
+	return full.intersection(Rect2i(top_left, bottom_right - top_left))
 
 func _get_tile_color(tile: int) -> Color:
 	match tile:
