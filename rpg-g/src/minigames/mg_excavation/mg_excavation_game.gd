@@ -72,6 +72,13 @@ var bomb_texture: Texture2D = null
 var potion_texture: Texture2D = null
 var player_texture: Texture2D = null
 
+# Explosion effect: a horizontal strip of EXPLOSION_FRAMES square frames, played on every cell of the 3x3 blast
+const EXPLOSION_TEXTURE_PATH: String = "res://assets/sprites/excavation_explosion_placeholder.png"
+const EXPLOSION_FRAMES: int = 4
+const EXPLOSION_FRAME_TIME: float = 0.06
+var explosion_texture: Texture2D = null
+var explosion_effects: Array = [] # Array[Dictionary]: [{"pos": Vector2i, "time": float}]
+
 # Smooth interpolation system
 var visual_player_pos: Vector2 = Vector2.ZERO
 var interp_speed: float = 15.0
@@ -91,6 +98,7 @@ func _ready() -> void:
 	coin_texture = get_coin_texture()
 	bomb_texture = load("res://assets/items/icons/iron_key.png") as Texture2D
 	potion_texture = load("res://assets/items/icons/blue_potion.png") as Texture2D
+	explosion_texture = load(EXPLOSION_TEXTURE_PATH) as Texture2D
 	player_texture = load("res://assets/sprites/player_down.png") as Texture2D
 
 	config = GameManager.minigame_config
@@ -181,6 +189,7 @@ func _initialize_falling_visuals() -> void:
 func _process(delta: float) -> void:
 	if is_player_dead:
 		_interpolate_visuals(delta) # Keep interpolating even when dead so the impact can be seen
+		_update_explosion_effects(delta)
 		queue_redraw()
 		return
 
@@ -200,6 +209,7 @@ func _process(delta: float) -> void:
 		_handle_continuous_movement(delta)
 
 	_interpolate_visuals(delta)
+	_update_explosion_effects(delta)
 	_update_camera_position()
 	queue_redraw()
 
@@ -254,6 +264,7 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 			var tx = center_pos.x + dx
 			var ty = center_pos.y + dy
 			if _in_bounds(Vector2i(tx, ty)):
+				explosion_effects.append({"pos": Vector2i(tx, ty), "time": 0.0})
 				var t = grid[ty][tx]
 				# Another ambient bomb is primed instead of destroyed: it explodes after a short delay
 				if (dx != 0 or dy != 0) and t == TileType.BOMBA:
@@ -278,6 +289,15 @@ func _explode_at(center_pos: Vector2i, _reason: String = "EXPLOSIÓN") -> void:
 	
 	if player_caught:
 		_player_crushed()
+
+func _update_explosion_effects(delta: float) -> void:
+	var duration: float = EXPLOSION_FRAMES * EXPLOSION_FRAME_TIME
+	var remaining: Array = []
+	for fx in explosion_effects:
+		fx.time += delta
+		if fx.time < duration:
+			remaining.append(fx)
+	explosion_effects = remaining
 
 func _update_primed_bombs(delta: float) -> void:
 	for bomb_pos: Vector2i in primed_bombs.keys():
@@ -450,6 +470,16 @@ func _draw():
 		var sec_left = str(int(ceil(b.timer)))
 		draw_string(ThemeDB.fallback_font, b_world + Vector2(-3, 4), sec_left, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color.YELLOW)
 	
+	# Explosion animation on each blasted cell
+	for fx in explosion_effects:
+		var fx_rect: Rect2 = Rect2(Vector2(fx.pos * CELL_SIZE), Vector2(CELL_SIZE, CELL_SIZE))
+		if explosion_texture:
+			var frame: int = mini(int(fx.time / EXPLOSION_FRAME_TIME), EXPLOSION_FRAMES - 1)
+			var frame_size: Vector2 = Vector2(explosion_texture.get_width() / float(EXPLOSION_FRAMES), explosion_texture.get_height())
+			draw_texture_rect_region(explosion_texture, fx_rect, Rect2(Vector2(frame * frame_size.x, 0), frame_size))
+		else:
+			draw_rect(fx_rect, Color(1.0, 0.5, 0.1, 0.8))
+
 	# Death tint over the level (drawn after the level so it is not covered)
 	if is_player_dead:
 		draw_rect(Rect2(0, 0, grid_width * CELL_SIZE, grid_height * CELL_SIZE), Color(0.3, 0, 0, 0.3))
