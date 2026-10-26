@@ -37,17 +37,21 @@ static func load_scene(scene_path: String) -> ExcavationLevelData:
 ## Builds the level data from an ExcavationLevel node (inside or outside the scene tree).
 static func build(level: ExcavationLevel) -> LoadResult:
 	var result: LoadResult = LoadResult.new()
-	var layer: TileMapLayer = level.get_terrain_layer()
-	if layer == null:
+	# TileMapLayer is preferred; a legacy TileMap node (layer 0) is also read
+	var terrain: Node2D = level.get_terrain_node()
+	if terrain == null:
 		result.warnings.append("The level has no TileMapLayer child to read tiles from.")
 		return result
-	if layer.tile_set == null or layer.tile_set.get_custom_data_layer_by_name(CUSTOM_DATA_NAME) < 0:
+	if terrain is TileMap:
+		result.warnings.append("Terrain uses the deprecated TileMap node; only its first layer is read. Prefer a TileMapLayer.")
+	var tile_set: TileSet = _get_tile_set(terrain)
+	if tile_set == null or tile_set.get_custom_data_layer_by_name(CUSTOM_DATA_NAME) < 0:
 		result.warnings.append("The TileSet has no '%s' custom data layer." % CUSTOM_DATA_NAME)
 		return result
 
-	var used_rect: Rect2i = layer.get_used_rect()
+	var used_rect: Rect2i = _get_used_rect(terrain)
 	if used_rect.size == Vector2i.ZERO:
-		result.warnings.append("Nothing is painted on the TileMapLayer.")
+		result.warnings.append("Nothing is painted on the terrain.")
 		return result
 
 	# With auto_border the painted area is wrapped by one ring of unbreakable walls
@@ -66,8 +70,8 @@ static func build(level: ExcavationLevel) -> LoadResult:
 			data.grid[y][data.size.x - 1] = TileType.MURO_IRROMPIBLE
 
 	var start_count: int = 0
-	for map_cell: Vector2i in layer.get_used_cells():
-		var tile_data: TileData = layer.get_cell_tile_data(map_cell)
+	for map_cell: Vector2i in _get_used_cells(terrain):
+		var tile_data: TileData = _get_cell_tile_data(terrain, map_cell)
 		if tile_data == null:
 			continue
 		var tile_type: int = int(tile_data.get_custom_data(CUSTOM_DATA_NAME))
@@ -79,10 +83,10 @@ static func build(level: ExcavationLevel) -> LoadResult:
 			data.grid[cell.y][cell.x] = tile_type
 
 	# Hand-placed items: each marker turns its cell into an item with a specific reward
-	var layer_from_level: Transform2D = _transform_to_ancestor(layer, level).affine_inverse()
+	var terrain_from_level: Transform2D = _transform_to_ancestor(terrain, level).affine_inverse()
 	for marker: ExcavationItemMarker in level.get_item_markers():
 		var level_pos: Vector2 = _transform_to_ancestor(marker, level).origin
-		var cell: Vector2i = layer.local_to_map(layer_from_level * level_pos) - origin
+		var cell: Vector2i = _local_to_map(terrain, terrain_from_level * level_pos) - origin
 		if not Rect2i(Vector2i.ZERO, data.size).has_point(cell):
 			result.warnings.append("Item marker '%s' is outside the painted area." % marker.name)
 			continue
@@ -108,6 +112,32 @@ static func build(level: ExcavationLevel) -> LoadResult:
 		result.warnings.append("The exit is sealed off by unbreakable walls.")
 
 	return result
+
+# TileMapLayer and the legacy TileMap expose the same queries with different signatures
+static func _get_tile_set(terrain: Node2D) -> TileSet:
+	if terrain is TileMap:
+		return (terrain as TileMap).tile_set
+	return (terrain as TileMapLayer).tile_set
+
+static func _get_used_rect(terrain: Node2D) -> Rect2i:
+	if terrain is TileMap:
+		return (terrain as TileMap).get_used_rect()
+	return (terrain as TileMapLayer).get_used_rect()
+
+static func _local_to_map(terrain: Node2D, local_pos: Vector2) -> Vector2i:
+	if terrain is TileMap:
+		return (terrain as TileMap).local_to_map(local_pos)
+	return (terrain as TileMapLayer).local_to_map(local_pos)
+
+static func _get_used_cells(terrain: Node2D) -> Array[Vector2i]:
+	if terrain is TileMap:
+		return (terrain as TileMap).get_used_cells(0)
+	return (terrain as TileMapLayer).get_used_cells()
+
+static func _get_cell_tile_data(terrain: Node2D, cell: Vector2i) -> TileData:
+	if terrain is TileMap:
+		return (terrain as TileMap).get_cell_tile_data(0, cell)
+	return (terrain as TileMapLayer).get_cell_tile_data(cell)
 
 # Transform of node expressed in ancestor's local space (works outside the scene tree).
 static func _transform_to_ancestor(node: Node, ancestor: Node) -> Transform2D:

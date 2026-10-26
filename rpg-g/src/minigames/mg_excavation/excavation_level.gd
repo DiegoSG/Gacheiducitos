@@ -20,18 +20,22 @@ func _ready() -> void:
 	if not Engine.is_editor_hint():
 		return
 	# Refresh the warnings while painting or moving markers
-	var layer: TileMapLayer = get_terrain_layer()
-	if layer != null and not layer.changed.is_connected(update_configuration_warnings):
-		layer.changed.connect(update_configuration_warnings)
+	var terrain: Node2D = get_terrain_node()
+	if terrain != null and terrain.has_signal("changed") and not terrain.is_connected("changed", update_configuration_warnings):
+		terrain.connect("changed", update_configuration_warnings)
 	if not child_order_changed.is_connected(update_configuration_warnings):
 		child_order_changed.connect(update_configuration_warnings)
 
-## Returns the first TileMapLayer child, which holds the painted terrain.
-func get_terrain_layer() -> TileMapLayer:
+## Returns the child that holds the painted terrain: the first TileMapLayer,
+## or else a legacy TileMap node.
+func get_terrain_node() -> Node2D:
+	var legacy: TileMap = null
 	for child: Node in get_children():
 		if child is TileMapLayer:
 			return child as TileMapLayer
-	return null
+		if child is TileMap and legacy == null:
+			legacy = child as TileMap
+	return legacy
 
 ## Returns every ExcavationItemMarker below this node.
 func get_item_markers() -> Array[ExcavationItemMarker]:
